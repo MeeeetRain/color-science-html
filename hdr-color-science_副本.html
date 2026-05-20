@@ -1,0 +1,2208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SDR 到 HDR：色彩科学的演变</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #181c24;
+      --panel-2: #202630;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --blue: #68a7ff;
+      --green: #41d59b;
+      --shadow: 0 18px 52px rgba(0,0,0,.32);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(70,217,232,.12), transparent 28rem),
+        radial-gradient(circle at 92% 12%, rgba(255,209,102,.10), transparent 22rem),
+        linear-gradient(180deg, #101219 0%, #151820 44%, #101318 100%);
+      color: var(--ink);
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    a { color: inherit; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 50;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      border-bottom: 1px solid var(--line);
+      background: rgba(17,19,24,.82);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+    .brand {
+      font-weight: 780;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .links {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      justify-content: end;
+      scrollbar-width: none;
+    }
+    .links a {
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.09);
+    }
+
+    main { overflow: hidden; }
+    section {
+      padding: 74px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .hero {
+      position: relative;
+      min-height: calc(100vh - 54px);
+      display: grid;
+      align-items: center;
+      padding-top: 38px;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(124,130,138,.26), rgba(70,217,232,.20) 36%, rgba(169,229,95,.18) 59%, rgba(255,107,122,.18)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23282b31'/%3E%3Cstop offset='.22' stop-color='%23434b58'/%3E%3Cstop offset='.48' stop-color='%231a9bb0'/%3E%3Cstop offset='.72' stop-color='%23ddc35c'/%3E%3Cstop offset='1' stop-color='%23f04f6c'/%3E%3C/linearGradient%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='.2'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 .16'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23g)'/%3E%3Cpath d='M0 674 C290 560 438 714 676 594 C893 485 1011 294 1224 372 C1392 434 1498 333 1600 285 L1600 900 L0 900 Z' fill='%230b0d12' opacity='.72'/%3E%3Cpath d='M0 722 C262 642 460 755 706 648 C944 545 1058 426 1244 468 C1417 507 1513 421 1600 382' fill='none' stroke='%23ffffff' stroke-opacity='.2' stroke-width='3'/%3E%3Crect width='1600' height='900' filter='url(%23n)'/%3E%3C/svg%3E") center/cover;
+      animation: hue 15s linear infinite alternate;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(90deg, rgba(17,19,24,.95) 0%, rgba(17,19,24,.68) 47%, rgba(17,19,24,.26) 100%);
+    }
+    @keyframes hue { from { filter: saturate(.82) brightness(.72); } to { filter: saturate(1.18) brightness(1.02); } }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .75fr);
+      gap: 30px;
+      align-items: center;
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 780;
+    }
+    h1 {
+      margin: 12px 0 18px;
+      max-width: 13ch;
+      font-size: clamp(44px, 7vw, 88px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
+    p { margin: 0 0 14px; color: var(--muted); }
+    .lead {
+      max-width: 760px;
+      color: #e5ebf6;
+      font-size: clamp(17px, 2vw, 22px);
+    }
+    .hero-tools {
+      display: grid;
+      gap: 14px;
+      align-self: stretch;
+    }
+    .meter {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(16,18,23,.72);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .meter strong { display: block; font-size: 13px; color: var(--muted); margin-bottom: 9px; }
+    .range-row {
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3b3d42, #8f9299 10%, #e4e8f2 18%, #46d9e8 42%, #a9e55f 66%, #ffd166 82%, #ff6b7a);
+      position: relative;
+      overflow: hidden;
+    }
+    .range-row::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: var(--w, 18%);
+      background: rgba(255,255,255,.36);
+      border-right: 2px solid white;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .metric b { display: block; font-size: 24px; }
+    .metric span { color: var(--muted); font-size: 12px; }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(260px, .52fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 10px 0 10px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .gamma-layout {
+      display: grid;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .gamma-layout .canvas-box {
+      min-height: 520px;
+    }
+    .transfer-layout {
+      display: grid;
+      gap: 16px;
+    }
+    .transfer-layout .canvas-box {
+      min-height: 520px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      padding: 18px;
+      min-width: 0;
+    }
+    .card b { color: var(--ink); }
+    .tag {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #101318;
+      background: var(--gold);
+      font-size: 12px;
+      font-weight: 760;
+      margin-bottom: 12px;
+    }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi-item {
+      background: rgba(255,255,255,.045);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kpi-label { font-size: 12px; color: var(--muted); }
+    .kpi-val { font-size: 22px; font-weight: 720; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--muted); }
+    .range-legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .range-legend span { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .sdr-hdr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .sdr-hdr-card {
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 1px solid var(--line);
+    }
+    .sdr-hdr-card.sdr { border-left: 4px solid #a5abb4; background: rgba(165,171,180,.07); }
+    .sdr-hdr-card.hdr { border-left: 4px solid var(--cyan); background: rgba(70,217,232,.07); }
+    .sdr-hdr-card h3 { margin: 0 0 12px; font-size: 16px; }
+    .sdr-hdr-card ul { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .sdr-hdr-card li { display: flex; gap: 10px; align-items: baseline; font-size: 14px; color: var(--muted); }
+    .sdr-hdr-card li b { color: var(--ink); white-space: nowrap; min-width: 7em; }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(170px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .time-step {
+      min-height: 164px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(255,255,255,.04);
+      position: relative;
+    }
+    .time-step::before {
+      content: attr(data-year);
+      display: inline-block;
+      color: var(--cyan);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 14px;
+    }
+    .ctrl-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .ctrl-row-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      font-weight: 700;
+      min-width: 88px;
+      flex-shrink: 0;
+    }
+    .seg {
+      display: inline-flex;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 3px;
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+    .seg button {
+      min-height: 30px;
+      padding: 4px 12px;
+      font-size: 13px;
+      background: transparent;
+      border: none;
+      border-radius: 5px;
+      color: var(--muted);
+    }
+    .seg button:hover { color: var(--ink); }
+    .seg button[aria-pressed="true"] {
+      background: var(--cyan);
+      color: #101318;
+      font-weight: 700;
+    }
+    button, select, input[type="range"], input[type="search"] {
+      font: inherit;
+    }
+    button, select, input[type="search"] {
+      color: var(--ink);
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 38px;
+    }
+    button {
+      cursor: pointer;
+      padding: 8px 12px;
+    }
+    button[aria-pressed="true"], button.active {
+      color: #101318;
+      background: var(--cyan);
+      border-color: transparent;
+      font-weight: 760;
+    }
+    select, input[type="search"] { padding: 8px 10px; }
+    input[type="range"] { accent-color: var(--cyan); }
+    .canvas-box {
+      position: relative;
+      min-height: 390px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0d1015;
+      overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .readout {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      background: rgba(13,16,21,.82);
+      border-radius: var(--radius);
+      color: #eef5ff;
+      font-size: 13px;
+    }
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #eaf2ff;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      text-align: center;
+      margin-top: 16px;
+    }
+    .flow .node {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.055);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      min-height: 76px;
+    }
+    .arrow { color: var(--gold); font-size: 24px; }
+
+    .cie-wrap {
+      display: grid;
+      grid-template-columns: minmax(300px, .9fr) minmax(280px, .6fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .cie {
+      width: 100%;
+      aspect-ratio: 1.12;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0b0e13;
+    }
+    .swatches { display: grid; gap: 10px; }
+    .swatch {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      cursor: pointer;
+      background: rgba(255,255,255,.04);
+    }
+    .swatch.active { border-color: var(--cyan); background: rgba(70,217,232,.11); }
+    .mini {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .volume-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, .95fr) minmax(280px, .55fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .sliders {
+      display: grid;
+      gap: 13px;
+    }
+    label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    label span {
+      color: var(--ink);
+      float: right;
+      font-weight: 760;
+    }
+    input[type="range"] { width: 100%; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .tab-panel {
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.045);
+      padding: 20px;
+    }
+    .tab-panel.active { display: block; }
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .spec {
+      border-top: 1px solid var(--line);
+      padding-top: 9px;
+    }
+    .spec small { display: block; color: var(--muted); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+    }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #101318;
+      background: var(--gold);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    tr:hover td { background: rgba(255,255,255,.04); }
+    .table-wrap { overflow-x: auto; }
+
+    .glossary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .term {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(255,255,255,.04);
+      position: relative;
+    }
+    .term strong { color: var(--cyan); }
+    .tooltip {
+      border-bottom: 1px dotted var(--gold);
+      cursor: help;
+      color: #f2f6ff;
+    }
+    .sources li { margin-bottom: 8px; color: var(--muted); }
+    .sources a { color: #d8efff; }
+    .warn {
+      color: #ffe7b0;
+      background: rgba(255,209,102,.10);
+      border: 1px solid rgba(255,209,102,.22);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 920px) {
+      .nav { grid-template-columns: 1fr; gap: 8px; }
+      .links { justify-content: start; }
+      .hero-grid, .section-head, .grid-2, .grid-3, .grid-4, .cie-wrap, .volume-grid {
+        grid-template-columns: 1fr;
+      }
+      .specs, .glossary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+    @media (max-width: 560px) {
+      section { padding: 56px 16px; }
+      .hero { min-height: auto; }
+      .metric-grid, .specs, .glossary { grid-template-columns: 1fr; }
+      .canvas-box { min-height: 320px; }
+      h1 { font-size: 42px; }
+      th, td { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav" aria-label="主导航">
+      <div class="brand">SDR → HDR Color Science</div>
+      <div class="links" id="navLinks">
+        <a href="#range">动态范围</a>
+        <a href="#gamma">Gamma</a>
+        <a href="#transfer">PQ / HLG</a>
+        <a href="#gamut">色彩空间</a>
+        <a href="#volume">色彩体积</a>
+        <a href="#formats">格式与对比</a>
+        <a href="#glossary">词汇表</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">从 100 nit 到万 nit，从伽玛到感知量化</div>
+          <h1>SDR 到 HDR 的色彩科学演变</h1>
+          <p class="lead">HDR 不是简单把画面“拉亮”。它把拍摄、编码、显示、观看环境和人眼感知重新接线：OETF 负责把场景光压进信号，EOTF 负责把信号展开成显示光，OOTF 则决定最终“看起来”的反差。</p>
+        </div>
+        <div class="hero-tools" aria-label="关键范围预览">
+          <div class="meter">
+            <strong>SDR 参考白与 HDR 高光</strong>
+            <div class="range-row" style="--w: 18%"></div>
+            <div class="metric-grid">
+              <div class="metric"><b>100</b><span>nit SDR 参考白</span></div>
+              <div class="metric"><b>1,000</b><span>nit 常见 HDR 母版</span></div>
+              <div class="metric"><b>10,000</b><span>PQ 标准上限</span></div>
+            </div>
+          </div>
+          <div class="meter">
+            <strong>内容依据</strong>
+            <p>本页结合本文件夹 PDF《HDR制作、转换与播出》与 2025-2026 可查的 HDR 标准资料整理。重点不是背参数，而是看清每个函数和色域为何出现。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="range">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>1. 亮度动态范围：HDR 把"能显示多亮"提高了 10–100 倍</h2>
+            <p>SDR 电视的峰值亮度上限是 <b>100 nit</b>；超过这个值，颜色就被压成白色。HDR 把上限推到 1,000–10,000 nit，让高亮区域在更亮的同时还能保持颜色饱和度。两者的核心差距不在于"整体更亮"，而在于 <b>高光区域能否同时"亮"与"有色"</b>。</p>
+          </div>
+          <div class="note">拖动下方滑块改变 HDR 峰值，上方四个数字会同步更新。图表横轴为<b>对数刻度</b>——这反映了人眼对亮度的感知方式：暗部差异比亮部差异更敏感。</div>
+        </div>
+
+        <!-- KPI 数字行 -->
+        <div class="kpi-row">
+          <div class="kpi-item">
+            <span class="kpi-label">SDR 峰值白</span>
+            <span class="kpi-val" style="color:#a5abb4">100 nit</span>
+            <span class="kpi-sub">BT.709 / BT.1886 标准上限</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">HDR 参考白（图形安全白）</span>
+            <span class="kpi-val" style="color:var(--gold)">203 nit</span>
+            <span class="kpi-sub">BT.2408 规定，比 SDR 亮 2 倍</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">当前 HDR 峰值</span>
+            <span class="kpi-val" id="statPeak" style="color:var(--cyan)">1,000 nit</span>
+            <span class="kpi-sub">由滑块控制</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">相对 SDR 峰值倍数</span>
+            <span class="kpi-val" id="statRatio" style="color:var(--violet)">10×</span>
+            <span class="kpi-sub">高光余量扩展幅度</span>
+          </div>
+        </div>
+
+        <!-- 主交互区：滑块 + 图表 -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+            <span style="font-size:14px;color:var(--muted);white-space:nowrap">HDR 峰值亮度</span>
+            <input id="peakSlider" type="range" min="100" max="10000" step="100" value="1000" style="flex:1;min-width:120px">
+            <span id="peakValue" style="min-width:90px;text-align:right;color:var(--cyan);font-weight:700;font-size:16px">1,000 nit</span>
+          </div>
+          <div class="canvas-box" style="min-height:240px">
+            <canvas id="rangeCanvas" aria-label="SDR 与 HDR 动态范围对比图"></canvas>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
+            <div class="range-legend">
+              <span><span class="legend-dot" style="background:#8a9099"></span>SDR 可用范围（到 100 nit）</span>
+              <span><span class="legend-dot" style="background:var(--cyan)"></span>HDR 高光余量（100 nit → 峰值）</span>
+              <span><span class="legend-dot" style="background:var(--gold);border-radius:50%"></span>203 nit HDR 参考白</span>
+            </div>
+            <div id="rangeReadout" style="font-size:13px;color:var(--muted)">当前 HDR 峰值：1,000 nit；比 SDR 高出 10×</div>
+          </div>
+        </div>
+
+        <!-- SDR vs HDR 对比卡片 -->
+        <div class="sdr-hdr-grid">
+          <div class="sdr-hdr-card sdr">
+            <span class="tag" style="background:#a5abb4;color:#0d1015">SDR</span>
+            <h3>标准动态范围 · BT.709</h3>
+            <ul>
+              <li><b>峰值白：</b>100 nit（硬上限）</li>
+              <li><b>编码标准：</b>BT.709 OETF + BT.1886 EOTF</li>
+              <li><b>高光处理：</b>超过 100 nit → 颜色压白，饱和度丢失</li>
+              <li><b>编码位深：</b>8 bit，256 个亮度级别</li>
+              <li><b>颜色空间：</b>BT.709（约覆盖 36% CIE 色域）</li>
+            </ul>
+          </div>
+          <div class="sdr-hdr-card hdr">
+            <span class="tag" style="background:var(--cyan);color:#0d1015">HDR</span>
+            <h3>高动态范围 · BT.2100</h3>
+            <ul>
+              <li><b>峰值白：</b>1,000–10,000 nit（可变）</li>
+              <li><b>编码标准：</b>PQ (ST 2084) 或 HLG (BT.2100)</li>
+              <li><b>高光处理：</b>203 nit 以上仍保持颜色饱和度</li>
+              <li><b>编码位深：</b>10/12 bit，1,024–4,096 个亮度级别</li>
+              <li><b>颜色空间：</b>BT.2020（约覆盖 76% CIE 色域）</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 颜色模拟对比 -->
+        <div class="card" style="margin-top:18px">
+          <h3 style="margin-bottom:4px">高亮颜色对比：SDR 通道剪切 vs HDR 保持饱和（真实 HDR 图片）</h3>
+          <p style="margin-bottom:12px;font-size:14px;color:var(--muted)">每一行是同一颜色的"亮度阶梯"，从左到右 <b>1 nit → 1,000 nit</b>。左半屏模拟 SDR（每个 RGB 通道在 100 nit 处硬剪切，导致橙色→黄色等色相偏移）；右半屏是真实 HDR 渲染。</p>
+          <div style="position:relative;border-radius:var(--radius);overflow:hidden;background:#000">
+            <picture>
+              <source srcset="assets/hdr_compare.avif" type="image/avif">
+              <img src="assets/hdr_compare.jpg" alt="SDR vs HDR 高亮颜色对比" style="width:100%;height:auto;display:block">
+            </picture>
+            <div style="position:absolute;top:8px;left:12px;padding:4px 10px;background:rgba(0,0,0,.6);border-radius:4px;font-size:12px;color:#e0e0e0;font-weight:600">SDR · 100 nit 剪切</div>
+            <div style="position:absolute;top:8px;right:12px;padding:4px 10px;background:rgba(70,217,232,.85);border-radius:4px;font-size:12px;color:#0d1015;font-weight:600">HDR · 1,000 nit PQ</div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">
+            ※ 图片为 <b>AVIF · BT.2020 · SMPTE ST 2084 (PQ) · 10-bit · MaxCLL 1,000 nit</b>。在支持 EDR 的 macOS 显示器（XDR / Pro Display XDR / mini-LED MacBook Pro / iPhone Pro）+ Safari 17 或 Chrome 116+ 上自动渲染为真 HDR；其他环境降级为 SDR JPEG（仍能看到色相偏移差异，但右半屏不会真的"更亮"）。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="gamma">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>2. Gamma：从 CRT 缺陷到主动利用视觉</h2>
+            <p>PDF 中强调了一个关键转变：早期伽玛像是在“校正 CRT 非线性”，但到了现代显示与数字编码，伽玛更像是在主动压缩动态范围、提高量化资源利用率。下面把 OETF、EOTF、OOTF 分开看，避免把拍摄编码、显示解码和系统观感混在一起。</p>
+          </div>
+          <div class="formula">函数关系：OOTF = EOTF ∘ OETF<br>伽玛近似：γ<sub>OOTF</sub> ≈ γ<sub>OETF</sub> × γ<sub>EOTF</sub> ≈ 0.5 × 2.4 = 1.2</div>
+        </div>
+
+        <div class="timeline">
+          <div class="time-step" data-year="CRT时代"><h3>显示端天生非线性</h3><p>显像管 EOTF 近似 V<sup>2.2</sup>，摄像机端用约 L<sup>0.45</sup> 预失真抵消。</p></div>
+          <div class="time-step" data-year="胶片"><h3>低反差记录，高反差放映</h3><p>底片低伽玛压缩动态范围，发行拷贝高伽玛扩展反差，本质也是感知编码。</p></div>
+          <div class="time-step" data-year="1993"><h3>BT.709 OETF</h3><p>暗部线性段 + 0.45 幂函数段，实际近似 0.5，成为 SDR 拍摄制作基础。</p></div>
+          <div class="time-step" data-year="2011"><h3>BT.1886 EOTF</h3><p>把平板、OLED、投影等“非 CRT”显示规范到接近 2.4 的显示伽玛。</p></div>
+          <div class="time-step" data-year="2016-2025"><h3>BT.2100 HDR</h3><p>PQ 与 HLG 进入同一 HDR-TV 标准框架，2025 版 BT.2100-3 继续更新图像参数建议。</p></div>
+        </div>
+
+        <div class="gamma-layout">
+          <div class="card">
+            <div class="ctrl-rows">
+              <div class="ctrl-row">
+                <span class="ctrl-row-label">① 角色视角</span>
+                <div class="seg" role="tablist" aria-label="按传递函数角色看">
+                  <button class="gammaMode" data-mode="oetf" aria-pressed="true">OETF（光→信号）</button>
+                  <button class="gammaMode" data-mode="eotf" aria-pressed="false">EOTF（信号→光）</button>
+                  <button class="gammaMode" data-mode="ootf" aria-pressed="false">OOTF（场景→屏幕）</button>
+                </div>
+                <span style="font-size:12px;color:var(--muted)">看信号链中某一段的曲线形状</span>
+              </div>
+              <div class="ctrl-row">
+                <span class="ctrl-row-label">② 编码曲线对比</span>
+                <div class="seg" role="tablist" aria-label="HDR 编码曲线对比">
+                  <button class="gammaMode" data-mode="pqEncode" aria-pressed="false">PQ 编码</button>
+                  <button class="gammaMode" data-mode="hlgEncode" aria-pressed="false">HLG 编码</button>
+                  <button class="gammaMode" data-mode="encodeCompare" aria-pressed="false">PQ + HLG + SDR 同显</button>
+                </div>
+                <span style="font-size:12px;color:var(--muted)">把具体的编码曲线放在同一坐标比对</span>
+              </div>
+              <div class="ctrl-row">
+                <span class="ctrl-row-label">显示参数</span>
+                <div class="seg" id="gammaScaleTabs" aria-label="Gamma 图亮度刻度">
+                  <button type="button" class="gammaScaleOption" data-scale="log" aria-pressed="true">对数</button>
+                  <button type="button" class="gammaScaleOption" data-scale="linear" aria-pressed="false">线性</button>
+                </div>
+                <label for="gammaHlgPeak" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
+                  <span id="gammaPeakLabel">HLG 峰值</span>
+                  <input id="gammaHlgPeak" type="range" min="500" max="4000" step="100" value="1000" style="width:160px">
+                  <span id="gammaHlgPeakValue" style="color:var(--cyan);font-weight:700;min-width:70px">1000 nit</span>
+                </label>
+              </div>
+            </div>
+            <div class="canvas-box">
+              <canvas id="gammaCanvas" aria-label="OETF EOTF OOTF 分离曲线"></canvas>
+              <div class="readout" id="gammaReadout">移动指针读取标准曲线数值</div>
+            </div>
+          </div>
+          <div class="card gamma-explain">
+            <h3 id="gammaModeTitle">OETF：拍摄/编码端</h3>
+            <p id="gammaModeText"><span class="tooltip" title="Opto-Electrical Transfer Function">OETF</span> 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可在上方切到“PQ 编码”单独查看。</p>
+            <div class="flow">
+              <div class="node"><b>场景光</b><br><span class="mini">Scene light</span></div>
+              <div class="arrow">→</div>
+              <div class="node"><b>信号</b><br><span class="mini">OETF 编码</span></div>
+              <div class="arrow">→</div>
+              <div class="node"><b>显示光</b><br><span class="mini">EOTF 解码</span></div>
+            </div>
+            <div class="warn" id="gammaModeNote">当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="transfer">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>3. PQ 与 HLG：HDR 的两条路线</h2>
+            <p>PQ（ST 2084）把码值映射到绝对显示亮度，面向精准母版、元数据与显示适配；HLG 把传统广播链路放在首位，信号相对、兼容 SDR 观看，但依赖终端根据峰值亮度设置系统伽玛。</p>
+          </div>
+          <div class="note">在曲线上移动鼠标或触控，查看同一归一化信号在 PQ、HLG、SDR gamma 下对应的近似亮度。切换对数坐标会更容易看清暗部码值分配。</div>
+        </div>
+
+        <div class="transfer-layout">
+          <div class="card">
+            <div class="controls">
+              <div class="tabs" id="hdrScaleTabs" aria-label="PQ HLG 曲线亮度刻度">
+                <button type="button" class="hdrScaleOption active" data-scale="log" aria-pressed="true">对数亮度</button>
+                <button type="button" class="hdrScaleOption" data-scale="segmented" aria-pressed="false">分段线性亮度</button>
+              </div>
+              <label for="hlgPeak" style="min-width:230px">HLG 显示峰值 <span id="hlgPeakValue">1000 nit</span></label>
+              <input id="hlgPeak" type="range" min="500" max="4000" step="100" value="1000">
+            </div>
+            <div class="canvas-box">
+              <canvas id="hdrCanvas" aria-label="PQ HLG SDR 曲线对比"></canvas>
+              <div class="readout" id="hdrReadout">移动指针读取曲线</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <span class="tag">PQ — 绝对亮度体系</span>
+              <h3>Display Referred EOTF</h3>
+              <p>ST 2084 / PQ 的设计上限为 <b>10,000 cd/m²</b>。码值直接对应绝对显示亮度（与终端无关），因此同一信号在不同显示器上试图呈现相同的 nit 值。适合精确调色母版、电影与流媒体。<br><span style="color:var(--rose);font-size:13px">⚠ 低亮度显示器无法还原母版中超出自身峰值的部分，需要 Tone Mapping 或元数据辅助。</span></p>
+              <div class="formula" style="white-space:normal;line-height:1.75">
+                <div><b>1. 先把码值 V 做感知反压缩</b></div>
+                <div>N = V<sup>1/m₂</sup></div>
+                <div><b>2. 计算归一化亮度比例</b></div>
+                <div>Y = ( max(N − c₁, 0) / (c₂ − c₃·N) )<sup>1/m₁</sup></div>
+                <div><b>3. 转成绝对显示亮度</b></div>
+                <div>L = 10000 × Y &nbsp;<span style="color:var(--muted)">cd/m²</span></div>
+                <div style="margin-top:8px;color:var(--muted);font-size:12px">常量：m₁=2610/16384 · m₂=2523/32 · c₁=107/128 · c₂=2413/128 · c₃=2392/128</div>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag" style="background:var(--lime)">HLG — 相对亮度体系</span>
+              <h3>Scene Referred OETF</h3>
+              <p>HLG 定义的是<b>拍摄端 OETF</b>，码值表示相对场景亮度，与终端显示峰值无直接绑定。EOTF 随终端峰值自动调整系统伽玛（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），可在不同峰值显示器上自适应。不强制动态元数据，对广播链路友好。</p>
+              <div class="formula" style="white-space:normal;line-height:1.75">
+                <div><b>1. 低亮段：保留暗部细节</b></div>
+                <div>E′ = √(3E), &nbsp;0 ≤ E ≤ 1/12</div>
+                <div><b>2. 高亮段：用对数压缩高光</b></div>
+                <div>E′ = a·ln(12E − b) + c, &nbsp;E &gt; 1/12</div>
+                <div><b>3. 两段交界</b></div>
+                <div>E = 1/12 时，E′ = 0.5，曲线连续</div>
+                <div style="margin-top:8px;color:var(--muted);font-size:12px">常量：a=0.17883277 · b=0.28466892 · c=0.55991073</div>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag" style="background:var(--rose)">PQ流程</span>
+              <h3>通知模式（Notify）</h3>
+              <p>PQ 制作需要传递母版显示信息（ST 2086）、MaxCLL、MaxFALL 等静态元数据；动态格式（HDR10+/Dolby Vision）还会逐场景或逐镜头给出映射建议，指导显示端自适应 Tone Mapping。</p>
+            </div>
+            <div class="card">
+              <span class="tag" style="background:var(--blue)">HLG流程</span>
+              <h3>约定模式</h3>
+              <p>HLG 制播更像 SDR：前端与终端按约定解释信号。终端峰值越高，系统伽玛随之增大（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），自动压低平均亮度，保持中间调观感稳定。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:18px;border-left-color:var(--gold)">
+          <strong style="color:var(--gold)">🔑 HDR 参考白：203 nit（BT.2408 规定）</strong>
+          <p style="margin:8px 0 4px">PQ 和 HLG 共用同一参考白亮度 <b>203 cd/m²</b>，但对应的信号电平不同：</p>
+          <div class="grid-2" style="gap:10px;margin-top:10px">
+            <div class="card" style="padding:12px">
+              <b style="color:var(--cyan)">PQ：58% 电平 = 203 nit</b>
+              <p style="margin:6px 0 0;font-size:13px">100% PQ 对应 10,000 nit；在 1000 nit 监视器上，58% 是 HDR 制作参考白基准，51% 对应 100 nit（SDR 参考白）。</p>
+            </div>
+            <div class="card" style="padding:12px">
+              <b style="color:var(--lime)">HLG：75% 电平 = 203 nit（HLG75）</b>
+              <p style="margin:6px 0 0;font-size:13px">HLG 参考白基准定在 75%（BT.2390 / BT.2408），早期曾用 50%（HLG50，已废弃）。波形监视器上的"1000 nit"刻度即指 75% HLG 电平。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:14px;border-left-color:var(--violet)">
+          <strong style="color:var(--violet)">PQ 母版分级（BT.2408 操作实践）</strong>
+          <p style="margin:6px 0 8px">PQ 是绝对亮度体系，100% 电平固定对应 10,000 nit，参考白 203 nit 固定对应 58% 电平。<br>不同峰值监视器上制作的母版，其信号电平上限不同：</p>
+          <div class="grid-4" style="gap:10px">
+            <div class="card" style="padding:10px;border-color:rgba(154,140,255,.45)">
+              <b style="color:var(--violet)">PQ600</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">600 nit 监视器<br>最高电平 ≈ 70%</p>
+            </div>
+            <div class="card" style="padding:10px;border-color:rgba(154,140,255,.45)">
+              <b style="color:var(--violet)">PQ1000</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">1000 nit 监视器<br>最高电平 ≈ 75%</p>
+            </div>
+            <div class="card" style="padding:10px;border-color:rgba(154,140,255,.45)">
+              <b style="color:var(--violet)">PQ2000</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">2000 nit 监视器<br>最高电平 ≈ 83%</p>
+            </div>
+            <div class="card" style="padding:10px;border-color:rgba(154,140,255,.45)">
+              <b style="color:var(--violet)">PQ4000</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">4000 nit 监视器<br>最高电平 ≈ 90%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gamut">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>4. 色彩空间：从 BT.709 到 BT.2020</h2>
+            <p>HDR 通常伴随更宽色域。BT.709 是 HDTV/SDR 的常用工作空间；DCI-P3 来自数字电影；BT.2020 是 UHD/HDR 传输容器，覆盖更大范围，但现实显示器常只能覆盖其中一部分。</p>
+          </div>
+          <div class="note">点击右侧色域卡片，SVG 色度图会突出对应三角形。覆盖率为 CIE 1931 xy 色度图近似面积占比：BT.709 约 35.9%，P3 约 53.6%，BT.2020 约 75.8%。</div>
+        </div>
+
+        <div class="cie-wrap">
+          <svg class="cie" id="cieSvg" viewBox="0 0 720 640" role="img" aria-label="CIE 1931 色度图色域示意">
+            <defs>
+              <linearGradient id="spectrum" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#4b56ff"/>
+                <stop offset=".24" stop-color="#31d7ff"/>
+                <stop offset=".47" stop-color="#38e07a"/>
+                <stop offset=".68" stop-color="#ffe15a"/>
+                <stop offset=".86" stop-color="#ff6d3f"/>
+                <stop offset="1" stop-color="#e82a6d"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="720" height="640" fill="#0b0e13"/>
+            <g id="gridLines" stroke="rgba(255,255,255,.13)" stroke-width="1"></g>
+            <g id="cieLocus"></g>
+            <g id="gamutPolys"></g>
+            <g fill="#f4f6fb" font-size="13">
+              <text x="360" y="620" text-anchor="middle">x</text>
+              <text x="26" y="320" text-anchor="middle" transform="rotate(-90 26 320)">y</text>
+            </g>
+          </svg>
+          <div class="swatches" id="gamutCards">
+            <div class="swatch active" data-gamut="bt709"><h3>BT.709 / sRGB</h3><p>R 0.640,0.330 · G 0.300,0.600 · B 0.150,0.060</p><div class="mini">典型覆盖：35.9%</div></div>
+            <div class="swatch" data-gamut="p3"><h3>DCI-P3 / Display P3</h3><p>R 0.680,0.320 · G 0.265,0.690 · B 0.150,0.060</p><div class="mini">典型覆盖：53.6%</div></div>
+            <div class="swatch" data-gamut="bt2020"><h3>BT.2020</h3><p>R 0.708,0.292 · G 0.170,0.797 · B 0.131,0.046</p><div class="mini">典型覆盖：75.8%</div></div>
+          </div>
+        </div>
+        <div id="cieHoverInfo" style="margin-top:8px;font-size:13px;color:var(--muted);min-height:18px;padding:4px 0">在色度图上移动鼠标可读取 xy 坐标</div>
+
+        <div class="card" style="margin-top:18px">
+          <span class="tag" style="background:var(--violet)">ICtCp</span>
+          <h3>BT.2100 推荐的 HDR / WCG 色差编码</h3>
+          <div class="grid-2" style="gap:14px">
+            <div>
+              <p>传统 Y'CbCr 在 HDR 和宽色域下会产生明显的色调旋转误差（hue rotation error）——高饱和色在量化后色相偏移。ICtCp 基于 PQ 或 HLG 的感知均匀色差空间，使色差分量对高亮高饱和颜色更线性。</p>
+              <p>I（Intensity）承载亮度；Ct 为蓝-黄方向色差（tritan 轴）；Cp 为红-绿方向色差（protan 轴），对应人眼最敏感的两条色差轴。</p>
+            </div>
+            <div>
+              <table style="font-size:13px">
+                <thead><tr><th>特性</th><th>Y'CbCr</th><th>ICtCp</th></tr></thead>
+                <tbody>
+                  <tr><td>色调旋转误差</td><td>明显</td><td>极小</td></tr>
+                  <tr><td>感知均匀性</td><td>低</td><td>高</td></tr>
+                  <tr><td>适用范围</td><td>SDR / BT.709</td><td>HDR / WCG</td></tr>
+                  <tr><td>传递函数基础</td><td>Gamma</td><td>PQ 或 HLG</td></tr>
+                  <tr><td>典型用途</td><td>广播、编码存储</td><td>后期、质量评估</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="volume">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>5. 色彩体积：色域 × 亮度，不只是三角形变大</h2>
+            <p>色彩空间只描述 xy 平面上的色度范围；色彩体积把亮度轴也加进来。HDR 的价值在于：高亮区域仍能保留颜色，而不是像 SDR 那样接近白色剪切。</p>
+          </div>
+          <div class="note">调节峰值亮度和色域，观察“可表达颜色的三维空间”如何增大。实际显示还受面板峰值、ABL、色彩管理和色调映射影响。</div>
+        </div>
+
+        <div class="volume-grid">
+          <div class="canvas-box" style="min-height:460px">
+            <canvas id="volumeCanvas" aria-label="色彩体积伪三维示意"></canvas>
+            <div class="readout" id="volumeReadout">xyY 几何体积：18.9× SDR基准</div>
+          </div>
+          <div class="card sliders">
+            <label for="volumePeak">峰值亮度 <span id="volumePeakValue">1000 nit</span></label>
+            <input id="volumePeak" type="range" min="100" max="10000" step="100" value="1000">
+            <label>色域底面 <span id="volumeGamutValue">BT.2020 xy面积 0.2119</span></label>
+            <div class="tabs" id="volumeGamutTabs" role="tablist" aria-label="色彩体积色域选择">
+              <button type="button" class="volumeGamutBtn" data-gamut="bt709" aria-pressed="false">BT.709</button>
+              <button type="button" class="volumeGamutBtn" data-gamut="p3" aria-pressed="false">P3</button>
+              <button type="button" class="volumeGamutBtn active" data-gamut="bt2020" aria-pressed="true">BT.2020</button>
+            </div>
+            <div class="grid-2">
+              <div class="card"><b>SDR</b><p>BT.709 色域 × 100 nit。高亮颜色容易向白色压缩，色彩体积有限。</p></div>
+              <div class="card"><b>HDR</b><p>BT.2020 容器 × 更高亮度。霓虹、火焰、金属反光等可以同时“亮且有色”。</p></div>
+            </div>
+            <div class="warn" id="volumeFormula">计算口径：V<sub>xyY</sub> = A<sub>xy</sub> × L<sub>peak</sub>；A<sub>xy</sub> = 1/2 |Σ(x<sub>i</sub>y<sub>i+1</sub> − x<sub>i+1</sub>y<sub>i</sub>)|。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="formats">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>6. HDR 格式与对比：元数据决定“如何适配显示器”</h2>
+            <p>HDR10、HDR10+、Dolby Vision、HLG、HDR Vivid 都可承载 HDR，但它们对 EOTF、元数据、授权、兼容性和场景适配的选择不同。</p>
+          </div>
+          <div class="note">先切换标签理解每种格式，再用下方表格横向比较。核心判断不是“谁更亮”，而是谁能把创作者意图更稳定地映射到不同峰值、黑位和色域的终端上。</div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="HDR格式">
+          <button type="button" class="tabBtn active" data-tab="hdr10" role="tab" aria-pressed="true" aria-selected="true" aria-controls="tab-hdr10">HDR10</button>
+          <button type="button" class="tabBtn" data-tab="hdr10p" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-hdr10p">HDR10+</button>
+          <button type="button" class="tabBtn" data-tab="dv" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-dv">Dolby Vision</button>
+          <button type="button" class="tabBtn" data-tab="hlg" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-hlg">HLG</button>
+          <button type="button" class="tabBtn" data-tab="vivid" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-vivid">HDR Vivid</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-hdr10" role="tabpanel">
+          <h3>HDR10：PQ + BT.2020 + 静态元数据</h3>
+          <p>HDR10 是最基础、最广泛的 HDR 媒体配置。它使用 ST 2084 / PQ EOTF、10 bit、BT.2020 容器，以及 ST 2086 母版显示信息、MaxCLL、MaxFALL。弱点是静态元数据只给整部内容一个全局描述，显示适配较粗。</p>
+          <div class="specs"><div class="spec"><small>EOTF</small>PQ / ST 2084</div><div class="spec"><small>元数据</small>静态</div><div class="spec"><small>位深</small>10 bit</div><div class="spec"><small>适合</small>UHD Blu-ray、流媒体基础层</div></div>
+        </div>
+        <div class="tab-panel" id="tab-hdr10p" role="tabpanel">
+          <h3>HDR10+：在 HDR10 上加入动态元数据</h3>
+          <p>HDR10+ 使用 ST 2094-40 动态元数据，可逐场景或逐帧给出显示映射信息。2025 年 HDR10+ Technologies 推出 HDR10+ Advanced，强调更精细的亮度映射、环境适配和游戏等扩展体验。</p>
+          <div class="specs"><div class="spec"><small>EOTF</small>PQ / ST 2084</div><div class="spec"><small>元数据</small>动态 ST 2094-40</div><div class="spec"><small>授权</small>相对开放的认证生态</div><div class="spec"><small>适合</small>流媒体、电视、移动端</div></div>
+        </div>
+        <div class="tab-panel" id="tab-dv" role="tabpanel">
+          <h3>Dolby Vision：动态元数据与端到端显示映射</h3>
+          <p>Dolby Vision 以逐场景/逐帧动态元数据和 Dolby 专有的显示映射链路为核心。元数据分层（L1 自动动态亮度、L2/L8 手动 Trim、L6 可选 MaxCLL/MaxFALL），允许调色师精确控制不同终端能力下的再现效果。常见发行链路多为 PQ / ST 2084，但 Dolby Vision 也有 HLG 兼容配置：Profile 8.4 使用 HLG base layer、BT.2020、HEVC Main10，并叠加 Dolby Vision RPU 元数据，非 Dolby Vision 设备可按 HLG 基础层显示。</p>
+          <div class="specs">
+            <div class="spec"><small>传递函数</small>PQ / ST 2084；Profile 8.4 可为 HLG base layer</div>
+            <div class="spec"><small>元数据</small>动态：Dolby / ST 2094-10</div>
+            <div class="spec"><small>位深</small>最高 12 bit 工作流</div>
+            <div class="spec"><small>授权</small>专有认证生态（厂商付费）</div>
+          </div>
+          <div class="warn" style="margin-top:14px">
+            <b>Dolby Vision 2（2025 年 9 月发布）新特性：</b>
+            <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted);line-height:1.8">
+              <li><b style="color:var(--ink)">Precision Black</b>：精细黑位控制，极暗场景不再因 ABL 崩色；</li>
+              <li><b style="color:var(--ink)">Light Sense</b>：结合环境光传感器动态调整内容映射，适应不同观影环境；</li>
+              <li><b style="color:var(--ink)">Authentic Motion</b>：运动场景与游戏内容的高帧率优化；</li>
+              <li><b style="color:var(--ink)">Content Intelligence</b>：内容智能分析，自动优化场景分类与映射策略。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-hlg" role="tabpanel">
+          <h3>HLG：广播优先的相对 HDR</h3>
+          <p>HLG 由 BBC 与 NHK 推动，进入 BT.2100。它不依赖 HDR10 式元数据；非 HDR 终端可把 HLG 当作类似 SDR 的信号显示，通常不会完全崩坏，适合直播和电视播出。</p>
+          <div class="specs"><div class="spec"><small>传递函数</small>HLG OETF/OOTF</div><div class="spec"><small>元数据</small>可无</div><div class="spec"><small>兼容性</small>较适合广播 SDR 共存</div><div class="spec"><small>适合</small>直播、体育、新闻、电视台</div></div>
+        </div>
+        <div class="tab-panel" id="tab-vivid" role="tabpanel">
+          <h3>HDR Vivid：中国超高清产业的动态元数据 HDR 方案</h3>
+          <p>HDR Vivid 由中国超高清视频产业联盟（CUVA）制定，标准编号 CUVA 005-2021，并于 2021 年 3 月正式发布。它同时支持 PQ 和 HLG 两种传递函数，通过动态元数据实现场景级亮度映射、SDR 下转兼容及多终端自适应显示。</p>
+          <div class="grid-2" style="gap:12px;margin-top:12px">
+            <div>
+              <div class="specs" style="margin-bottom:12px">
+                <div class="spec"><small>EOTF</small>PQ 或 HLG（双模式）</div>
+                <div class="spec"><small>元数据</small>动态：CUVA 005-2021</div>
+                <div class="spec"><small>位深</small>常见 10 bit</div>
+                <div class="spec"><small>标准机构</small>CUVA（中国超高清视频产业联盟）</div>
+              </div>
+              <p style="font-size:13px;margin:0"><b>动态元数据功能：</b>逐场景提供亮度范围、色域范围与映射参数；支持 SDR 回退——非 HDR 终端可通过内嵌 SDR 层正常播放；支持显示设备能力自适应，不同峰值与色域终端均可获得优化映射。</p>
+            </div>
+            <div>
+              <p style="font-size:13px;margin:0 0 8px"><b>产业链覆盖：</b></p>
+              <ul style="font-size:13px;padding-left:18px;margin:0;color:var(--muted);line-height:1.9">
+                <li>内容制作：央视、爱奇艺、优酷、腾讯视频等</li>
+                <li>传输分发：IPTV、互联网 OTT 平台、有线/卫星</li>
+                <li>终端设备：国产主流电视品牌（海信、TCL、创维等）</li>
+                <li>4K/8K 超高清频道：4K 超高清频道（CCTV 4K）</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head" id="compare" style="margin-top:42px">
+          <div>
+            <h3>综合对比表</h3>
+            <p>搜索或点击表头排序，快速比较格式差异。</p>
+          </div>
+          <div class="controls"><input id="formatSearch" type="search" placeholder="搜索格式、元数据、场景..."></div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <h3 style="margin-bottom:14px">MaxCLL 与 MaxFALL：静态元数据的核心参数</h3>
+          <div class="grid-2" style="gap:16px;align-items:start">
+            <div>
+              <p><b style="color:var(--gold)">MaxCLL</b>（Maximum Content Light Level）：整段内容中<b>单个像素出现的最高亮度</b>，单位 cd/m²。显示端用它判断高光峰值，决定映射曲线的上限锚点。</p>
+              <p><b style="color:var(--cyan)">MaxFALL</b>（Maximum Frame-Average Light Level）：整段内容中<b>帧平均亮度的最高值</b>。反映"最亮的一帧总体发光量"，用于控制 OLED 等依赖 ABL 的显示器，防止过热或亮度骤降。</p>
+              <p style="font-size:13px;color:var(--muted)">典型值：影院母版 MaxCLL ≈ 1000–4000 nit，MaxFALL ≈ 100–400 nit。HDR10 用这两个值作为全片唯一的静态描述；HDR10+ / Dolby Vision 则在此基础上叠加逐场景动态元数据。</p>
+            </div>
+            <div>
+              <div style="border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:#0d1015">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:10px">亮度时间轴示意（横轴=时间，纵轴=亮度）</div>
+                <canvas id="metaCanvas" style="width:100%;height:120px;display:block"></canvas>
+                <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+                  <span style="color:var(--gold)">▬ MaxCLL（单帧峰值像素）</span>
+                  <span style="color:var(--cyan)">▬ MaxFALL（帧平均亮度）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="formatTable">
+            <thead><tr><th data-key="name">格式</th><th data-key="eotf">传递函数</th><th data-key="bit">位深</th><th data-key="metadata">元数据</th><th data-key="gamut">色域</th><th data-key="license">生态</th><th data-key="use">典型用途</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="glossary">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>7. 技术词汇表</h2>
+            <p>把 HDR 学清楚，通常不是参数不够，而是这些词的边界混在一起。这里给出最短可用定义。</p>
+          </div>
+          <div class="note">页面中的虚线词也可以悬浮查看解释。</div>
+        </div>
+        <div class="glossary">
+          <div class="term"><strong>OETF</strong><p>场景光到电信号。摄像机或制作编码端使用。</p></div>
+          <div class="term"><strong>EOTF</strong><p>电信号到显示光。监视器/电视的解码显示函数。</p></div>
+          <div class="term"><strong>OOTF</strong><p>场景光到显示光的整体系统观感，包含创作意图与观看环境补偿。</p></div>
+          <div class="term"><strong>PQ</strong><p>基于人眼感知的绝对亮度 EOTF，标准上限 10,000 nit。</p></div>
+          <div class="term"><strong>HLG</strong><p>相对 HDR 传递函数，暗部 gamma、亮部 log，适合广播兼容。</p></div>
+          <div class="term"><strong>MaxCLL</strong><p>整段内容中最高像素亮度，用于显示端判断高光映射。</p></div>
+          <div class="term"><strong>MaxFALL</strong><p>最大帧平均亮度，反映一帧总体发光负载。</p></div>
+          <div class="term"><strong>色彩体积</strong><p>色域面积与亮度范围共同构成，决定“亮而有色”的可表达范围。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <h2>资料来源</h2>
+        <div class="grid-2" style="gap:0">
+          <ul class="sources">
+            <li>本地 PDF：<b>HDR Production_210705.pdf</b>，王亚明，《HDR制作、转换与播出》，2021。</li>
+            <li><a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noreferrer">ITU-R BT.2100-3（2025-02）</a>：HDR-TV PQ 与 HLG 图像参数值，最新版本。</li>
+            <li><a href="https://www.itu.int/rec/R-REC-BT.2390" target="_blank" rel="noreferrer">ITU-R BT.2390-9</a>：用于制作和国际节目交换的 HDR 电视技术报告。</li>
+            <li><a href="https://www.itu.int/rec/R-REC-BT.2408" target="_blank" rel="noreferrer">ITU-R BT.2408-4</a>：HDR 电视制作操作实践指南（含 203 nit 参考白规定）。</li>
+            <li><a href="https://www.itu.int/rec/R-REC-BT.2446" target="_blank" rel="noreferrer">ITU-R BT.2446-1</a>：HDR 与 SDR 内容互转方法。</li>
+            <li><a href="https://www.itu.int/rec/R-REC-BT.1886" target="_blank" rel="noreferrer">ITU-R BT.1886</a>：SDR 平板显示参考 EOTF（γ = 2.4）。</li>
+          </ul>
+          <ul class="sources">
+            <li><a href="https://www.itu.int/rec/R-REC-BT.709" target="_blank" rel="noreferrer">ITU-R BT.709</a> 与 <a href="https://www.itu.int/rec/R-REC-BT.2020" target="_blank" rel="noreferrer">BT.2020</a>：HDTV / UHDTV 色域原色与图像参数。</li>
+            <li>SMPTE ST 2084：PQ EOTF 规范；SMPTE ST 2086：母版显示色域元数据（MaxCLL/MaxFALL 容器）。</li>
+            <li>SMPTE ST 2094-10（Dolby）/ ST 2094-40（HDR10+）：动态元数据框架规范。</li>
+            <li>ARIB STD-B67：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
+            <li>CUVA 005-2021：HDR Vivid 动态元数据标准（中国超高清视频产业联盟）。</li>
+          <li><a href="https://hdr10plus.org/" target="_blank" rel="noreferrer">HDR10+ Technologies</a>、<a href="https://professional.dolby.com/tv/dolby-vision/" target="_blank" rel="noreferrer">Dolby Vision</a>、<a href="https://professionalsupport.dolby.com/s/article/Dolby-Vision-Recommended-Source-Formats" target="_blank" rel="noreferrer">Dolby Vision Recommended Source Formats</a>（Profile 8.4 HLG base layer）、<a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA / HDR Vivid</a> 官方技术资料。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    function rrect(ctx, x, y, w, h, r) {
+      if (typeof r === "number") r = [r, r, r, r];
+      const [tl, tr, br, bl] = r;
+      ctx.beginPath();
+      ctx.moveTo(x + tl, y);
+      ctx.lineTo(x + w - tr, y); ctx.arcTo(x + w, y, x + w, y + tr, tr);
+      ctx.lineTo(x + w, y + h - br); ctx.arcTo(x + w, y + h, x + w - br, y + h, br);
+      ctx.lineTo(x + bl, y + h); ctx.arcTo(x, y + h, x, y + h - bl, bl);
+      ctx.lineTo(x, y + tl); ctx.arcTo(x, y, x + tl, y, tl);
+      ctx.closePath();
+    }
+
+    function resizeCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    function drawAxes(ctx, w, h, xLabel, yLabel) {
+      const pad = { l: 52, r: 22, t: 24, b: 44 };
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,.13)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 5; i++) {
+        const x = lerp(pad.l, w - pad.r, i / 5);
+        const y = lerp(h - pad.b, pad.t, i / 5);
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(255,255,255,.55)";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      ctx.fillText(xLabel, w - pad.r - 72, h - 14);
+      ctx.save();
+      ctx.translate(15, pad.t + 88);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+      return pad;
+    }
+
+    function bt709Oetf(L) {
+      return L < 0.018 ? 4.5 * L : 1.099 * Math.pow(L, 0.45) - 0.099;
+    }
+    function bt1886Eotf(V) { return Math.pow(clamp(V, 0, 1), 2.4); }
+    function pqEotf(V) {
+      const m1 = 2610 / 16384;
+      const m2 = 2523 / 32;
+      const c1 = 3424 / 4096;
+      const c2 = 2413 / 128;
+      const c3 = 2392 / 128;
+      const p = Math.pow(clamp(V, 0, 1), 1 / m2);
+      return 10000 * Math.pow(Math.max(p - c1, 0) / (c2 - c3 * p), 1 / m1);
+    }
+    function pqInverseEotf(nit) {
+      const m1 = 2610 / 16384;
+      const m2 = 2523 / 32;
+      const c1 = 3424 / 4096;
+      const c2 = 2413 / 128;
+      const c3 = 2392 / 128;
+      const y = Math.pow(clamp(nit, 0, 10000) / 10000, m1);
+      return Math.pow((c1 + c2 * y) / (1 + c3 * y), m2);
+    }
+    function hlgOetf(E) {
+      const a = 0.17883277, b = 0.28466892, c = 0.55991073;
+      return E <= 1 / 12 ? Math.sqrt(3 * E) : a * Math.log(12 * E - b) + c;
+    }
+    function hlgInverseOetf(V) {
+      const a = 0.17883277, b = 0.28466892, c = 0.55991073;
+      return V <= 0.5 ? (V * V) / 3 : (Math.exp((V - c) / a) + b) / 12;
+    }
+    /* BT.2100 HLG system gamma: γ = 1.2 + 0.42·log10(Lw/1000)
+       At 1000 nit → γ=1.2; at 2000 nit → γ≈1.327; at 4000 nit → γ≈1.453 */
+    function hlgGamma(peak) {
+      return 1.2 + 0.42 * Math.log10(Math.max(peak, 1) / 1000);
+    }
+    /* HLG EOTF (achromatic): Lw × OETF⁻¹(E')^γ */
+    function hlgEotf(V, peak) {
+      return peak * Math.pow(hlgInverseOetf(clamp(V, 0, 1)), hlgGamma(peak));
+    }
+
+    function drawRange() {
+      const canvas = $("#rangeCanvas");
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const peak = Number($("#peakSlider").value);
+      const ratio = peak / 100;
+
+      // 更新 KPI 行
+      $("#peakValue").textContent = `${peak.toLocaleString()} nit`;
+      if ($("#statPeak")) $("#statPeak").textContent = `${peak.toLocaleString()} nit`;
+      if ($("#statRatio")) $("#statRatio").textContent = `${ratio % 1 === 0 ? ratio : ratio.toFixed(1)}×`;
+      $("#rangeReadout").textContent = `当前 HDR 峰值：${peak.toLocaleString()} nit，比 SDR 参考白（100 nit）亮 ${ratio % 1 === 0 ? ratio : ratio.toFixed(1)} 倍`;
+
+      const pad = { l: 64, r: 28, t: 28, b: 54 };
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+
+      const minNit = 0.001, maxNit = 10000;
+      const minLog = Math.log10(minNit), maxLog = Math.log10(maxNit);
+      const xOf = nit => lerp(pad.l, w - pad.r, (Math.log10(nit) - minLog) / (maxLog - minLog));
+      const axisY = h - pad.b;
+
+      // ── 背景区域着色（暗部 / 中间调 / 亮部）──
+      const zones = [
+        { from: 0.001, to: 0.1,   color: "rgba(255,255,255,.018)", label: "暗部" },
+        { from: 0.1,   to: 10,    color: "rgba(255,255,255,.032)", label: "阴影" },
+        { from: 10,    to: 100,   color: "rgba(255,255,255,.048)", label: "中调" },
+        { from: 100,   to: 10000, color: "rgba(70,217,232,.055)",  label: "高光" },
+      ];
+      zones.forEach(z => {
+        const x1 = xOf(z.from), x2 = xOf(z.to);
+        ctx.fillStyle = z.color;
+        ctx.fillRect(x1, pad.t, x2 - x1, axisY - pad.t);
+      });
+
+      // ── SDR 条（从 0.001 到 100 nit）──
+      const barH = 26, sdrY = pad.t + 14, hdrY = sdrY + barH + 18;
+      const sdrGrad = ctx.createLinearGradient(xOf(0.001), 0, xOf(100), 0);
+      sdrGrad.addColorStop(0,   "rgba(90,96,110,.15)");
+      sdrGrad.addColorStop(0.7, "rgba(140,148,162,.55)");
+      sdrGrad.addColorStop(1,   "rgba(180,186,200,.9)");
+      ctx.fillStyle = sdrGrad;
+      rrect(ctx, xOf(0.001), sdrY, xOf(100) - xOf(0.001), barH, 4);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(180,186,200,.4)";
+      ctx.lineWidth = 1;
+      rrect(ctx, xOf(0.001), sdrY, xOf(100) - xOf(0.001), barH, 4);
+      ctx.stroke();
+
+      // SDR 条标签
+      ctx.fillStyle = "#dbe7f7";
+      ctx.font = "bold 12px system-ui";
+      ctx.fillText("SDR", xOf(0.001) + 8, sdrY + barH / 2 + 5);
+      ctx.font = "12px system-ui";
+      ctx.fillStyle = "#a5abb4";
+      ctx.fillText("0.001 → 100 nit", xOf(0.001) + 40, sdrY + barH / 2 + 5);
+
+      // ── HDR 条（从 0.001 到 peak nit）──
+      //    灰色段（0.001→100）+ 青色段（100→peak）
+      if (peak > 100) {
+        const hdrGrayGrad = ctx.createLinearGradient(xOf(0.001), 0, xOf(100), 0);
+        hdrGrayGrad.addColorStop(0, "rgba(90,96,110,.15)");
+        hdrGrayGrad.addColorStop(1, "rgba(140,148,162,.5)");
+        ctx.fillStyle = hdrGrayGrad;
+        rrect(ctx, xOf(0.001), hdrY, xOf(100) - xOf(0.001), barH, [4, 0, 0, 4]);
+        ctx.fill();
+
+        const hdrCyanGrad = ctx.createLinearGradient(xOf(100), 0, xOf(peak), 0);
+        hdrCyanGrad.addColorStop(0,   "rgba(70,217,232,.55)");
+        hdrCyanGrad.addColorStop(0.6, "rgba(70,217,232,.85)");
+        hdrCyanGrad.addColorStop(1,   "rgba(70,217,232,1)");
+        ctx.fillStyle = hdrCyanGrad;
+        rrect(ctx, xOf(100), hdrY, xOf(peak) - xOf(100), barH, [0, 4, 4, 0]);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(70,217,232,.45)";
+        ctx.lineWidth = 1;
+        rrect(ctx, xOf(0.001), hdrY, xOf(peak) - xOf(0.001), barH, 4);
+        ctx.stroke();
+      } else {
+        // peak = 100：与 SDR 相同
+        ctx.fillStyle = "rgba(140,148,162,.5)";
+        rrect(ctx, xOf(0.001), hdrY, xOf(100) - xOf(0.001), barH, 4);
+        ctx.fill();
+      }
+
+      // HDR 条标签
+      ctx.fillStyle = "#46d9e8";
+      ctx.font = "bold 12px system-ui";
+      ctx.fillText("HDR", xOf(0.001) + 8, hdrY + barH / 2 + 5);
+      ctx.font = "12px system-ui";
+      ctx.fillStyle = "#a5abb4";
+      ctx.fillText(`0.001 → ${peak >= 1000 ? peak / 1000 + "k" : peak} nit`, xOf(0.001) + 40, hdrY + barH / 2 + 5);
+
+      // ── 关键垂直线 ──
+      const markers = [
+        { nit: 0.001, label: "OLED 黑位\n0.001 nit",   color: "rgba(255,255,255,.3)",  bold: false },
+        { nit: 100,   label: "SDR 参考白\n100 nit",     color: "#a5abb4",               bold: true  },
+        { nit: 203,   label: "HDR 参考白\n203 nit",     color: "#ffd166",               bold: true  },
+        { nit: peak,  label: `HDR 峰值\n${peak >= 1000 ? peak/1000 + "k" : peak} nit`, color: "#46d9e8", bold: true },
+      ];
+      // 当 peak 等于某个固定标记时去重
+      const dedupedMarkers = markers.filter((m, i, arr) =>
+        arr.findIndex(n => n.nit === m.nit) === i
+      );
+
+      ctx.font = "11px system-ui";
+      dedupedMarkers.forEach(m => {
+        const x = xOf(m.nit);
+        if (x < pad.l || x > w - pad.r) return;
+        // 垂直虚线
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = m.bold ? 1.5 : 1;
+        ctx.setLineDash(m.bold ? [4, 4] : [2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, axisY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // 圆点
+        ctx.fillStyle = m.color;
+        ctx.beginPath();
+        ctx.arc(x, axisY, m.bold ? 4 : 3, 0, Math.PI * 2);
+        ctx.fill();
+        // 双行标签（标签在轴下方）
+        const lines = m.label.split("\n");
+        ctx.fillStyle = m.color;
+        ctx.font = m.bold ? "bold 11px system-ui" : "11px system-ui";
+        lines.forEach((ln, i) => {
+          const tw = ctx.measureText(ln).width;
+          const lx = clamp(x - tw / 2, pad.l, w - pad.r - tw);
+          ctx.fillText(ln, lx, axisY + 16 + i * 14);
+        });
+      });
+
+      // ── X 轴刻度线 ──
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1;
+      const ticks = [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000];
+      ticks.forEach(n => {
+        const x = xOf(n);
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, axisY);
+        ctx.stroke();
+      });
+
+      // ── X 轴底线 ──
+      ctx.strokeStyle = "rgba(255,255,255,.4)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, axisY);
+      ctx.lineTo(w - pad.r, axisY);
+      ctx.stroke();
+
+      // ── 轴标签 ──
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      ticks.forEach(n => {
+        const x = xOf(n);
+        if (x < pad.l - 4 || x > w - pad.r + 4) return;
+        const label = n >= 1000 ? `${n/1000}k` : n < 1 ? String(n) : String(n);
+        ctx.fillText(label, x, axisY - (h - pad.b - pad.t) - 6 + h - pad.t - 4);
+      });
+      ctx.textAlign = "left";
+
+      // Y 轴标签（左侧竖排）
+      ctx.fillStyle = "#7a8494";
+      ctx.font = "11px system-ui";
+      ctx.save();
+      ctx.translate(14, (pad.t + axisY) / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "center";
+      ctx.fillText("亮度（cd/m²，对数刻度）", 0, 0);
+      ctx.restore();
+      ctx.textAlign = "left";
+    }
+
+    const gammaModes = {
+      oetf: {
+        title: "OETF：拍摄/编码端",
+        text: "OETF 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可切到“PQ 编码”单独查看。",
+        note: "当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。",
+        xLabel: "场景相对亮度 L",
+        yLabel: "归一化视频信号 V",
+        xKind: "signal",
+        yKind: "signal",
+        showScale: false,
+        showPeak: false,
+        lines: [
+          { color: "#9a8cff", name: "BT.709 OETF", fn: x => bt709Oetf(x), unit: "" },
+          { color: "#a9e55f", name: "HLG OETF", fn: x => hlgOetf(x), unit: "" }
+        ]
+      },
+      eotf: {
+        title: "EOTF：显示/解码端",
+        text: "EOTF 把视频信号变成屏幕亮度。BT.1886 是 SDR 显示伽玛；PQ / ST 2084 是绝对亮度 EOTF；HLG 显示亮度还要结合系统伽玛和终端峰值。",
+        note: "当前只看 EOTF：Y 轴是显示亮度 cd/m²。PQ 到 10,000 nit；BT.1886 这里按 100 nit SDR 显示；HLG 峰值可用滑块调节。",
+        xLabel: "视频信号 V",
+        yLabel: "显示亮度 cd/m²",
+        xKind: "signal",
+        yKind: "nit",
+        showScale: true,
+        scaleLabel: "亮度刻度",
+        showPeak: true,
+        lines: [
+          { color: "#ffd166", name: "BT.1886 EOTF / 100 nit", fn: x => 100 * bt1886Eotf(x), unit: "nit" },
+          { color: "#a9e55f", name: "HLG EOTF / 可调峰值（可变γ）", fn: x => { const p = Number($("#gammaHlgPeak").value); return hlgEotf(x, p); }, unit: "nit" },
+          { color: "#46d9e8", name: "PQ / ST 2084 EOTF", fn: x => pqEotf(x), unit: "nit" }
+        ]
+      },
+      ootf: {
+        title: "OOTF：系统观感",
+        text: "OOTF 描述从场景光到屏幕光的总效果。这里不比较绝对 nit，而把横轴和纵轴都归一化到 0-1，只看系统伽马带来的弯曲形状：γ=1 是线性参考，γ>1 会压低中间调、增加主观反差。",
+        note: "当前只看 OOTF 伽马形状：X/Y 都是归一化亮度。PQ 不画成固定 OOTF，因为 ST 2084 规定的是 EOTF，不是创作端到显示端的唯一总曲线。",
+        xLabel: "场景相对亮度 L",
+        yLabel: "归一化屏幕亮度 L′",
+        xKind: "signal",
+        yKind: "signal",
+        showScale: false,
+        showPeak: true,
+        lines: [
+          { color: "rgba(255,255,255,.45)", name: "线性参考 / γ=1", fn: x => x, unit: "" },
+          { color: "#ff6b7a", name: "SDR OOTF / γ≈1.2", fn: x => Math.pow(x, 1.2), unit: "" },
+          { color: "#a9e55f", name: "HLG OOTF / 可变γ", fn: x => { const p = Number($("#gammaHlgPeak").value); return Math.pow(x, hlgGamma(p)); }, unit: "" }
+        ]
+      },
+      pqEncode: {
+        title: "PQ 编码：亮度 nit → 码值",
+        text: "PQ / ST 2084 是 Display Referred 的绝对亮度体系。这里画的是 ST 2084 EOTF 的反函数：输入显示亮度 cd/m²，输出 PQ 归一化码值；它不是摄像机 OETF。",
+        note: "单独看 PQ 编码：横轴是显示亮度 cd/m²，纵轴是 PQ 码值。关键锚点：100 nit ≈ 0.508，203 nit ≈ 0.581，1000 nit ≈ 0.752，4000 nit ≈ 0.903。",
+        xLabel: "输入显示亮度 / cd/m²",
+        yLabel: "PQ 归一化码值",
+        xKind: "nit",
+        yKind: "signal",
+        showScale: true,
+        scaleLabel: "亮度刻度",
+        showPeak: false,
+        lines: [
+          { color: "#46d9e8", name: "ST 2084 inverse EOTF", fn: nit => pqInverseEotf(nit), unit: "" }
+        ],
+        anchors: [
+          { x: 100, label: "100 nit" },
+          { x: 203, label: "203 nit" },
+          { x: 1000, label: "1000 nit" },
+          { x: 4000, label: "4000 nit" },
+          { x: 10000, label: "10000 nit" }
+        ]
+      },
+      hlgEncode: {
+        title: "HLG 编码：场景相对亮度 → 码值",
+        text: "HLG 的 OETF 是 Scene Referred：输入是场景相对亮度 E，输出是 HLG 信号 E′。低亮段用平方根保留暗部，高亮段用对数压缩高光；两段在 E=1/12、E′=0.5 处连续。",
+        note: "单独看 HLG 编码：横轴是场景相对亮度，纵轴是 HLG 码值。关键点：E=1/12 → E′=0.500；18% 灰约 E′=0.672；E=1 → E′=1。",
+        xLabel: "场景相对亮度 E",
+        yLabel: "HLG 归一化码值 E′",
+        xKind: "signal",
+        yKind: "signal",
+        showScale: false,
+        showPeak: false,
+        lines: [
+          { color: "#a9e55f", name: "BT.2100 HLG OETF", fn: x => hlgOetf(x), unit: "" }
+        ],
+        anchors: [
+          { x: 1 / 12, label: "1/12 分段点" },
+          { x: .18, label: "18% 灰" },
+          { x: .5, label: "50% 场景亮度" },
+          { x: 1, label: "100% 场景亮度" }
+        ]
+      },
+      encodeCompare: {
+        title: "三曲线同显：SDR / HLG / PQ 编码",
+        text: "这个视图把三种编码曲线放在同一张 0-1 坐标里比较码值分配。BT.709 与 HLG 的横轴是场景相对亮度；PQ 为了能同屏展示，横轴按“归一化亮度 × 当前参考峰值”换算成 cd/m² 后再编码。",
+        note: "同屏比较只用于观察码值分配趋势：PQ 是绝对显示亮度编码，HLG/BT.709 是场景相对编码，三者物理含义不同。可用参考峰值滑块改变 PQ 曲线的 nit 上限。",
+        xLabel: "归一化亮度 L",
+        yLabel: "归一化码值",
+        xKind: "signal",
+        yKind: "signal",
+        showScale: false,
+        showPeak: true,
+        lines: [
+          { color: "#9a8cff", name: "BT.709 OETF", fn: x => bt709Oetf(x), unit: "" },
+          { color: "#a9e55f", name: "HLG OETF", fn: x => hlgOetf(x), unit: "" },
+          { color: "#46d9e8", name: "PQ inverse EOTF / L×峰值", fn: x => pqInverseEotf(x * Number($("#gammaHlgPeak").value)), unit: "" }
+        ]
+      }
+    };
+    let gammaLogScale = true;
+    let gammaPointer = null;
+    let activeGammaMode = "oetf";
+
+    function setPressedGroup(selector, activeValue, attr = "scale") {
+      $$(selector).forEach(btn => {
+        const active = btn.dataset[attr] === activeValue;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    function drawGammaAxes(ctx, w, h, mode, logScale) {
+      const pad = { l: 72, r: 28, t: 28, b: 56 };
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+      const minNit = .0001;
+      const maxNit = 10000;
+      const signalTicks = [0, .1, .25, .5, .58, .75, .9, 1];
+      const nitTicks = logScale ? [.0001, .001, .01, .1, 1, 10, 100, 203, 1000, 4000, 10000] : [0, 100, 203, 1000, 2000, 4000, 6000, 8000, 10000];
+      const xTicks = mode.xKind === "nit" ? nitTicks : [0, .1, .25, .5, .75, .9, 1];
+      const yTicks = mode.yKind === "signal" ? signalTicks : nitTicks;
+      const minLog = Math.log10(minNit), maxLog = Math.log10(10000);
+      const xOfSignal = x => lerp(pad.l, w - pad.r, clamp(x, 0, 1));
+      const xOfNit = nit => {
+        if (logScale) {
+          return lerp(pad.l, w - pad.r, (Math.log10(Math.max(nit, minNit)) - minLog) / (maxLog - minLog));
+        }
+        return lerp(pad.l, w - pad.r, clamp(nit / maxNit, 0, 1));
+      };
+      const xOf = x => mode.xKind === "nit" ? xOfNit(x) : xOfSignal(x);
+      const xFromT = t => {
+        if (mode.xKind !== "nit") return clamp(t, 0, 1);
+        return logScale ? Math.pow(10, lerp(minLog, maxLog, clamp(t, 0, 1))) : lerp(0, maxNit, clamp(t, 0, 1));
+      };
+      const yOfNit = nit => {
+        if (logScale) {
+          return lerp(h - pad.b, pad.t, (Math.log10(Math.max(nit, minNit)) - minLog) / (maxLog - minLog));
+        }
+        return lerp(h - pad.b, pad.t, clamp(nit / maxNit, 0, 1));
+      };
+      const yOfSignal = y => lerp(h - pad.b, pad.t, clamp(y, 0, 1));
+      const yOf = y => mode.yKind === "nit" ? yOfNit(y) : yOfSignal(y);
+      ctx.strokeStyle = "rgba(255,255,255,.13)";
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      xTicks.forEach(t => {
+        const x = xOf(t);
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+        const label = mode.xKind === "nit"
+          ? (t >= 1000 ? `${t / 1000}k` : String(t))
+          : t.toFixed(t === 0 || t === 1 ? 0 : 2).replace("0.", ".");
+        ctx.fillText(label, clamp(x - 12, pad.l, w - pad.r - 24), h - 30);
+      });
+      yTicks.forEach(t => {
+        const y = yOf(t);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        const label = mode.yKind === "signal" ? t.toFixed(t === 0 || t === 1 ? 0 : 2).replace("0.", ".") : (t >= 1000 ? `${t / 1000}k` : String(t));
+        ctx.fillText(label, 18, y + 4);
+      });
+      ctx.strokeStyle = "rgba(255,255,255,.6)";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+      ctx.fillStyle = "#d8e1ee";
+      const xAxisLabel = mode.xKind === "nit" ? `${mode.xLabel}${logScale ? "（对数）" : "（线性）"}` : mode.xLabel;
+      ctx.fillText(xAxisLabel, w - pad.r - Math.min(240, xAxisLabel.length * 11), h - 12);
+      ctx.save();
+      ctx.translate(15, pad.t + 145);
+      ctx.rotate(-Math.PI / 2);
+      const yAxisLabel = mode.yKind === "signal" ? mode.yLabel : (logScale ? `${mode.yLabel}（对数刻度）` : `${mode.yLabel}（线性刻度）`);
+      ctx.fillText(yAxisLabel, 0, 0);
+      ctx.restore();
+      return { pad, xOf, xFromT, yOfNit, yOfSignal, yOf };
+    }
+
+    function drawGamma() {
+      const canvas = $("#gammaCanvas");
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const mode = gammaModes[activeGammaMode];
+      const peak = Number($("#gammaHlgPeak").value);
+      $("#gammaHlgPeakValue").textContent = `${peak} nit`;
+      $("#gammaPeakLabel").textContent = activeGammaMode === "encodeCompare" ? "PQ参考峰值" : "HLG峰值";
+      $("#gammaModeTitle").textContent = mode.title;
+      $("#gammaModeText").innerHTML = mode.text;
+      $("#gammaModeNote").textContent = mode.note;
+      $("#gammaScaleTabs").style.display = mode.showScale ? "" : "none";
+      const scaleButtons = $$(".gammaScaleOption");
+      if (scaleButtons.length >= 2) {
+        scaleButtons[0].textContent = mode.scaleLabel ? `对数${mode.scaleLabel.replace("刻度", "")}` : "对数";
+        scaleButtons[1].textContent = mode.scaleLabel ? `线性${mode.scaleLabel.replace("刻度", "")}` : "线性";
+      }
+      $("#gammaHlgPeak").style.display = mode.showPeak ? "" : "none";
+      $("label[for='gammaHlgPeak']").style.display = mode.showPeak ? "" : "none";
+      const { pad, xOf, xFromT, yOf } = drawGammaAxes(ctx, w, h, mode, gammaLogScale);
+      ctx.lineWidth = 3;
+      mode.lines.forEach((line, index) => {
+        ctx.strokeStyle = line.color;
+        ctx.beginPath();
+        for (let i = 0; i <= 900; i++) {
+          const x = xFromT(i / 900);
+          const value = line.fn(x);
+          const px = xOf(x);
+          const py = yOf(value);
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        const labelX = line.labelAt || (mode.xKind === "nit" ? ([1000, 4000, 203][index] || 1000) : ([.12, .42, .68][index] || .78));
+        const labelY = yOf(line.fn(labelX));
+        ctx.fillStyle = line.color;
+        ctx.fillText(line.name, xOf(labelX) + 7, clamp(labelY, pad.t + 12, h - pad.b - 8));
+      });
+      if (mode.anchors) {
+        const line = mode.lines[0];
+        mode.anchors.forEach(anchor => {
+          const value = line.fn(anchor.x);
+          const x = xOf(anchor.x);
+          const y = yOf(value);
+          ctx.fillStyle = "#ffd166";
+          ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#dbe7f7";
+          const xLabel = mode.xKind === "nit" ? `${anchor.label} → ${value.toFixed(3)}` : `${anchor.label} → ${value.toFixed(3)}`;
+          ctx.fillText(xLabel, clamp(x + 6, pad.l, w - pad.r - 140), y - 8);
+        });
+      }
+      if (gammaPointer !== null) {
+        const x = xFromT(gammaPointer);
+        const px = xOf(x);
+        ctx.strokeStyle = "rgba(255,255,255,.45)";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, h - pad.b); ctx.stroke();
+        const rows = mode.lines.map(line => {
+          const value = line.fn(x);
+          const text = mode.yKind === "nit" ? `${value.toFixed(value < 10 ? 3 : 1)} nit` : value.toFixed(4);
+          return `<span style="color:${line.color}">${line.name}: ${text}</span>`;
+        });
+        const xText = mode.xKind === "nit"
+          ? `${x < .01 ? x.toExponential(2) : x.toFixed(x < 10 ? 3 : 1)} nit`
+          : x.toFixed(3);
+        const xName = mode.xKind === "nit" ? "亮度" : (activeGammaMode === "eotf" ? "V" : "L");
+        $("#gammaReadout").innerHTML = `${xName}=${xText}<br>${rows.join("<br>")}`;
+      } else {
+        $("#gammaReadout").innerHTML = mode.xKind === "nit"
+          ? "移动指针读取亮度 nit 与 PQ 码值"
+          : (mode.yKind === "signal"
+            ? "移动指针读取归一化输入与码值"
+            : "移动指针读取输入信号与显示亮度");
+      }
+    }
+
+    let logScale = true;
+    let hdrPointer = null;
+    function drawHdrCurves() {
+      const canvas = $("#hdrCanvas");
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const peak = Number($("#hlgPeak").value);
+      $("#hlgPeakValue").textContent = `${peak} nit`;
+      const pad = drawAxes(ctx, w, h, "信号值", logScale ? "亮度 / nit（对数）" : "亮度 / nit（分段）");
+      const minNit = .0001;
+      const yOf = nit => {
+        if (logScale) {
+          return lerp(h - pad.b, pad.t, (Math.log10(Math.max(nit, minNit)) - Math.log10(minNit)) / (Math.log10(10000) - Math.log10(minNit)));
+        }
+        const n = clamp(nit, 0, 10000);
+        let t;
+        if (n <= 100) t = (n / 100) * .52;
+        else if (n <= 1000) t = .52 + ((n - 100) / 900) * .25;
+        else t = .77 + ((n - 1000) / 9000) * .23;
+        return lerp(h - pad.b, pad.t, t);
+      };
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      [0, .1, .25, .5, .75, .9, 1].forEach(t => {
+        const x = lerp(pad.l, w - pad.r, t);
+        ctx.fillText(t.toFixed(t === 0 || t === 1 ? 0 : 2).replace("0.", "."), x - 8, h - 24);
+      });
+      const yTicks = logScale ? [.0001, .001, .01, .1, 1, 10, 100, 1000, 10000] : [0, 10, 25, 50, 75, 100, 203, 500, 1000, 4000, 10000];
+      yTicks.forEach(t => {
+        const y = yOf(t);
+        const label = logScale
+          ? (t < .01 ? String(t) : t >= 1000 ? `${t / 1000}k` : String(t))
+          : (t >= 1000 ? `${t / 1000}k` : String(t));
+        ctx.fillText(label, 16, y + 4);
+      });
+      if (!logScale) {
+        [
+          { y: yOf(100), text: "SDR / 参考白区间", color: "rgba(255,209,102,.55)" },
+          { y: yOf(1000), text: "常见 HDR 峰值", color: "rgba(70,217,232,.55)" }
+        ].forEach(mark => {
+          ctx.strokeStyle = mark.color;
+          ctx.setLineDash([6, 6]);
+          ctx.beginPath();
+          ctx.moveTo(pad.l, mark.y);
+          ctx.lineTo(w - pad.r, mark.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = mark.color;
+          ctx.fillText(mark.text, pad.l + 8, mark.y - 6);
+        });
+      }
+      const lines = [
+        { name: "PQ", color: "#46d9e8", fn: pqEotf },
+        { name: "HLG", color: "#a9e55f", fn: v => hlgEotf(v, peak) },
+        { name: "SDR 2.4", color: "#ffd166", fn: v => 100 * Math.pow(v, 2.4) }
+      ];
+      lines.forEach(line => {
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let i = 1; i <= 700; i++) {
+          const x = i / 700;
+          const px = lerp(pad.l, w - pad.r, x);
+          const py = yOf(line.fn(x));
+          i === 1 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.fillStyle = line.color;
+        ctx.fillText(line.name, w - pad.r - 70, yOf(line.fn(.86)));
+      });
+      if (hdrPointer !== null) {
+        const x = clamp(hdrPointer, 0, 1);
+        const px = lerp(pad.l, w - pad.r, x);
+        ctx.strokeStyle = "rgba(255,255,255,.38)";
+        ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, h - pad.b); ctx.stroke();
+        const pq = pqEotf(x), hlg = hlgEotf(x, peak), sdr = 100 * Math.pow(x, 2.4);
+        const fmtNit = v => v < .01 ? v.toExponential(2) : v < 10 ? v.toFixed(3) : v.toFixed(1);
+        $("#hdrReadout").innerHTML = `V=${x.toFixed(3)}<br>PQ ${fmtNit(pq)} nit · HLG ${fmtNit(hlg)} nit · SDR ${fmtNit(sdr)} nit`;
+      }
+    }
+
+    const gamuts = {
+      bt709: { color: "#46d9e8", pts: [[.640,.330],[.300,.600],[.150,.060]], label: "BT.709", opacity: .82 },
+      p3: { color: "#ffd166", pts: [[.680,.320],[.265,.690],[.150,.060]], label: "DCI-P3", opacity: .62 },
+      bt2020: { color: "#ff6b7a", pts: [[.708,.292],[.170,.797],[.131,.046]], label: "BT.2020", opacity: .5 }
+    };
+    const cieLocus = [
+      [.1741,.0050], [.1724,.0041], [.1733,.0048], [.1726,.0048], [.1714,.0051],
+      [.1689,.0069], [.1644,.0109], [.1566,.0177], [.1439,.0297], [.1241,.0578],
+      [.0913,.1327], [.0454,.2949], [.0082,.5384], [.0139,.7502], [.0743,.8338],
+      [.1547,.8059], [.2296,.7543], [.3016,.6923], [.3731,.6245], [.4441,.5547],
+      [.5125,.4866], [.5752,.4242], [.6270,.3725], [.6658,.3340], [.6915,.3083],
+      [.7080,.2920], [.7190,.2809], [.7250,.2740], [.7300,.2698], [.7320,.2676],
+      [.7334,.2665], [.7340,.2658], [.7347,.2653]
+    ];
+    const cieChart = { left: 90, bottom: 600, scale: 640, xMax: .8, yMax: .9 };
+    let activeGamut = "bt709";
+    function ciePoint(x, y) {
+      return [cieChart.left + x * cieChart.scale, cieChart.bottom - y * cieChart.scale];
+    }
+    function cieSvgPoint(point) {
+      return ciePoint(point[0], point[1]).map(v => Number(v.toFixed(1))).join(",");
+    }
+    function drawCie() {
+      const grid = $("#gridLines");
+      grid.innerHTML = "";
+      for (let i = 0; i <= 8; i++) {
+        const [x] = ciePoint(i / 10, 0);
+        const [, yTop] = ciePoint(0, cieChart.yMax);
+        grid.insertAdjacentHTML("beforeend", `<line x1="${x}" y1="${yTop}" x2="${x}" y2="${cieChart.bottom}"></line><text x="${x - 8}" y="618" fill="#b7c0ce" stroke="none" font-size="11">${i === 0 ? "0" : "." + i}</text>`);
+      }
+      for (let i = 0; i <= 9; i++) {
+        const [, y] = ciePoint(0, i / 10);
+        const [xRight] = ciePoint(cieChart.xMax, 0);
+        grid.insertAdjacentHTML("beforeend", `<line x1="${cieChart.left}" y1="${y}" x2="${xRight}" y2="${y}"></line><text x="58" y="${y + 4}" fill="#b7c0ce" stroke="none" font-size="11">${i === 0 ? "0" : "." + i}</text>`);
+      }
+      const locus = $("#cieLocus");
+      const locusPoints = cieLocus.map(cieSvgPoint).join(" ");
+      locus.innerHTML = `
+        <polygon points="${locusPoints}" fill="url(#spectrum)" fill-opacity=".68" stroke="rgba(255,255,255,.72)" stroke-width="2"></polygon>
+        <polyline points="${locusPoints}" fill="none" stroke="rgba(255,255,255,.82)" stroke-width="2.5"></polyline>
+        <line x1="${ciePoint(.7347,.2653)[0]}" y1="${ciePoint(.7347,.2653)[1]}" x2="${ciePoint(.1741,.0050)[0]}" y2="${ciePoint(.1741,.0050)[1]}" stroke="rgba(255,255,255,.52)" stroke-width="2"></line>
+      `;
+      const g = $("#gamutPolys");
+      g.innerHTML = "";
+      Object.entries(gamuts).forEach(([key, gamut]) => {
+        const points = gamut.pts.map(p => ciePoint(p[0], p[1]).join(",")).join(" ");
+        const active = key === activeGamut;
+        g.insertAdjacentHTML("beforeend", `<polygon points="${points}" fill="${gamut.color}" fill-opacity="${active ? .2 : .055}" stroke="${gamut.color}" stroke-width="${active ? 5 : 2}" opacity="${active ? 1 : .45}"></polygon>`);
+        gamut.pts.forEach((p, i) => {
+          const [x, y] = ciePoint(p[0], p[1]);
+          g.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="${y}" r="${active ? 6 : 4}" fill="${gamut.color}"><title>${gamut.label} ${["R","G","B"][i]} (${p[0]}, ${p[1]})</title></circle>`);
+        });
+      });
+    }
+
+    let volumeGamutKey = "bt2020";
+    const volumeGamutMeta = {
+      bt709: { label: "BT.709" },
+      p3: { label: "P3" },
+      bt2020: { label: "BT.2020" }
+    };
+    function xyTriangleArea(points) {
+      const sum = points.reduce((acc, p, i) => {
+        const next = points[(i + 1) % points.length];
+        return acc + p[0] * next[1] - next[0] * p[1];
+      }, 0);
+      return Math.abs(sum) / 2;
+    }
+    function drawVolume() {
+      const canvas = $("#volumeCanvas");
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const peak = Number($("#volumePeak").value);
+      const gamutMeta = volumeGamutMeta[volumeGamutKey];
+      const targetPts = gamuts[volumeGamutKey].pts;
+      const area = xyTriangleArea(targetPts);
+      const sdrArea = xyTriangleArea(gamuts.bt709.pts);
+      const currentVolume = area * peak;
+      const sdrVolume = sdrArea * 100;
+      const relativeVolume = currentVolume / sdrVolume;
+      $("#volumePeakValue").textContent = `${peak.toLocaleString()} nit`;
+      const gamutName = gamutMeta.label;
+      $("#volumeGamutValue").textContent = `${gamutName} xy面积 ${area.toFixed(4)}`;
+      $("#volumeReadout").textContent = `xyY 几何体积：${relativeVolume.toFixed(1)}× SDR基准`;
+      $("#volumeFormula").innerHTML = `计算口径：V<sub>xyY</sub> = A<sub>xy</sub> × L<sub>peak</sub>，A<sub>xy</sub> = 1/2 |Σ(x<sub>i</sub>y<sub>i+1</sub> − x<sub>i+1</sub>y<sub>i</sub>)|。当前 A<sub>xy</sub>(${gamutName})=${area.toFixed(4)}，V=${currentVolume.toFixed(1)} xy·nit；SDR 基准为 A<sub>xy</sub>(BT.709)=${sdrArea.toFixed(4)} × 100 nit。这个值只对应左侧几何示意，不代表感知均匀色彩体积或真实显示器实测体积。`;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+      const cx = w * .5;
+      const baseY = h * .76;
+      const scale = Math.min(w, h) * .48;
+      const toZ = nit => lerp(35, h * .58, Math.log10(Math.max(nit, 101) / 100) / Math.log10(100));
+      const height = toZ(peak);
+      const sdrHeight = 35;
+      const d65 = [.3127, .3290];
+
+      function project(pt, z = 0) {
+        const u = (pt[0] - d65[0]) * scale;
+        const v = (d65[1] - pt[1]) * scale;
+        return [cx + u + v * .36, baseY + v * .52 - z];
+      }
+      function pathFrom(points, z = 0) {
+        return points.map((pt, i) => {
+          const [x, y] = project(pt, z);
+          return `${i ? "L" : "M"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }).join(" ") + " Z";
+      }
+      function strokePath(points, z, color, width = 2) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        points.forEach((pt, i) => {
+          const [x, y] = project(pt, z);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        });
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      const locus = cieLocus;
+      const baseGradient = ctx.createLinearGradient(cx - scale * .42, baseY + scale * .18, cx + scale * .42, baseY - scale * .3);
+      baseGradient.addColorStop(0, "rgba(82,91,255,.24)");
+      baseGradient.addColorStop(.35, "rgba(54,220,160,.25)");
+      baseGradient.addColorStop(.7, "rgba(255,210,89,.24)");
+      baseGradient.addColorStop(1, "rgba(255,83,118,.24)");
+      ctx.fillStyle = baseGradient;
+      ctx.strokeStyle = "rgba(255,255,255,.62)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      locus.forEach((pt, i) => {
+        const [x, y] = project(pt, 0);
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      [0, .25, .5, .75, 1].forEach(step => {
+        const z = height * step;
+        ctx.strokeStyle = `rgba(255,255,255,${.09 + step * .12})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        locus.forEach((pt, i) => {
+          const [x, y] = project(pt, z);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        });
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      function fillTriangle(points, z, color, alpha) {
+        ctx.fillStyle = color.replace(")", `,${alpha})`).replace("rgb", "rgba");
+        ctx.beginPath();
+        points.forEach((pt, i) => {
+          const [x, y] = project(pt, z);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        });
+        ctx.closePath();
+        ctx.fill();
+      }
+      fillTriangle(gamuts.bt709.pts, 0, "rgb(180,186,196)", .13);
+      fillTriangle(gamuts.bt709.pts, sdrHeight, "rgb(180,186,196)", .18);
+      fillTriangle(targetPts, height, "rgb(70,217,232)", .22);
+      strokePath(gamuts.bt709.pts, 0, "rgba(180,186,196,.45)", 1.5);
+      strokePath(gamuts.bt709.pts, sdrHeight, "rgba(210,220,234,.86)", 2);
+      strokePath(targetPts, 0, "rgba(70,217,232,.35)", 1.5);
+      strokePath(targetPts, height, "#46d9e8", 3);
+      targetPts.forEach(pt => {
+        const [bx, by] = project(pt, 0);
+        const [tx, ty] = project(pt, height);
+        ctx.strokeStyle = "rgba(70,217,232,.42)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+      });
+      gamuts.bt709.pts.forEach(pt => {
+        const [bx, by] = project(pt, 0);
+        const [tx, ty] = project(pt, sdrHeight);
+        ctx.strokeStyle = "rgba(210,220,234,.26)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+      });
+
+      const axisBase = project([.78, .08], 0);
+      const axisTop = [axisBase[0], axisBase[1] - height];
+      ctx.strokeStyle = "rgba(255,255,255,.58)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(axisBase[0], axisBase[1]);
+      ctx.lineTo(axisTop[0], axisTop[1]);
+      ctx.stroke();
+      for (let i = 0; i <= 4; i++) {
+        const y = lerp(axisBase[1], axisTop[1], i / 4);
+        ctx.beginPath();
+        ctx.moveTo(axisBase[0] - 5, y);
+        ctx.lineTo(axisBase[0] + 5, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#f4f6fb";
+      ctx.font = "14px system-ui";
+      ctx.fillText("HDR 色彩体积", clamp(cx - scale * .33, 10, w - 120), clamp(baseY - height - 14, 16, h - 10));
+      ctx.fillText("亮度", clamp(axisTop[0] + 8, 4, w - 40), clamp(axisTop[1] + 8, 14, h - 4));
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      ctx.fillText("底面：CIE 1931 xy 马蹄图", clamp(cx - scale * .38, 8, w - 160), clamp(baseY + 38, 16, h - 4));
+      const sdrLbl = project([.24, .1], sdrHeight);
+      ctx.fillText("SDR / BT.709 / 100 nit", clamp(sdrLbl[0] - 10, 8, w - 140), clamp(sdrLbl[1] - 8, 14, h - 4));
+      const hdrLbl = project([.20, .82], height);
+      ctx.fillText(`${gamutName} / ${peak.toLocaleString()} nit`, clamp(hdrLbl[0] - 12, 8, w - 140), clamp(hdrLbl[1] - 8, 14, h - 4));
+    }
+
+    function drawMetaCanvas() {
+      const canvas = $("#metaCanvas");
+      if (!canvas) return;
+      const { ctx, w, h } = resizeCanvas(canvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+      const frames = 80;
+      const peakFn = t =>
+        Math.max(30,
+          600 + 400 * Math.sin(t * Math.PI * 1.8) +
+          1200 * Math.max(0, Math.sin(t * Math.PI * 3.1)) * (t > 0.35 && t < 0.55 ? 1 : 0) +
+          800 * Math.max(0, Math.sin(t * Math.PI * 5)) * (t > 0.7 && t < 0.85 ? 1 : 0));
+      const avgFn = t =>
+        Math.max(15, 180 + 120 * Math.sin(t * Math.PI * 1.8 + 0.3) + 60 * Math.sin(t * Math.PI * 4));
+      const peaks = Array.from({ length: frames }, (_, i) => peakFn(i / frames));
+      const avgs  = Array.from({ length: frames }, (_, i) => avgFn(i / frames));
+      const maxCLL = Math.max(...peaks), maxFALL = Math.max(...avgs);
+      const ceiling = maxCLL * 1.12;
+      const pad = { l: 10, r: 10, t: 22, b: 10 };
+      const xOf = i => lerp(pad.l, w - pad.r, i / (frames - 1));
+      const yOf = v => lerp(h - pad.b, pad.t, clamp(v / ceiling, 0, 1));
+      const drawLine = (data, color, fillColor) => {
+        ctx.beginPath();
+        data.forEach((v, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(v)) : ctx.lineTo(xOf(i), yOf(v)));
+        ctx.lineTo(xOf(frames - 1), h - pad.b); ctx.lineTo(pad.l, h - pad.b); ctx.closePath();
+        ctx.fillStyle = fillColor; ctx.fill();
+        ctx.beginPath();
+        data.forEach((v, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(v)) : ctx.lineTo(xOf(i), yOf(v)));
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      };
+      const dashed = (y, color) => {
+        ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        ctx.setLineDash([]);
+      };
+      dashed(yOf(maxCLL), "rgba(255,209,102,.62)");
+      dashed(yOf(maxFALL), "rgba(70,217,232,.62)");
+      drawLine(peaks, "#ffd166", "rgba(255,209,102,.12)");
+      drawLine(avgs,  "#46d9e8", "rgba(70,217,232,.12)");
+      ctx.font = "11px system-ui";
+      ctx.fillStyle = "#ffd166";
+      ctx.fillText(`MaxCLL ≈ ${maxCLL.toFixed(0)} nit`, pad.l + 4, clamp(yOf(maxCLL) - 4, 12, h - 4));
+      ctx.fillStyle = "#46d9e8";
+      ctx.fillText(`MaxFALL ≈ ${maxFALL.toFixed(0)} nit`, pad.l + 4, clamp(yOf(maxFALL) - 4, 12, h - 4));
+    }
+
+    const tableRows = [
+      { name: "SDR / BT.709", eotf: "BT.709 OETF + BT.1886 EOTF (γ≈2.4)", bit: "8", metadata: "无（固定显示环境假定）", gamut: "BT.709（35.9% CIE）", license: "ITU 开放广播标准", use: "标清/高清电视、电脑显示、传统广播（基准参考）" },
+      { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086, MaxCLL, MaxFALL", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
+      { name: "HDR10+", eotf: "PQ / ST 2084", bit: "10", metadata: "动态：ST 2094-40，逐场景映射", gamut: "BT.2020 容器", license: "HDR10+ 认证生态（相对开放）", use: "流媒体、电视、移动端" },
+      { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：ST 2094-10 / Dolby RPU，逐帧映射", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
+      { name: "HLG", eotf: "HLG OETF + 可变系统γ", bit: "10/12", metadata: "可无，依靠识别符 / 约定", gamut: "BT.2020", license: "广播开放标准（BBC/NHK/ITU）", use: "直播、体育、新闻、电视播出" },
+      { name: "HDR Vivid", eotf: "PQ 或 HLG（双模式）", bit: "常见 10", metadata: "动态：CUVA 005-2021", gamut: "BT.2020 容器", license: "中国超高清产业生态（CUVA）", use: "IPTV、OTT、国产终端、超高清平台" },
+      { name: "SL-HDR1/2/3", eotf: "PQ/HLG 与 SDR 兼容重建", bit: "10", metadata: "动态或静态重建信息（ETSI TS 103 433）", gamut: "BT.709/BT.2020", license: "ETSI/Technicolor/Philips 相关", use: "SDR-HDR 兼容分发" }
+    ];
+    let sortKey = "name", sortAsc = true;
+    function renderTable() {
+      const q = $("#formatSearch").value.trim().toLowerCase();
+      const rows = tableRows
+        .filter(row => Object.values(row).join(" ").toLowerCase().includes(q))
+        .sort((a, b) => String(a[sortKey]).localeCompare(String(b[sortKey]), "zh-CN") * (sortAsc ? 1 : -1));
+      $("#formatTable tbody").innerHTML = rows.map(row => `<tr><td><b>${row.name}</b></td><td>${row.eotf}</td><td>${row.bit}</td><td>${row.metadata}</td><td>${row.gamut}</td><td>${row.license}</td><td>${row.use}</td></tr>`).join("");
+    }
+
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      $("#progress").style.transform = `scaleX(${max ? scrollY / max : 0})`;
+      const pos = scrollY + 120;
+      $$("#navLinks a").forEach(a => {
+        const sec = $(a.getAttribute("href"));
+        if (!sec) return;
+        a.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
+      });
+    }
+
+    function redrawAll() {
+      drawRange();
+      drawGamma();
+      drawHdrCurves();
+      drawCie();
+      drawVolume();
+      drawMetaCanvas();
+    }
+
+    $("#peakSlider").addEventListener("input", drawRange);
+    $$(".gammaScaleOption").forEach(btn => btn.addEventListener("click", () => {
+      gammaLogScale = btn.dataset.scale === "log";
+      setPressedGroup(".gammaScaleOption", btn.dataset.scale);
+      drawGamma();
+    }));
+    $$(".gammaMode").forEach(btn => btn.addEventListener("click", () => {
+      activeGammaMode = btn.dataset.mode;
+      const mode = gammaModes[activeGammaMode];
+      gammaLogScale = mode.xKind === "nit" || mode.yKind === "nit";
+      gammaPointer = null;
+      setPressedGroup(".gammaScaleOption", gammaLogScale ? "log" : "linear");
+      $$(".gammaMode").forEach(b => {
+        const active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      drawGamma();
+    }));
+    $("#gammaHlgPeak").addEventListener("input", drawGamma);
+    $("#gammaCanvas").addEventListener("pointermove", e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      gammaPointer = (e.clientX - rect.left - 70) / (rect.width - 98);
+      drawGamma();
+    });
+    $("#gammaCanvas").addEventListener("pointerleave", () => {
+      gammaPointer = null;
+      drawGamma();
+    });
+    $$(".hdrScaleOption").forEach(btn => btn.addEventListener("click", () => {
+      logScale = btn.dataset.scale === "log";
+      setPressedGroup(".hdrScaleOption", btn.dataset.scale);
+      drawHdrCurves();
+    }));
+    $("#hlgPeak").addEventListener("input", drawHdrCurves);
+    $("#hdrCanvas").addEventListener("pointermove", e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      hdrPointer = (e.clientX - rect.left - 52) / (rect.width - 74);
+      drawHdrCurves();
+    });
+    $("#hdrCanvas").addEventListener("pointerleave", () => { hdrPointer = null; $("#hdrReadout").textContent = "移动指针读取曲线"; drawHdrCurves(); });
+    $$("#gamutCards .swatch").forEach(card => card.addEventListener("click", () => {
+      activeGamut = card.dataset.gamut;
+      $$("#gamutCards .swatch").forEach(c => c.classList.toggle("active", c === card));
+      drawCie();
+    }));
+    $("#volumePeak").addEventListener("input", drawVolume);
+    $$(".volumeGamutBtn").forEach(btn => btn.addEventListener("click", () => {
+      volumeGamutKey = btn.dataset.gamut;
+      $$(".volumeGamutBtn").forEach(b => {
+        const active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      drawVolume();
+    }));
+    function activateTab(btn) {
+      $$(".tabBtn").forEach(b => {
+        const active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+        b.setAttribute("aria-selected", active ? "true" : "false");
+        b.tabIndex = active ? 0 : -1;
+      });
+      $$(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === `tab-${btn.dataset.tab}`));
+      btn.focus();
+    }
+    $$(".tabBtn").forEach((btn, i, all) => {
+      btn.tabIndex = i === 0 ? 0 : -1;
+      btn.addEventListener("click", () => activateTab(btn));
+      btn.addEventListener("keydown", e => {
+        let next = null;
+        if (e.key === "ArrowRight") next = all[(i + 1) % all.length];
+        if (e.key === "ArrowLeft")  next = all[(i - 1 + all.length) % all.length];
+        if (e.key === "Home") next = all[0];
+        if (e.key === "End")  next = all[all.length - 1];
+        if (next) { e.preventDefault(); activateTab(next); }
+      });
+    });
+    $("#formatSearch").addEventListener("input", renderTable);
+    $$("#formatTable th").forEach(th => th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      sortAsc = sortKey === key ? !sortAsc : true;
+      sortKey = key;
+      renderTable();
+    }));
+    /* CIE diagram hover coordinates */
+    $("#cieSvg").addEventListener("mousemove", e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const svgX = (e.clientX - rect.left) * (720 / rect.width);
+      const svgY = (e.clientY - rect.top)  * (640 / rect.height);
+      const cx = (svgX - 70) / 760;
+      const cy = (595 - svgY) / 660;
+      const el = $("#cieHoverInfo");
+      if (cx >= 0 && cx <= 0.85 && cy >= 0 && cy <= 0.9) {
+        el.innerHTML = `<b style="color:var(--ink)">x = ${cx.toFixed(4)}, y = ${cy.toFixed(4)}</b>&ensp;·&ensp;CIE 1931 xy 色度坐标`;
+      } else {
+        el.textContent = "在色度图上移动鼠标可读取 xy 坐标";
+      }
+    });
+    $("#cieSvg").addEventListener("mouseleave", () => {
+      $("#cieHoverInfo").textContent = "在色度图上移动鼠标可读取 xy 坐标";
+    });
+
+    /* Hero range-row: set SDR marker to correct log-scale position */
+    (function() {
+      const minLog = Math.log10(0.01), maxLog = Math.log10(10000);
+      const sdrPct = ((Math.log10(100) - minLog) / (maxLog - minLog) * 100).toFixed(1);
+      const row = document.querySelector(".range-row");
+      if (row) row.style.setProperty("--w", `${sdrPct}%`);
+    })();
+
+    addEventListener("scroll", updateProgress, { passive: true });
+    addEventListener("resize", redrawAll);
+    renderTable();
+    redrawAll();
+    updateProgress();
+  </script>
+</body>
+</html>
