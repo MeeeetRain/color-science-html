@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>为什么相机使用 Log 拍摄 | 色彩科学</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #181c24;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: linear-gradient(180deg, #101219 0%, #151820 50%, #101318 100%);
+      color: var(--ink);
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 50;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      border-bottom: 1px solid var(--line);
+      background: rgba(17,19,24,.85);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand { font-weight: 700; }
+    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .links a {
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .links a:hover { color: var(--ink); background: rgba(255,255,255,.08); }
+    main { max-width: 1100px; margin: 0 auto; }
+    section { padding: 60px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    h1 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 16px; line-height: 1.1; }
+    h2 { font-size: clamp(24px, 3vw, 36px); margin-bottom: 12px; }
+    h3 { font-size: 20px; margin-bottom: 10px; }
+    p { color: var(--muted); margin-bottom: 12px; }
+    .eyebrow { color: var(--gold); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+    .lead { font-size: 18px; color: #e0e5f0; max-width: 700px; }
+    .note { border-left: 3px solid var(--cyan); padding: 12px 16px; background: rgba(70,217,232,.08); margin: 16px 0; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: rgba(255,255,255,.03); margin: 16px 0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+    .kpi { background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; text-align: center; }
+    .kpi-label { font-size: 12px; color: var(--muted); }
+    .kpi-val { font-size: 24px; font-weight: 700; margin: 4px 0; }
+    .canvas-box { border: 1px solid var(--line); border-radius: var(--radius); background: #0a0d12; overflow: hidden; min-height: 320px; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .formula { font-family: monospace; background: rgba(255,255,255,.06); padding: 12px; border-radius: var(--radius); margin: 12px 0; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.08); }
+    th { background: var(--gold); color: #000; font-weight: 700; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+    .tag-cyan { background: var(--cyan); color: #000; }
+    .tag-rose { background: var(--rose); color: #000; }
+    .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .step { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: rgba(255,255,255,.03); }
+    .step-num { color: var(--cyan); font-weight: 800; font-size: 12px; margin-bottom: 6px; }
+    .warn { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.3); border-radius: var(--radius); padding: 14px; color: #ffe7b0; margin: 16px 0; }
+    .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+    .flow-node { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; background: rgba(255,255,255,.04); text-align: center; }
+    .flow-arrow { color: var(--gold); font-size: 20px; }
+    @media (max-width: 600px) { section { padding: 40px 16px; } }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav">
+      <div class="brand"><a href="index.html">← 色彩科学</a></div>
+      <div class="links">
+        <a href="#why">为什么用Log</a>
+        <a href="#sensor">传感器困境</a>
+        <a href="#curve">曲线原理</a>
+        <a href="#brands">品牌对比</a>
+        <a href="#workflow">工作流程</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section id="top">
+      <div class="eyebrow">Log Gamma</div>
+      <h1>为什么相机使用 Log 拍摄</h1>
+      <p class="lead">Log（对数伽马曲线）是现代数字摄影的核心技术。它让相机能够记录更宽广的动态范围，为后期调色保留最大创作空间。</p>
+    </section>
+
+    <section id="why">
+      <h2>1. 什么是 Log？</h2>
+      <p>Log（Logarithmic Gamma Curve）即对数伽马曲线。使用 Log 拍摄的画面呈现"低对比度、低饱和度"的灰色调，这是有意为之的<b>数据保护策略</b>——把高光和阴影信息都"压缩"到中间调，等待后期释放。</p>
+      
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">普通拍摄 (Rec.709)</div><div class="kpi-val" style="color:#a5abb4">8-10档</div><div style="font-size:12px;color:var(--muted)">动态范围受限</div></div>
+        <div class="kpi"><div class="kpi-label">Log 拍摄</div><div class="kpi-val" style="color:var(--cyan)">12-16档</div><div style="font-size:12px;color:var(--muted)">动态范围大幅提升</div></div>
+        <div class="kpi"><div class="kpi-label">位深度</div><div class="kpi-val" style="color:var(--gold)">10-12 bit</div><div style="font-size:12px;color:var(--muted)">更多量化级别</div></div>
+        <div class="kpi"><div class="kpi-label">后期空间</div><div class="kpi-val" style="color:var(--violet)">极大</div><div style="font-size:12px;color:var(--muted)">灵活调整曝光色彩</div></div>
+      </div>
+    </section>
+
+    <section id="sensor">
+      <h2>2. 传感器的"线性困境"</h2>
+      <p>相机传感器对光线响应是线性的：光子增加一倍，信号增加一倍。这导致最亮的一档占据一半编码空间，暗部被压缩在极少级别中。</p>
+      
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color:var(--rose)">线性编码问题</h3>
+          <ul style="padding-left:20px;color:var(--muted)">
+            <li>亮部占据大量编码空间（冗余）</li>
+            <li>暗部编码级别极少</li>
+            <li>暗部容易出现色阶断裂</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--cyan)">对数编码优势</h3>
+          <ul style="padding-left:20px;color:var(--muted)">
+            <li>亮部适当压缩</li>
+            <li>暗部获得更多编码级别</li>
+            <li>过渡平滑，细节丰富</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>编码分布对比</h3>
+        <div class="canvas-box"><canvas id="encodingCanvas"></canvas></div>
+      </div>
+    </section>
+
+    <section id="curve">
+      <h2>3. Log vs Gamma：数学原理</h2>
+      
+      <div class="card">
+        <h3>Gamma 校正（幂函数）</h3>
+        <div class="formula">V_out = V_in ^ γ</div>
+        <p>Gamma 值通常为 2.2（显示）或 0.45（拍摄）。Gamma 不能改变数据分布，只是调整显示。</p>
+      </div>
+
+      <div class="card">
+        <h3>Log 曲线（对数函数）</h3>
+        <div class="formula">V_out = a × log₁₀(V_in × k + c) + d</div>
+        <p>Log 从采集阶段就重新分配编码资源，最大化保留场景信息。</p>
+      </div>
+
+      <div class="card">
+        <h3>曲线形态对比</h3>
+        <div class="canvas-box"><canvas id="curveCanvas"></canvas></div>
+      </div>
+    </section>
+
+    <section id="brands">
+      <h2>4. 各品牌 Log 对比</h2>
+      
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>品牌</th><th>Log名称</th><th>动态范围</th><th>特点</th></tr></thead>
+          <tbody>
+            <tr><td><b>Sony</b></td><td>S-Log3</td><td>~15档</td><td>暗部表现好，噪点控制优秀</td></tr>
+            <tr><td><b>Canon</b></td><td>C-Log3</td><td>~14档</td><td>平衡性好，适合大多数场景</td></tr>
+            <tr><td><b>ARRI</b></td><td>Log C4</td><td>~16+档</td><td>电影级标准，色彩科学标杆</td></tr>
+            <tr><td><b>Panasonic</b></td><td>V-Log</td><td>~14档</td><td>与Varicam电影机同源</td></tr>
+            <tr><td><b>Nikon</b></td><td>N-Log</td><td>~13档</td><td>适合入门，肤色表现好</td></tr>
+            <tr><td><b>RED</b></td><td>Log3G10</td><td>~17档</td><td>配合REDCODE RAW使用</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Log 曲线对比</h3>
+        <div class="canvas-box"><canvas id="brandCanvas"></canvas></div>
+      </div>
+
+      <div class="warn">注意：Log 需配合对应色彩空间使用。如 S-Log3 配 S-Gamut3.Cine，C-Log3 配 Cinema Gamut。混用会导致色彩偏差。</div>
+    </section>
+
+    <section id="workflow">
+      <h2>5. Log 工作流程</h2>
+      
+      <div class="timeline">
+        <div class="step"><div class="step-num">1. 拍摄</div><h3>正确曝光</h3><p style="font-size:14px">建议向右曝光(ETTR)1-2档，利用传感器宽容度，避免高光剪切。</p></div>
+        <div class="step"><div class="step-num">2. 监看</div><h3>加载LUT</h3><p style="font-size:14px">现场加载转换LUT，让画面呈现正常反差，便于判断构图曝光。</p></div>
+        <div class="step"><div class="step-num">3. 后期</div><h3>色彩分级</h3><p style="font-size:14px">先应用官方LUT或色彩空间转换，再进行创意调色。</p></div>
+        <div class="step"><div class="step-num">4. 输出</div><h3>交付格式</h3><p style="font-size:14px">网络用Rec.709，HDR用PQ/HLG，影院用DCI-P3。</p></div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-node"><b style="color:var(--cyan)">Log素材</b></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b style="color:var(--gold)">色彩空间转换</b></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b style="color:var(--lime)">创意调色</b></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b style="color:var(--rose)">最终输出</b></div>
+      </div>
+    </section>
+
+    <section id="when">
+      <h2>6. 何时使用 Log？</h2>
+      
+      <div class="grid-2">
+        <div class="card">
+          <span class="tag tag-cyan">适合使用 Log</span>
+          <ul style="padding-left:20px;color:var(--muted);margin-top:10px">
+            <li>高对比度场景（日出日落、室内窗外）</li>
+            <li>需要大量后期调色的项目</li>
+            <li>专业制作、广告、电影</li>
+            <li>有足够时间进行后期处理</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag tag-rose">不建议使用 Log</span>
+          <ul style="padding-left:20px;color:var(--muted);margin-top:10px">
+            <li>快速交付的项目（新闻、活动记录）</li>
+            <li>后期时间有限</li>
+            <li>低光环境（Log会增加暗部噪点）</li>
+            <li>初学者且无调色经验</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note"><b>关键要点：</b>Log 不是万能的。它需要正确的曝光、合适的场景、以及充分的后期处理时间。对于快速交付或低光拍摄，普通 Gamma 可能是更好的选择。</div>
+    </section>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    // Progress bar
+    addEventListener('scroll', () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      $('#progress').style.transform = `scaleX(${max ? scrollY / max : 0})`;
+    }, { passive: true });
+
+    // Canvas: Encoding comparison
+    function drawEncoding() {
+      const canvas = $('#encodingCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = 320 * 2;
+      ctx.scale(2, 2);
+      const w = rect.width, h = 320;
+      const pad = 50;
+
+      ctx.fillStyle = '#0a0d12';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 10; i++) {
+        const x = pad + (w - 2*pad) * i / 10;
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, h - pad);
+        ctx.stroke();
+      }
+
+      // Linear encoding (stepped)
+      ctx.beginPath();
+      ctx.moveTo(pad, h - pad);
+      const linearStops = 14;
+      for (let i = 0; i <= linearStops; i++) {
+        const x = pad + (w - 2*pad) * i / linearStops;
+        const linearVal = Math.pow(2, i);
+        const maxVal = Math.pow(2, linearStops);
+        const y = h - pad - (h - 2*pad) * (linearVal / maxVal);
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#ff6b7a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Log encoding (smooth)
+      ctx.beginPath();
+      ctx.moveTo(pad, h - pad);
+      for (let i = 0; i <= 100; i++) {
+        const x = pad + (w - 2*pad) * i / 100;
+        const y = h - pad - (h - 2*pad) * i / 100;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#46d9e8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Labels
+      ctx.fillStyle = '#ff6b7a';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('线性编码', pad, 25);
+      ctx.fillStyle = '#46d9e8';
+      ctx.fillText('对数编码 (Log)', w - 100, 25);
+      ctx.fillStyle = '#8b95a5';
+      ctx.fillText('暗', pad, h - 15);
+      ctx.fillText('亮', w - pad - 15, h - 15);
+    }
+
+    // Canvas: Curve comparison
+    function drawCurves() {
+      const canvas = $('#curveCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = 320 * 2;
+      ctx.scale(2, 2);
+      const w = rect.width, h = 320;
+      const pad = 50;
+
+      ctx.fillStyle = '#0a0d12';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      for (let i = 0; i <= 10; i++) {
+        const x = pad + (w - 2*pad) * i / 10;
+        const y = pad + (h - 2*pad) * i / 10;
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, h - pad);
+        ctx.moveTo(pad, y);
+        ctx.lineTo(w - pad, y);
+        ctx.stroke();
+      }
+
+      // Linear
+      ctx.beginPath();
+      ctx.moveTo(pad, h - pad);
+      ctx.lineTo(w - pad, pad);
+      ctx.strokeStyle = '#8b95a5';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Gamma 2.4
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        const x = pad + (w - 2*pad) * i / 100;
+        const v = i / 100;
+        const y = h - pad - (h - 2*pad) * Math.pow(v, 1/2.4);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Log curve
+      ctx.beginPath();
+      for (let i = 1; i <= 100; i++) {
+        const x = pad + (w - 2*pad) * i / 100;
+        const v = i / 100;
+        const logVal = 0.9 * Math.log10(v * 9 + 1) + 0.05;
+        const y = h - pad - (h - 2*pad) * logVal;
+        i === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#46d9e8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Labels
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#8b95a5';
+      ctx.fillText('线性', w - 70, h - 60);
+      ctx.fillStyle = '#ffd166';
+      ctx.fillText('Gamma 2.4', w - 90, 80);
+      ctx.fillStyle = '#46d9e8';
+      ctx.fillText('Log', pad + 10, 80);
+    }
+
+    // Canvas: Brand comparison
+    function drawBrands() {
+      const canvas = $('#brandCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = 300 * 2;
+      ctx.scale(2, 2);
+      const w = rect.width, h = 300;
+      const pad = 50;
+
+      ctx.fillStyle = '#0a0d12';
+      ctx.fillRect(0, 0, w, h);
+
+      const brands = [
+        { name: 'Sony S-Log3', color: '#46d9e8', offset: 0 },
+        { name: 'Canon C-Log3', color: '#ffd166', offset: 0.02 },
+        { name: 'ARRI Log C', color: '#a9e55f', offset: -0.01 },
+        { name: 'Panasonic V-Log', color: '#ff6b7a', offset: 0.03 }
+      ];
+
+      brands.forEach(brand => {
+        ctx.beginPath();
+        for (let i = 1; i <= 100; i++) {
+          const x = pad + (w - 2*pad) * i / 100;
+          const v = i / 100;
+          const logVal = (0.85 + brand.offset) * Math.log10(v * 12 + 1) / Math.log10(13) + 0.08;
+          const y = h - pad - (h - 2*pad) * Math.min(1, logVal);
+          i === 1 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = brand.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      ctx.font = '11px sans-serif';
+      brands.forEach((brand, i) => {
+        ctx.fillStyle = brand.color;
+        ctx.fillText(brand.name, pad + 10, 25 + i * 16);
+      });
+    }
+
+    // Init
+    addEventListener('resize', () => {
+      drawEncoding();
+      drawCurves();
+      drawBrands();
+    });
+
+    setTimeout(() => {
+      drawEncoding();
+      drawCurves();
+      drawBrands();
+    }, 100);
+  </script>
+</body>
+</html>
