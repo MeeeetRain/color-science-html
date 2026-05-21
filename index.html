@@ -321,11 +321,12 @@
 <body>
   <header>
     <nav class="nav">
-      <a href="/" class="logo">Color Science</a>
+      <a href="index.html" class="logo">Color Science</a>
       <div class="nav-links">
         <a href="hdr-color-science.html">SDR→HDR</a>
         <a href="log-gamma.html">Log拍摄</a>
-        <a href="https://github.com/MeeeetRain/color-science-html" target="_blank">GitHub</a>
+        <a href="image-color-management.html">图片色彩管理</a>
+        <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </nav>
   </header>
@@ -345,7 +346,7 @@
         <a href="hdr-color-science.html" class="btn btn-primary">
           开始阅读 →
         </a>
-        <a href="https://github.com" class="btn btn-secondary" target="_blank">
+        <a href="https://github.com/MeeeetRain/color-science-html" class="btn btn-secondary" target="_blank" rel="noreferrer">
           查看源码
         </a>
       </div>
@@ -383,6 +384,11 @@
           <div class="feature-icon cyan">🎨</div>
           <h3>感知编码</h3>
           <p>探索 PQ 与 HLG 感知量化曲线，理解人眼视觉系统的特性。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon lime">ICC</div>
+          <h3>图片色彩管理</h3>
+          <p>理解 ICC Profile、sRGB、Display P3，以及同一张图为什么到处变色。</p>
         </div>
       </div>
     </section>
@@ -429,6 +435,29 @@
             <div class="color-block" style="background: linear-gradient(135deg, #a78bfa, #7c3aed)"></div>
             <div class="color-block" style="background: linear-gradient(135deg, #46d9e8, #06b6d4)"></div>
             <div class="color-block" style="background: linear-gradient(135deg, #a9e55f, #84cc16)"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-section">
+      <div class="wrap">
+        <div class="article-content">
+          <h2>图片色彩管理到底在管什么</h2>
+          <p>
+            从 RGB 数字不是颜色讲起，梳理 ICC Profile、Assign/Convert、Web 广色域图片与实际导出策略，解释为什么同一张图在不同地方会变色。
+          </p>
+          <a href="image-color-management.html" class="article-link">
+            阅读完整文章 →
+          </a>
+        </div>
+        <div class="article-visual">
+          <div class="gradient-bar" style="background: linear-gradient(90deg, #ef4444, #22d3ee, #a3e635, #fbbf24)"></div>
+          <div class="color-blocks">
+            <div class="color-block" style="background: color(display-p3 1 0 0)"></div>
+            <div class="color-block" style="background: linear-gradient(135deg, #22d3ee, #0f766e)"></div>
+            <div class="color-block" style="background: linear-gradient(135deg, #a3e635, #15803d)"></div>
+            <div class="color-block" style="background: linear-gradient(135deg, #fbbf24, #b45309)"></div>
           </div>
         </div>
       </div>

@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图片色彩管理到底在管什么 | 色彩科学</title>
+  <meta name="description" content="理解图片色彩管理：ICC Profile、sRGB、Display P3、Assign/Convert、Web 图片颜色链路与导出建议。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101217;
+      --panel: #171b22;
+      --panel-2: #202633;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --shadow: 0 18px 52px rgba(0,0,0,.32);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(70,217,232,.12), transparent 30rem),
+        radial-gradient(circle at 88% 16%, rgba(255,209,102,.10), transparent 24rem),
+        linear-gradient(180deg, #101217 0%, #151922 46%, #101217 100%);
+      color: var(--ink);
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 50;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16,18,23,.84);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+    .brand {
+      font-weight: 780;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .links {
+      display: flex;
+      gap: 6px;
+      justify-content: end;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .links a {
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.09);
+    }
+
+    main { overflow: hidden; }
+    section {
+      padding: 72px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .hero {
+      min-height: 76vh;
+      display: grid;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(110deg, rgba(70,217,232,.20), rgba(169,229,95,.10) 45%, rgba(255,107,122,.14)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23111620'/%3E%3Cstop offset='.36' stop-color='%23136a78'/%3E%3Cstop offset='.68' stop-color='%23d9bd5f'/%3E%3Cstop offset='1' stop-color='%23d65476'/%3E%3C/linearGradient%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='.3'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 .16'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23a)'/%3E%3Cpath d='M0 688 C280 612 420 754 670 628 C920 504 1046 318 1264 392 C1434 450 1518 364 1600 318 L1600 900 L0 900 Z' fill='%230b0d12' opacity='.75'/%3E%3Cpath d='M0 748 C320 660 470 778 740 654 C1010 530 1098 452 1288 490 C1428 518 1510 468 1600 418' fill='none' stroke='%23ffffff' stroke-opacity='.18' stroke-width='3'/%3E%3Crect width='1600' height='900' filter='url(%23n)'/%3E%3C/svg%3E") center/cover;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(90deg, rgba(16,18,23,.96) 0%, rgba(16,18,23,.72) 54%, rgba(16,18,23,.35) 100%);
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 780;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 18px;
+      max-width: 13ch;
+      font-size: clamp(42px, 7vw, 84px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+    }
+    h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
+    p { margin: 0 0 14px; color: var(--muted); }
+    .lead {
+      max-width: 720px;
+      color: #e7edf7;
+      font-size: clamp(17px, 2vw, 21px);
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(260px, .48fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 10px 0 10px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      min-width: 0;
+    }
+    .tag {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #101318;
+      background: var(--gold);
+      font-size: 12px;
+      font-weight: 760;
+      margin-bottom: 12px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(255,255,255,.04);
+      min-height: 150px;
+    }
+    .flow-step b { color: var(--cyan); display: block; margin-bottom: 8px; }
+    .detail-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .detail-list li {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: rgba(255,255,255,.035);
+      color: var(--muted);
+    }
+    .detail-list b { color: var(--ink); }
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+    }
+    .mini-table th,
+    .mini-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      vertical-align: top;
+    }
+    .mini-table th {
+      color: var(--ink);
+      background: rgba(255,255,255,.07);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    label { color: var(--muted); font-size: 13px; }
+    input, select, button {
+      font: inherit;
+      color: var(--ink);
+    }
+    input[type="range"] { accent-color: var(--cyan); }
+    select, input[type="number"], input[type="text"] {
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 38px;
+      padding: 7px 9px;
+    }
+    button, .button-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.07);
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    button.active, button[aria-pressed="true"], .button-link.primary {
+      color: #101318;
+      background: var(--cyan);
+      border-color: transparent;
+      font-weight: 760;
+    }
+    .canvas-box {
+      position: relative;
+      min-height: 380px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0d1015;
+      overflow: hidden;
+    }
+    .cie-box {
+      min-height: 650px;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .readout {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      background: rgba(13,16,21,.82);
+      border-radius: var(--radius);
+      color: #eef5ff;
+      font-size: 13px;
+    }
+    .swatch-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .swatch {
+      min-height: 110px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      align-items: end;
+      padding: 12px;
+      color: white;
+      text-shadow: 0 1px 8px rgba(0,0,0,.8);
+      background: #777;
+    }
+    .mini {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .result {
+      border: 1px solid rgba(255,209,102,.22);
+      background: rgba(255,209,102,.10);
+      color: #ffe7b0;
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+    }
+    .table th, .table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    .table th {
+      background: rgba(255,255,255,.08);
+      color: var(--ink);
+    }
+    .sources li { margin-bottom: 8px; color: var(--muted); }
+    .sources a { color: #d8efff; }
+    .checklist {
+      display: grid;
+      gap: 10px;
+    }
+    .check-item {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+    }
+    .check-item::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 8px;
+      background: var(--cyan);
+      box-shadow: 0 0 0 5px rgba(70,217,232,.10);
+    }
+    @media (max-width: 900px) {
+      .nav { grid-template-columns: 1fr; }
+      .links { justify-content: start; }
+      .section-head, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: repeat(5, 220px); }
+    }
+    @media (max-width: 560px) {
+      section { padding: 54px 16px; }
+      .hero { min-height: 62vh; }
+      h1 { font-size: 42px; }
+      .swatch-row { grid-template-columns: 1fr; }
+      .canvas-box { min-height: 320px; }
+      .cie-box { min-height: 620px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="index.html">← 色彩科学</a>
+      <div class="links" id="navLinks">
+        <a href="#problem">问题</a>
+        <a href="#rgb">RGB</a>
+        <a href="#profile">Profile</a>
+        <a href="#assign">指定/转换</a>
+        <a href="#web">Web</a>
+        <a href="#workflow">导出</a>
+        <a href="#tools">工具</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap">
+        <div class="eyebrow">Image Color Management</div>
+        <h1>图片色彩管理到底在管什么</h1>
+        <p class="lead">同一张图在不同软件、浏览器和屏幕上变色，通常不是图片“坏了”，而是 RGB 数字、色彩配置文件、系统色彩管理和显示器能力没有被同一种规则解释。</p>
+      </div>
+    </section>
+
+    <section id="problem">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>1. 先从一个常见问题开始</h2>
+            <p>摄影师、设计师和视频创作者经常遇到：Photoshop 里正常，浏览器里偏艳，手机上更亮，社交平台压缩后又变淡。色彩管理要解决的不是“让颜色更好看”，而是让颜色被正确解释。</p>
+          </div>
+          <div class="note">核心句：RGB 数字不是颜色。只有配合色彩空间和 Profile，它才对应到真实的色度、白点和亮度响应。</div>
+        </div>
+        <div class="grid-3">
+          <div class="card"><span class="tag">文件</span><h3>图片带着 RGB 数字</h3><p>例如 255, 0, 0。数字本身只说明三个通道的比例，不说明这个红到底有多红。</p></div>
+          <div class="card"><span class="tag" style="background:var(--cyan)">解释</span><h3>Profile 像说明书</h3><p>sRGB、Display P3、Adobe RGB 会把同一组 RGB 解释成不同的真实颜色。</p></div>
+          <div class="card"><span class="tag" style="background:var(--lime)">输出</span><h3>屏幕也有自己的性格</h3><p>系统还要根据显示器 ICC Profile，把目标颜色转换成这台屏幕需要的驱动值。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rgb">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>2. RGB 数字不是颜色</h2>
+            <p>下面用同一组 RGB 数字，在不同色彩空间里解释。你会看到：数值不变，但在 CIE xy 图上的落点不同。P3 与 Adobe RGB 的红/绿原色比 sRGB 更外扩，因此同样的 255 可能代表更饱和的颜色。</p>
+          </div>
+          <div class="note">这里展示的是“按不同 Profile 解释同一 RGB”。实际屏幕能否显示出来，还取决于显示器色域和浏览器色彩管理。</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="controls">
+              <label>R <input id="rgbR" type="range" min="0" max="255" value="255"></label>
+              <label>G <input id="rgbG" type="range" min="0" max="255" value="0"></label>
+              <label>B <input id="rgbB" type="range" min="0" max="255" value="0"></label>
+              <select id="rgbSpace" aria-label="选择色彩空间">
+                <option value="srgb">sRGB</option>
+                <option value="p3">Display P3</option>
+                <option value="adobe">Adobe RGB (1998)</option>
+              </select>
+            </div>
+            <div class="swatch-row">
+              <div class="swatch" id="managedSwatch"><b>按所选空间解释</b></div>
+              <div class="swatch" id="srgbSwatch"><b>当作 sRGB 解释</b></div>
+            </div>
+            <div class="result" id="rgbReadout">RGB(255, 0, 0)</div>
+          </div>
+          <div class="canvas-box cie-box">
+            <canvas id="cieCanvas" aria-label="CIE 1931 xy 色度图与 RGB 色域三角形"></canvas>
+            <div class="readout" id="cieReadout">切换色彩空间查看 xy 落点</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profile">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>3. Profile 是图片的说明书</h2>
+            <p>ICC Profile 不是滤镜，也不是调色预设。它是一份机器可读的颜色说明书：告诉软件“这组 RGB 数字如何换算成设备无关颜色”，也告诉系统“这台显示器需要怎样的信号才能发出目标颜色”。</p>
+          </div>
+          <div class="note">没有 Profile，RGB 只是三个比例数字；有了源 Profile、显示器 Profile 和 CMM，颜色才有机会在不同设备之间保持一致。</div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <span class="tag">Profile 里有什么</span>
+            <ul class="detail-list">
+              <li><b>色域原色与白点</b><br>说明红、绿、蓝原色和参考白在 CIE 坐标中的位置，例如 sRGB、Display P3、Adobe RGB 的三角形不同。</li>
+              <li><b>TRC / 响应曲线</b><br>说明 RGB 码值如何变成线性光。sRGB、Adobe RGB、显示器实测响应都可能不同。</li>
+              <li><b>转换表或矩阵</b><br>简单矩阵 Profile 用原色矩阵转换；复杂设备 Profile 可能包含 A2B / B2A 查找表。</li>
+              <li><b>渲染意图</b><br>当源色域大于目标色域时，告诉 CMM 应该裁切、压缩还是保持相对关系。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag" style="background:var(--cyan)">谁在用 Profile</span>
+            <ul class="detail-list">
+              <li><b>图片的嵌入 Profile</b><br>解释文件里的 RGB 数字属于哪个源空间。它描述的是图片，不是屏幕。</li>
+              <li><b>显示器 Profile</b><br>由系统、厂商或校色仪提供，描述这台屏幕实际的原色、白点和灰阶响应。</li>
+              <li><b>CMM</b><br>Color Management Module 负责把源 Profile、目标 Profile、渲染意图串起来，计算最终输出 RGB。</li>
+              <li><b>应用软件</b><br>浏览器、Photoshop、预览、视频软件是否调用系统色彩管理，决定链路是否完整。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="flow">
+          <div class="flow-step"><b>1. 图片 RGB</b><p>文件里的 R/G/B 数值。它们还不是“绝对颜色”。</p></div>
+          <div class="flow-step"><b>2. 源 Profile</b><p>把 RGB 解释成源空间中的真实颜色。</p></div>
+          <div class="flow-step"><b>3. PCS</b><p>进入 Profile Connection Space，通常是 D50 适配下的 CIE XYZ 或 Lab。</p></div>
+          <div class="flow-step"><b>4. 目标 Profile</b><p>显示器、打印机或导出目标空间告诉系统它能表达什么。</p></div>
+          <div class="flow-step"><b>5. 输出 RGB</b><p>CMM 计算出目标设备需要的通道值，屏幕才真正发光。</p></div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="card">
+            <h3>为什么需要 PCS？</h3>
+            <p>如果每个设备都直接给另一个设备写转换表，N 个设备之间需要大量两两转换。ICC 用 PCS 做中间语言：源 Profile 负责“RGB → PCS”，目标 Profile 负责“PCS → 设备 RGB”。这样一张 P3 图片、一台 sRGB 显示器、一台打印机都能通过同一个连接空间协作。</p>
+            <div class="result">可以把 PCS 理解成“颜色中转站”：它不关心设备怎么发光，只关心目标颜色在 CIE 标准观察者下是什么。</div>
+          </div>
+          <div class="card">
+            <h3>缺失或错误 Profile 会发生什么？</h3>
+            <p>缺失 Profile 时，很多现代软件会把图片当作 sRGB；但旧软件、部分转码链路或未色彩管理的环境可能不这样处理。错误 Profile 更危险：RGB 数字没变，但解释规则换了，画面会整体偏艳、偏灰或偏色。</p>
+            <div class="result">这也是为什么“看起来变色”常常不是调色问题，而是解释规则在某一环断了。</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h3>渲染意图：超出目标色域时怎么办</h3>
+          <p>当源颜色超出目标设备能力时，CMM 需要决定如何处理。ICC 规范定义了多种渲染意图，实际软件会根据图像类型和 Profile 支持情况选择。</p>
+          <div style="overflow-x:auto">
+            <table class="mini-table">
+              <thead><tr><th>渲染意图</th><th>适合场景</th><th>直观理解</th></tr></thead>
+              <tbody>
+                <tr><td>Perceptual 感知</td><td>照片、复杂图像</td><td>把整体色域压进目标空间，尽量保持颜色之间的关系。</td></tr>
+                <tr><td>Relative Colorimetric 相对色度</td><td>网页、屏幕交付、精确颜色</td><td>目标空间能显示的颜色尽量不动，超出的颜色裁到边界，白点按目标适配。</td></tr>
+                <tr><td>Absolute Colorimetric 绝对色度</td><td>打样、模拟纸白</td><td>连源白点也尽量模拟出来，常用于印刷软打样。</td></tr>
+                <tr><td>Saturation 饱和度</td><td>图表、商业图形</td><td>优先保持鲜艳，不追求照片般自然。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="assign">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>4. Assign Profile 和 Convert Profile 是两件事</h2>
+            <p>很多颜色事故来自这里：指定 Profile 会改变 RGB 数字的解释方式；转换 Profile 会尽量保持外观，但 RGB 数字会被重算。</p>
+          </div>
+          <div class="note">如果你把一张 sRGB 图“指定”为 Display P3，颜色会变艳；如果你把它“转换”为 Display P3，外观应尽量保持一致，只是底层 RGB 数字改变。</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="controls">
+              <label>源空间
+                <select id="assignSource">
+                  <option value="srgb">sRGB</option>
+                  <option value="p3">Display P3</option>
+                  <option value="adobe">Adobe RGB</option>
+                </select>
+              </label>
+              <label>目标空间
+                <select id="assignTarget">
+                  <option value="p3">Display P3</option>
+                  <option value="srgb">sRGB</option>
+                  <option value="adobe">Adobe RGB</option>
+                </select>
+              </label>
+              <button id="assignMode" class="active" data-mode="assign" aria-pressed="true">指定 Profile</button>
+              <button id="convertMode" data-mode="convert" aria-pressed="false">转换 Profile</button>
+            </div>
+            <div class="swatch-row">
+              <div class="swatch" id="beforeSwatch"><b>原始解释</b></div>
+              <div class="swatch" id="afterSwatch"><b>处理后</b></div>
+            </div>
+            <div class="result" id="assignReadout"></div>
+          </div>
+          <div class="card">
+            <h3>怎么判断你该用哪个？</h3>
+            <div class="checklist">
+              <div class="check-item"><div><b>颜色看起来错了</b><br><span class="mini">通常先检查是否“指定”了错误 Profile。</span></div></div>
+              <div class="check-item"><div><b>要交付到另一个空间</b><br><span class="mini">例如 P3 图交付网页 sRGB，应该转换 Profile。</span></div></div>
+              <div class="check-item"><div><b>不要随手丢弃 Profile</b><br><span class="mini">文件小一点，但接收方只能猜你的 RGB。</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="web">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>5. Web 图片为什么容易出问题</h2>
+            <p>Web 长期默认 sRGB。现代浏览器和设备开始支持 Display P3、CSS Color 4 和广色域图片，但图片、CSS 色值、Canvas、视频的处理路径并不完全一样。</p>
+          </div>
+          <div class="note" id="gamutNote">正在检测当前浏览器的色域能力。</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>同样写“红”，含义可能不同</h3>
+            <div class="swatch-row">
+              <div class="swatch" style="background: rgb(255 0 0)"><b>CSS #ff0000</b><span>sRGB 红</span></div>
+              <div class="swatch" style="background: color(display-p3 1 0 0)"><b>color(display-p3 1 0 0)</b><span>P3 红</span></div>
+            </div>
+            <p class="mini" style="margin-top:10px">如果当前设备或浏览器不支持 P3，两块可能看起来接近或被映射回 sRGB。</p>
+          </div>
+          <div class="card">
+            <h3>Web 链路的实用规则</h3>
+            <div class="checklist">
+              <div class="check-item"><div>普通网页图片：导出 sRGB，并嵌入 Profile。</div></div>
+              <div class="check-item"><div>广色域图片：导出 Display P3，并确认目标平台保留 Profile。</div></div>
+              <div class="check-item"><div>不要把未管理的 P3 屏幕当作“颜色更准”。它只可能更艳。</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>6. 按用途选择导出策略</h2>
+            <p>色彩管理不是“永远用最大的色域”。正确策略取决于用途、接收方、软件链路和是否能保留 Profile。</p>
+          </div>
+          <div class="note">最稳妥的原则：编辑可以用大空间，交付必须按目标链路收窄并嵌入 Profile。</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="table">
+            <thead>
+              <tr><th>用途</th><th>推荐空间</th><th>关键动作</th><th>风险</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>普通网页 / 社交</td><td>sRGB</td><td>转换到 sRGB，嵌入 ICC</td><td>平台可能重压缩，但兼容性最好</td></tr>
+              <tr><td>Apple 生态广色域展示</td><td>Display P3</td><td>保留 P3 Profile，测试 Safari / Chrome</td><td>非 P3 设备会映射或裁切</td></tr>
+              <tr><td>摄影后期母版</td><td>Adobe RGB / ProPhoto RGB</td><td>大空间编辑，最终按用途转换</td><td>直接发给普通用户容易偏色</td></tr>
+              <tr><td>印刷协作</td><td>按印厂 ICC / CMYK</td><td>使用印厂指定 Profile 和软打样</td><td>自己乱转 CMYK 可能损失更大</td></tr>
+              <tr><td>HDR / 视频截图</td><td>按视频链路</td><td>区分 SDR 图片、HDR 图片和视频帧</td><td>浏览器、系统和格式支持差异大</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>7. 外部工具：纯色图片生成器</h2>
+            <p>做色彩管理测试时，纯色色块很有用：你可以生成一张指定 RGB 的图片，再测试不同软件、浏览器和平台是否保留 Profile、是否发生过饱和或裁切。</p>
+          </div>
+          <div class="note">本页不内嵌生成器。需要生成纯色测试图的用户，可以去工具仓库下载使用。</div>
+        </div>
+        <div class="card">
+          <span class="tag" style="background:var(--cyan)">GitHub 工具</span>
+          <h3>Solid Color Image Generator</h3>
+          <p>MeeeetRain 的纯色图片生成工具，可用于制作颜色测试图、导出纯色色块，并配合本章的 Profile / Web 色彩管理实验。</p>
+          <a class="button-link primary" href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer">打开 GitHub 仓库</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <h2>资料来源</h2>
+        <div class="grid-2">
+          <ul class="sources">
+            <li><a href="https://www.color.org/" target="_blank" rel="noreferrer">International Color Consortium</a>：ICC 色彩管理组织。</li>
+            <li><a href="https://www.color.org/specification/ICC.1-2022-05.pdf" target="_blank" rel="noreferrer">ICC.1:2022 Profile Specification</a>：ICC Profile 架构与 PCS 概念。</li>
+            <li><a href="https://www.color.org/faqs.xalter" target="_blank" rel="noreferrer">ICC Frequently Asked Questions</a>：Profile、CMM、渲染意图等基础说明。</li>
+            <li><a href="https://www.w3.org/TR/css-color-4/" target="_blank" rel="noreferrer">W3C CSS Color Module Level 4</a>：Web 色彩空间、Display P3、Lab/LCH 等 CSS 表达。</li>
+          </ul>
+          <ul class="sources">
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/color-gamut" target="_blank" rel="noreferrer">MDN @media color-gamut</a>：浏览器色域能力检测。</li>
+            <li><a href="https://developer.chrome.com/docs/css-ui/access-colors-spaces" target="_blank" rel="noreferrer">Chrome Developers: Access more colors and new spaces</a>：现代浏览器广色域支持。</li>
+            <li><a href="https://support.apple.com/guide/colorsync-utility/welcome/mac" target="_blank" rel="noreferrer">Apple ColorSync Utility User Guide</a>：macOS 色彩管理与 Profile 工具。</li>
+            <li><a href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer">Solid Color Image Generator</a>：纯色图片生成工具仓库。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+    const spaces = {
+      srgb: {
+        label: "sRGB",
+        primaries: { r: [0.64, 0.33], g: [0.30, 0.60], b: [0.15, 0.06] },
+        toXYZ: [
+          [0.4124564, 0.3575761, 0.1804375],
+          [0.2126729, 0.7151522, 0.0721750],
+          [0.0193339, 0.1191920, 0.9503041]
+        ],
+        fromXYZ: [
+          [3.2404542, -1.5371385, -0.4985314],
+          [-0.9692660, 1.8760108, 0.0415560],
+          [0.0556434, -0.2040259, 1.0572252]
+        ],
+        gamma: "srgb"
+      },
+      p3: {
+        label: "Display P3",
+        primaries: { r: [0.68, 0.32], g: [0.265, 0.690], b: [0.150, 0.060] },
+        toXYZ: [
+          [0.4865709, 0.2656676, 0.1982173],
+          [0.2289746, 0.6917385, 0.0792869],
+          [0.0000000, 0.0451134, 1.0439444]
+        ],
+        fromXYZ: [
+          [2.4934969, -0.9313836, -0.4027108],
+          [-0.8294889, 1.7626641, 0.0236247],
+          [0.0358458, -0.0761724, 0.9568845]
+        ],
+        gamma: "srgb"
+      },
+      adobe: {
+        label: "Adobe RGB (1998)",
+        primaries: { r: [0.64, 0.33], g: [0.21, 0.71], b: [0.15, 0.06] },
+        toXYZ: [
+          [0.5767309, 0.1855540, 0.1881852],
+          [0.2973769, 0.6273491, 0.0752741],
+          [0.0270343, 0.0706872, 0.9911085]
+        ],
+        fromXYZ: [
+          [2.0413690, -0.5649464, -0.3446944],
+          [-0.9692660, 1.8760108, 0.0415560],
+          [0.0134474, -0.1183897, 1.0154096]
+        ],
+        gamma: "adobe"
+      }
+    };
+
+    function decode(v, gamma) {
+      v = clamp(v, 0, 1);
+      if (gamma === "adobe") return Math.pow(v, 2.19921875);
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+    function encode(v, gamma) {
+      v = clamp(v, 0, 1);
+      if (gamma === "adobe") return Math.pow(v, 1 / 2.19921875);
+      return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+    }
+    function multiplyMatrix(m, v) {
+      return [
+        m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+        m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+        m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]
+      ];
+    }
+    function rgbToXYZ(rgb, key) {
+      const space = spaces[key];
+      const linear = rgb.map(v => decode(v / 255, space.gamma));
+      return multiplyMatrix(space.toXYZ, linear);
+    }
+    function xyzToRgb(xyz, key) {
+      const space = spaces[key];
+      const linear = multiplyMatrix(space.fromXYZ, xyz);
+      return linear.map(v => Math.round(encode(v, space.gamma) * 255));
+    }
+    function xyzToXy(xyz) {
+      const sum = xyz[0] + xyz[1] + xyz[2];
+      if (sum <= 0) return [0.3127, 0.3290];
+      return [xyz[0] / sum, xyz[1] / sum];
+    }
+    function clippedRgb(rgb) {
+      return rgb.map(v => clamp(Math.round(v), 0, 255));
+    }
+    function rgbCss(rgb) {
+      const c = clippedRgb(rgb);
+      return `rgb(${c[0]} ${c[1]} ${c[2]})`;
+    }
+    function p3Css(rgb) {
+      return `color(display-p3 ${(rgb[0] / 255).toFixed(4)} ${(rgb[1] / 255).toFixed(4)} ${(rgb[2] / 255).toFixed(4)})`;
+    }
+
+    const cieLocus = [
+      [.1741,.0050], [.1724,.0041], [.1733,.0048], [.1726,.0048], [.1714,.0051],
+      [.1689,.0069], [.1644,.0109], [.1566,.0177], [.1439,.0297], [.1241,.0578],
+      [.0913,.1327], [.0454,.2949], [.0082,.5384], [.0139,.7502], [.0743,.8338],
+      [.1547,.8059], [.2296,.7543], [.3016,.6923], [.3731,.6245], [.4441,.5547],
+      [.5125,.4866], [.5752,.4242], [.6270,.3725], [.6658,.3340], [.6915,.3083],
+      [.7080,.2920], [.7190,.2809], [.7250,.2740], [.7300,.2698], [.7320,.2676],
+      [.7334,.2665], [.7340,.2658], [.7347,.2653]
+    ];
+
+    function drawCie() {
+      const canvas = $("#cieCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = rect.width, h = rect.height;
+      const pad = { l: 70, r: 28, t: 26, b: 54 };
+      const xMax = .8, yMax = .9;
+      const availableW = w - pad.l - pad.r;
+      const availableH = h - pad.t - pad.b;
+      const unit = Math.min(availableW / xMax, availableH / yMax);
+      const plotW = xMax * unit;
+      const plotH = yMax * unit;
+      const plotLeft = pad.l + Math.max(0, (availableW - plotW) / 2);
+      const plotBottom = h - pad.b - Math.max(0, (availableH - plotH) / 2);
+      const plotTop = plotBottom - plotH;
+      const plotRight = plotLeft + plotW;
+      const xOf = x => plotLeft + x * unit;
+      const yOf = y => plotBottom - y * unit;
+      const drawClosedPath = points => {
+        ctx.beginPath();
+        points.forEach((p, i) => {
+          const x = xOf(p[0]);
+          const y = yOf(p[1]);
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        });
+        ctx.closePath();
+      };
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0d1015";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = "rgba(255,255,255,.11)";
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      ctx.textBaseline = "alphabetic";
+      for (let i = 0; i <= 8; i++) {
+        const x = xOf(i / 10);
+        ctx.beginPath();
+        ctx.moveTo(x, plotTop);
+        ctx.lineTo(x, plotBottom);
+        ctx.stroke();
+        ctx.fillText(i === 0 ? "0" : "." + i, x - 7, plotBottom + 28);
+      }
+      for (let i = 0; i <= 9; i++) {
+        const y = yOf(i / 10);
+        ctx.beginPath();
+        ctx.moveTo(plotLeft, y);
+        ctx.lineTo(plotRight, y);
+        ctx.stroke();
+        ctx.fillText(i === 0 ? "0" : "." + i, plotLeft - 44, y + 4);
+      }
+
+      ctx.fillStyle = "#dbe7f7";
+      ctx.fillText("x", plotRight - 8, plotBottom + 48);
+      ctx.save();
+      ctx.translate(plotLeft - 60, plotTop + plotH / 2 + 8);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("y", 0, 0);
+      ctx.restore();
+
+      const spectrum = ctx.createLinearGradient(xOf(.05), yOf(.05), xOf(.72), yOf(.75));
+      spectrum.addColorStop(0, "rgba(74,112,255,.55)");
+      spectrum.addColorStop(.28, "rgba(70,217,232,.48)");
+      spectrum.addColorStop(.52, "rgba(86,210,146,.48)");
+      spectrum.addColorStop(.72, "rgba(255,209,102,.50)");
+      spectrum.addColorStop(1, "rgba(255,107,122,.52)");
+      drawClosedPath(cieLocus);
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = spectrum;
+      ctx.fillRect(plotLeft, plotTop, plotW, plotH);
+      ctx.restore();
+
+      drawClosedPath(cieLocus);
+      ctx.fillStyle = "rgba(255,255,255,.025)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.72)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      cieLocus.forEach((p, i) => {
+        const x = xOf(p[0]);
+        const y = yOf(p[1]);
+        if (i) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+      });
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.50)";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(xOf(.7347), yOf(.2653));
+      ctx.lineTo(xOf(.1741), yOf(.0050));
+      ctx.stroke();
+
+      const spaceKey = $("#rgbSpace").value;
+      const gamutDefs = [
+        { key: "srgb", label: "sRGB", color: "#46d9e8" },
+        { key: "p3", label: "Display P3", color: "#ffd166" },
+        { key: "adobe", label: "Adobe RGB", color: "#9a8cff" }
+      ];
+      gamutDefs.forEach(gamut => {
+        const space = spaces[gamut.key];
+        const pts = [space.primaries.r, space.primaries.g, space.primaries.b];
+        const active = gamut.key === spaceKey;
+        drawClosedPath(pts);
+        ctx.fillStyle = active ? `${gamut.color}33` : `${gamut.color}12`;
+        ctx.strokeStyle = gamut.color;
+        ctx.lineWidth = active ? 4 : 1.8;
+        ctx.globalAlpha = active ? 1 : .48;
+        ctx.fill();
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        pts.forEach((p, i) => {
+          ctx.fillStyle = gamut.color;
+          ctx.beginPath();
+          ctx.arc(xOf(p[0]), yOf(p[1]), active ? 5.5 : 3.8, 0, Math.PI * 2);
+          ctx.fill();
+          if (active) {
+            ctx.fillStyle = "#dbe7f7";
+            ctx.font = "11px system-ui";
+            ctx.fillText(`${["R","G","B"][i]}`, xOf(p[0]) + 7, yOf(p[1]) - 7);
+          }
+        });
+      });
+
+      ctx.fillStyle = "#dbe7f7";
+      ctx.font = "12px system-ui";
+      ctx.beginPath();
+      ctx.arc(xOf(.3127), yOf(.3290), 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillText("D65", xOf(.3127) + 8, yOf(.3290) + 4);
+
+      const rgb = [Number($("#rgbR").value), Number($("#rgbG").value), Number($("#rgbB").value)];
+      const xy = xyzToXy(rgbToXYZ(rgb, spaceKey));
+      const activeColor = gamutDefs.find(g => g.key === spaceKey)?.color || "#fff";
+      ctx.fillStyle = "#f7fbff";
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(xOf(xy[0]), yOf(xy[1]), 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(10,14,20,.70)";
+      ctx.strokeStyle = "rgba(255,255,255,.18)";
+      ctx.lineWidth = 1;
+      const label = `${spaces[spaceKey].label}  x=${xy[0].toFixed(4)}, y=${xy[1].toFixed(4)}`;
+      ctx.font = "13px system-ui";
+      const labelW = Math.min(ctx.measureText(label).width + 22, w - pad.l - pad.r);
+      const labelX = clamp(xOf(xy[0]) + 14, pad.l, w - pad.r - labelW);
+      const labelY = clamp(yOf(xy[1]) - 34, pad.t, h - pad.b - 30);
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(labelX, labelY, labelW, 28, 7);
+      else ctx.rect(labelX, labelY, labelW, 28);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#dbe7f7";
+      ctx.fillText(label, labelX + 11, labelY + 19);
+
+      $("#cieReadout").innerHTML = `${spaces[spaceKey].label}<br>x=${xy[0].toFixed(4)}, y=${xy[1].toFixed(4)}`;
+    }
+
+    function updateRgbDemo() {
+      const rgb = [Number($("#rgbR").value), Number($("#rgbG").value), Number($("#rgbB").value)];
+      const key = $("#rgbSpace").value;
+      const xyz = rgbToXYZ(rgb, key);
+      const srgb = xyzToRgb(xyz, "srgb");
+      $("#managedSwatch").style.background = key === "p3" ? p3Css(rgb) : rgbCss(srgb);
+      $("#srgbSwatch").style.background = rgbCss(rgb);
+      $("#managedSwatch").innerHTML = `<b>${spaces[key].label}</b><span>RGB(${rgb.join(", ")})</span>`;
+      $("#srgbSwatch").innerHTML = `<b>sRGB 猜测</b><span>RGB(${rgb.join(", ")})</span>`;
+      const xy = xyzToXy(xyz);
+      $("#rgbReadout").innerHTML = `当前数值：RGB(${rgb.join(", ")}) · 按 ${spaces[key].label} 解释 → xy(${xy[0].toFixed(4)}, ${xy[1].toFixed(4)}) · 显示预览已裁切到当前浏览器可显示范围。`;
+      drawCie();
+    }
+
+    let assignMode = "assign";
+    function updateAssignDemo() {
+      const rgb = [220, 48, 36];
+      const source = $("#assignSource").value;
+      const target = $("#assignTarget").value;
+      const sourceXYZ = rgbToXYZ(rgb, source);
+      const afterRgb = assignMode === "assign" ? rgb : clippedRgb(xyzToRgb(sourceXYZ, target));
+      const afterXYZ = assignMode === "assign" ? rgbToXYZ(rgb, target) : sourceXYZ;
+      $("#beforeSwatch").style.background = rgbCss(xyzToRgb(sourceXYZ, "srgb"));
+      $("#afterSwatch").style.background = rgbCss(xyzToRgb(afterXYZ, "srgb"));
+      $("#beforeSwatch").innerHTML = `<b>原始</b><span>${spaces[source].label} · RGB(${rgb.join(", ")})</span>`;
+      $("#afterSwatch").innerHTML = `<b>${assignMode === "assign" ? "指定" : "转换"}</b><span>${spaces[target].label} · RGB(${afterRgb.join(", ")})</span>`;
+      $("#assignReadout").innerHTML = assignMode === "assign"
+        ? `指定 Profile：RGB 数字保持 ${rgb.join(", ")}，但解释方式从 ${spaces[source].label} 改成 ${spaces[target].label}，外观会变化。`
+        : `转换 Profile：尽量保持原始外观，RGB 数字重算为 ${afterRgb.join(", ")}。`;
+    }
+
+    function updateGamutNote() {
+      const supportsP3 = matchMedia("(color-gamut: p3)").matches;
+      const supportsRec2020 = matchMedia("(color-gamut: rec2020)").matches;
+      $("#gamutNote").innerHTML = supportsRec2020
+        ? "当前浏览器报告支持 Rec.2020 级别色域；仍需确认具体显示器和系统色彩管理。"
+        : (supportsP3 ? "当前浏览器报告支持 Display P3 色域，适合测试广色域 CSS 与图片。" : "当前浏览器没有报告 P3 色域，广色域示例可能会被映射到 sRGB。");
+    }
+
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      $("#progress").style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+      const pos = scrollY + 90;
+      $$("section[id]").forEach(sec => {
+        const link = $(`#navLinks a[href="#${sec.id}"]`);
+        if (link) link.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
+      });
+    }
+
+    $$("#rgbR,#rgbG,#rgbB,#rgbSpace").forEach(el => el.addEventListener("input", updateRgbDemo));
+    $$("#assignSource,#assignTarget").forEach(el => el.addEventListener("input", updateAssignDemo));
+    $("#assignMode").addEventListener("click", () => {
+      assignMode = "assign";
+      $("#assignMode").classList.add("active");
+      $("#assignMode").setAttribute("aria-pressed", "true");
+      $("#convertMode").classList.remove("active");
+      $("#convertMode").setAttribute("aria-pressed", "false");
+      updateAssignDemo();
+    });
+    $("#convertMode").addEventListener("click", () => {
+      assignMode = "convert";
+      $("#convertMode").classList.add("active");
+      $("#convertMode").setAttribute("aria-pressed", "true");
+      $("#assignMode").classList.remove("active");
+      $("#assignMode").setAttribute("aria-pressed", "false");
+      updateAssignDemo();
+    });
+    addEventListener("scroll", updateProgress, { passive: true });
+    addEventListener("resize", () => { updateRgbDemo(); updateAssignDemo(); });
+    updateRgbDemo();
+    updateAssignDemo();
+    updateGamutNote();
+    updateProgress();
+  </script>
+</body>
+</html>
