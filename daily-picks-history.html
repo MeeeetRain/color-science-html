@@ -190,6 +190,43 @@
       font-size: 14px;
       border-top: 1px solid var(--line);
     }
+    footer a {
+      color: var(--cyan);
+    }
+    .contributors {
+      margin-top: 18px;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+    .contributors-title {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .contributors-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .contributor-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,.04);
+      color: var(--ink);
+    }
+    .contributor-pill small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .contributors-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
 
     @media (max-width: 720px) {
       .nav-links { display: none; }
@@ -264,6 +301,16 @@
 
   <footer>
     <p>色彩科学科普项目 · 每日推荐归档</p>
+    <!-- CONTRIBUTORS_START -->
+    <div class="contributors" aria-label="贡献者名单">
+      <p class="contributors-title">贡献者</p>
+      <div class="contributors-list">
+        <span class="contributor-pill">User <small>8 次提交</small></span>
+        <a class="contributor-pill" href="https://github.com/MeeeetRain" target="_blank" rel="noreferrer">MeeeetRain <small>2 次提交</small></a>
+      </div>
+      <p class="contributors-note">按 GitHub 默认分支提交者记录更新</p>
+    </div>
+    <!-- CONTRIBUTORS_END -->
   </footer>
 </body>
 </html>
