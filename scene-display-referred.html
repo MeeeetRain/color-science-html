@@ -4,12 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scene-referred vs Display-referred | 色彩科学</title>
-  <meta name="description" content="理解 Scene-referred 与 Display-referred：调色是在改场景光还是屏幕光？Log、RAW、ACES、DaVinci Wide Gamut 全解析。">
+  <meta name="description" content="理解 Scene-referred 与 Display-referred：同一份素材在色彩管理链路中什么时候描述场景光，什么时候描述屏幕光。">
   <style>
     :root {
       color-scheme: dark;
+      --bg: #101217;
+      --panel: #181c24;
+      --panel-2: #202532;
       --ink: #f4f6fb;
       --muted: #b7c0ce;
+      --soft: #8d98aa;
       --line: rgba(255,255,255,.14);
       --cyan: #46d9e8;
       --lime: #a9e55f;
@@ -18,103 +22,350 @@
       --violet: #9a8cff;
       --radius: 8px;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      margin: 0;
-      background: linear-gradient(180deg, #101217 0%, #151922 46%, #101217 100%);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 16% 6%, rgba(70,217,232,.14), transparent 27%),
+        radial-gradient(circle at 86% 16%, rgba(255,209,102,.10), transparent 24%),
+        linear-gradient(180deg, #101217 0%, #151923 48%, #101217 100%);
       color: var(--ink);
-      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      font: 16px/1.66 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     a { color: inherit; text-decoration: none; }
-    .progress {
-      position: fixed; inset: 0 0 auto 0; height: 3px;
-      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose));
-      transform-origin: 0 50%; transform: scaleX(0); z-index: 50;
+    code {
+      padding: 1px 5px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 5px;
+      background: rgba(255,255,255,.06);
+      color: #eaf7ff;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .92em;
     }
-    header { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid var(--line); background: rgba(16,18,23,.84); backdrop-filter: blur(16px); }
-    .nav { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 60;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16,18,23,.86);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
     .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; justify-content: end; overflow-x: auto; scrollbar-width: none; }
-    .links a { padding: 7px 10px; border-radius: 999px; color: var(--muted); font-size: 13px; white-space: nowrap; }
-    .links a:hover, .links a.active { color: var(--ink); background: rgba(255,255,255,.09); }
+    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .links a {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.08);
+    }
     main { overflow: hidden; }
-    section { padding: 72px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .wrap { max-width: 1120px; margin: 0 auto; }
-    .hero { min-height: 76vh; display: grid; align-items: center; position: relative; isolation: isolate; }
-    .hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(110deg, rgba(70,217,232,.20), rgba(169,229,95,.10) 45%, rgba(255,107,122,.14)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect fill='%230b0d12' width='1600' height='900'/%3E%3C/svg%3E") center/cover; }
-    .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(16,18,23,.96) 0%, rgba(16,18,23,.72) 54%, rgba(16,18,23,.35) 100%); }
-    .eyebrow { color: var(--gold); font-size: 13px; text-transform: uppercase; letter-spacing: .16em; font-weight: 780; margin-bottom: 12px; }
-    h1 { margin: 0 0 18px; max-width: 14ch; font-size: clamp(42px, 7vw, 84px); line-height: .98; }
-    h2 { margin: 0 0 14px; font-size: clamp(28px, 4vw, 42px); line-height: 1.08; }
+    section {
+      padding: 72px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+    .hero {
+      min-height: 78vh;
+      display: grid;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(110deg, rgba(12,14,20,.96), rgba(12,14,20,.64) 56%, rgba(12,14,20,.38)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23101318'/%3E%3Cstop offset='.35' stop-color='%2317737d'/%3E%3Cstop offset='.66' stop-color='%2396a866'/%3E%3Cstop offset='1' stop-color='%23804055'/%3E%3C/linearGradient%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.68' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='.35'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 .13'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23g)'/%3E%3Cpath d='M0 690 C270 610 430 760 690 620 C960 475 1110 340 1320 430 C1470 494 1535 452 1600 420 L1600 900 L0 900 Z' fill='%23090b10' opacity='.72'/%3E%3Cpath d='M0 750 C300 650 450 778 720 640 C1010 490 1150 470 1600 610' fill='none' stroke='%23ffffff' stroke-opacity='.18' stroke-width='3'/%3E%3Crect width='1600' height='900' filter='url(%23n)'/%3E%3C/svg%3E") center/cover;
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 780;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      max-width: 13ch;
+      margin: 0 0 20px;
+      font-size: clamp(42px, 7vw, 84px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
     h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
-    h4 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
     p { margin: 0 0 14px; color: var(--muted); }
-    .lead { max-width: 720px; color: #e7edf7; font-size: clamp(17px, 2vw, 21px); }
-    .note { border-left: 3px solid var(--cyan); padding: 10px 0 10px 16px; color: #dce8f7; background: linear-gradient(90deg, rgba(70,217,232,.10), transparent); }
-    .warn { color: #ffe7b0; background: rgba(255,209,102,.10); border: 1px solid rgba(255,209,102,.22); border-radius: var(--radius); padding: 12px; margin-top: 12px; }
-    .card { background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026)); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
-    .tag { display: inline-flex; padding: 3px 8px; border-radius: 999px; color: #101318; background: var(--gold); font-size: 12px; font-weight: 760; margin-bottom: 12px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
-    .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 20px 0; }
-    .kpi-item { background: rgba(255,255,255,.045); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
-    .kpi-label { font-size: 12px; color: var(--muted); }
-    .kpi-val { font-size: 22px; font-weight: 720; line-height: 1; }
-    .kpi-sub { font-size: 11px; color: var(--muted); }
-    .flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
-    .flow-node { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; background: rgba(255,255,255,.04); text-align: center; min-width: 140px; }
-    .flow-node b { display: block; color: var(--cyan); margin-bottom: 4px; font-size: 13px; }
-    .flow-arrow { color: var(--gold); font-size: 24px; font-weight: 700; }
-    .comp-table { width: 100%; border-collapse: collapse; border-radius: var(--radius); border: 1px solid var(--line); background: rgba(255,255,255,.035); margin: 16px 0; }
-    .comp-table th, .comp-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.08); text-align: left; vertical-align: top; }
-    .comp-table th { color: #101318; background: var(--gold); font-weight: 700; }
-    .comp-table tr:hover td { background: rgba(255,255,255,.04); }
-    .comp-table .cat { color: var(--cyan); font-weight: 700; white-space: nowrap; }
-    .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; }
-    .step { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: rgba(255,255,255,.04); }
-    .step-num { color: var(--cyan); font-weight: 800; font-size: 12px; margin-bottom: 6px; }
-    .wf-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-    .wf-card { border-radius: var(--radius); padding: 20px; border: 1px solid var(--line); }
-    .wf-card.scene { border-left: 4px solid var(--cyan); background: rgba(70,217,232,.07); }
-    .wf-card.display { border-left: 4px solid var(--gold); background: rgba(255,209,102,.07); }
-    .wf-card h3 { margin: 0 0 12px; font-size: 16px; }
-    .wf-card ul { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    .wf-card li { display: flex; gap: 10px; align-items: baseline; font-size: 14px; color: var(--muted); }
-    .wf-card li b { color: var(--ink); white-space: nowrap; min-width: 7em; }
-    .myth-list { display: grid; gap: 16px; margin: 16px 0; }
-    .myth-item { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: rgba(255,255,255,.03); }
-    .myth-item .myth { color: var(--rose); font-weight: 700; margin-bottom: 6px; }
-    .myth-item .truth { color: var(--lime); }
-    .sources li { margin-bottom: 8px; color: var(--muted); }
-    .sources a { color: #d8efff; }
-    .canvas-box { position: relative; min-height: 380px; border: 1px solid var(--line); border-radius: var(--radius); background: #0d1015; overflow: hidden; }
+    .lead {
+      max-width: 780px;
+      color: #e9eef7;
+      font-size: clamp(18px, 2vw, 22px);
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(280px, .48fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 12px 0 12px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      padding: 20px;
+      min-width: 0;
+    }
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(70,217,232,.16);
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 760;
+      margin-bottom: 10px;
+    }
+    .tag.gold { background: rgba(255,209,102,.16); color: var(--gold); }
+    .tag.rose { background: rgba(255,107,122,.16); color: var(--rose); }
+    .metric {
+      font-size: clamp(30px, 4vw, 44px);
+      font-weight: 820;
+      line-height: 1;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .mini { color: var(--soft); font-size: 13px; }
+    .state-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .state-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: rgba(255,255,255,.04);
+    }
+    .state-card.scene { border-color: rgba(70,217,232,.44); background: rgba(70,217,232,.07); }
+    .state-card.display { border-color: rgba(255,209,102,.44); background: rgba(255,209,102,.07); }
+    .state-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 28px;
+      font-weight: 820;
+      min-width: 30px;
+    }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .pipe-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+      padding: 14px;
+      min-height: 116px;
+      transition: .18s ease;
+    }
+    .pipe-step.active {
+      border-color: var(--cyan);
+      background: rgba(70,217,232,.12);
+      box-shadow: 0 0 0 1px rgba(70,217,232,.16) inset;
+    }
+    .pipe-step b { display: block; color: var(--ink); margin-bottom: 5px; }
+    .pipe-step span { display: block; color: var(--soft); font-size: 12px; line-height: 1.45; }
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.07);
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+    button.active, button[aria-pressed="true"] {
+      color: #101318;
+      background: var(--cyan);
+      border-color: transparent;
+      font-weight: 780;
+    }
+    input[type="range"] {
+      accent-color: var(--cyan);
+      min-width: 240px;
+      flex: 1;
+    }
+    .canvas-box {
+      position: relative;
+      height: 360px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0a0d12;
+      overflow: hidden;
+    }
     canvas { width: 100%; height: 100%; display: block; }
-    .readout { position: absolute; right: 12px; top: 12px; padding: 9px 11px; border: 1px solid var(--line); background: rgba(13,16,21,.82); border-radius: var(--radius); color: #eef5ff; font-size: 13px; }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
-    label { color: var(--muted); font-size: 13px; }
-    input, select, button { font: inherit; }
-    input[type="range"] { accent-color: var(--cyan); width: 100%; }
-    select, input[type="number"] { background: rgba(255,255,255,.07); border: 1px solid var(--line); border-radius: var(--radius); min-height: 38px; padding: 7px 9px; color: var(--ink); }
-    button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.07); color: var(--ink); cursor: pointer; }
-    button.active, button[aria-pressed="true"] { color: #101318; background: var(--cyan); border-color: transparent; font-weight: 760; }
-    .seg { display: inline-flex; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; gap: 2px; flex-wrap: wrap; }
-    .seg button { min-height: 30px; padding: 4px 12px; font-size: 13px; background: transparent; border: none; border-radius: 5px; color: var(--muted); cursor: pointer; }
-    .seg button:hover { color: var(--ink); }
-    .seg button[aria-pressed="true"] { background: var(--cyan); color: #101318; font-weight: 700; }
-    @media (max-width: 900px) {
-      .nav { grid-template-columns: 1fr; }
-      .links { justify-content: start; }
-      .grid-2, .wf-compare { grid-template-columns: 1fr; }
-      .kpi-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .flow { flex-direction: column; }
-      .flow-arrow { transform: rotate(90deg); }
+    .readout {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      max-width: min(360px, calc(100% - 24px));
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(10,13,18,.82);
+      color: #eef5ff;
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+    th, td {
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 11px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: rgba(255,209,102,.92);
+      color: #111318;
+      font-weight: 820;
+    }
+    td { color: var(--muted); }
+    td b { color: var(--ink); }
+    .workflows {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .recipe {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .recipe div {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,.035);
+    }
+    .recipe b { color: var(--ink); }
+    .myths {
+      display: grid;
+      gap: 12px;
+    }
+    .myth {
+      display: grid;
+      grid-template-columns: minmax(200px, .42fr) minmax(0, 1fr);
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(255,255,255,.035);
+    }
+    .myth b { color: var(--rose); }
+    .myth span { color: var(--lime); }
+    .source-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .source-list a {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(255,255,255,.04);
+      color: #e9f6ff;
+    }
+    .source-list span {
+      display: block;
+      margin-top: 4px;
+      color: var(--soft);
+      font-size: 13px;
+    }
+    @media (max-width: 920px) {
+      .section-head, .grid-2, .grid-3, .grid-4, .workflows, .source-list { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: 1fr; }
+      .state-grid { grid-template-columns: 1fr; }
+      .state-arrow { transform: rotate(90deg); }
+      .myth { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       section { padding: 54px 16px; }
-      .hero { min-height: 62vh; }
+      .hero { min-height: 66vh; }
       h1 { font-size: 42px; }
-      .kpi-row { grid-template-columns: 1fr; }
-      .canvas-box { min-height: 320px; }
+      .canvas-box { height: 320px; }
+      input[type="range"] { min-width: 100%; }
     }
   </style>
 </head>
@@ -124,561 +375,459 @@
     <nav class="nav" aria-label="主导航">
       <a class="brand" href="index.html">← 色彩科学</a>
       <div class="links" id="navLinks">
-        <a href="#why">为什么多版本</a>
-        <a href="#scene">Scene-referred</a>
-        <a href="#display">Display-referred</a>
-        <a href="#log">Log 角色</a>
-        <a href="#transform">Output Transform</a>
-        <a href="#resolve">Resolve 实战</a>
-        <a href="#compare">对比表</a>
+        <a href="#model">核心模型</a>
+        <a href="#states">三种状态</a>
+        <a href="#pipeline">链路</a>
+        <a href="#transform">Output</a>
+        <a href="#workflow">Resolve</a>
         <a href="#myths">误区</a>
+        <a href="#sources">来源</a>
       </div>
     </nav>
   </header>
+
   <main>
     <section class="hero" id="top">
       <div class="wrap">
-        <div class="eyebrow">Scene vs Display</div>
-        <h1>调色是在改场景，还是在改屏幕？</h1>
-        <p class="lead">
-          同一份素材，为什么可以输出 Rec.709、P3、PQ HDR 多个"正确版本"？
-          Scene-referred 和 Display-referred 是理解现代色彩管理的核心钥匙。
-        </p>
+        <div class="eyebrow">Scene-referred / Display-referred</div>
+        <h1>调色到底是在改场景，还是改屏幕？</h1>
+        <p class="lead">这两个词不只是色彩管理术语。它们决定了你调曝光时是在移动“场景里的光”，还是在修改“某台屏幕上的成片外观”。理解这一点，Log、ACES、DaVinci Wide Gamut、Rec.709 和 HDR 输出会突然连成一条线。</p>
       </div>
     </section>
 
-    <!-- 1. 为什么多版本 -->
-    <section id="why">
+    <section id="model">
       <div class="wrap">
-        <div class="note">
-          核心理解：<b>Scene-referred</b> 描述的是拍摄现场或虚拟场景中的光；<b>Display-referred</b> 描述的是某个目标显示设备最终发出的光。
+        <div class="section-head">
+          <div>
+            <h2>1. 先把问题换一种问法</h2>
+            <p>不要先问“这个素材是什么色彩空间”。更好的问题是：这个图像现在处在什么状态？它的数字参照的是现场光，还是目标显示器？同一个 <code>0.5</code>，在不同状态下含义完全不同。</p>
+          </div>
+          <div class="note">核心句：Scene-referred 描述场景光；Display-referred 描述屏幕光。中间的 Output Transform 是把场景“渲染”为屏幕画面的翻译器。</div>
         </div>
-        <div class="flow">
-          <div class="flow-node"><b>真实场景 / CG / RAW</b></div>
-          <div class="flow-arrow">→</div>
-          <div class="flow-node"><b>Scene-linear</b><br>线性场景光</div>
-          <div class="flow-arrow">→</div>
-          <div class="flow-node" style="border-color:var(--cyan)"><b>Scene-referred</b><br>Log / Wide Gamut</div>
-          <div class="flow-arrow">→</div>
-          <div class="flow-node"><b>调色 / Look</b><br>曝光、白平衡、合成</div>
-          <div class="flow-arrow">→</div>
-          <div class="flow-node" style="border-color:var(--gold)"><b>Output Transform</b><br>Tone / Gamut mapping</div>
-          <div class="flow-arrow">→</div>
-          <div class="flow-node"><b>Display-referred</b><br>Rec.709 / P3 / PQ</div>
+
+        <div class="state-grid">
+          <div class="state-card scene">
+            <span class="tag">Scene-referred</span>
+            <h3>参照拍摄现场或虚拟场景</h3>
+            <p>它保留“比 18% 灰高几档”“灯比墙亮多少倍”这类曝光关系。RAW、Linear EXR、ACES、LogC、S-Log3、V-Log 都属于这个大思路，只是有的线性，有的是 Log 编码。</p>
+          </div>
+          <div class="state-arrow">→</div>
+          <div class="state-card display">
+            <span class="tag gold">Display-referred</span>
+            <h3>参照目标显示器最终发光</h3>
+            <p>它已经为 Rec.709 100 nit、P3 影院、sRGB 网页或 PQ HDR 1000 nit 这类目标做过渲染。此时数字更接近“屏幕应该怎么亮”，而不是“现场原来多亮”。</p>
+          </div>
         </div>
-        <div class="note" style="margin-top:20px">
-          <b>对创作者的影响：</b>理解这条链路，你就知道什么时候该在 Scene 端调色（曝光、白平衡、合成），什么时候该在 Display 端微调。
+
+        <div class="grid-4" style="margin-top:16px">
+          <div class="card"><span class="tag">输入</span><div class="metric">IDT / CST</div><p>告诉软件素材原本怎样编码：S-Log3/S-Gamut3.Cine、LogC4/AWG4、BRAW Gen 5 等。</p></div>
+          <div class="card"><span class="tag">工作</span><div class="metric">Wide Gamut</div><p>把素材放进统一的宽色域工作空间，例如 ACEScct 或 DaVinci Wide Gamut Intermediate。</p></div>
+          <div class="card"><span class="tag gold">渲染</span><div class="metric">View</div><p>通过 tone mapping、gamut mapping、色貌调整，把场景状态变成可看的显示状态。</p></div>
+          <div class="card"><span class="tag rose">输出</span><div class="metric">Delivery</div><p>编码成 Rec.709、sRGB、P3、PQ HDR 或 HLG。这个版本通常已经是 display-referred。</p></div>
         </div>
       </div>
     </section>
 
-    <!-- 2. Scene-referred -->
-    <section id="scene">
+    <section id="states">
       <div class="wrap">
-        <h2>1. Scene-referred：数字描述的是场景光</h2>
-        <p>Scene-referred（场景参照）图像的每一个数值，对应的是<b>拍摄现场或虚拟场景中的真实光线强度</b>。它不是"这张图看起来有多亮"，而是"当时那个地方实际有多亮"。</p>
-        <div class="kpi-row">
-          <div class="kpi-item">
-            <span class="kpi-label">参照对象</span>
-            <span class="kpi-val" style="color:var(--cyan)">场景光</span>
-            <span class="kpi-sub">拍摄现场或虚拟场景</span>
+        <div class="section-head">
+          <div>
+            <h2>2. 三种图像状态，不要混成两个词</h2>
+            <p>“Scene-referred vs Display-referred”最容易误解的地方，是把 scene-referred 当成 scene-linear。实际上 Log 也是 scene-referred，只是它不是线性光。</p>
           </div>
-          <div class="kpi-item">
-            <span class="kpi-label">数值特点</span>
-            <span class="kpi-val" style="color:var(--lime)">可超过 1</span>
-            <span class="kpi-sub">保留曝光关系</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-label">常见例子</span>
-            <span class="kpi-val" style="font-size:16px;color:var(--gold)">RAW, Log, ACES</span>
-            <span class="kpi-sub">线性或对数编码</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-label">适合操作</span>
-            <span class="kpi-val" style="font-size:16px;color:var(--violet)">曝光/白平衡</span>
-            <span class="kpi-sub">合成、Look 开发</span>
-          </div>
+          <div class="note">判断方法：问这个值能不能直接当作目标屏幕亮度看。不能直接看、还需要 View/Output Transform 的，通常还在 scene-referred 一侧。</div>
         </div>
-        <div class="card">
-          <span class="tag">一句话定义</span>
-          <h3>Scene-referred = 数字描述场景光</h3>
-          <p>如果场景里有一盏灯是 1000 nit，阴影是 1 nit，那么 scene-referred 图像里这两个区域的数值比大约是 1000:1。这个关系在数值中<b>被保留</b>了，不管你后来把它显示在什么屏幕上。</p>
-        </div>
-        <div class="grid-2" style="margin-top:16px">
+
+        <div class="grid-3">
           <div class="card">
-            <h4 style="color:var(--cyan)">Scene-linear 是线性场景光</h4>
-            <p style="font-size:14px">数值与物理光强度成正比。0.5 表示"一半亮度"。例子：EXR 线性文件、ACES2065-1。问题是：要保留 14 档动态范围，需要极高位深。</p>
+            <span class="tag">Scene-linear</span>
+            <h3>线性场景光</h3>
+            <p>数值和场景光强成正比。<code>2.0</code> 真的是 <code>1.0</code> 的两倍光。常见于 Linear EXR、ACES2065-1、ACEScg、CG 渲染与合成。</p>
+            <p class="mini">优势：物理运算直觉清晰。风险：动态范围大，需要浮点或高位深。</p>
           </div>
           <div class="card">
-            <h4 style="color:var(--lime)">Scene-referred 不一定线性</h4>
-            <p style="font-size:14px">Log 编码也是 scene-referred，但它用对数压缩了高光，不是线性的。例子：S-Log3、LogC、V-Log、DaVinci Wide Gamut Intermediate。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Display-referred -->
-    <section id="display">
-      <div class="wrap">
-        <h2>2. Display-referred：数字描述的是屏幕光</h2>
-        <p>Display-referred（显示参照）图像的每一个数值，对应的是<b>目标显示设备最终发出的光线强度</b>。它已经考虑了特定屏幕的亮度、色域和观看环境。</p>
-        <div class="kpi-row">
-          <div class="kpi-item">
-            <span class="kpi-label">参照对象</span>
-            <span class="kpi-val" style="color:var(--gold)">显示器光</span>
-            <span class="kpi-sub">目标屏幕发出的光</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-label">数值特点</span>
-            <span class="kpi-val" style="color:var(--rose)">0–1 范围</span>
-            <span class="kpi-sub">已被压进显示范围</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-label">常见例子</span>
-            <span class="kpi-val" style="font-size:15px;color:var(--violet)">Rec.709, sRGB</span>
-            <span class="kpi-sub">PQ HDR 成片</span>
-          </div>
-          <div class="kpi-item">
-            <span class="kpi-label">适合操作</span>
-            <span class="kpi-val" style="font-size:15px;color:var(--lime)">最终微调</span>
-            <span class="kpi-sub">交付检查、网页图片</span>
-          </div>
-        </div>
-        <div class="card">
-          <span class="tag" style="background:var(--gold)">一句话定义</span>
-          <h3>Display-referred = 数字描述屏幕光</h3>
-          <p>如果一段 Rec.709 视频里某个像素是 0.7，那它对应的就是"在 Rec.709 标准显示器上发出 70% 亮度的光"。这个数值已经<b>不是</b>场景里的真实亮度了——它已经经过了 tone mapping。</p>
-        </div>
-        <div class="warn">
-          <b>重要：</b>PQ HDR 成片通常是 display-referred！虽然 PQ 码值对应绝对 nit 值，但成片已经经过了 tone mapping，被压缩到了目标 HDR 显示器的范围（如 1000 nit）。
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. 对比表 -->
-    <section id="compare">
-      <div class="wrap">
-        <h2>3. Scene-referred vs Display-referred 对比表</h2>
-        <table class="comp-table">
-          <thead><tr><th>维度</th><th>Scene-referred</th><th>Display-referred</th></tr></thead>
-          <tbody>
-            <tr><td class="cat">参照对象</td><td>场景光（拍摄现场 / 虚拟场景）</td><td>显示器光（目标屏幕发出的光）</td></tr>
-            <tr><td class="cat">常见例子</td><td>RAW、Linear EXR、ACEScg、ACEScct、LogC、S-Log3、V-Log、DaVinci Wide Gamut Intermediate</td><td>Rec.709 Gamma 2.4、sRGB、Display P3、PQ HDR 成片</td></tr>
-            <tr><td class="cat">数值特点</td><td>可超过 1，可有负值，保留曝光关系</td><td>通常被压进目标显示范围（0–1）</td></tr>
-            <tr><td class="cat">适合操作</td><td>曝光、白平衡、合成、Look 开发、多输出</td><td>最终微调、交付检查、网页/普通视频</td></tr>
-            <tr><td class="cat">风险</td><td>直接看会灰或不正常</td><td>后期空间较小，跨显示复用差</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 5. Log 的角色 -->
-    <section id="log">
-      <div class="wrap">
-        <h2>4. Log 是 Scene-referred，但不是 Scene-linear</h2>
-        <p>Log 曲线是 scene-referred 的<b>非线性编码</b>方式。它描述的是场景光，但用对数压缩了高光，在有限的位深内最大化保留动态范围。</p>
-        <div class="grid-2">
-          <div class="card">
-            <span class="tag">Log 的核心特点</span>
-            <ul style="padding-left:20px;color:var(--muted);margin-top:10px">
-              <li><b>Scene-referred：</b>数值参照场景光，不是屏幕光</li>
-              <li><b>非线性：</b>用对数压缩，不是线性比例</li>
-              <li><b>不是最终画面：</b>看起来灰是正常的</li>
-              <li><b>需要转换：</b>通过 LUT / CST / Output Transform</li>
-            </ul>
+            <span class="tag">Scene-referred Log</span>
+            <h3>场景光的非线性编码</h3>
+            <p>LogC、S-Log3、V-Log、Log3G10 仍然参照场景曝光，但用对数曲线把高光压进有限码值。</p>
+            <p class="mini">优势：适合相机记录与调色。风险：直接看会灰，必须配对应 Gamut。</p>
           </div>
           <div class="card">
-            <span class="tag" style="background:var(--rose)">常见误区</span>
-            <ul style="padding-left:20px;color:var(--muted);margin-top:10px">
-              <li>Log 不是"灰色滤镜"或风格</li>
-              <li>Log 不是 display-referred</li>
-              <li>Log 不能直接交付</li>
-              <li>不同品牌 Log 要配对应 Gamut</li>
-            </ul>
+            <span class="tag gold">Display-referred</span>
+            <h3>已经面向目标显示渲染</h3>
+            <p>Rec.709 成片、sRGB 图片、P3 交付、PQ HDR master 通常都属于这里。数字已经服务于“看起来怎样”。</p>
+            <p class="mini">优势：所见接近交付。风险：跨显示复用和二次调色空间更小。</p>
           </div>
         </div>
-        <div class="card" style="margin-top:16px">
-          <h3>Log + Gamut 配对表</h3>
-          <table class="comp-table">
-            <thead><tr><th>品牌</th><th>Log 曲线</th><th>对应 Gamut</th><th>推荐工作空间</th></tr></thead>
+
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead>
+              <tr><th>问题</th><th>Scene-referred</th><th>Display-referred</th></tr>
+            </thead>
             <tbody>
-              <tr><td><b>Sony</b></td><td>S-Log3</td><td>S-Gamut3.Cine</td><td>DaVinci Wide Gamut / ACES</td></tr>
-              <tr><td><b>Canon</b></td><td>C-Log3</td><td>Cinema Gamut</td><td>DaVinci Wide Gamut / ACES</td></tr>
-              <tr><td><b>ARRI</b></td><td>Log C4</td><td>ARRI Wide Gamut 4</td><td>ARRI Wide Gamut / ACES</td></tr>
-              <tr><td><b>Panasonic</b></td><td>V-Log</td><td>V-Gamut</td><td>DaVinci Wide Gamut / ACES</td></tr>
-              <tr><td><b>RED</b></td><td>Log3G10</td><td>REDWideGamut</td><td>REDWideGamut / ACES</td></tr>
+              <tr><td><b>数字参照什么？</b></td><td>场景光、曝光关系、相对中灰</td><td>目标显示器的发光和观看条件</td></tr>
+              <tr><td><b>能否超过 1？</b></td><td>可以，尤其在线性/浮点工作空间里很常见</td><td>交付码值通常限制在目标范围内</td></tr>
+              <tr><td><b>适合做什么？</b></td><td>曝光、白平衡、镜头匹配、合成、Look、多输出</td><td>最终微调、广播交付、网页图片、单一 SDR 快速交付</td></tr>
+              <tr><td><b>典型例子</b></td><td>RAW、Linear EXR、ACEScg、ACEScct、DWG Intermediate、LogC、S-Log3、V-Log</td><td>Rec.709 Gamma 2.4、sRGB、Display P3 交付、PQ HDR master</td></tr>
             </tbody>
           </table>
-          <div class="note" style="margin-top:12px">
-            <b>为什么必须配对？</b>Log 曲线和 Gamut 是一起设计的。混用会导致色彩偏差——比如用 S-Log3 配 V-Gamut，红色会偏橙。
-          </div>
         </div>
       </div>
     </section>
 
-    <!-- 6. Output Transform -->
+    <section id="pipeline">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>3. 互动：一条素材在链路里换了几次身份</h2>
+            <p>点击不同工作流，看同一条素材在输入、工作空间、调色、输出变换和交付阶段的状态。真正的色彩管理不是“套 LUT”，而是明确每一步的图像状态。</p>
+          </div>
+          <div class="note" id="pipelineNote">当前：Scene-referred 管线。素材先被解释到统一工作空间，再通过 Output Transform 生成 Rec.709 / HDR 等显示版本。</div>
+        </div>
+
+        <div class="controls" aria-label="选择工作流">
+          <button class="pipeMode active" data-mode="managed" aria-pressed="true">Scene-referred 管线</button>
+          <button class="pipeMode" data-mode="display" aria-pressed="false">Rec.709 直接调色</button>
+          <button class="pipeMode" data-mode="aces" aria-pressed="false">ACES 管线</button>
+        </div>
+
+        <div class="pipeline" id="pipelineSteps">
+          <div class="pipe-step" data-step="0"><b>Input</b><span>读取相机 Log / RAW，并指定 Input Gamma + Input Gamut。</span></div>
+          <div class="pipe-step" data-step="1"><b>Working Space</b><span>进入 DWG Intermediate、ACEScct 或其他 scene-referred 工作空间。</span></div>
+          <div class="pipe-step" data-step="2"><b>Grade / Look</b><span>调整曝光、白平衡、对比、肤色、风格。这里通常还没变成最终显示。</span></div>
+          <div class="pipe-step" data-step="3"><b>View / Output</b><span>通过 tone scale、gamut compression 和显示编码，把场景渲染到目标显示。</span></div>
+          <div class="pipe-step" data-step="4"><b>Delivery</b><span>Rec.709、sRGB、P3、PQ HDR、HLG 等 display-referred 版本。</span></div>
+        </div>
+      </div>
+    </section>
+
     <section id="transform">
       <div class="wrap">
-        <h2>5. Output Transform：从场景到屏幕的翻译器</h2>
-        <p>Output Transform（输出变换）是 scene-referred 到 display-referred 的关键步骤。它不是"套个风格 LUT"——它是一套完整的数学流程，把高动态范围场景"翻译"成目标显示器能正确显示的信号。</p>
-        <div class="timeline">
-          <div class="step">
-            <div class="step-num">1. Tone Mapping</div>
-            <p style="font-size:14px">把场景的高动态范围压缩进目标显示器的亮度范围。比如把 14 stops 场景压缩到 100 nit SDR 或 1000 nit HDR。</p>
+        <div class="section-head">
+          <div>
+            <h2>4. Output Transform 不是风格 LUT</h2>
+            <p>ACES 文档把 Output Transform 描述为：把 scene-referred ACES 数据一致、可预测地转成适合特定显示设备和观看条件的输出图像。OCIO 里类似的东西叫 View Transform，ARRI 也明确说 Log C 要正确显示到 Rec.709、Rec.2020 或 P3，需要 tone-map 并转换到目标色彩空间。</p>
           </div>
-          <div class="step">
-            <div class="step-num">2. Gamut Mapping</div>
-            <p style="font-size:14px">把工作空间的色域映射到目标显示器的色域。超出部分需要裁切或压缩。</p>
-          </div>
-          <div class="step">
-            <div class="step-num">3. 白点 / 观看环境</div>
-            <p style="font-size:14px">考虑目标环境的白点（D65）和观看条件（暗室、明亮房间等）。</p>
-          </div>
-          <div class="step">
-            <div class="step-num">4. Gamma / PQ / HLG</div>
-            <p style="font-size:14px">最终编码成目标格式：sRGB Gamma 2.2、PQ ST 2084、或 HLG BT.2100。</p>
-          </div>
+          <div class="note">你可以把它理解成“显示渲染器”：它决定高光怎么卷、饱和色怎么压、白点和 EOTF 怎么落到目标屏幕。</div>
         </div>
-        <div class="note" style="margin-top:16px">
-          <b>对创作者的影响：</b>Output Transform 决定了"场景光"如何变成"屏幕光"。在 ACES 里叫 <b>ACES Output Transform</b>，在 DaVinci 里叫 <b>Color Management / Output Transform</b>，在 OCIO 里叫 <b>View Transform</b>。它们做的是同一件事。
+
+        <div class="card">
+          <div class="controls">
+            <button class="targetBtn active" data-target="rec709" aria-pressed="true">Rec.709 / 100 nit</button>
+            <button class="targetBtn" data-target="p3" aria-pressed="false">P3 Cinema / 48 nit</button>
+            <button class="targetBtn" data-target="hdr" aria-pressed="false">PQ HDR / 1000 nit</button>
+            <label>场景范围 <input id="rangeSlider" type="range" min="8" max="18" value="14" step="1"></label>
+            <strong id="rangeReadout">14 stops</strong>
+          </div>
+          <div class="canvas-box">
+            <canvas id="toneCanvas" aria-label="Output Transform tone mapping 示意图"></canvas>
+            <div class="readout" id="toneReadout">Output Transform 示意</div>
+          </div>
+          <p class="mini" style="margin-top:10px">此图是教学示意：真实 ACES、Resolve、ARRI 或厂商 DRT 的 tone scale 和 gamut mapping 会更复杂。这里重点展示“同一场景范围在不同显示目标下必须被重新渲染”。</p>
+        </div>
+
+        <div class="grid-4" style="margin-top:16px">
+          <div class="card"><span class="tag">Tone Scale</span><h3>高光怎么卷</h3><p>把场景里可能超过显示峰值的亮度压进 100 nit、48 nit 或 1000 nit。</p></div>
+          <div class="card"><span class="tag">Chroma</span><h3>饱和度怎么保</h3><p>好的显示渲染会避免高光颜色粗暴变白，也避免广色域颜色直接裁切。</p></div>
+          <div class="card"><span class="tag">Gamut</span><h3>色域怎么压</h3><p>工作空间可能比 P3、Rec.709 大得多，出界颜色要被映射到可显示范围。</p></div>
+          <div class="card"><span class="tag">Encoding</span><h3>最后怎么编码</h3><p>Rec.709 Gamma 2.4、sRGB、PQ、HLG 是不同的显示编码和观看假设。</p></div>
         </div>
       </div>
     </section>
 
-    <!-- 7. Resolve 实战 -->
-    <section id="resolve">
+    <section id="workflow">
       <div class="wrap">
-        <h2>6. 在 Resolve 里它们怎么落地</h2>
-        <p>DaVinci Resolve 支持两种主要思路：Display-referred 直接调色，和 Scene-referred 工作流。理解它们的区别，才能选择正确的工作方式。</p>
-        <div class="wf-compare">
-          <div class="wf-card scene">
-            <span class="tag" style="background:var(--cyan);color:#000">Scene-referred 工作流</span>
-            <h3>S-Log3 → DWG Intermediate → 调色 → Output</h3>
-            <ul>
-              <li><b>输入：</b>S-Log3 / S-Gamut3.Cine</li>
-              <li><b>工作空间：</b>DaVinci Wide Gamut Intermediate</li>
-              <li><b>调色：</b>在 DWG 里做曝光、白平衡、Look</li>
-              <li><b>输出：</b>Output Transform → Rec.709 / P3 / HDR</li>
-            </ul>
-            <div class="note" style="margin-top:12px;font-size:13px">
-              <b>优势：</b>一份 master 可以输出多个版本，后期空间最大，适合复杂制作。
+        <div class="section-head">
+          <div>
+            <h2>5. 在 Resolve 里怎么落地</h2>
+            <p>Resolve 里最重要的是把三件事分开：输入素材怎么解释、调色发生在哪个工作空间、最后输出到哪种显示。你可以用项目级 RCM，也可以用节点级 CST，但逻辑是同一套。</p>
+          </div>
+          <div class="note">Display-referred 并不低级。目标就是快速 Rec.709 交付时，它反而更直接。Scene-referred 的优势在于多机位、多输出和更稳定的高光/色域处理。</div>
+        </div>
+
+        <div class="workflows">
+          <div class="card">
+            <span class="tag">Scene-referred 做法</span>
+            <h3>S-Log3 → DWG Intermediate → Output</h3>
+            <div class="recipe">
+              <div><b>Input：</b>S-Log3 / S-Gamut3.Cine</div>
+              <div><b>Timeline：</b>DaVinci Wide Gamut Intermediate</div>
+              <div><b>Grade：</b>曝光、白平衡、镜头匹配、Look 在宽色域中间空间完成</div>
+              <div><b>Output：</b>Rec.709、P3 或 PQ HDR，由 Output Transform 生成</div>
             </div>
           </div>
-          <div class="wf-card display">
-            <span class="tag" style="background:var(--gold);color:#000">Display-referred 工作流</span>
-            <h3>S-Log3 → Rec.709 LUT → 在 Rec.709 里调色</h3>
-            <ul>
-              <li><b>输入：</b>S-Log3 + 官方 Rec.709 LUT</li>
-              <li><b>工作空间：</b>直接是 Rec.709</li>
-              <li><b>调色：</b>在 Rec.709 里直接调色</li>
-              <li><b>输出：</b>Rec.709 直接交付</li>
-            </ul>
-            <div class="note" style="margin-top:12px;font-size:13px;border-color:var(--gold)">
-              <b>优势：</b>简单直接，适合快速交付 SDR 视频，不需要复杂色彩管理。
+          <div class="card">
+            <span class="tag gold">Display-referred 做法</span>
+            <h3>S-Log3 → Rec.709 LUT → Rec.709 调色</h3>
+            <div class="recipe">
+              <div><b>Input：</b>S-Log3 先通过官方 LUT / CST 变成 Rec.709</div>
+              <div><b>Timeline：</b>Rec.709 Gamma 2.4</div>
+              <div><b>Grade：</b>所有调整都围绕 SDR 显示外观</div>
+              <div><b>Output：</b>直接 Rec.709 交付，速度快但跨 HDR/P3 复用较差</div>
             </div>
           </div>
         </div>
+
         <div class="card" style="margin-top:16px">
-          <h3>ACES 工作流（另一种 Scene-referred 方式）</h3>
-          <p style="font-size:14px">ACES（Academy Color Encoding System）是 Hollywood 标准的 scene-referred 色彩管理系统：</p>
-          <div class="flow" style="margin-top:12px">
-            <div class="flow-node" style="min-width:120px"><b>输入</b><br>各种 Log / RAW</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-node" style="min-width:120px;border-color:var(--cyan)"><b>ACEScg</b><br>工作空间</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-node" style="min-width:120px"><b>调色</b><br>在 ACES 里</div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-node" style="min-width:120px;border-color:var(--gold)"><b>ACES Output Transform</b></div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-node" style="min-width:120px"><b>Rec.709 / HDR</b></div>
-          </div>
+          <span class="tag">ACES 的等价说法</span>
+          <h3>IDT → ACES 工作空间 → LMT / Grade → Output Transform</h3>
+          <p>ACES 的核心是把不同相机和 CG 输入统一到 scene-referred ACES 编码，再通过 Output Transform 输出到特定显示设备。旧文档里常见 RRT + ODT，新 ACES 文档更倾向把整体称为 Output Transform。</p>
         </div>
       </div>
     </section>
 
-    <!-- 8. 互动：高光压缩示意 -->
-    <section id="interactive">
-      <div class="wrap">
-        <h2>7. 互动：高光压缩示意</h2>
-        <p>用滑块模拟场景亮度范围（如 14 stops），选择输出目标，观察不同 Output Transform 如何压缩高光。</p>
-        <div class="controls">
-          <label style="min-width:120px">场景动态范围：<span id="stopsValue">14</span> stops</label>
-          <input type="range" id="stopsSlider" min="6" max="18" value="14" style="flex:1;max-width:400px">
-          <div class="seg">
-            <button class="outBtn" data-out="rec709" aria-pressed="true">Rec.709 100nit</button>
-            <button class="outBtn" data-out="p3" aria-pressed="false">P3 影院</button>
-            <button class="outBtn" data-out="hdr" aria-pressed="false">PQ HDR 1000nit</button>
-          </div>
-        </div>
-        <div class="canvas-box"><canvas id="toneCanvas"></canvas></div>
-        <div id="toneReadout" class="readout">场景 14 stops → Rec.709 100 nit</div>
-      </div>
-    </section>
-
-    <!-- 9. 同一素材多输出 -->
-    <section id="multiout">
-      <div class="wrap">
-        <h2>8. 同一素材多输出</h2>
-        <p>左侧是 scene-referred master，右侧切换输出目标。强调同一份场景参照数据可以生成多个 display-referred 版本。</p>
-        <div class="grid-2">
-          <div class="card">
-            <h3>Scene-referred Master</h3>
-            <div class="canvas-box" style="min-height:280px">
-              <canvas id="masterCanvas"></canvas>
-            </div>
-            <p style="font-size:13px;margin-top:8px">S-Log3 / DaVinci Wide Gamut Intermediate<br>保留完整动态范围和色彩信息</p>
-          </div>
-          <div class="card">
-            <h3>Display-referred 输出</h3>
-            <div class="controls">
-              <div class="seg">
-                <button class="dispBtn" data-disp="rec709" aria-pressed="true">Rec.709</button>
-                <button class="dispBtn" data-disp="srgb" aria-pressed="false">sRGB</button>
-                <button class="dispBtn" data-disp="hdr" aria-pressed="false">PQ HDR</button>
-                <button class="dispBtn" data-disp="hlg" aria-pressed="false">HLG</button>
-              </div>
-            </div>
-            <div class="canvas-box" style="min-height:280px">
-              <canvas id="outputCanvas"></canvas>
-            </div>
-            <p style="font-size:13px;margin-top:8px" id="dispNote">输出到 Rec.709 (100 nit)，高光被压缩，暗部细节保留</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 10. 常见误区 -->
     <section id="myths">
       <div class="wrap">
-        <h2>9. 常见误区</h2>
-        <div class="myth-list">
-          <div class="myth-item">
-            <div class="myth">误区 1：Log 就是灰色滤镜。</div>
-            <div class="truth">正解：Log 是场景参照编码，不是最终画面。灰色是它的设计特性——把高光和阴影信息"藏"在中间调，等待后期释放。</div>
+        <div class="section-head">
+          <div>
+            <h2>6. 最常见的误区</h2>
+            <p>这几个误区会直接导致调色链路错位：把 Log 当滤镜、把 LUT 当色彩管理、把 Rec.709 当成错误、把 PQ HDR 当成 scene-referred。</p>
           </div>
-          <div class="myth-item">
-            <div class="myth">误区 2：Scene-referred 一定更高级。</div>
-            <div class="truth">正解：它适合复杂制作和多输出，但快速交付用 display-referred 也合理。选择取决于项目需求，不是"高级"与否。</div>
-          </div>
-          <div class="myth-item">
-            <div class="myth">误区 3：套 LUT 就等于色彩管理。</div>
-            <div class="truth">正解：LUT 可能只是显示变换，也可能包含创意风格。必须知道它在链路中做什么——是技术转换还是创意调色。</div>
-          </div>
-          <div class="myth-item">
-            <div class="myth">误区 4：Rec.709 调色一定错。</div>
-            <div class="truth">正解：如果目标就是 SDR 快速交付，Rec.709 display-referred 工作流完全可以成立。不要为了"专业"而复杂化。</div>
-          </div>
-          <div class="myth-item">
-            <div class="myth">误区 5：HDR 就一定 scene-referred。</div>
-            <div class="truth">正解：PQ HDR 成片通常是 display-referred，因为 PQ 码值对应绝对 nit。HDR 的"高动态"来自显示能力，不是编码方式。</div>
-          </div>
+          <div class="note">判断任何素材或节点时都问一句：它现在是在描述场景，还是在描述某个显示器上的外观？</div>
+        </div>
+
+        <div class="myths">
+          <div class="myth"><b>误区：Log 是灰色滤镜。</b><span>正解：Log 是 scene-referred 的非线性编码。灰只是它未经过显示渲染时的样子。</span></div>
+          <div class="myth"><b>误区：Scene-referred 一定更高级。</b><span>正解：它适合复杂制作和多输出。快速 SDR 项目用 display-referred 完全合理。</span></div>
+          <div class="myth"><b>误区：套 LUT 就等于色彩管理。</b><span>正解：LUT 可能是技术转换，也可能带创意风格。必须知道它在链路里承担什么角色。</span></div>
+          <div class="myth"><b>误区：Rec.709 调色一定错。</b><span>正解：如果目标就是 Rec.709，它是合理的 display-referred 工作流，只是未来再转 HDR/P3 的空间较小。</span></div>
+          <div class="myth"><b>误区：PQ HDR 就是 scene-referred。</b><span>正解：PQ 码值对应绝对显示亮度，PQ HDR master 通常已经是 display-referred。</span></div>
         </div>
       </div>
     </section>
 
-    <!-- 11. 资料来源 -->
     <section id="sources">
       <div class="wrap">
-        <h2>资料来源</h2>
-        <ul class="sources">
-          <li>ACES 官方文档：<a href="https://acescentral.com" target="_blank">acescentral.com</a> — scene-referred encoding、Output Transform</li>
-          <li>OpenColorIO 官方文档：<a href="https://opencolorio.org" target="_blank">opencolorio.org</a> — scene-referred / display-referred reference space</li>
-          <li>ARRI Log C 文档：<a href="https://www.arri.com" target="_blank">arri.com</a> — LogC 到显示输出需要 tone mapping</li>
-          <li>Blackmagic DaVinci Resolve 文档 — DaVinci Wide Gamut Intermediate、Resolve Color Management</li>
-          <li>SMPTE ST 2084 / ITU-R BT.2100 — PQ、HLG、OOTF 与显示适配</li>
-          <li>Sony S-Log3 技术文档 — S-Log3 + S-Gamut3.Cine 配对说明</li>
-        </ul>
+        <div class="section-head">
+          <div>
+            <h2>资料来源</h2>
+            <p>这一章的重点来自 ACES、OpenColorIO、ARRI、Blackmagic 和 HDR 标准文档对 scene/display、Output Transform、View Transform 和 Log 显示转换的定义。</p>
+          </div>
+          <div class="note">后续如果做更深入的交互，可以单独补 ACES 2 Output Transform、Resolve DRT、ARRI LUT/Display Transform 的数学实现。</div>
+        </div>
+        <div class="source-list">
+          <a href="https://docs.acescentral.com/system-components/output-transforms/" target="_blank" rel="noreferrer">ACES Output Transforms<span>Output Transform 把 scene-referred ACES 数据转为特定显示设备和观看条件下的输出图像。</span></a>
+          <a href="https://docs.acescentral.com/encodings/overview/" target="_blank" rel="noreferrer">ACES Encodings Overview<span>ACES2065-1、ACEScg、ACEScct 等 scene-referred 编码与用途。</span></a>
+          <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html" target="_blank" rel="noreferrer">OpenColorIO Displays & Views<span>View Transform 可在 scene-referred reference 与 display-referred reference 之间转换。</span></a>
+          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C Image Science<span>Log C 是 scene-based encoding，显示到 Rec.709、Rec.2020 或 P3 需要 tone mapping 和目标色彩空间转换。</span></a>
+          <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span>Resolve 宽色域中间工作空间和色彩管理设计。</span></a>
+          <a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noreferrer">ITU-R BT.2100<span>PQ、HLG、HDR-TV 图像参数和显示链路相关定义。</span></a>
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- JavaScript -->
   <script>
     const $ = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
 
-    // Progress bar
-    addEventListener('scroll', () => {
+    let target = "rec709";
+
+    function updateProgress() {
       const max = document.documentElement.scrollHeight - innerHeight;
-      $('#progress').style.transform = `scaleX(${max ? scrollY / max : 0})`;
-    }, { passive: true });
+      $("#progress").style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+      const pos = scrollY + 90;
+      $$("section[id]").forEach(sec => {
+        const link = $(`#navLinks a[href="#${sec.id}"]`);
+        if (link) link.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
+      });
+    }
 
-    // Tone mapping interactive chart
-    function drawTone() {
-      const canvas = $('#toneCanvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
+    function updatePipeline(mode) {
+      const content = {
+        managed: {
+          active: [0, 1, 2, 3, 4],
+          note: "当前：Scene-referred 管线。素材先被解释到统一工作空间，再通过 Output Transform 生成 Rec.709 / HDR 等显示版本。",
+          steps: [
+            ["Input", "读取 S-Log3 / LogC / RAW，指定正确 Input Gamma + Input Gamut。"],
+            ["Working Space", "进入 DWG Intermediate、ACEScct 或其他 scene-referred 宽色域工作空间。"],
+            ["Grade / Look", "曝光、白平衡、镜头匹配、Look 开发主要发生在这里。"],
+            ["View / Output", "DRT / Output Transform 把场景状态渲染到目标显示。"],
+            ["Delivery", "生成 Rec.709、P3、PQ HDR、HLG 等 display-referred 版本。"]
+          ]
+        },
+        display: {
+          active: [0, 3, 4],
+          note: "当前：Rec.709 直接调色。素材很早就被转成显示参照，后续调整都围绕 SDR 屏幕外观。",
+          steps: [
+            ["Input", "Log 素材先经过官方 LUT / CST，直接转成 Rec.709。"],
+            ["Working Space", "没有真正的宽色域中间空间，时间线通常就是 Rec.709。"],
+            ["Grade / Look", "调色器看到和调整的是 SDR 显示外观。"],
+            ["View / Output", "输出变换已经很早发生，后面主要是微调。"],
+            ["Delivery", "快速交付 Rec.709 很合适，但再做 HDR/P3 版本弹性较小。"]
+          ]
+        },
+        aces: {
+          active: [0, 1, 2, 3, 4],
+          note: "当前：ACES 管线。IDT 把不同输入转为 ACES scene-referred 编码，Output Transform 负责显示渲染。",
+          steps: [
+            ["IDT", "Input Device Transform 把相机或 CG 输入解释到 ACES。"],
+            ["ACEScct / ACEScg", "调色常用 ACEScct，CG / 合成常用 ACEScg。"],
+            ["LMT / Grade", "Look Modification Transform 或调色节点改变创作意图。"],
+            ["Output Transform", "ACES 输出变换把 scene-linear 数据渲染到目标显示。"],
+            ["Display", "Rec.709、P3、HDR 等 output-referred 图像。"]
+          ]
+        }
+      }[mode];
+
+      $("#pipelineNote").textContent = content.note;
+      $$("#pipelineSteps .pipe-step").forEach((step, i) => {
+        step.classList.toggle("active", content.active.includes(i));
+        step.querySelector("b").textContent = content.steps[i][0];
+        step.querySelector("span").textContent = content.steps[i][1];
+      });
+    }
+
+    function resizeCanvas(canvas) {
       const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * 2;
-      canvas.height = 380 * 2;
-      ctx.scale(2, 2);
-      const w = rect.width, h = 380;
-      const pad = { l: 60, r: 30, t: 30, b: 50 };
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    const targetMeta = {
+      rec709: { label: "Rec.709 SDR", peak: 100, grey: 18, color: "#ffd166", knee: 2.3 },
+      p3: { label: "P3 Cinema", peak: 48, grey: 9, color: "#9a8cff", knee: 2.8 },
+      hdr: { label: "PQ HDR", peak: 1000, grey: 203, color: "#46d9e8", knee: 4.4 }
+    };
+
+    function toneMapRelative(sceneRelative, meta) {
+      const exposed = sceneRelative * (meta.grey / 18);
+      return exposed / (exposed + meta.knee);
+    }
+
+    function drawToneChart() {
+      const canvas = $("#toneCanvas");
+      if (!canvas) return;
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const pad = { l: 70, r: 28, t: 34, b: 54 };
+      const xMin = -8;
+      const xMax = Number($("#rangeSlider").value) - 8;
       const plotW = w - pad.l - pad.r;
       const plotH = h - pad.t - pad.b;
+      const xOf = stop => pad.l + plotW * ((stop - xMin) / (xMax - xMin));
+      const yOf = value => h - pad.b - plotH * clamp(value, 0, 1);
+      const meta = targetMeta[target];
 
-      ctx.fillStyle = '#0d1015';
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0a0d12";
       ctx.fillRect(0, 0, w, h);
 
-      // Grid
-      ctx.strokeStyle = 'rgba(255,255,255,.08)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= 10; i++) {
-        const x = pad.l + plotW * i / 10;
-        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
-        ctx.fillStyle = '#8b95a5'; ctx.font = '11px sans-serif';
-        ctx.fillText(i === 0 ? '0' : '.' + i, x - 5, h - pad.b + 20);
+      ctx.strokeStyle = "rgba(255,255,255,.11)";
+      ctx.fillStyle = "#b7c0ce";
+      ctx.font = "12px system-ui";
+      for (let stop = -8; stop <= xMax; stop += 2) {
+        const x = xOf(stop);
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, h - pad.b);
+        ctx.stroke();
+        ctx.fillText(String(stop), x - 7, h - 24);
+      }
+      for (let i = 0; i <= 5; i++) {
+        const yv = i / 5;
+        const y = yOf(yv);
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(w - pad.r, y);
+        ctx.stroke();
+        ctx.fillText(yv.toFixed(1), 28, y + 4);
       }
 
-      const stops = Number($('#stopsSlider').value);
-      const outType = $$('.outBtn').length && [...$$('.outBtn')].find(b => b.getAttribute('aria-pressed') === 'true')?.dataset.out || 'rec709';
-
-      // Scene-referred linear (input)
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = "rgba(255,255,255,.40)";
       ctx.beginPath();
-      for (let i = 0; i <= 100; i++) {
-        const x = pad.l + plotW * i / 100;
-        const sceneVal = Math.pow(2, (i / 100) * stops - stops); // -stops to 0
-        const y = pad.t + plotH * (1 - Math.min(1, sceneVal));
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      ctx.moveTo(xOf(0), pad.t);
+      ctx.lineTo(xOf(0), h - pad.b);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#dbe7f7";
+      ctx.fillText("18% 灰", xOf(0) + 8, pad.t + 18);
+
+      ctx.beginPath();
+      for (let i = 0; i <= 360; i++) {
+        const stop = lerp(xMin, xMax, i / 360);
+        const sceneRelative = Math.pow(2, stop);
+        const y = toneMapRelative(sceneRelative, meta);
+        const x = xOf(stop);
+        const py = yOf(y);
+        if (i) ctx.lineTo(x, py);
+        else ctx.moveTo(x, py);
       }
-      ctx.strokeStyle = '#46d9e8';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = meta.color;
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Output-referred (after tone mapping)
       ctx.beginPath();
-      for (let i = 0; i <= 100; i++) {
-        const x = pad.l + plotW * i / 100;
-        const sceneVal = Math.pow(2, (i / 100) * stops - stops);
-        let displayVal;
-        if (outType === 'rec709') {
-          displayVal = Math.min(1, sceneVal * 0.7); // Simplified tone map to 100 nit
-        } else if (outType === 'p3') {
-          displayVal = Math.min(1, sceneVal * 0.5); // Theater
-        } else {
-          displayVal = Math.min(1, sceneVal * 0.3); // HDR 1000 nit
-        }
-        const y = pad.t + plotH * (1 - displayVal);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      for (let i = 0; i <= 360; i++) {
+        const stop = lerp(xMin, xMax, i / 360);
+        const sceneRelative = Math.pow(2, stop);
+        const y = clamp(Math.log2(sceneRelative * 256 + 1) / 12, 0, 1);
+        const x = xOf(stop);
+        const py = yOf(y);
+        if (i) ctx.lineTo(x, py);
+        else ctx.moveTo(x, py);
       }
-      ctx.strokeStyle = '#ffd166';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(70,217,232,.55)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([7, 5]);
       ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Labels
-      ctx.font = '12px sans-serif';
-      ctx.fillStyle = '#46d9e8';
-      ctx.fillText('Scene-referred (linear)', pad.l + 10, pad.t + 20);
-      ctx.fillStyle = '#ffd166';
-      ctx.fillText('Display-referred (' + (outType === 'rec709' ? 'Rec.709 100nit' : outType === 'p3' ? 'P3 Cinema' : 'PQ HDR 1000nit') + ')', pad.l + 10, pad.t + 38);
+      ctx.fillStyle = "#dbe7f7";
+      ctx.fillText("横轴：相对 18% 灰曝光档位 / stop", w - 238, h - 9);
+      ctx.save();
+      ctx.translate(18, pad.t + plotH / 2 + 62);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("显示归一化信号 / 教学示意", 0, 0);
+      ctx.restore();
 
-      $('#toneReadout').textContent = `场景 ${stops} stops → ${outType === 'rec709' ? 'Rec.709 100 nit' : outType === 'p3' ? 'P3 Cinema' : 'PQ HDR 1000 nit'}`;
+      ctx.fillStyle = meta.color;
+      ctx.fillText(`${meta.label} Output Transform`, pad.l + 12, pad.t + 18);
+      ctx.fillStyle = "rgba(70,217,232,.75)";
+      ctx.fillText("Scene contrast before display rendering", pad.l + 12, pad.t + 38);
+
+      $("#rangeReadout").textContent = `${$("#rangeSlider").value} stops`;
+      $("#toneReadout").innerHTML = `${meta.label}<br>峰值 ${meta.peak} nit · 参考灰约 ${meta.grey} nit<br>曲线展示 tone scale 如何把场景范围压进目标显示`;
     }
 
-    // Master canvas (scene-referred)
-    function drawMaster() {
-      const canvas = $('#masterCanvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * 2;
-      canvas.height = 280 * 2;
-      ctx.scale(2, 2);
-      const w = rect.width, h = 280;
-      
-      // Gradient representing scene-referred wide gamut
-      const grad = ctx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, 'rgba(70,217,232,.6)');
-      grad.addColorStop(0.5, 'rgba(163,229,95,.6)');
-      grad.addColorStop(1, 'rgba(255,209,102,.6)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-      
-      ctx.fillStyle = '#dbe7f7';
-      ctx.font = '14px sans-serif';
-      ctx.fillText('Scene-referred Master', 20, 30);
-      ctx.font = '12px sans-serif';
-      ctx.fillText('S-Log3 / DWG Intermediate', 20, 50);
-    }
-
-    // Output canvas
-    function drawOutput() {
-      const canvas = $('#outputCanvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * 2;
-      canvas.height = 280 * 2;
-      ctx.scale(2, 2);
-      const w = rect.width, h = 280;
-      
-      const dispType = $$('.dispBtn').length && [...$$('.dispBtn')].find(b => b.getAttribute('aria-pressed') === 'true')?.dataset.disp || 'rec709';
-      
-      let grad;
-      if (dispType === 'rec709') {
-        grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, 'rgba(70,217,232,.35)');
-        grad.addColorStop(0.5, 'rgba(163,229,95,.35)');
-        grad.addColorStop(1, 'rgba(255,209,102,.35)');
-      } else if (dispType === 'srgb') {
-        grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, 'rgba(70,217,232,.3)');
-        grad.addColorStop(0.5, 'rgba(163,229,95,.3)');
-        grad.addColorStop(1, 'rgba(255,209,102,.3)');
-      } else if (dispType === 'hdr') {
-        grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, 'rgba(70,217,232,.8)');
-        grad.addColorStop(0.5, 'rgba(163,229,95,.8)');
-        grad.addColorStop(1, 'rgba(255,209,102,.8)');
-      } else {
-        grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, 'rgba(70,217,232,.5)');
-        grad.addColorStop(0.5, 'rgba(163,229,95,.5)');
-        grad.addColorStop(1, 'rgba(255,209,102,.5)');
-      }
-      
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-      
-      ctx.fillStyle = '#dbe7f7';
-      ctx.font = '14px sans-serif';
-      ctx.fillText('Display-referred: ' + dispType.toUpperCase(), 20, 30);
-      
-      const note = $('#dispNote');
-      if (note) {
-        const notes = {
-          rec709: '输出到 Rec.709 (100 nit)，高光被压缩，暗部细节保留',
-          srgb: '输出到 sRGB (100 nit)，适合网页显示',
-          hdr: '输出到 PQ HDR (1000 nit)，高光保持饱和度和亮度',
-          hlg: '输出到 HLG (BBC/NHK 广播标准)，兼容 SDR+HDR'
-        };
-        note.textContent = notes[dispType] || '';
-      }
-    }
-
-    // Event listeners
-    $('#stopsSlider')?.addEventListener('input', () => {
-      $('#stopsValue').textContent = $('#stopsSlider').value;
-      drawTone();
+    $$(".pipeMode").forEach(btn => {
+      btn.addEventListener("click", () => {
+        $$(".pipeMode").forEach(item => {
+          const active = item === btn;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        updatePipeline(btn.dataset.mode);
+      });
     });
 
-    $$('.outBtn').forEach(btn => btn.addEventListener('click', () => {
-      $$('.outBtn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-      drawTone();
-    }));
+    $$(".targetBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        target = btn.dataset.target;
+        $$(".targetBtn").forEach(item => {
+          const active = item === btn;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        drawToneChart();
+      });
+    });
 
-    $$('.dispBtn').forEach(btn => btn.addEventListener('click', () => {
-      $$('.dispBtn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-      drawOutput();
-    }));
+    $("#rangeSlider").addEventListener("input", drawToneChart);
+    addEventListener("resize", drawToneChart);
+    addEventListener("scroll", updateProgress, { passive: true });
 
-    // Init
-    addEventListener('resize', () => { drawTone(); drawMaster(); drawOutput(); });
-    setTimeout(() => { drawTone(); drawMaster(); drawOutput(); }, 100);
+    setTimeout(() => {
+      updatePipeline("managed");
+      drawToneChart();
+      updateProgress();
+    }, 80);
   </script>
 </body>
 </html>

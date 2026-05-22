@@ -5,6 +5,8 @@
 ## 项目内容
 
 - `index.html`：项目主页，汇总当前章节入口。
+- 首页“每日精选”：工作日更新两条与 HDR 制作、色彩科学、色彩管理和影像工作流相关的高价值文章或链接。
+- `daily-picks-history.html`：每日推荐归档页，保存历史推荐链接。
 - `hdr-color-science.html`：从 SDR 到 HDR 的色彩科学演变，覆盖动态范围、Gamma、PQ/HLG、色彩空间、色彩体积、HDR 格式与对比表。
 - `log-gamma.html`：为什么相机使用 Log 拍摄，解释传感器线性数据、Log 曲线和调色工作流。
 - `image-color-management.html`：图片色彩管理到底在管什么，解释 RGB 数字、ICC Profile、Assign/Convert、Web 广色域和导出检查。

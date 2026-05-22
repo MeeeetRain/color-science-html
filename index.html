@@ -237,6 +237,104 @@
       line-height: 1.6;
     }
 
+    /* Daily Picks */
+    .daily-picks {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+    }
+    .daily-picks-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    .daily-picks h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .daily-picks-intro {
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .daily-history-link {
+      display: inline-flex;
+      margin-top: 12px;
+      color: var(--cyan);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .daily-history-link:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .pick-updated {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,.04);
+    }
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .pick-card {
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      transition: transform .2s, border-color .2s, background .2s;
+    }
+    .pick-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(34,211,238,.35);
+      background: linear-gradient(180deg, rgba(34,211,238,.09), rgba(255,255,255,.03));
+    }
+    .pick-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pick-tag {
+      color: #071014;
+      background: var(--lime);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-weight: 700;
+    }
+    .pick-title {
+      font-size: 19px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+    .pick-desc {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .pick-link {
+      margin-top: auto;
+      color: var(--cyan);
+      font-weight: 700;
+    }
+    .pick-link:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
     /* Article Preview */
     .article-section {
       background: var(--panel);
@@ -315,6 +413,9 @@
       .nav-links { display: none; }
       .cta-group { flex-direction: column; width: 100%; max-width: 280px; }
       .btn { justify-content: center; }
+      .daily-picks-head { display: block; }
+      .pick-updated { display: inline-flex; margin-top: 14px; }
+      .pick-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -325,6 +426,7 @@
       <div class="nav-links">
         <a href="hdr-color-science.html">SDR→HDR</a>
         <a href="log-gamma.html">Log拍摄</a>
+        <a href="#daily-picks">每日精选</a>
         <a href="scene-display-referred.html">Scene vs Display</a>
         <a href="image-color-management.html">图片色彩管理</a>
         <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub</a>
@@ -392,6 +494,47 @@
           <p>理解 ICC Profile、sRGB、Display P3，以及同一张图为什么到处变色。</p>
         </div>
       </div>
+    </section>
+
+    <section class="daily-picks" id="daily-picks">
+      <div class="daily-picks-head">
+        <div>
+          <h2>每日精选</h2>
+          <p class="daily-picks-intro">
+            每个工作日早晨挑选两篇与 HDR 制作、色彩科学、色彩管理和影像工作流相关的高价值资料。
+          </p>
+          <a class="daily-history-link" href="daily-picks-history.html">查看历史推荐 →</a>
+        </div>
+        <div class="pick-updated">更新：2026-05-22</div>
+      </div>
+
+      <!-- DAILY_PICKS_START -->
+      <div class="pick-grid">
+        <a class="pick-card" href="https://community.acescentral.com/t/introduction-to-hdr-by-kevin-shaw-c-s-i/780" target="_blank" rel="noreferrer">
+          <div class="pick-meta">
+            <span class="pick-tag">文章</span>
+            <span>ACESCentral · HDR 入门</span>
+          </div>
+          <h3 class="pick-title">Introduction to HDR - by Kevin Shaw, C.S.I</h3>
+          <p class="pick-desc">
+            从调色师视角解释 HDR 制作为什么需要新的工作流，并把 ACES、HDR 监看和创作判断放在同一个语境里，适合作为 HDR 章节的延伸阅读。
+          </p>
+          <span class="pick-link">打开链接 →</span>
+        </a>
+
+        <a class="pick-card" href="https://webkit.org/blog/10042/wide-gamut-color-in-css-with-display-p3/" target="_blank" rel="noreferrer">
+          <div class="pick-meta">
+            <span class="pick-tag">科普</span>
+            <span>WebKit · Display-P3</span>
+          </div>
+          <h3 class="pick-title">Wide Gamut Color in CSS with Display-P3</h3>
+          <p class="pick-desc">
+            以网页开发者能理解的方式讲清楚为什么 sRGB 不再覆盖所有屏幕颜色，以及如何在 CSS 中使用 Display-P3，很适合补充图片色彩管理章节。
+          </p>
+          <span class="pick-link">打开链接 →</span>
+        </a>
+      </div>
+      <!-- DAILY_PICKS_END -->
     </section>
 
     <section class="article-section">
