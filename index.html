@@ -302,6 +302,10 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
+    .pick-status {
+      color: var(--muted);
+      padding: 20px 0;
+    }
     .pick-card {
       min-height: 210px;
       display: flex;
@@ -562,35 +566,11 @@
           </p>
           <a class="daily-history-link" href="daily-picks-history.html">查看历史推荐 →</a>
         </div>
-        <div class="pick-updated">更新：2026-05-25</div>
+        <div class="pick-updated">更新中</div>
       </div>
 
       <!-- DAILY_PICKS_START -->
-      <div class="pick-grid">
-        <a class="pick-card" href="https://blog.frame.io/2024/06/10/arri-reveal-color-science-explained/" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">文章</span>
-            <span>Frame.io · 摄影机色彩科学</span>
-          </div>
-          <h3 class="pick-title">ARRI REVEAL Color Science Explained</h3>
-          <p class="pick-desc">
-            把 REVEAL、AWG4、LogC4 和 LUT 兼容性问题放进同一条叙事线里，能帮助你把“新色彩科学为什么会改工作流”这件事真正串起来，尤其适合建立从拍摄到调色的整体直觉。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-
-        <a class="pick-card" href="https://community.acescentral.com/t/preserving-logos-and-graphics-in-aces/2861" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">讨论</span>
-            <span>ACESCentral · 图形与字幕工作流</span>
-          </div>
-          <h3 class="pick-title">Preserving Logos and Graphics in ACES</h3>
-          <p class="pick-desc">
-            这串讨论把 ACES 中最容易踩坑的一类问题说透了：为什么 logo、字幕和 UI 资产一进 scene-referred 流程就“变味”。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-      </div>
+      <div class="pick-grid" id="daily-picks-list" aria-live="polite"></div>
       <!-- DAILY_PICKS_END -->
     </section>
 
@@ -608,5 +588,50 @@
     </div>
     <!-- CONTRIBUTORS_END -->
   </footer>
+  <script>
+    const dailyPicksList = document.querySelector("#daily-picks-list");
+    const dailyUpdated = document.querySelector(".pick-updated");
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function renderPickCard(pick) {
+      return `
+        <a class="pick-card" href="${escapeHtml(pick.url)}" target="_blank" rel="noreferrer">
+          <div class="pick-meta">
+            <span class="pick-tag">${escapeHtml(pick.tag)}</span>
+            <span>${escapeHtml(pick.source)}</span>
+          </div>
+          <h3 class="pick-title">${escapeHtml(pick.title)}</h3>
+          <p class="pick-desc">${escapeHtml(pick.description)}</p>
+          <span class="pick-link">打开链接 →</span>
+        </a>
+      `;
+    }
+
+    async function loadDailyPicks() {
+      try {
+        const response = await fetch("data/daily-picks.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("daily picks data unavailable");
+        const data = await response.json();
+        const latest = data.days?.[0];
+        if (!latest || !Array.isArray(latest.picks)) throw new Error("daily picks data invalid");
+        dailyUpdated.textContent = `更新：${latest.date}`;
+        dailyPicksList.innerHTML = latest.picks.slice(0, 2).map(renderPickCard).join("");
+      } catch (error) {
+        dailyUpdated.textContent = "暂未更新";
+        dailyPicksList.innerHTML = '<p class="pick-status">每日精选暂时无法加载，请稍后再试。</p>';
+      }
+    }
+
+    loadDailyPicks();
+  </script>
 </body>
 </html>

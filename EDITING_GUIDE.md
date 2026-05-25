@@ -111,7 +111,64 @@ perl -0ne 'print $1 if /<script>(.*)<\/script>/s' image-color-management.html > 
 node --check /tmp/page.js
 ```
 
-## 8. 新增章节流程
+## 8. 每日精选数据维护
+
+每日精选内容不直接写进 `index.html` 或 `daily-picks-history.html`。这两个页面只负责读取数据和渲染卡片。
+
+维护入口：
+
+- 只编辑 `data/daily-picks.json`。
+- 首页读取 `days[0]` 作为最新推荐。
+- 归档页读取 `days` 全部历史，并按文件里的顺序展示。
+- `updated` 应与最新一天的 `date` 保持一致。
+
+数据结构：
+
+```json
+{
+  "updated": "2026-05-25",
+  "days": [
+    {
+      "date": "2026-05-25",
+      "picks": [
+        {
+          "tag": "文章",
+          "source": "来源名称 · 主题",
+          "title": "文章标题",
+          "description": "中文推荐理由",
+          "url": "https://example.com/article"
+        }
+      ]
+    }
+  ]
+}
+```
+
+内容选择原则：
+
+- 每个工作日推荐 2 条，`picks` 数组必须正好有两项。
+- 优先选择科普文章、深度技术文章、教程、案例复盘、有价值的社区讨论。
+- 不优先推荐纯规范、参数表、标准 PDF 或只适合查参数的页面。
+- `description` 用中文说明为什么值得读，不复制原文长段落。
+- `tag` 优先使用“科普”“文章”“讨论”“教程”“案例”等短标签。
+- 尽量不要连续多天重复同一个链接。
+
+更新检查：
+
+```bash
+python3 -m json.tool data/daily-picks.json
+node -e "const data=require('./data/daily-picks.json'); console.log(data.updated, data.days[0].date, data.days[0].picks.length)"
+```
+
+因为页面通过 `fetch` 读取 JSON，本地检查应使用静态服务器访问：
+
+```bash
+python3 -m http.server 8000
+```
+
+然后打开 `http://localhost:8000/`。不要只用 `file://` 直接打开页面来检查每日精选区域。
+
+## 9. 新增章节流程
 
 1. 先写选题问题：这个章节解决读者什么困惑。
 2. 搜集资料，列出关键来源。
@@ -121,18 +178,19 @@ node --check /tmp/page.js
 6. 更新 `index.html` 入口。
 7. 更新 README 的项目内容或后续计划。
 
-## 9. 发布前检查清单
+## 10. 发布前检查清单
 
 - 页面标题和 meta description 已更新。
 - 导航链接可用。
 - 所有资料来源链接可点击。
+- 如果修改了每日精选，`data/daily-picks.json` 已通过 JSON 语法检查，并已用本地静态服务器确认首页和归档页能加载。
 - 交互控件默认状态清晰。
 - 图表坐标轴、单位、刻度完整。
 - 移动端没有文字溢出或按钮挤压。
 - 没有把本地临时文件、未确认版权的 PDF 或大文件误提交。
 - `git status` 中只包含本次要发布的文件。
 
-## 10. Git 约定
+## 11. Git 约定
 
 建议提交信息使用简短英文动词短语：
 

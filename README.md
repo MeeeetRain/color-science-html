@@ -5,7 +5,7 @@
 ## 项目内容
 
 - `index.html`：项目主页，汇总当前章节入口。
-- 首页“每日精选”：工作日更新两条与 HDR 制作、色彩科学、色彩管理和影像工作流相关的高价值文章或链接。
+- `data/daily-picks.json`：每日精选数据源。首页读取最新一天，归档页读取全部历史；手动更新推荐时优先编辑这个文件。
 - `daily-picks-history.html`：每日推荐归档页，保存历史推荐链接。
 - `hdr-color-science.html`：从 SDR 到 HDR 的色彩科学演变，覆盖动态范围、Gamma、PQ/HLG、色彩空间、色彩体积、HDR 格式与对比表。
 - `log-gamma.html`：为什么相机使用 Log 拍摄，解释传感器线性数据、Log 曲线和调色工作流。
@@ -29,9 +29,8 @@
 
 ## 本地查看
 
-直接用浏览器打开 `index.html` 即可。
+推荐在项目目录启动一个本地静态服务器，这样首页和归档页可以正常读取 `data/daily-picks.json`：
 
-如果某些浏览器对本地文件权限比较严格，也可以在项目目录启动一个本地静态服务器：
 
 ```bash
 python3 -m http.server 8000
@@ -42,6 +41,8 @@ python3 -m http.server 8000
 ```text
 http://localhost:8000/
 ```
+
+直接用浏览器打开 `index.html` 也能查看大部分静态内容，但部分浏览器会限制本地 JSON 读取，导致每日精选区域无法加载。
 
 ## 部署
 

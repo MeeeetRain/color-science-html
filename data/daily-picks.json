@@ -1,0 +1,43 @@
+{
+  "updated": "2026-05-25",
+  "days": [
+    {
+      "date": "2026-05-25",
+      "picks": [
+        {
+          "tag": "文章",
+          "source": "Frame.io · 摄影机色彩科学",
+          "title": "ARRI REVEAL Color Science Explained",
+          "description": "把 REVEAL、AWG4、LogC4 和 LUT 兼容性问题放进同一条叙事线里，能帮助你把“新色彩科学为什么会改工作流”这件事真正串起来，尤其适合建立从拍摄到调色的整体直觉。",
+          "url": "https://blog.frame.io/2024/06/10/arri-reveal-color-science-explained/"
+        },
+        {
+          "tag": "讨论",
+          "source": "ACESCentral · 图形与字幕工作流",
+          "title": "Preserving Logos and Graphics in ACES",
+          "description": "这串讨论把 ACES 中最容易踩坑的一类问题说透了：为什么 logo、字幕和 UI 资产一进 scene-referred 流程就“变味”。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。",
+          "url": "https://community.acescentral.com/t/preserving-logos-and-graphics-in-aces/2861"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-22",
+      "picks": [
+        {
+          "tag": "文章",
+          "source": "ACESCentral · HDR 入门",
+          "title": "Introduction to HDR - by Kevin Shaw, C.S.I",
+          "description": "从调色师视角解释 HDR 制作为什么需要新的工作流，并把 ACES、HDR 监看和创作判断放在同一个语境里，适合作为 HDR 章节的延伸阅读。",
+          "url": "https://community.acescentral.com/t/introduction-to-hdr-by-kevin-shaw-c-s-i/780"
+        },
+        {
+          "tag": "科普",
+          "source": "WebKit · Display-P3",
+          "title": "Wide Gamut Color in CSS with Display-P3",
+          "description": "以网页开发者能理解的方式讲清楚为什么 sRGB 不再覆盖所有屏幕颜色，以及如何在 CSS 中使用 Display-P3，很适合补充图片色彩管理章节。",
+          "url": "https://webkit.org/blog/10042/wide-gamut-color-in-css-with-display-p3/"
+        }
+      ]
+    }
+  ]
+}

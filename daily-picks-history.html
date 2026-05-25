@@ -137,6 +137,11 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
+    .archive-status {
+      color: var(--muted);
+      padding: 20px 0;
+      border-top: 1px solid var(--line);
+    }
     .pick-card {
       min-height: 210px;
       display: flex;
@@ -265,68 +270,7 @@
     </section>
 
     <!-- DAILY_PICKS_ARCHIVE_START -->
-    <section class="archive-entry" data-date="2026-05-25">
-      <div class="archive-date">
-        <h2>2026-05-25</h2>
-        <span>2 条推荐</span>
-      </div>
-      <div class="pick-grid">
-        <a class="pick-card" href="https://blog.frame.io/2024/06/10/arri-reveal-color-science-explained/" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">文章</span>
-            <span>Frame.io · 摄影机色彩科学</span>
-          </div>
-          <h3 class="pick-title">ARRI REVEAL Color Science Explained</h3>
-          <p class="pick-desc">
-            把 REVEAL、AWG4、LogC4 和 LUT 兼容性问题放进同一条叙事线里，能帮助你把“新色彩科学为什么会改工作流”这件事真正串起来，尤其适合建立从拍摄到调色的整体直觉。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-
-        <a class="pick-card" href="https://community.acescentral.com/t/preserving-logos-and-graphics-in-aces/2861" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">讨论</span>
-            <span>ACESCentral · 图形与字幕工作流</span>
-          </div>
-          <h3 class="pick-title">Preserving Logos and Graphics in ACES</h3>
-          <p class="pick-desc">
-            这串讨论把 ACES 中最容易踩坑的一类问题说透了：为什么 logo、字幕和 UI 资产一进 scene-referred 流程就“变味”。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-      </div>
-    </section>
-    <section class="archive-entry" data-date="2026-05-22">
-      <div class="archive-date">
-        <h2>2026-05-22</h2>
-        <span>2 条推荐</span>
-      </div>
-      <div class="pick-grid">
-        <a class="pick-card" href="https://community.acescentral.com/t/introduction-to-hdr-by-kevin-shaw-c-s-i/780" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">文章</span>
-            <span>ACESCentral · HDR 入门</span>
-          </div>
-          <h3 class="pick-title">Introduction to HDR - by Kevin Shaw, C.S.I</h3>
-          <p class="pick-desc">
-            从调色师视角解释 HDR 制作为什么需要新的工作流，并把 ACES、HDR 监看和创作判断放在同一个语境里，适合作为 HDR 章节的延伸阅读。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-
-        <a class="pick-card" href="https://webkit.org/blog/10042/wide-gamut-color-in-css-with-display-p3/" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">科普</span>
-            <span>WebKit · Display-P3</span>
-          </div>
-          <h3 class="pick-title">Wide Gamut Color in CSS with Display-P3</h3>
-          <p class="pick-desc">
-            以网页开发者能理解的方式讲清楚为什么 sRGB 不再覆盖所有屏幕颜色，以及如何在 CSS 中使用 Display-P3，很适合补充图片色彩管理章节。
-          </p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-      </div>
-    </section>
+    <div id="daily-picks-archive" aria-live="polite"></div>
     <!-- DAILY_PICKS_ARCHIVE_END -->
   </main>
 
@@ -343,5 +287,60 @@
     </div>
     <!-- CONTRIBUTORS_END -->
   </footer>
+  <script>
+    const archiveRoot = document.querySelector("#daily-picks-archive");
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function renderPickCard(pick) {
+      return `
+        <a class="pick-card" href="${escapeHtml(pick.url)}" target="_blank" rel="noreferrer">
+          <div class="pick-meta">
+            <span class="pick-tag">${escapeHtml(pick.tag)}</span>
+            <span>${escapeHtml(pick.source)}</span>
+          </div>
+          <h3 class="pick-title">${escapeHtml(pick.title)}</h3>
+          <p class="pick-desc">${escapeHtml(pick.description)}</p>
+          <span class="pick-link">打开链接 →</span>
+        </a>
+      `;
+    }
+
+    function renderArchiveEntry(day) {
+      const picks = Array.isArray(day.picks) ? day.picks.slice(0, 2) : [];
+      return `
+        <section class="archive-entry" data-date="${escapeHtml(day.date)}">
+          <div class="archive-date">
+            <h2>${escapeHtml(day.date)}</h2>
+            <span>${picks.length} 条推荐</span>
+          </div>
+          <div class="pick-grid">${picks.map(renderPickCard).join("")}</div>
+        </section>
+      `;
+    }
+
+    async function loadDailyPicksArchive() {
+      try {
+        const response = await fetch("data/daily-picks.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("daily picks data unavailable");
+        const data = await response.json();
+        const days = Array.isArray(data.days) ? data.days : [];
+        if (!days.length) throw new Error("daily picks archive empty");
+        archiveRoot.innerHTML = days.map(renderArchiveEntry).join("");
+      } catch (error) {
+        archiveRoot.innerHTML = '<p class="archive-status">每日推荐归档暂时无法加载，请稍后再试。</p>';
+      }
+    }
+
+    loadDailyPicksArchive();
+  </script>
 </body>
 </html>
