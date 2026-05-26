@@ -463,9 +463,62 @@
       font-size: 12px;
     }
 
+    /* Mobile nav */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: background .2s;
+    }
+    .nav-toggle:hover { background: rgba(255,255,255,.06); }
+    .nav-toggle span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 2px;
+      transition: transform .2s, opacity .2s;
+    }
+    .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 57px;
+      left: 0;
+      right: 0;
+      background: rgba(10,11,15,.97);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+      padding: 8px 12px 16px;
+      z-index: 99;
+      gap: 2px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      padding: 11px 16px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .mobile-nav a:hover {
+      color: var(--ink);
+      background: rgba(255,255,255,.06);
+    }
+
     /* Responsive */
     @media (max-width: 640px) {
       .nav-links { display: none; }
+      .nav-toggle { display: flex; }
+      .hero { padding-top: 88px; padding-bottom: 56px; }
       .cta-group { flex-direction: column; width: 100%; max-width: 280px; }
       .btn { justify-content: center; }
       .chapter-head { display: block; }
@@ -492,8 +545,20 @@
         <a href="image-color-management.html">图片色彩管理</a>
         <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub</a>
       </div>
+      <button class="nav-toggle" id="navToggle" aria-label="展开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </nav>
   </header>
+  <nav class="mobile-nav" id="mobileNav" aria-label="移动端导航">
+    <a href="#chapters">技术章节</a>
+    <a href="#daily-picks">每日精选</a>
+    <a href="hdr-color-science.html">SDR→HDR</a>
+    <a href="log-gamma.html">Log 拍摄</a>
+    <a href="scene-display-referred.html">Scene vs Display</a>
+    <a href="image-color-management.html">图片色彩管理</a>
+    <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub ↗</a>
+  </nav>
 
   <main>
     <section class="hero">
@@ -632,6 +697,20 @@
     }
 
     loadDailyPicks();
+
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const mobileNav = document.getElementById('mobileNav');
+    navToggle?.addEventListener('click', () => {
+      const open = mobileNav.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', String(open));
+    });
+    mobileNav?.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
   </script>
 </body>
 </html>

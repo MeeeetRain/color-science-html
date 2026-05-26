@@ -655,6 +655,8 @@
       .hero-grid, .section-head, .grid-2, .grid-3, .grid-4, .cie-wrap, .volume-grid {
         grid-template-columns: 1fr;
       }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .sdr-hdr-grid { grid-template-columns: 1fr; }
       .specs, .glossary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .flow { grid-template-columns: 1fr; }
       .arrow { transform: rotate(90deg); }
@@ -662,8 +664,11 @@
     @media (max-width: 560px) {
       section { padding: 56px 16px; }
       .hero { min-height: auto; }
-      .metric-grid, .specs, .glossary { grid-template-columns: 1fr; }
+      .metric-grid, .kpi-row, .specs, .glossary { grid-template-columns: 1fr; }
       .canvas-box { min-height: 320px; }
+      .gamma-layout .canvas-box, .transfer-layout .canvas-box { height: 380px; min-height: 0; }
+      .readout { max-width: min(200px, calc(100% - 88px)); font-size: 12px; padding: 7px 9px; }
+      .gamma-summary .summary-chain { grid-template-columns: 1fr; }
       h1 { font-size: 42px; }
       th, td { font-size: 14px; }
     }
@@ -743,7 +748,7 @@
             <input id="peakSlider" type="range" min="100" max="10000" step="100" value="1000" style="flex:1;min-width:120px">
             <span id="peakValue" style="min-width:90px;text-align:right;color:var(--cyan);font-weight:700;font-size:16px">1,000 nit</span>
           </div>
-          <div class="canvas-box" style="min-height:240px">
+          <div class="canvas-box" style="height:240px">
             <canvas id="rangeCanvas" aria-label="SDR 与 HDR 动态范围对比图"></canvas>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
