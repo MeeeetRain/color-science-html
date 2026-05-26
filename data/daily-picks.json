@@ -1,6 +1,25 @@
 {
-  "updated": "2026-05-25",
+  "updated": "2026-05-26",
   "days": [
+    {
+      "date": "2026-05-26",
+      "picks": [
+        {
+          "tag": "教程",
+          "source": "Frame.io · DaVinci Resolve 工作流",
+          "title": "How to Color Manage using Nodes in DaVinci Resolve",
+          "description": "这篇教程的价值在于它没有把色彩管理讲成抽象术语，而是直接用 Resolve 的 Group Pre-Clip、Timeline 和 CST 节点把“相机空间、工作空间、显示空间”三层关系拆开。对刚接触 Log、RAW、跨机型混剪的人来说，很适合建立从素材进入到监看输出的实际工作流直觉。",
+          "url": "https://blog.frame.io/2024/01/08/color-management-nodes-davinci-resolve/"
+        },
+        {
+          "tag": "讨论",
+          "source": "ACESCentral · HDR/VFX 工作流",
+          "title": "DI Delivering HDR, VFX monitoring SDR",
+          "description": "这串讨论特别适合教学，因为它不只是给一个标准答案，而是把真实协作中的冲突摆到台面上：当 DI 在 1000 nit HDR 监看、VFX 却只有 SDR 显示器时，到底该统一 ODT 还是各看各的显示条件。你能从中看到 ACES 社区成员对“统一观看模型”与“按显示设备匹配输出”的不同立场。",
+          "url": "https://community.acescentral.com/t/di-delivering-hdr-vfx-monitoring-sdr/5140"
+        }
+      ]
+    },
     {
       "date": "2026-05-25",
       "picks": [
