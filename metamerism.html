@@ -814,6 +814,38 @@
       background: rgba(244,63,94,.15);
       color: var(--rose);
     }
+    .camera-display-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .camera-display-grid .card {
+      height: 100%;
+    }
+    .case-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .case-row {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.035);
+    }
+    .case-row b {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .case-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
     .response-list {
       list-style: none;
       padding: 0;
@@ -904,7 +936,7 @@
       .concept-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .concept-example { grid-template-columns: 1fr; }
       .concept-equal { transform: rotate(90deg); }
-      .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid { grid-template-columns: 1fr; }
+      .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid, .camera-display-grid { grid-template-columns: 1fr; }
       .fail-row { grid-template-columns: 1fr; gap: 8px; }
       .fail-row .ftag { justify-self: start; }
       .match-card { grid-template-columns: 1fr 1fr; }
@@ -1078,7 +1110,7 @@
             <div class="term">Luther condition</div>
             <h4>Luther 条件</h4>
             <p>一台设备（相机、扫描仪、分光仪）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</p>
-            <p>现实里几乎没有相机精确满足。这是相机色彩还原永远做不到 ΔE=0 的根本原因，也是后文"相机同色异谱"的入口。</p>
+            <p>现实里几乎没有相机精确满足。相机的 RGB 滤色片需要同时兼顾噪声、灵敏度、红外抑制和制造一致性，通常只能接近人眼三刺激值。白平衡和矩阵校正能修正灰轴与一部分色卡，但不能把所有光谱都变成人眼会看到的颜色。</p>
           </div>
         </div>
       </div>
@@ -1189,6 +1221,32 @@
             <h3>校准为什么不能彻底解决</h3>
             <p>常规校准把显示器对齐到一个标准观察者和一个目标白点，例如 CIE 1931 2° 的 D65。它能减少设备误差，但不能消除人眼个体差异。</p>
             <p>更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。</p>
+          </div>
+        </div>
+
+        <div class="camera-display-grid">
+          <div class="card">
+            <h3>为什么相机拍屏和人眼观察会差很多</h3>
+            <p>显示器校准的目标是让<b>人眼</b>看到目标颜色：在指定观察者模型下得到正确的 XYZ / Lab。相机拍屏时，光没有先经过人眼，而是进入相机自己的 RGB 滤色片。只要相机的三条光谱灵敏度不满足 Luther 条件，它就会把同一条显示光谱压缩成另一组 RGB。</p>
+            <p>传统宽峰 LCD 的光谱较平滑，相机误差有时不明显；OLED、激光投影和 RGB mini LED 的原色更窄，光谱能量集中在少数波段。窄峰越多，相机响应与人眼 CMF 的偏差越容易被放大，所以拍出来可能偏绿、偏粉、肤色不稳，或者不同屏幕在照片里白点差异很大。</p>
+            <p><b>判断显示器颜色时应以人眼观察和仪器测量为准</b>。相机画面只是“这台相机对这台显示器光谱的反应”，不是显示器视觉效果本身。除非为特定相机、镜头、曝光和显示器光谱建立专门校正，否则拍屏不能作为颜色准确性的依据。</p>
+          </div>
+          <div class="card">
+            <h3>三个典型设备案例</h3>
+            <div class="case-list">
+              <div class="case-row">
+                <b>OLED / QD-OLED</b>
+                <span>蓝光 OLED、量子点转换的红绿峰较窄。人眼可被校准到 D65，但相机 RGB 通道可能对这些窄峰过度或不足响应，拍屏常见白点和肤色偏移。</span>
+              </div>
+              <div class="case-row">
+                <b>激光投影</b>
+                <span>RGB 激光接近单色光，能覆盖很大色域，也最容易触发观察者差异和相机同色异谱。相机可能把肉眼看起来中性的白或灰拍成明显偏色。</span>
+              </div>
+              <div class="case-row">
+                <b>RGB mini LED</b>
+                <span>如果背光由独立红、绿、蓝 mini LED 混合而成，光谱比白 LED 背光更离散。它有利于亮度和色域控制，但拍屏时更依赖相机的光谱响应匹配程度。</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1392,7 +1450,7 @@
             <h4>相机 IDT 永远不完美</h4>
             <p>相机用自己的光谱灵敏度替代了人眼 CMF——而几乎没有相机精确满足 Luther 条件。所以 ARRI / Sony / Canon 的 IDT（Input Device Transform）只是<b>最小二乘最优解</b>，不是数学完美匹配。</p>
             <p>用 ColorChecker 校准只优化了色卡内的 24 块，<b>对色卡光谱之外的物体不保证</b>。荧光物体、窄峰染料（如紫色染料、某些霓虹色）尤其容易出现明显偏差。</p>
-            <p>对策：调色时优先信任示波器/矢量图而非"看起来像不像"，关键产品级颜色用真实物体而非色卡迭代。</p>
+            <p>拍摄显示器也是同一个问题：OLED、激光投影、RGB mini LED 等窄峰光源可能让相机拍出明显偏色，但这不等于人眼看到的显示效果错误。对策：拍屏只作记录，颜色判断以受控环境下的人眼观察、分光测量和目标交付标准为准。</p>
           </div>
           <div class="wf">
             <span class="ctx">印刷 · 光源同色异谱</span>
