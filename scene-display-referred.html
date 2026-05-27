@@ -408,7 +408,7 @@
       <div class="wrap">
         <div class="eyebrow">Scene-referred / Display-referred</div>
         <h1>调色到底是在改场景，还是改屏幕？</h1>
-        <p class="lead">这两个词不只是色彩管理术语。它们决定了你调曝光时是在移动“场景里的光”，还是在修改“某台屏幕上的成片外观”。理解这一点，Log、ACES、DaVinci Wide Gamut、Rec.709 和 HDR 输出会突然连成一条线。</p>
+        <p class="lead">这两个词不只是色彩管理术语。它们决定了你调曝光时是在移动“场景里的光”，还是在修改“某台屏幕上的成片外观”。理解这一点，Log、ACES、DaVinci Wide Gamut、Rec.709 和 HDR 输出可以被放进同一条工作链路中分析。</p>
       </div>
     </section>
 
@@ -438,7 +438,7 @@
 
         <div class="grid-4" style="margin-top:16px">
           <div class="card"><span class="tag">输入</span><div class="metric">IDT / CST</div><p>告诉软件素材原本怎样编码：S-Log3/S-Gamut3.Cine、LogC4/AWG4、BRAW Gen 5 等。</p></div>
-          <div class="card"><span class="tag">工作</span><div class="metric">Wide Gamut</div><p>把素材放进统一的宽色域工作空间，例如 ACEScct 或 DaVinci Wide Gamut Intermediate。</p></div>
+          <div class="card"><span class="tag">工作</span><div class="metric">Wide Gamut</div><p>把素材放进统一的宽色域工作空间，例如 ACEScct 或 DaVinci Wide Gamut Intermediate。这里不是显示端，不使用 BT.1886、PQ 这类 EOTF；它使用的是工作空间自己的编码/传递函数，最后再由 Output Transform 转到目标显示 EOTF。</p></div>
           <div class="card"><span class="tag gold">渲染</span><div class="metric">View</div><p>通过 tone mapping、gamut mapping、色貌调整，把场景状态变成可看的显示状态。</p></div>
           <div class="card"><span class="tag rose">输出</span><div class="metric">Delivery</div><p>编码成 Rec.709、sRGB、P3、PQ HDR 或 HLG。这个版本通常已经是 display-referred。</p></div>
         </div>

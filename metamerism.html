@@ -1,0 +1,2152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>同色异谱 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="同色异谱（metamerism）：两条形状完全不同的光谱，可以在人眼里产生完全相同的颜色。这是色彩管理一切难题的根。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101217;
+      --panel: #181c24;
+      --panel-2: #202632;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --soft: #8994a6;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 6%, rgba(70,217,232,.13), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(255,209,102,.10), transparent 26%),
+        linear-gradient(180deg, #101217 0%, #141821 42%, #101217 100%);
+      color: var(--ink);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose), var(--violet));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 60;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16,18,23,.86);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { font-weight: 780; }
+    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .links a {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.08);
+    }
+    main { overflow: hidden; }
+    section {
+      padding: 72px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; }
+
+    .hero {
+      min-height: 60vh;
+      display: grid;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(115deg, rgba(15,18,24,.94), rgba(15,18,24,.56)),
+        linear-gradient(90deg, #3a006e 0%, #1f3aff 10%, #00b3ff 20%, #00f0a8 35%, #d8ff00 55%, #ffae00 72%, #ff2a2a 86%, #6b0000 100%);
+      filter: saturate(.7) brightness(.55);
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 780;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      max-width: 14ch;
+      font-size: clamp(42px, 7vw, 80px);
+      line-height: 1.02;
+      margin: 0 0 20px;
+    }
+    h2 {
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+      margin: 0 0 14px;
+    }
+    h3 { font-size: 18px; line-height: 1.3; margin: 0; }
+    p { color: var(--muted); margin: 0 0 14px; }
+    .lead {
+      max-width: 760px;
+      color: #e9eef7;
+      font-size: clamp(17px, 2vw, 21px);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(280px, .48fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 12px 0 12px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    /* Spec card */
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      padding: 18px;
+      min-width: 0;
+    }
+    .spec-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .spec-head .label {
+      font-size: 12px;
+      color: var(--soft);
+    }
+    .swatch {
+      width: 64px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #888;
+      transition: background .12s;
+    }
+    .canvas-box {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0b0e13;
+      overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+
+    .sliders {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .sliders label {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .sliders label .val {
+      color: var(--ink);
+      font-weight: 760;
+      font-variant-numeric: tabular-nums;
+      min-width: 32px;
+      text-align: right;
+    }
+    .sliders input[type="range"] {
+      grid-column: 1 / -1;
+      width: 100%;
+      accent-color: var(--cyan);
+      min-width: 0;
+    }
+
+    .xyz-out {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(0,0,0,.25);
+      font-size: 13px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      justify-content: space-around;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .xyz-out b {
+      color: var(--ink);
+      font-weight: 760;
+    }
+
+    /* Match indicator */
+    .match-card {
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+    .match-card[data-status="match"] {
+      border-color: rgba(169,229,95,.45);
+      background: linear-gradient(180deg, rgba(169,229,95,.10), rgba(255,255,255,.02));
+    }
+    .match-card[data-status="close"] {
+      border-color: rgba(70,217,232,.4);
+      background: linear-gradient(180deg, rgba(70,217,232,.08), rgba(255,255,255,.02));
+    }
+    .match-metric .lbl {
+      color: var(--soft);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .match-metric .num {
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 780;
+      font-variant-numeric: tabular-nums;
+    }
+    .match-status {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 720;
+      font-size: 14px;
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .match-card[data-status="match"] .match-status {
+      background: var(--lime);
+      color: #1a2008;
+    }
+    .match-card[data-status="close"] .match-status {
+      background: rgba(70,217,232,.22);
+      color: var(--cyan);
+    }
+
+    /* Comparison swatches */
+    .compare-swatches {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-top: 16px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      height: 100px;
+    }
+    .compare-swatches > div {
+      position: relative;
+      transition: background .12s;
+    }
+    .compare-swatches > div::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 12px;
+      bottom: 8px;
+      color: rgba(0,0,0,.65);
+      font-size: 12px;
+      font-weight: 760;
+      mix-blend-mode: difference;
+      color: #ffffff;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      font: inherit;
+      color: var(--ink);
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 38px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    button:hover {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.22);
+    }
+    button.primary {
+      background: var(--cyan);
+      color: #0a1014;
+      border-color: transparent;
+      font-weight: 740;
+    }
+    button.primary:hover {
+      background: #62e3ef;
+    }
+
+    .explain {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .explain .card {
+      padding: 16px 18px;
+    }
+    .explain h4 {
+      font-size: 14px;
+      color: var(--cyan);
+      margin: 0 0 6px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .explain p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .explain p b { color: var(--ink); }
+
+    .placeholder {
+      text-align: center;
+    }
+    .placeholder p {
+      color: var(--soft);
+      font-size: 14px;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+    .placeholder .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255,209,102,.16);
+      color: var(--gold);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 720;
+      margin-bottom: 14px;
+    }
+
+    /* Scenario grid (问题场景) */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .scenario {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+      position: relative;
+    }
+    .scenario .ico {
+      font-size: 22px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .scenario h4 {
+      font-size: 15px;
+      margin: 0 0 6px;
+      color: var(--ink);
+    }
+    .scenario p {
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    /* Concept summary (核心直觉) */
+    .concept-line {
+      max-width: 880px;
+      font-size: clamp(20px, 2.8vw, 28px);
+      line-height: 1.4;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .concept-line b {
+      background: linear-gradient(90deg, var(--cyan), var(--lime));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .concept-formula {
+      margin-top: 22px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #eaf2ff;
+      line-height: 1.85;
+      overflow-x: auto;
+    }
+    .concept-formula b { color: var(--gold); }
+    .concept-formula em { color: var(--cyan); font-style: normal; }
+
+    /* Definition cards */
+    .def-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .def {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+    }
+    .def .term {
+      font-size: 13px;
+      color: var(--gold);
+      font-weight: 720;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .def h4 {
+      font-size: 17px;
+      margin: 0 0 8px;
+      color: var(--ink);
+    }
+    .def p {
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0 0 6px;
+      color: var(--muted);
+    }
+    .def p b { color: var(--ink); }
+    .def code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--cyan);
+      background: rgba(70,217,232,.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* Failure types table */
+    .fail-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .fail-row {
+      display: grid;
+      grid-template-columns: 130px 1fr 1.3fr;
+      gap: 16px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      align-items: start;
+    }
+    .fail-row .ftag {
+      font-size: 13px;
+      font-weight: 720;
+      padding: 4px 10px;
+      border-radius: 999px;
+      align-self: start;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .fail-row[data-kind="illum"] .ftag { background: rgba(255,209,102,.18); color: var(--gold); }
+    .fail-row[data-kind="obs"] .ftag { background: rgba(154,140,255,.20); color: var(--violet); }
+    .fail-row[data-kind="field"] .ftag { background: rgba(70,217,232,.18); color: var(--cyan); }
+    .fail-row[data-kind="geom"] .ftag { background: rgba(255,107,122,.18); color: var(--rose); }
+    .fail-row[data-kind="cam"] .ftag { background: rgba(169,229,95,.20); color: var(--lime); }
+    .fail-row .title {
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .fail-row .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .fail-row .desc small {
+      display: block;
+      margin-top: 6px;
+      color: var(--soft);
+      font-size: 12.5px;
+    }
+
+    /* Workflow steps */
+    .wf-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .wf {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    }
+    .wf h4 {
+      font-size: 16px;
+      margin: 0 0 10px;
+      color: var(--cyan);
+    }
+    .wf p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .wf p:last-child { margin-bottom: 0; }
+    .wf p b { color: var(--ink); }
+    .wf .ctx {
+      display: inline-block;
+      font-size: 11.5px;
+      padding: 3px 9px;
+      background: rgba(255,255,255,.06);
+      color: var(--soft);
+      border-radius: 999px;
+      margin-bottom: 10px;
+      letter-spacing: .04em;
+    }
+
+    /* Myth cards */
+    .myth-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .myth {
+      padding: 16px 18px;
+      border: 1px solid rgba(255,107,122,.25);
+      border-left: 3px solid var(--rose);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,107,122,.06), rgba(255,255,255,.02));
+    }
+    .myth .wrong {
+      color: var(--rose);
+      font-weight: 720;
+      font-size: 14px;
+      margin: 0 0 6px;
+    }
+    .myth .truth {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .myth .truth b { color: var(--ink); }
+
+    /* Bridge links */
+    .bridge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .bridge {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      color: var(--ink);
+      transition: border-color .15s, background .15s;
+    }
+    .bridge:hover {
+      border-color: rgba(70,217,232,.4);
+      background: rgba(70,217,232,.08);
+    }
+    .bridge .arrow {
+      flex-shrink: 0;
+      color: var(--cyan);
+      font-weight: 800;
+    }
+    .bridge .info b {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+      font-size: 14.5px;
+    }
+    .bridge .info span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* Source list */
+    .source-group {
+      margin-bottom: 22px;
+    }
+    .source-group:last-child { margin-bottom: 0; }
+    .source-group h4 {
+      font-size: 14px;
+      color: var(--cyan);
+      margin: 0 0 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .source-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .source-list a {
+      display: block;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      color: #e9f6ff;
+      font-size: 13.5px;
+      line-height: 1.5;
+      transition: border-color .15s, background .15s;
+    }
+    .source-list a:hover {
+      border-color: rgba(70,217,232,.4);
+      background: rgba(70,217,232,.06);
+    }
+    .source-list a small {
+      display: block;
+      color: var(--soft);
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    /* Display technology cards (modern display section) */
+    .display-tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .display-tech {
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      position: relative;
+    }
+    .display-tech.featured {
+      border-color: rgba(244,63,94,.4);
+      background: linear-gradient(180deg, rgba(244,63,94,.08), rgba(255,255,255,.02));
+    }
+    .display-tech .tech-era {
+      font-size: 11.5px;
+      color: var(--gold);
+      font-weight: 720;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 6px;
+    }
+    .display-tech.featured .tech-era { color: var(--rose); }
+    .display-tech h4 {
+      font-size: 15.5px;
+      margin: 0 0 8px;
+      color: var(--ink);
+    }
+    .display-tech p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .display-tech p b { color: var(--ink); }
+    .display-tech .tech-metric {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 10px;
+      background: rgba(70,217,232,.12);
+      color: var(--cyan);
+      border-radius: 999px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .display-tech.featured .tech-metric {
+      background: rgba(244,63,94,.15);
+      color: var(--rose);
+    }
+    .response-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .response-list li {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.03);
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .response-list li b { color: var(--ink); }
+
+    /* Demo B specific */
+    .illuminant-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 4px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .illuminant-tabs button {
+      min-height: 32px;
+      padding: 4px 12px;
+      font-size: 13px;
+      background: transparent;
+      border: none;
+      border-radius: 5px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .illuminant-tabs button:hover { color: var(--ink); }
+    .illuminant-tabs button[aria-pressed="true"] {
+      background: var(--cyan);
+      color: #101318;
+      font-weight: 720;
+    }
+    .swatch-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .swatch-tile {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .swatch-tile .swatch-large {
+      height: 80px;
+      background: #888;
+      transition: background .15s;
+    }
+    .swatch-tile .swatch-info {
+      padding: 10px 14px;
+      background: rgba(0,0,0,.25);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .swatch-tile .swatch-info b {
+      color: var(--ink);
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+    .illuminant-info {
+      margin-top: 12px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .illuminant-info span b { color: var(--ink); }
+
+    @media (max-width: 920px) {
+      .section-head, .grid-2 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid { grid-template-columns: 1fr; }
+      .fail-row { grid-template-columns: 1fr; gap: 8px; }
+      .fail-row .ftag { justify-self: start; }
+      .match-card { grid-template-columns: 1fr 1fr; }
+      .match-card .match-status { grid-column: 1 / -1; text-align: center; }
+      .explain { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      section { padding: 54px 16px; }
+      .hero { min-height: 56vh; }
+      h1 { font-size: 40px; }
+      .grid-4 { grid-template-columns: 1fr; }
+      .compare-swatches { height: 80px; }
+      .swatch-pair { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="index.html">← 色彩与显示指南</a>
+      <div class="links" id="navLinks">
+        <a href="#intro">问题</a>
+        <a href="#concept">直觉</a>
+        <a href="#defs">定义</a>
+        <a href="#types">五种失败</a>
+        <a href="#modern-display">新显示</a>
+        <a href="#demo-a">演示 A</a>
+        <a href="#demo-b">演示 B</a>
+        <a href="#workflow">工作流</a>
+        <a href="#myths">误区</a>
+        <a href="#sources">来源</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap">
+        <div class="eyebrow">Metamerism</div>
+        <h1>同色异谱：不同光谱，<br>同一颜色</h1>
+        <p class="lead">人眼把无穷维光谱压缩成三维 XYZ。所以无穷多种"不一样的光"，可以在眼里变成"同一个颜色"。这是色彩管理一切难题的根，也是为什么手机屏看色卡总差一点、印刷打样到办公室就变色、不同人看同一台 OLED 颜色不一致。</p>
+      </div>
+    </section>
+
+    <section id="intro">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>1. 问题场景：你已经被它影响了</h2>
+            <p>下面四个困惑，本质都是同色异谱的不同侧面。先认出它们，再回头看原理就会顺很多。</p>
+          </div>
+          <div class="note">这一章讨论的不是单纯的设备误差，而是<b>颜色匹配成立所依赖的条件</b>。当光源、观察者或测量方式变化时，原本成立的匹配可能失效。</div>
+        </div>
+        <div class="grid-4">
+          <div class="scenario">
+            <span class="ico">📱</span>
+            <h4>跨屏不一致</h4>
+            <p>同一张图在 iPhone OLED 和 MacBook LCD 上，颜色就是不一样——而且不是简单的色温偏移。</p>
+          </div>
+          <div class="scenario">
+            <span class="ico">🖨️</span>
+            <h4>打样变色</h4>
+            <p>印刷打样在 D50 灯箱里完美还原，搬到办公室白炽灯下样张就和原稿对不上了。</p>
+          </div>
+          <div class="scenario">
+            <span class="ico">👁️</span>
+            <h4>校色仪 vs 眼睛</h4>
+            <p>校色仪测出屏幕白点是 D65，同事看觉得偏粉、自己看觉得偏绿，没有人是错的。</p>
+          </div>
+          <div class="scenario">
+            <span class="ico">📷</span>
+            <h4>相机色卡校不齐</h4>
+            <p>用 ColorChecker 拉 IDT 后，色卡内的方块都还原得很准，拍其他物体却总有些颜色对不上。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="concept">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>2. 核心直觉：3 维压缩无穷维</h2>
+            <p>所有同色异谱现象都来自同一个事实：视觉系统把光的全部光谱信息压缩成 3 个数字。</p>
+          </div>
+        </div>
+        <p class="concept-line">人眼只有 <b>3 种锥细胞</b>。任何到达视网膜的光，无论它由几百个波长组成，最终都被压成 <b>3 个数字（XYZ）</b>。无穷多种光谱可以产生同一组 XYZ——它们对眼睛就是"同一个颜色"。</p>
+        <div class="concept-formula">
+          <div><em>三刺激值定义：</em></div>
+          <div>X = ∫ S(λ) · <b>x̄</b>(λ) dλ &nbsp;&nbsp;&nbsp; Y = ∫ S(λ) · <b>ȳ</b>(λ) dλ &nbsp;&nbsp;&nbsp; Z = ∫ S(λ) · <b>z̄</b>(λ) dλ</div>
+          <div style="margin-top:10px"><em>同色异谱条件：</em></div>
+          <div>S₁(λ) ≠ S₂(λ) &nbsp;&nbsp; <b>但</b> &nbsp;&nbsp; (X, Y, Z)₁ = (X, Y, Z)₂</div>
+          <div style="margin-top:10px;color:var(--muted);font-family:inherit;font-size:13px;line-height:1.6">
+            S(λ) = 进入眼睛的光谱功率分布；x̄/ȳ/z̄ = 三条色匹配函数（颜色锥细胞响应的线性组合）。积分把无穷维函数压成 3 个标量。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="defs">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>3. 基础定义</h2>
+            <p>四个术语撑起了同色异谱的整个理论框架。先把它们的边界划清楚，下面所有讨论都建立在这之上。</p>
+          </div>
+          <div class="note">这一节不是术语字典——只列后文会用到的、容易被混淆的核心概念。</div>
+        </div>
+        <div class="def-grid">
+          <div class="def">
+            <div class="term">Tristimulus & CMF</div>
+            <h4>三刺激值与色匹配函数</h4>
+            <p><b>三刺激值 (X, Y, Z)</b> 是把光谱 S(λ) 与三条标准函数 <code>x̄(λ)</code>、<code>ȳ(λ)</code>、<code>z̄(λ)</code> 逐波长相乘再积分得到的 3 个数。这三条函数叫<b>色匹配函数 (CMF)</b>，是 1931 年 CIE 根据多人色觉实验拟合出来的"标准人眼"。</p>
+            <p>常用观察者：<b>CIE 1931 2°</b>（小色块匹配，目前 RGB/印刷链路默认）、<b>CIE 1964 10°</b>（大色块匹配，工业色差常用）、<b>CIE 2015 生理观察者</b>（按年龄/视场参数化）。</p>
+          </div>
+          <div class="def">
+            <div class="term">Metameric Match</div>
+            <h4>同色异谱对</h4>
+            <p>当两条<b>光谱形状不同</b>但<b>计算出的 XYZ 完全相等</b>时，它们就是一对同色异谱（metameric pair）。在指定观察者和指定光源下，眼睛把它们视作同一颜色。</p>
+            <p>关键限定：<b>同一观察者 + 同一光源</b>。只要其中一个条件改变，原本的匹配就可能失效——这就是后面要讲的"失败"。</p>
+          </div>
+          <div class="def">
+            <div class="term">Metameric Black</div>
+            <h4>同色异谱黑</h4>
+            <p>一种<b>非零光谱</b>，但它的 X、Y、Z 三个积分都精确为零。把它叠加到任何光谱上，颜色不变——这就是为什么同色异谱必然存在：CMF 的"零空间"里有无穷多种可加光谱。</p>
+            <p>直观理解：负反卷积、负频率成分等数学概念在色彩空间的体现。任何 XYZ 相同的两条光谱，差值就是一条 metameric black。</p>
+          </div>
+          <div class="def">
+            <div class="term">Luther condition</div>
+            <h4>Luther 条件</h4>
+            <p>一台设备（相机、扫描仪、分光仪）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</p>
+            <p>现实里几乎没有相机精确满足。这是相机色彩还原永远做不到 ΔE=0 的根本原因，也是后文"相机同色异谱"的入口。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="types">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>4. 五种同色异谱失败</h2>
+            <p>同色异谱本身不是"故障"——它是色彩系统能存在的前提。真正的问题是<b>条件改变时同色异谱匹配失效</b>。CIE/ISO 把这种失效按触发条件分成 4 类，加上相机/扫描仪场景一共 5 类。</p>
+          </div>
+          <div class="note">每一行对应一个真实可重现的现象。后面"工作流落地"会逐一对应到摄影/调色/印刷/显示链路里。</div>
+        </div>
+        <div class="fail-grid">
+          <div class="fail-row" data-kind="illum">
+            <span class="ftag">光源 Illuminant</span>
+            <div>
+              <div class="title">换光源色样变色</div>
+            </div>
+            <div class="desc">
+              两个样本在 D65 下匹配，换到 A（白炽灯 2856K）/ F2（冷白荧光）/ 普通商用 LED 下颜色就分开。<b>印刷打样最常见</b>。CIE 用 MI（Metamerism Index）量化偏移，分 A–E 五级（ISO 18314-4:2020）。
+              <small>触发条件：S(λ) 变化。两个反射率不同的样本，在不同光源下产生不同的 XYZ。</small>
+            </div>
+          </div>
+          <div class="fail-row" data-kind="obs">
+            <span class="ftag">观察者 Observer</span>
+            <div>
+              <div class="title">不同人看不一样</div>
+            </div>
+            <div class="desc">
+              个体差异（锥细胞比例、晶状体黄化、视网膜色素密度）让 CMF 因人略异。<b>在 OLED / QD-OLED 等窄峰显示上更明显</b>：窄峰原色可能让不同观察者之间的 ΔE 差异达到 10 以上，这是"为什么有人觉得新 iPhone 偏绿"的原因之一。
+              <small>触发条件：CMF 变化。同一光谱在不同人的视网膜上压成不同的 XYZ。</small>
+            </div>
+          </div>
+          <div class="fail-row" data-kind="field">
+            <span class="ftag">视场 Field-size</span>
+            <div>
+              <div class="title">小块匹配，大块分开</div>
+            </div>
+            <div class="desc">
+              视网膜中心（黄斑区，~2°）和外周（~10°）的锥细胞比例不同。小色卡用 2° 观察者匹配的颜色，铺成大面积墙漆/印张就显出差异。
+              <small>工业色差容差常切到 10° 观察者就是这个原因（CIE 1964）。</small>
+            </div>
+          </div>
+          <div class="fail-row" data-kind="geom">
+            <span class="ftag">几何 Geometric</span>
+            <div>
+              <div class="title">换角度色样变色</div>
+            </div>
+            <div class="desc">
+              珠光漆、金属漆、金属相纸（Kodak Endura Metallic）、全息材料等的反射光谱随观察角度变化，从某一角度看的同色异谱对换个角度就拆。汽车油漆和质感软包装中经常出现这类问题。
+              <small>触发条件：S(λ) 的角度依赖性。同一物体在不同方向反射不同光谱。</small>
+            </div>
+          </div>
+          <div class="fail-row" data-kind="cam">
+            <span class="ftag">相机 Camera</span>
+            <div>
+              <div class="title">相机不是人眼</div>
+            </div>
+            <div class="desc">
+              相机用自己的 R/G/B 光谱灵敏度替代了人眼 CMF，几乎不满足 <b>Luther 条件</b>。结果是：两个对眼睛同色异谱的样本，相机可能看不一致；反之，对相机一致的两个样本，眼睛可能区分得清。
+              <small>ISO 17321 用 <b>SMI</b>（Sensitivity Metamerism Index）量化相机与人眼的偏离程度。这是 IDT / ICC 相机配置文件永远不完美的物理基础。</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="modern-display">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>5. 为什么新显示设备更容易同色异谱失效</h2>
+            <p>现代显示设备为了更高亮度、更大色域和更高效率，越来越依赖窄峰或多峰光谱。问题在于：XYZ 可以被校准到同一个白点，但光谱形状越尖、越不连续，不同观察者之间的差异就越容易被放大。</p>
+          </div>
+          <div class="note">关键不一定是显示设备存在校准错误，而是它们用更窄、更集中的光谱去生成同一个三刺激值。仪器按 CIE 1931 标准观察者读数正确，不代表每个真实观察者看到都完全一致。</div>
+        </div>
+
+        <div class="display-tech-grid">
+          <div class="display-tech">
+            <div class="tech-era">传统 LCD / 白 LED 背光</div>
+            <h4>光谱较宽，观察者差异相对温和</h4>
+            <p>白 LED + 彩色滤光片或荧光粉背光的发射峰通常较宽。它不一定色域最大，但不同人的锥细胞差异被宽光谱“平均”了一部分。</p>
+            <span class="tech-metric">宽峰 / 中等色域</span>
+          </div>
+          <div class="display-tech featured">
+            <div class="tech-era">QD-OLED / 量子点 LCD</div>
+            <h4>量子点把红绿推成窄峰</h4>
+            <p>量子点能做出很纯的红、绿原色，提升 P3 / Rec.2020 覆盖率。但窄峰刚好落在 L/M 锥响应变化最敏感的区域，不同观察者的白点和饱和色感知会更容易分开。</p>
+            <span class="tech-metric">窄峰 / 高色域 / 高风险</span>
+          </div>
+          <div class="display-tech featured">
+            <div class="tech-era">RGB OLED / 激光投影</div>
+            <h4>越接近单色光，越考验“标准观察者”</h4>
+            <p>激光和部分窄带 OLED 的原色更接近线状光谱。校准仪可以把白点调到 D65，但真实观众不是同一个标准观察者，所以有人看偏绿、有人看偏粉。</p>
+            <span class="tech-metric">极窄峰 / 观察者同色异谱</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="card">
+            <h3>为什么 HDR 会把问题放大</h3>
+            <p>HDR 不只是亮度更高，也常常伴随更广色域、更高饱和度和更强的显示原色纯度。饱和色越靠近显示器原色，颜色越依赖那几个窄峰，观察者同色异谱就越明显。</p>
+            <p>这也是为什么同一个 HDR 片段在不同 OLED、Mini LED + 量子点电视和参考监视器上，即使测量白点相近，肉眼观感仍可能不一致。</p>
+          </div>
+          <div class="card">
+            <h3>校准为什么不能彻底解决</h3>
+            <p>常规校准把显示器对齐到一个标准观察者和一个目标白点，例如 CIE 1931 2° 的 D65。它能减少设备误差，但不能消除人眼个体差异。</p>
+            <p>更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。</p>
+          </div>
+        </div>
+
+        <ul class="response-list" style="margin-top:16px">
+          <li><b>工程取舍：</b>更窄的光谱峰带来更大色域和更高效率，但也更容易暴露“标准观察者 ≠ 每个真实观察者”的问题。</li>
+          <li><b>内容制作：</b>不要把“校色仪读数一致”直接等同于“所有人看起来一致”。HDR 广色域母版尤其需要参考环境和参考显示器。</li>
+          <li><b>未来方向：</b>多原色显示、CIE 2015 生理观察者、按年龄/视场建模的观察者补偿，都在试图降低这种差异。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="demo-a">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>6. 演示 A：两条不同光谱，同一个颜色</h2>
+            <p>左边是窄峰光谱（类似 OLED / 激光投影原色），右边是宽峰光谱（类似传统 LCD 荧光粉）。调整两组峰的强度，让两侧的 XYZ 三刺激值尽可能接近。当 ΔE 落到 1 以下，人眼就会把两者视为同一颜色——尽管它们的光谱形状完全不一样。</p>
+          </div>
+          <div class="note">XYZ 用 CIE 1931 2° 标准观察者计算，范围 380–780 nm，步长 5 nm。色卡用 sRGB 显示，超出色域的颜色已截断。</div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Spectrum A: narrow peaks -->
+          <div class="card">
+            <div class="spec-head">
+              <h3>光谱 A · 窄峰</h3>
+              <div class="swatch" id="swA" aria-label="光谱 A 颜色"></div>
+            </div>
+            <div class="canvas-box" style="height:220px">
+              <canvas id="specA" aria-label="光谱 A 曲线"></canvas>
+            </div>
+            <div class="sliders">
+              <label>红峰 R · 620 nm <span class="val" id="aRval">80</span><input id="aR" type="range" min="0" max="100" value="80"></label>
+              <label>绿峰 G · 532 nm <span class="val" id="aGval">70</span><input id="aG" type="range" min="0" max="100" value="70"></label>
+              <label>蓝峰 B · 467 nm <span class="val" id="aBval">60</span><input id="aB" type="range" min="0" max="100" value="60"></label>
+            </div>
+            <div class="xyz-out">
+              <span>X = <b id="aX">0</b></span>
+              <span>Y = <b id="aY">0</b></span>
+              <span>Z = <b id="aZ">0</b></span>
+            </div>
+          </div>
+
+          <!-- Spectrum B: broad peaks -->
+          <div class="card">
+            <div class="spec-head">
+              <h3>光谱 B · 宽峰</h3>
+              <div class="swatch" id="swB" aria-label="光谱 B 颜色"></div>
+            </div>
+            <div class="canvas-box" style="height:220px">
+              <canvas id="specB" aria-label="光谱 B 曲线"></canvas>
+            </div>
+            <div class="sliders">
+              <label>暖峰 · 605 nm <span class="val" id="bRval">55</span><input id="bR" type="range" min="0" max="100" value="55"></label>
+              <label>中峰 · 545 nm <span class="val" id="bGval">60</span><input id="bG" type="range" min="0" max="100" value="60"></label>
+              <label>冷峰 · 475 nm <span class="val" id="bBval">50</span><input id="bB" type="range" min="0" max="100" value="50"></label>
+            </div>
+            <div class="xyz-out">
+              <span>X = <b id="bX">0</b></span>
+              <span>Y = <b id="bY">0</b></span>
+              <span>Z = <b id="bZ">0</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Side-by-side color comparison -->
+        <div class="compare-swatches" aria-label="两个光谱产生的颜色并排比较">
+          <div id="cmpA" data-label="A"></div>
+          <div id="cmpB" data-label="B"></div>
+        </div>
+
+        <!-- Match indicator -->
+        <div class="match-card" id="matchCard" data-status="diff">
+          <div class="match-metric">
+            <span class="lbl">XYZ 差异</span>
+            <span class="num" id="deltaXYZ">—</span>
+          </div>
+          <div class="match-metric">
+            <span class="lbl">CIELAB ΔE76</span>
+            <span class="num" id="deltaE">—</span>
+          </div>
+          <div class="match-status" id="matchStatus">差异明显</div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="findMatch">让 B 匹配 A</button>
+          <button id="findReverse">让 A 匹配 B</button>
+          <button id="resetDemo">重置</button>
+        </div>
+
+        <div class="explain">
+          <div class="card">
+            <h4>你刚才看到了什么</h4>
+            <p>左右两条光谱在 380–780 nm 上形状完全不同——一边是三个尖锐的窄峰，一边是三个平滑的宽峰。但当 ΔE 小于 1 时，<b>人眼无法区分</b>这两种光。把这两块色卡贴在一起，看到的是同一种颜色。</p>
+          </div>
+          <div class="card">
+            <h4>为什么会这样</h4>
+            <p>视网膜上只有 3 种锥细胞（L、M、S），任何光谱进入眼睛后都会被压缩成 3 个数字（XYZ 三刺激值）。无穷多种光谱可以产生<b>同一组三刺激值</b>——它们就是同色异谱对（metameric pair）。这是色彩管理的起点。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo-b">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>7. 演示 B：换光源，匹配失效</h2>
+            <p>两个反射率不同的样本，可以被设计成在 <b>D65 下完全匹配</b>。但只要换一个光源（白炽灯 / 荧光 / LED），同色异谱匹配就会失效——这就是<b>光源同色异谱失败</b>，也是印刷打样中最常见的问题之一。</p>
+          </div>
+          <div class="note">先点"在 D65 下匹配"让样本 B 与样本 A 同色，然后依次切换光源观察 ΔE。在 A、F2、LED 下，差异会明显跳出来。</div>
+        </div>
+
+        <div class="illuminant-tabs" role="tablist" aria-label="光源选择">
+          <button type="button" data-illum="D65" aria-pressed="true">D65 日光</button>
+          <button type="button" data-illum="D50" aria-pressed="false">D50 印刷标准</button>
+          <button type="button" data-illum="A" aria-pressed="false">A 白炽 2856K</button>
+          <button type="button" data-illum="F2" aria-pressed="false">F2 冷白荧光</button>
+          <button type="button" data-illum="LED" aria-pressed="false">商用 LED 3000K</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="spec-head">
+              <h3>反射率 + 光源 SPD</h3>
+              <span class="label" id="illumName">D65 日光</span>
+            </div>
+            <div class="canvas-box" style="height:260px">
+              <canvas id="demoBCanvas" aria-label="样本反射率与光源 SPD 叠加图"></canvas>
+            </div>
+            <p style="margin:10px 0 0;font-size:12.5px;color:var(--soft);line-height:1.6">
+              虚线 = 光源 SPD（按峰值归一化）；实线 = 两个样本的反射率曲线。眼睛看到的 = SPD × 反射率，再经 CMF 积分。
+            </p>
+          </div>
+          <div class="card">
+            <div class="spec-head">
+              <h3>样本 B 反射率峰值</h3>
+              <span class="label">3 个高斯峰（FWHM ≈ 50 nm）</span>
+            </div>
+            <div class="sliders">
+              <label>蓝峰 · 460 nm <span class="val" id="rBlueVal">25</span><input id="rBlue" type="range" min="0" max="100" value="25"></label>
+              <label>绿峰 · 555 nm <span class="val" id="rGreenVal">55</span><input id="rGreen" type="range" min="0" max="100" value="55"></label>
+              <label>红峰 · 630 nm <span class="val" id="rRedVal">40</span><input id="rRed" type="range" min="0" max="100" value="40"></label>
+            </div>
+            <div class="swatch-pair">
+              <div class="swatch-tile">
+                <div class="swatch-large" id="swSampleA"></div>
+                <div class="swatch-info"><b>样本 A · 平滑反射</b>固定的宽峰反射曲线</div>
+              </div>
+              <div class="swatch-tile">
+                <div class="swatch-large" id="swSampleB"></div>
+                <div class="swatch-info"><b>样本 B · 三峰反射</b>由上方滑块控制</div>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:14px">
+              <button class="primary" id="matchD65">在 D65 下匹配 A</button>
+              <button id="resetDemoB">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-card" id="matchCardB" data-status="diff" style="margin-top:20px">
+          <div class="match-metric">
+            <span class="lbl">当前光源</span>
+            <span class="num" id="currentIllum" style="font-size:20px">D65</span>
+          </div>
+          <div class="match-metric">
+            <span class="lbl">两样本 ΔE76</span>
+            <span class="num" id="deltaEB">—</span>
+          </div>
+          <div class="match-status" id="matchStatusB">未匹配</div>
+        </div>
+
+        <div class="explain">
+          <div class="card">
+            <h4>典型操作序列</h4>
+            <p><b>1.</b> 点击"在 D65 下匹配 A"——样本 B 的三个峰自动调整，让两块色卡在 D65 下完全一致（ΔE &lt; 1）。<b>2.</b> 依次切换到 D50、A、F2、LED——观察 ΔE 如何变化。<b>3.</b> 在 A 和 F2 下 ΔE 会显著上升，因为这些光源的 SPD 形状差异很大。</p>
+          </div>
+          <div class="card">
+            <h4>为什么 F2 特别凶猛</h4>
+            <p>D65 是<b>平滑日光</b>，F2 是<b>带尖锐汞蒸气发射线的荧光</b>（435/546/611 nm 三条强线）。F2 在不同波长上能量分布完全不均，<b>对样本反射率的某些波段格外敏感</b>。任何在 D65 下匹配但依赖不同波段反射的两个样本，在 F2 下都很容易产生可见差异。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>8. 工作流落地</h2>
+            <p>同色异谱不是抽象概念——它每天都在你的工作链路里制造问题。下面四个场景是高频实例。</p>
+          </div>
+          <div class="note">每个场景对应前面"五种失败"里的一类。能定位到具体类型，就能知道该用 ICC profile、还是换观察箱、还是接受现实。</div>
+        </div>
+        <div class="wf-grid">
+          <div class="wf">
+            <span class="ctx">摄影 · 相机同色异谱</span>
+            <h4>相机 IDT 永远不完美</h4>
+            <p>相机用自己的光谱灵敏度替代了人眼 CMF——而几乎没有相机精确满足 Luther 条件。所以 ARRI / Sony / Canon 的 IDT（Input Device Transform）只是<b>最小二乘最优解</b>，不是数学完美匹配。</p>
+            <p>用 ColorChecker 校准只优化了色卡内的 24 块，<b>对色卡光谱之外的物体不保证</b>。荧光物体、窄峰染料（如紫色染料、某些霓虹色）尤其容易出现明显偏差。</p>
+            <p>对策：调色时优先信任示波器/矢量图而非"看起来像不像"，关键产品级颜色用真实物体而非色卡迭代。</p>
+          </div>
+          <div class="wf">
+            <span class="ctx">印刷 · 光源同色异谱</span>
+            <h4>D50 标准观察箱为什么必须用</h4>
+            <p>印刷颜色由油墨光谱 × 光源 SPD 决定。墨厂调出的"匹配色"是<b>在指定光源下</b>匹配。如果你在普通办公室灯下看打样，看到的就是<b>不同光源下的同色异谱失败</b>。</p>
+            <p>图文印刷国际标准光源是 D50（ISO 3664：2009）。墨样、打样、看样都必须在 <b>D50 灯箱</b>里进行。带荧光增白剂（OBA）的纸张还要考虑 UV 容差。</p>
+            <p>电视/视频制作改用 D65，是因为目标显示器是 D65 白点——保持评估光源与最终显示光源一致。</p>
+          </div>
+          <div class="wf">
+            <span class="ctx">显示 · 观察者同色异谱</span>
+            <h4>OLED / QD-OLED 显示中的观察者差异</h4>
+            <p>传统 LCD 用宽峰荧光粉，不同观察者看到的颜色差异较小。OLED 和 QD-OLED 用<b>窄峰发光体</b>（OLED 的窄带蓝、量子点的极窄绿/红），同样的 XYZ 在不同人眼里能产生 ΔE 5–18 的差距（Optica Express 2020 等多项实测）。</p>
+            <p>这就是为什么"有人觉得新 iPhone 偏绿、有人觉得正常"——校色仪用的是 CIE 1931 标准观察者，<b>你的眼睛不是</b>。色域越宽、原色越窄，问题越严重。</p>
+            <p>方向：CIE 2015 生理观察者模型、Asano 八参数个体观察者、显示器自适应观察者补偿——业界还在探索。</p>
+          </div>
+          <div class="wf">
+            <span class="ctx">HDR · 广色域副作用</span>
+            <h4>Rec.2020 / 广色域的光谱限制</h4>
+            <p>Rec.2020 用接近单色光的 RGB 原色（630 / 532 / 467 nm），色域比 Rec.709 大 75%。<b>但单色光原色 = 极窄峰</b>——意味着观察者同色异谱效应被推到极限。</p>
+            <p>实务后果：HDR 母带在不同型号 OLED 上、不同观看角度、不同观察者眼里的偏色比 SDR 显示更明显。这不一定是"屏幕没校准"，也可能来自显示光谱与观察者差异。</p>
+            <p>BT.2100 没有规定补偿方案，目前只能靠：1) 使用相同型号监视器交付；2) 多观察者交叉评估；3) 关键颜色避免落在窄峰原色附近。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="myths">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>9. 常见误区</h2>
+            <p>这四句话在论坛/教程/营销材料里出现频率很高，但每一条都漏掉了同色异谱给出的限定。</p>
+          </div>
+        </div>
+        <div class="myth-grid">
+          <div class="myth">
+            <p class="wrong">❌ "ΔE = 0 就是颜色相同"</p>
+            <p class="truth"><b>ΔE = 0 只在指定光源和观察者下成立。</b>换光源或换人，ΔE 就可能不再是 0。色差报告必须标注光源（D65/D50/A...）和观察者（2°/10°），否则不可比。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "校色仪准就是眼睛看也准"</p>
+            <p class="truth"><b>校色仪是另一个观察者。</b>它有自己的光谱灵敏度，等价于 CIE 1931 标准观察者。你的眼睛不是 CIE 1931——尤其在 OLED 窄峰前差异最大。校准只是"对仪器对准"，不保证"你看上去对"。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "广色域屏幕颜色更准"</p>
+            <p class="truth"><b>色域大 ≠ 颜色准</b>，反而<b>更易触发观察者同色异谱失败</b>。窄峰原色（Rec.2020、QD-OLED）让不同人看同一台屏的偏色更明显。广色域适合表达，不直接等于"准确"。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "白平衡到 D65 就是还原真实"</p>
+            <p class="truth"><b>白平衡补偿的是相机响应，不是 Luther 条件不满足。</b>白平衡只让灰卡在相机里变成 (R=G=B)，并不能让所有物体的颜色与人眼一致——后者需要光谱级匹配，物理上几乎不可达。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bridges">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>10. 跳到相关章节</h2>
+            <p>同色异谱是色彩管理的根。其他几章的具体话题，几乎都能在这里找到物理基础。</p>
+          </div>
+        </div>
+        <div class="bridge-grid">
+          <a class="bridge" href="log-gamma.html">
+            <span class="arrow">→</span>
+            <span class="info">
+              <b>为什么相机使用 Log 拍摄</b>
+              <span>相机光谱灵敏度的 Log 编码是工程上的妥协。本章解释这条灵敏度曲线<b>本身不能等于 CMF</b>，所以 IDT 永远不完美。</span>
+            </span>
+          </a>
+          <a class="bridge" href="image-color-management.html">
+            <span class="arrow">→</span>
+            <span class="info">
+              <b>图片色彩管理到底在管什么</b>
+              <span>ICC profile 解决"码值 → XYZ"的映射，但 XYZ 本身就是同色异谱的产物。Convert profile 后<b>跨光源/跨观察者还会偏</b>，就是同色异谱失败。</span>
+            </span>
+          </a>
+          <a class="bridge" href="hdr-color-science.html">
+            <span class="arrow">→</span>
+            <span class="info">
+              <b>SDR 到 HDR 色彩科学</b>
+              <span>Rec.2020 / HDR 广色域用近单色 RGB 原色。本章解释这类窄峰原色为什么会放大<b>观察者同色异谱差异</b>。</span>
+            </span>
+          </a>
+          <a class="bridge" href="scene-display-referred.html">
+            <span class="arrow">→</span>
+            <span class="info">
+              <b>Scene-referred vs Display-referred</b>
+              <span>Output Transform 的目标是"现场该有的样子"。本章解释"现场颜色"<b>本身就和观察者、光源耦合</b>——没有绝对参考。</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>10. 资料来源</h2>
+            <p>权威标准 + 学术综述 + 实务参考。按照可获取性和实用性排序，引用时请回到原文核实。</p>
+          </div>
+        </div>
+        <div class="source-group">
+          <h4>权威标准</h4>
+          <div class="source-list">
+            <a href="https://cie.co.at/publications/colorimetry-4th-edition" target="_blank" rel="noreferrer">
+              CIE 15:2018 Colorimetry, 4th edition
+              <small>三刺激值、CMF、Special Metamerism Index 的官方定义</small>
+            </a>
+            <a href="https://www.iso.org/standard/76573.html" target="_blank" rel="noreferrer">
+              ISO 18314-4:2020 Metamerism index for change of illuminant
+              <small>光源同色异谱指数 (MI) 的计算与分级（A–E）</small>
+            </a>
+            <a href="https://www.iso.org/standard/74585.html" target="_blank" rel="noreferrer">
+              ISO 17321-1:2012 Sensitivity Metamerism Index
+              <small>数码相机 SMI 指标，量化相机与人眼的偏离</small>
+            </a>
+            <a href="https://cie.co.at/publications/fundamental-chromaticity-diagram-physiological-axes-part-1" target="_blank" rel="noreferrer">
+              CIE 170-1:2006 / 170-2:2015 生理观察者模型
+              <small>基于 LMS 锥细胞响应推导的 CMF，CIE 2015 在此基础上</small>
+            </a>
+          </div>
+        </div>
+        <div class="source-group">
+          <h4>学术与综述</h4>
+          <div class="source-list">
+            <a href="https://en.wikipedia.org/wiki/Metamerism_(color)" target="_blank" rel="noreferrer">
+              Wikipedia · Metamerism (color)
+              <small>四种同色异谱失败的完整定义和示例</small>
+            </a>
+            <a href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-28-14-20305&id=432907" target="_blank" rel="noreferrer">
+              Observer metamerism to display white point — Optica Express 2020
+              <small>实测窄峰显示器在不同观察者间的 ΔE 偏移</small>
+            </a>
+            <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10607170/" target="_blank" rel="noreferrer">
+              Mapping Quantitative Observer Metamerism of Displays · PMC 2023
+              <small>不同显示技术（LCD/OLED/QD）的观察者一致性对比</small>
+            </a>
+            <a href="https://s3.cad.rit.edu/cadgallery_production/storage/media/uploads/faculty-f-projects/1374/documents/249/hvei2015-long.pdf" target="_blank" rel="noreferrer">
+              Reducing observer metamerism in wide-gamut multiprimary displays
+              <small>RIT 论文：多原色显示器如何减轻观察者同色异谱</small>
+            </a>
+            <a href="https://www.researchgate.net/publication/325489575" target="_blank" rel="noreferrer">
+              Correcting Metameric Failure of Wide Color Gamut Displays — SID 2018
+              <small>基于 CIE 2015 个体观察者模型的显示补偿方案</small>
+            </a>
+            <a href="https://pubmed.ncbi.nlm.nih.gov/36823841/" target="_blank" rel="noreferrer">
+              Reducing the CIE colorimetric matching failure on wide color gamut displays
+              <small>757 个 metameric pair 实验拟合新的锥基函数</small>
+            </a>
+          </div>
+        </div>
+        <div class="source-group">
+          <h4>实务参考</h4>
+          <div class="source-list">
+            <a href="https://www.datacolor.com/business-solutions/blog/what-is-metamerism/" target="_blank" rel="noreferrer">
+              Datacolor · What Is Metamerism in Color Matching
+              <small>纺织/印刷行业的同色异谱实战指引</small>
+            </a>
+            <a href="https://www.gtilite.com/2019/05/understanding-metamerism/" target="_blank" rel="noreferrer">
+              GTI · Understanding Metamerism
+              <small>观察箱厂商的光源同色异谱讲解，配实物示例</small>
+            </a>
+            <a href="https://www.waveformlighting.com/color-matching/what-is-d50-for-graphic-arts-printing" target="_blank" rel="noreferrer">
+              Waveform Lighting · What is D50 for graphic arts &amp; printing
+              <small>为什么图文印刷标准光源是 D50，含 ISO 3664 解读</small>
+            </a>
+            <a href="https://babelcolor.com/colorchecker.htm" target="_blank" rel="noreferrer">
+              BabelColor · ColorChecker spectral data
+              <small>X-Rite ColorChecker 24 块色卡的反射率光谱数据库</small>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center;padding:32px 20px;color:var(--soft);font-size:13px;border-top:1px solid var(--line)">
+    <p>影像色彩与显示技术指南 · <a href="index.html" style="color:var(--cyan)">返回首页</a></p>
+  </footer>
+
+  <script>
+    // ===== CIE 1931 2° Standard Observer color matching functions =====
+    // 380-780 nm at 5 nm intervals (81 points). Source: CIE 15:2018 Table T.4.
+    const LAMBDA_MIN = 380;
+    const LAMBDA_MAX = 780;
+    const LAMBDA_STEP = 5;
+    // x̄, ȳ, z̄ tables — abbreviated to 5nm
+    const CMF = {
+      x: [0.001368,0.002236,0.004243,0.007650,0.014310,0.023190,0.043510,0.077630,0.134380,0.214770,0.283900,0.328500,0.348280,0.348060,0.336200,0.318700,0.290800,0.251100,0.195360,0.142100,0.095640,0.057950,0.032010,0.014700,0.004900,0.002400,0.009300,0.029100,0.063270,0.109600,0.165500,0.225750,0.290400,0.359700,0.433450,0.512050,0.594500,0.678400,0.762100,0.842500,0.916300,0.978600,1.026300,1.056700,1.062200,1.045600,1.002600,0.938400,0.854450,0.751400,0.642400,0.541900,0.447900,0.360800,0.283500,0.218700,0.164900,0.121200,0.087400,0.063600,0.046770,0.032900,0.022700,0.015840,0.011359,0.008111,0.005790,0.004109,0.002899,0.002049,0.001440,0.000999,0.000690,0.000476,0.000332,0.000235,0.000166,0.000117,0.000083,0.000059,0.000042],
+      y: [0.000039,0.000064,0.000120,0.000217,0.000396,0.000640,0.001210,0.002180,0.004000,0.007300,0.011600,0.016840,0.023000,0.029800,0.038000,0.048000,0.060000,0.073900,0.090980,0.112600,0.139020,0.169300,0.208020,0.258600,0.323000,0.407300,0.503000,0.608200,0.710000,0.793200,0.862000,0.914850,0.954000,0.980300,0.994950,1.000000,0.995000,0.978600,0.952000,0.915400,0.870000,0.816300,0.757000,0.694900,0.631000,0.566800,0.503000,0.441200,0.381000,0.321000,0.265000,0.217000,0.175000,0.138200,0.107000,0.081600,0.061000,0.044580,0.032000,0.023200,0.017000,0.011920,0.008210,0.005723,0.004102,0.002929,0.002091,0.001484,0.001047,0.000740,0.000520,0.000361,0.000249,0.000172,0.000120,0.000085,0.000060,0.000042,0.000030,0.000021,0.000015],
+      z: [0.006450,0.010550,0.020050,0.036210,0.067850,0.110200,0.207400,0.371300,0.645600,1.039050,1.385600,1.622960,1.747060,1.782600,1.772110,1.744100,1.669200,1.528100,1.287640,1.041900,0.812950,0.616200,0.465180,0.353300,0.272000,0.212300,0.158200,0.111700,0.078250,0.057250,0.042160,0.029840,0.020300,0.013400,0.008750,0.005750,0.003900,0.002750,0.002100,0.001800,0.001650,0.001400,0.001100,0.001000,0.000800,0.000600,0.000340,0.000240,0.000190,0.000100,0.000050,0.000030,0.000020,0.000010,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000]
+    };
+    const N = CMF.x.length; // 81
+
+    // ===== Spectrum models =====
+    // Each spectrum = sum of 3 Gaussian peaks with fixed positions/widths, amplitudes are user-controlled.
+    const SPEC_A = {
+      label: "A",
+      peaks: [
+        { c: 620, w: 12 },  // R narrow
+        { c: 532, w: 14 },  // G narrow
+        { c: 467, w: 12 }   // B narrow
+      ],
+      defaults: [80, 70, 60]
+    };
+    const SPEC_B = {
+      label: "B",
+      peaks: [
+        { c: 605, w: 38 },  // warm broad
+        { c: 545, w: 44 },  // mid broad
+        { c: 475, w: 36 }   // cool broad
+      ],
+      defaults: [55, 60, 50]
+    };
+
+    function gaussian(lambda, center, width) {
+      const t = (lambda - center) / width;
+      return Math.exp(-0.5 * t * t);
+    }
+
+    // Returns array of 81 SPD values for given amplitudes (0-100) and spec model.
+    // Each Gaussian peak is area-normalized so amplitude controls TOTAL RADIANT POWER,
+    // not peak height. This keeps A (narrow) and B (broad) on the same energy basis,
+    // so the metameric-match solver behaves symmetrically for both directions.
+    function buildSPD(spec, amps) {
+      const out = new Array(N);
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        let sum = 0;
+        for (let k = 0; k < 3; k++) {
+          const peak = spec.peaks[k];
+          const norm = 1 / (peak.w * Math.sqrt(2 * Math.PI));
+          sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;
+        }
+        out[i] = sum;
+      }
+      return out;
+    }
+
+    // Compute XYZ from SPD. Treats SPD as emissive (light) — direct integration.
+    function computeXYZ(spd) {
+      let X = 0, Y = 0, Z = 0;
+      for (let i = 0; i < N; i++) {
+        X += spd[i] * CMF.x[i];
+        Y += spd[i] * CMF.y[i];
+        Z += spd[i] * CMF.z[i];
+      }
+      // Global scale tuned so default amplitudes give Y around 40-60 (mid-gray range).
+      // With area-normalized Gaussians, raw_sum_Y ≈ ȳ(peak_center)/Δλ per peak, which is
+      // small — we need k ≈ Δλ × 60 to land in a comfortable range.
+      const k = LAMBDA_STEP * 60;
+      return { X: X * k, Y: Y * k, Z: Z * k };
+    }
+
+    // XYZ -> linear sRGB (D65). Inputs assumed in same scale as Y_white ≈ 100.
+    const M_XYZ_RGB = [
+      [ 3.2404542, -1.5371385, -0.4985314],
+      [-0.9692660,  1.8760108,  0.0415560],
+      [ 0.0556434, -0.2040259,  1.0572252]
+    ];
+    function xyzToSRGBHex(X, Y, Z, normalizeY) {
+      const s = normalizeY > 0 ? (100 / normalizeY) : 1;
+      const x = X * s / 100, y = Y * s / 100, z = Z * s / 100;
+      let r = M_XYZ_RGB[0][0]*x + M_XYZ_RGB[0][1]*y + M_XYZ_RGB[0][2]*z;
+      let g = M_XYZ_RGB[1][0]*x + M_XYZ_RGB[1][1]*y + M_XYZ_RGB[1][2]*z;
+      let b = M_XYZ_RGB[2][0]*x + M_XYZ_RGB[2][1]*y + M_XYZ_RGB[2][2]*z;
+      const enc = v => {
+        if (v <= 0) return 0;
+        if (v >= 1) return 1;
+        return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1/2.4) - 0.055;
+      };
+      r = enc(r); g = enc(g); b = enc(b);
+      const toByte = v => Math.round(Math.max(0, Math.min(1, v)) * 255);
+      const h = n => n.toString(16).padStart(2, "0");
+      return `#${h(toByte(r))}${h(toByte(g))}${h(toByte(b))}`;
+    }
+
+    // XYZ -> CIELAB (D65 reference white).
+    const WHITE_D65 = { X: 95.047, Y: 100.000, Z: 108.883 };
+    function f(t) {
+      return t > 0.008856 ? Math.cbrt(t) : (7.787 * t + 16/116);
+    }
+    function xyzToLab(X, Y, Z, refWhite) {
+      const Xn = refWhite.X, Yn = refWhite.Y, Zn = refWhite.Z;
+      const fx = f(X / Xn), fy = f(Y / Yn), fz = f(Z / Zn);
+      return {
+        L: 116 * fy - 16,
+        a: 500 * (fx - fy),
+        b: 200 * (fy - fz)
+      };
+    }
+    function deltaE76(L1, L2) {
+      const dL = L1.L - L2.L, da = L1.a - L2.a, db = L1.b - L2.b;
+      return Math.sqrt(dL*dL + da*da + db*db);
+    }
+
+    // ===== Solve metameric match =====
+    // Given target XYZ and a spec with 3 peaks, find amplitudes [a1, a2, a3] such that
+    // the SPD produces the same XYZ. Each peak k contributes (amp_k/100) * Pk to XYZ
+    // where Pk = ∫ gaussian(λ; c_k, w_k) * CMF(λ) dλ. So it's a 3x3 linear system.
+    function peakContributions(spec) {
+      // For each peak k, returns its [X, Y, Z] contribution at amplitude = 100.
+      // Uses buildSPD with a single peak active so it matches the normalized SPD that
+      // the live demo computes — critical for the solver to converge.
+      const contribs = [];
+      for (let k = 0; k < 3; k++) {
+        const amps = [0, 0, 0];
+        amps[k] = 100;
+        const spd = buildSPD(spec, amps);
+        const xyz = computeXYZ(spd);
+        contribs.push([xyz.X, xyz.Y, xyz.Z]);
+      }
+      return contribs;
+    }
+
+    function solve3x3(M, v) {
+      // Cramer's rule on the 3×3 system M·a = v (M is column-major: M[k] is k-th column).
+      const det = (m) =>
+          m[0][0]*(m[1][1]*m[2][2]-m[2][1]*m[1][2])
+        - m[0][1]*(m[1][0]*m[2][2]-m[2][0]*m[1][2])
+        + m[0][2]*(m[1][0]*m[2][1]-m[2][0]*m[1][1]);
+      // Build row-major matrix from column vectors.
+      const A = [
+        [M[0][0], M[1][0], M[2][0]],
+        [M[0][1], M[1][1], M[2][1]],
+        [M[0][2], M[1][2], M[2][2]]
+      ];
+      const D = det(A);
+      if (Math.abs(D) < 1e-9) return null;
+      const replaceCol = (col) => A.map((row, i) => row.map((val, j) => j === col ? v[i] : val));
+      const a0 = det(replaceCol(0)) / D;
+      const a1 = det(replaceCol(1)) / D;
+      const a2 = det(replaceCol(2)) / D;
+      return [a0, a1, a2];
+    }
+
+    // Try to make `spec` produce target XYZ. Returns amps clamped to [0, 100] and whether exact.
+    function solveMetamericMatch(spec, targetXYZ) {
+      const P = peakContributions(spec); // P[k] = [X, Y, Z] for amp 100
+      const M = P; // 3 columns of P
+      // Solve M · (amps/100) = targetXYZ
+      const v = [targetXYZ.X, targetXYZ.Y, targetXYZ.Z];
+      const a = solve3x3(M, v);
+      if (!a) return { amps: spec.defaults.slice(), exact: false };
+      const ampsRaw = a.map(x => x * 100);
+      const amps = ampsRaw.map(x => Math.max(0, Math.min(100, Math.round(x))));
+      const exact = ampsRaw.every(x => x >= 0 && x <= 100);
+      return { amps, exact };
+    }
+
+    // ===== Canvas drawing =====
+    function resizeCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    // Wavelength → approximate sRGB for spectrum visualization
+    function wavelengthToColor(lam) {
+      // Simple piecewise approximation for spectrum locus display
+      let r=0, g=0, b=0;
+      if (lam >= 380 && lam < 440) { r = -(lam-440)/(440-380); g = 0; b = 1; }
+      else if (lam < 490) { r = 0; g = (lam-440)/(490-440); b = 1; }
+      else if (lam < 510) { r = 0; g = 1; b = -(lam-510)/(510-490); }
+      else if (lam < 580) { r = (lam-510)/(580-510); g = 1; b = 0; }
+      else if (lam < 645) { r = 1; g = -(lam-645)/(645-580); b = 0; }
+      else if (lam <= 780) { r = 1; g = 0; b = 0; }
+      // Edge falloff
+      let factor = 1;
+      if (lam < 420) factor = 0.3 + 0.7 * (lam - 380) / 40;
+      else if (lam > 700) factor = 0.3 + 0.7 * (780 - lam) / 80;
+      const enc = v => Math.round(Math.max(0, Math.min(1, Math.pow(v * factor, 0.85))) * 255);
+      return `rgb(${enc(r)},${enc(g)},${enc(b)})`;
+    }
+
+    function drawSpectrum(canvas, spd, color) {
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const pad = { l: 38, r: 14, t: 14, b: 28 };
+      ctx.clearRect(0, 0, w, h);
+
+      // Spectrum background bar
+      const gradient = ctx.createLinearGradient(pad.l, 0, w - pad.r, 0);
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        const lam = LAMBDA_MIN + t * (LAMBDA_MAX - LAMBDA_MIN);
+        gradient.addColorStop(t, wavelengthToColor(lam));
+      }
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = gradient;
+      ctx.fillRect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b);
+      ctx.globalAlpha = 1;
+
+      // Find max for scaling
+      let maxV = 0;
+      for (let i = 0; i < spd.length; i++) if (spd[i] > maxV) maxV = spd[i];
+      const yScale = maxV > 0 ? (h - pad.t - pad.b) / (maxV * 1.08) : 1;
+
+      // Grid
+      ctx.strokeStyle = "rgba(255,255,255,.08)";
+      ctx.lineWidth = 1;
+      [400, 500, 600, 700].forEach(lam => {
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, h - pad.b);
+        ctx.stroke();
+      });
+
+      // Axis
+      ctx.strokeStyle = "rgba(255,255,255,.4)";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+
+      // X labels
+      ctx.fillStyle = "#8994a6";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      [400, 500, 600, 700].forEach(lam => {
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        ctx.fillText(lam.toString(), x, h - pad.b + 16);
+      });
+      ctx.fillText("nm", w - pad.r - 6, h - pad.b + 16);
+      ctx.textAlign = "left";
+
+      // SPD curve (filled below, line on top)
+      ctx.beginPath();
+      ctx.moveTo(pad.l, h - pad.b);
+      for (let i = 0; i < spd.length; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        const y = h - pad.b - spd[i] * yScale;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.closePath();
+
+      // Fill with spectrum-tinted gradient
+      const fillGrad = ctx.createLinearGradient(pad.l, 0, w - pad.r, 0);
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        const lam = LAMBDA_MIN + t * (LAMBDA_MAX - LAMBDA_MIN);
+        fillGrad.addColorStop(t, wavelengthToColor(lam));
+      }
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Line on top
+      ctx.beginPath();
+      for (let i = 0; i < spd.length; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        const y = h - pad.b - spd[i] * yScale;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Y label
+      ctx.fillStyle = "#8994a6";
+      ctx.save();
+      ctx.translate(12, (h - pad.b + pad.t) / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "center";
+      ctx.fillText("光谱功率", 0, 0);
+      ctx.restore();
+    }
+
+    // ===== UI wiring =====
+    const $ = (id) => document.getElementById(id);
+    const sliders = {
+      A: [$("aR"), $("aG"), $("aB")],
+      B: [$("bR"), $("bG"), $("bB")]
+    };
+    const valLabels = {
+      A: [$("aRval"), $("aGval"), $("aBval")],
+      B: [$("bRval"), $("bGval"), $("bBval")]
+    };
+    const xyzOut = {
+      A: { X: $("aX"), Y: $("aY"), Z: $("aZ") },
+      B: { X: $("bX"), Y: $("bY"), Z: $("bZ") }
+    };
+
+    function readAmps(which) {
+      return sliders[which].map(s => Number(s.value));
+    }
+
+    function setAmps(which, amps) {
+      for (let k = 0; k < 3; k++) {
+        sliders[which][k].value = amps[k];
+      }
+    }
+
+    function update() {
+      const ampsA = readAmps("A");
+      const ampsB = readAmps("B");
+      const spdA = buildSPD(SPEC_A, ampsA);
+      const spdB = buildSPD(SPEC_B, ampsB);
+      const xyzA = computeXYZ(spdA);
+      const xyzB = computeXYZ(spdB);
+
+      // Update slider value labels
+      for (let k = 0; k < 3; k++) {
+        valLabels.A[k].textContent = ampsA[k];
+        valLabels.B[k].textContent = ampsB[k];
+      }
+
+      // Update XYZ readouts
+      xyzOut.A.X.textContent = xyzA.X.toFixed(1);
+      xyzOut.A.Y.textContent = xyzA.Y.toFixed(1);
+      xyzOut.A.Z.textContent = xyzA.Z.toFixed(1);
+      xyzOut.B.X.textContent = xyzB.X.toFixed(1);
+      xyzOut.B.Y.textContent = xyzB.Y.toFixed(1);
+      xyzOut.B.Z.textContent = xyzB.Z.toFixed(1);
+
+      // Compute color swatches — share normalization so brightness is comparable.
+      const normY = Math.max(xyzA.Y, xyzB.Y, 50);
+      const hexA = xyzToSRGBHex(xyzA.X, xyzA.Y, xyzA.Z, normY);
+      const hexB = xyzToSRGBHex(xyzB.X, xyzB.Y, xyzB.Z, normY);
+      $("swA").style.background = hexA;
+      $("swB").style.background = hexB;
+      $("cmpA").style.background = hexA;
+      $("cmpB").style.background = hexB;
+
+      // Draw spectrum charts
+      drawSpectrum($("specA"), spdA, "#ffffff");
+      drawSpectrum($("specB"), spdB, "#ffffff");
+
+      // Distance metrics
+      const dXYZ = Math.max(
+        Math.abs(xyzA.X - xyzB.X),
+        Math.abs(xyzA.Y - xyzB.Y),
+        Math.abs(xyzA.Z - xyzB.Z)
+      );
+      const labA = xyzToLab(xyzA.X, xyzA.Y, xyzA.Z, WHITE_D65);
+      const labB = xyzToLab(xyzB.X, xyzB.Y, xyzB.Z, WHITE_D65);
+      const dE = deltaE76(labA, labB);
+      $("deltaXYZ").textContent = dXYZ.toFixed(2);
+      $("deltaE").textContent = dE.toFixed(2);
+
+      // Match status
+      const card = $("matchCard");
+      const stat = $("matchStatus");
+      if (dE < 1) {
+        card.dataset.status = "match";
+        stat.textContent = "✓ 同色异谱匹配";
+      } else if (dE < 3) {
+        card.dataset.status = "close";
+        stat.textContent = "几乎一致";
+      } else if (dE < 10) {
+        card.dataset.status = "diff";
+        stat.textContent = "可见差异";
+      } else {
+        card.dataset.status = "diff";
+        stat.textContent = "明显不同";
+      }
+    }
+
+    // Bind sliders
+    [...sliders.A, ...sliders.B].forEach(s => {
+      s.addEventListener("input", update);
+    });
+
+    // Buttons
+    $("findMatch").addEventListener("click", () => {
+      const ampsA = readAmps("A");
+      const targetXYZ = computeXYZ(buildSPD(SPEC_A, ampsA));
+      const { amps, exact } = solveMetamericMatch(SPEC_B, targetXYZ);
+      setAmps("B", amps);
+      update();
+      if (!exact) {
+        $("matchStatus").textContent = "已尽量逼近（含负值/超量已截断）";
+      }
+    });
+    $("findReverse").addEventListener("click", () => {
+      const ampsB = readAmps("B");
+      const targetXYZ = computeXYZ(buildSPD(SPEC_B, ampsB));
+      const { amps, exact } = solveMetamericMatch(SPEC_A, targetXYZ);
+      setAmps("A", amps);
+      update();
+      if (!exact) {
+        $("matchStatus").textContent = "已尽量逼近（含负值/超量已截断）";
+      }
+    });
+    $("resetDemo").addEventListener("click", () => {
+      setAmps("A", SPEC_A.defaults);
+      setAmps("B", SPEC_B.defaults);
+      update();
+    });
+
+    // ============================================================
+    // ===== Demo B: illuminant switching ========================
+    // ============================================================
+
+    // CIE Standard Illuminant D65, relative SPD (380-780 nm, 5 nm step), normalized at 560 nm.
+    // Source: CIE 15:2018 Table T.1.
+    const SPD_D65 = [49.9755,52.3118,54.6482,68.7015,82.7549,87.1204,91.486,92.4589,93.4318,90.057,86.6823,95.7736,104.865,110.936,117.008,117.41,117.812,116.336,114.861,115.392,115.923,112.367,108.811,109.082,109.354,108.578,107.802,106.296,104.79,106.239,107.689,106.047,104.405,104.225,104.046,102.023,100.0,98.1671,96.3342,96.0611,95.788,92.2368,88.6856,89.3459,90.0062,89.8026,89.5991,88.6489,87.6987,85.4936,83.2886,83.4939,83.6992,81.863,80.0268,80.1207,80.2146,81.2462,82.2778,80.281,78.2842,74.0027,69.7213,70.6652,71.6091,72.979,74.349,67.9765,61.604,65.7448,69.8856,72.4863,75.087,69.3398,63.5927,55.0054,46.4182,56.6118,66.8054,65.0941,63.3828];
+
+    // CIE Standard Illuminant D50, relative SPD (380-780 nm, 5 nm step).
+    const SPD_D50 = [24.488,27.179,29.871,39.589,49.308,52.91,56.513,58.273,60.034,58.926,57.818,66.321,74.825,81.036,87.247,88.93,90.612,90.99,91.368,93.238,95.109,93.536,91.963,93.843,95.724,96.169,96.613,96.871,97.129,99.614,102.099,101.427,100.755,101.536,102.317,101.159,100.0,98.868,97.735,98.327,98.918,96.208,93.499,95.593,97.688,98.479,99.27,99.155,99.041,97.382,95.722,97.29,98.857,97.262,95.667,96.929,98.19,100.597,103.003,101.068,99.133,93.257,87.381,89.492,91.604,92.246,92.889,84.872,76.854,81.683,86.511,89.546,92.58,85.405,78.23,67.961,57.692,70.307,82.923,80.599,78.274];
+
+    // CIE Standard Illuminant F2 (cool white fluorescent) — characteristic Hg lines at 405/436/546 nm.
+    const SPD_F2 = [1.18,1.48,1.84,2.15,3.44,15.69,3.85,3.74,4.19,4.62,5.06,34.98,11.81,6.27,6.63,6.93,7.19,7.4,7.54,7.62,7.65,7.62,7.62,7.45,7.28,7.15,7.05,7.04,7.16,7.47,8.04,8.88,10.01,24.88,16.64,14.59,16.16,17.56,18.62,21.47,22.79,19.29,18.66,17.73,16.54,15.21,13.8,12.36,10.95,9.65,8.4,7.32,6.31,5.43,4.68,4.02,3.45,2.96,2.55,2.19,1.89,1.64,1.53,1.27,1.10,0.99,0.88,0.76,0.68,0.61,0.56,0.54,0.51,0.47,0.47,0.43,0.46,0.47,0.40,0.33,0.27];
+
+    // Illuminant A (Planckian radiator at 2856 K). Compute on the fly via Planck's law.
+    function planckianSPD(T) {
+      const c2 = 1.4388e7; // nm·K
+      const spd = new Array(N);
+      const refDen = Math.exp(c2 / (560 * T)) - 1;
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const den = Math.exp(c2 / (lam * T)) - 1;
+        spd[i] = 100 * Math.pow(560 / lam, 5) * refDen / den;
+      }
+      return spd;
+    }
+    const SPD_A = planckianSPD(2856);
+
+    // Commodity warm-white LED: InGaN blue spike at 450 nm + YAG phosphor broad at 590 nm.
+    function ledSPD() {
+      const spd = new Array(N);
+      let maxV = 0;
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const blue = 0.7 * Math.exp(-Math.pow((lam - 450) / 11, 2) / 2);
+        const phosphor = 1.0 * Math.exp(-Math.pow((lam - 590) / 55, 2) / 2);
+        spd[i] = blue + phosphor;
+        if (spd[i] > maxV) maxV = spd[i];
+      }
+      return spd.map(v => v / maxV * 100);
+    }
+    const SPD_LED = ledSPD();
+
+    const ILLUM = {
+      D65: { name: "D65 日光", spd: SPD_D65 },
+      D50: { name: "D50 印刷标准", spd: SPD_D50 },
+      A:   { name: "A 白炽 2856K", spd: SPD_A },
+      F2:  { name: "F2 冷白荧光", spd: SPD_F2 },
+      LED: { name: "商用 LED 3000K", spd: SPD_LED }
+    };
+
+    // Sample A reflectance — fixed yellow-orange selective: low floor + sharp bell around 595 nm.
+    // Wavelength selectivity is what makes the metameric match break dramatically under
+    // illuminants whose SPD differs at the peak/floor wavelengths (esp. F2 mercury lines).
+    const SAMPLE_A_REFL = (() => {
+      const r = new Array(N);
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        r[i] = 0.06 + 0.65 * Math.exp(-Math.pow((lam - 595) / 38, 2) / 2);
+      }
+      return r;
+    })();
+
+    // Sample B reflectance — 3 narrow Gaussian peaks with controllable amplitudes (0-100, scaled to 0-1).
+    // Narrow peaks placed at standard RGB-like positions so the match under D65 requires real
+    // wavelength redistribution, not just amplitude scaling.
+    const SAMPLE_B_PEAKS = [
+      { c: 460, w: 28 },
+      { c: 555, w: 28 },
+      { c: 630, w: 28 }
+    ];
+    function buildSampleB(amps) {
+      const r = new Array(N);
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        let sum = 0;
+        for (let k = 0; k < 3; k++) {
+          sum += (amps[k] / 100) * Math.exp(-Math.pow((lam - SAMPLE_B_PEAKS[k].c) / SAMPLE_B_PEAKS[k].w, 2) / 2);
+        }
+        r[i] = Math.max(0, Math.min(1, sum));
+      }
+      return r;
+    }
+
+    // XYZ for an object color: reflectance × illuminant SPD, normalized so a perfect white
+    // reflector (R≡1) under the same illuminant gives Y = 100.
+    function computeXYZUnderIlluminant(reflectance, illumSPD) {
+      let X = 0, Y = 0, Z = 0, normY = 0;
+      for (let i = 0; i < N; i++) {
+        const s = reflectance[i] * illumSPD[i];
+        X += s * CMF.x[i];
+        Y += s * CMF.y[i];
+        Z += s * CMF.z[i];
+        normY += illumSPD[i] * CMF.y[i];
+      }
+      const k = 100 / Math.max(normY, 1e-9);
+      return { X: X * k, Y: Y * k, Z: Z * k };
+    }
+
+    // Solve B amplitudes so its XYZ under D65 matches sample A's XYZ under D65.
+    function matchSampleBToAUnderD65() {
+      const targetXYZ = computeXYZUnderIlluminant(SAMPLE_A_REFL, SPD_D65);
+      const P = [];
+      for (let k = 0; k < 3; k++) {
+        const amps = [0, 0, 0];
+        amps[k] = 100;
+        const r = buildSampleB(amps);
+        const x = computeXYZUnderIlluminant(r, SPD_D65);
+        P.push([x.X, x.Y, x.Z]);
+      }
+      const M = [
+        [P[0][0], P[1][0], P[2][0]],
+        [P[0][1], P[1][1], P[2][1]],
+        [P[0][2], P[1][2], P[2][2]]
+      ];
+      const v = [targetXYZ.X, targetXYZ.Y, targetXYZ.Z];
+      const a = solve3x3(P, v);
+      if (!a) return null;
+      return a.map(x => Math.max(0, Math.min(100, Math.round(x * 100))));
+    }
+
+    // Draw the demo B chart: faint spectrum bg + dashed illuminant SPD + reflectance A/B lines.
+    function drawDemoB(canvas, illumSPD, reflA, reflB) {
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const pad = { l: 38, r: 14, t: 28, b: 28 };
+      ctx.clearRect(0, 0, w, h);
+
+      // Background spectrum tint
+      const bg = ctx.createLinearGradient(pad.l, 0, w - pad.r, 0);
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        bg.addColorStop(t, wavelengthToColor(LAMBDA_MIN + t * (LAMBDA_MAX - LAMBDA_MIN)));
+      }
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = bg;
+      ctx.fillRect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b);
+      ctx.globalAlpha = 1;
+
+      // Grid
+      ctx.strokeStyle = "rgba(255,255,255,.08)";
+      ctx.lineWidth = 1;
+      [400, 500, 600, 700].forEach(lam => {
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+      });
+
+      // Axis
+      ctx.strokeStyle = "rgba(255,255,255,.4)";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+
+      // X labels
+      ctx.fillStyle = "#8994a6";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      [400, 500, 600, 700].forEach(lam => {
+        const x = pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+        ctx.fillText(lam.toString(), x, h - pad.b + 16);
+      });
+      ctx.fillText("nm", w - pad.r - 6, h - pad.b + 16);
+      ctx.textAlign = "left";
+
+      const inner = h - pad.t - pad.b;
+      const plotX = (lam) => pad.l + (lam - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN) * (w - pad.l - pad.r);
+
+      // Illuminant SPD (dashed gold), normalized to its own max
+      const maxSPD = Math.max(...illumSPD);
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = "rgba(255,209,102,.65)";
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const y = h - pad.b - (illumSPD[i] / maxSPD) * inner * 0.95;
+        i === 0 ? ctx.moveTo(plotX(lam), y) : ctx.lineTo(plotX(lam), y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Sample A reflectance (cyan solid)
+      ctx.strokeStyle = "#46d9e8";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const y = h - pad.b - reflA[i] * inner * 0.95;
+        i === 0 ? ctx.moveTo(plotX(lam), y) : ctx.lineTo(plotX(lam), y);
+      }
+      ctx.stroke();
+
+      // Sample B reflectance (rose solid)
+      ctx.strokeStyle = "#f43f5e";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i < N; i++) {
+        const lam = LAMBDA_MIN + i * LAMBDA_STEP;
+        const y = h - pad.b - reflB[i] * inner * 0.95;
+        i === 0 ? ctx.moveTo(plotX(lam), y) : ctx.lineTo(plotX(lam), y);
+      }
+      ctx.stroke();
+
+      // Legend at top
+      ctx.font = "11px system-ui";
+      ctx.fillStyle = "#46d9e8";
+      ctx.fillText("— 样本 A 反射", pad.l + 6, pad.t - 10);
+      ctx.fillStyle = "#f43f5e";
+      ctx.fillText("— 样本 B 反射", pad.l + 100, pad.t - 10);
+      ctx.fillStyle = "rgba(255,209,102,.85)";
+      ctx.fillText("⋯ 光源 SPD", pad.l + 196, pad.t - 10);
+    }
+
+    // ===== Demo B UI wiring =====
+    let currentIllum = "D65";
+    const bSliders = [$("rBlue"), $("rGreen"), $("rRed")];
+    const bValLabels = [$("rBlueVal"), $("rGreenVal"), $("rRedVal")];
+
+    function updateDemoB() {
+      const amps = bSliders.map(s => Number(s.value));
+      bValLabels.forEach((l, k) => l.textContent = amps[k]);
+
+      const reflB = buildSampleB(amps);
+      const illum = ILLUM[currentIllum];
+      const xyzA = computeXYZUnderIlluminant(SAMPLE_A_REFL, illum.spd);
+      const xyzB = computeXYZUnderIlluminant(reflB, illum.spd);
+
+      // Render swatches — normalize so perfect white reflector under D65 maps to sRGB white.
+      // Using fixed normY = 100 gives consistent brightness across illuminants.
+      $("swSampleA").style.background = xyzToSRGBHex(xyzA.X, xyzA.Y, xyzA.Z, 100);
+      $("swSampleB").style.background = xyzToSRGBHex(xyzB.X, xyzB.Y, xyzB.Z, 100);
+
+      // Chart
+      drawDemoB($("demoBCanvas"), illum.spd, SAMPLE_A_REFL, reflB);
+
+      // ΔE under the current illuminant — Lab uses D65 white as a fixed reference.
+      const labA = xyzToLab(xyzA.X, xyzA.Y, xyzA.Z, WHITE_D65);
+      const labB = xyzToLab(xyzB.X, xyzB.Y, xyzB.Z, WHITE_D65);
+      const dE = deltaE76(labA, labB);
+      $("deltaEB").textContent = dE.toFixed(2);
+      $("currentIllum").textContent = illum.name.split(" ")[0];
+      $("illumName").textContent = illum.name;
+
+      const card = $("matchCardB");
+      const stat = $("matchStatusB");
+      if (dE < 1)      { card.dataset.status = "match"; stat.textContent = "✓ 同色异谱匹配"; }
+      else if (dE < 3) { card.dataset.status = "close"; stat.textContent = "几乎一致"; }
+      else if (dE < 10){ card.dataset.status = "diff";  stat.textContent = "可见差异"; }
+      else             { card.dataset.status = "diff";  stat.textContent = "明显不同"; }
+    }
+
+    // Illuminant tab switching
+    document.querySelectorAll('.illuminant-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.illuminant-tabs button')
+          .forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+        currentIllum = btn.dataset.illum;
+        updateDemoB();
+      });
+    });
+
+    bSliders.forEach(s => s.addEventListener('input', updateDemoB));
+
+    $("matchD65").addEventListener('click', () => {
+      // Switch back to D65 to show the match clearly.
+      document.querySelectorAll('.illuminant-tabs button')
+        .forEach(b => b.setAttribute('aria-pressed', b.dataset.illum === 'D65' ? 'true' : 'false'));
+      currentIllum = 'D65';
+      const amps = matchSampleBToAUnderD65();
+      if (amps) bSliders.forEach((s, k) => s.value = amps[k]);
+      updateDemoB();
+    });
+    $("resetDemoB").addEventListener('click', () => {
+      const defaults = [25, 55, 40];
+      bSliders.forEach((s, k) => s.value = defaults[k]);
+      updateDemoB();
+    });
+
+    updateDemoB();
+
+    // Progress bar
+    window.addEventListener("scroll", () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? h.scrollTop / max : 0;
+      $("progress").style.transform = `scaleX(${p})`;
+    });
+
+    // Resize handling
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { update(); updateDemoB(); }, 80);
+    });
+
+    // Initial render
+    update();
+  </script>
+</body>
+</html>

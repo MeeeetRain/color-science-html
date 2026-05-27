@@ -1,6 +1,25 @@
 {
-  "updated": "2026-05-26",
+  "updated": "2026-05-27",
   "days": [
+    {
+      "date": "2026-05-27",
+      "picks": [
+        {
+          "tag": "科普",
+          "source": "Stanford ISETCam · 色彩科学",
+          "title": "Illustrate a metameric matching and chromatic aberration",
+          "description": "这篇内容很适合用来建立“同色异谱”的核心直觉：两条光谱可以完全不同，但只要对人眼三类视锥产生相同刺激，就会看起来一样。它不仅解释概念，还展开了 D65 光谱如何被 LCD 三基色配成视觉等效结果，能帮助理解显示、摄影机和色彩管理为什么都受光谱压缩限制。",
+          "url": "https://web.stanford.edu/~wandell/data/isetcam/color/t_colorMetamerism.html"
+        },
+        {
+          "tag": "教程",
+          "source": "Light Illusion · 显示校准",
+          "title": "Perceptual Colour Match | Metameric Failure Correction | ColourSpace",
+          "description": "如果你已经知道同色异谱的定义，这篇更进一步解释它为什么会在 RGB OLED、激光和窄带广色域显示器上变成实际问题。文章把“仪器读数一致但肉眼不一致”的校准困境讲得很具体，并给出基于视觉比对的工作流，能帮助读者理解观察者同色异谱误差为什么会影响监看一致性。",
+          "url": "https://lightillusion.com/perceptual_match_guide.html"
+        }
+      ]
+    },
     {
       "date": "2026-05-26",
       "picks": [
@@ -34,7 +53,7 @@
           "tag": "讨论",
           "source": "ACESCentral · 图形与字幕工作流",
           "title": "Preserving Logos and Graphics in ACES",
-          "description": "这串讨论把 ACES 中最容易踩坑的一类问题说透了：为什么 logo、字幕和 UI 资产一进 scene-referred 流程就“变味”。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。",
+          "description": "这串讨论集中分析了 ACES 中常见的一类问题：为什么 logo、字幕和 UI 资产进入 scene-referred 流程后外观会改变。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。",
           "url": "https://community.acescentral.com/t/preserving-logos-and-graphics-in-aces/2861"
         }
       ]

@@ -207,3 +207,98 @@ git diff --stat
 ```
 
 如果仓库里有未跟踪资料文件，先确认是否真的需要发布。不要把研究用 PDF、临时截图或系统文件误提交。
+
+## 12. 手机端适配经验
+
+### 12.1 响应式网格
+
+多列布局（`.grid-2`、`.grid-3`、`.grid-4`、`.kpi-row`、`.section-head`）在 `≤920px` 和 `≤560px` 都需要显式的 `@media` 规则，否则在手机上会挤成极窄的多列。
+
+```css
+@media (max-width: 920px) {
+  .section-head, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .kpi-row { grid-template-columns: 1fr; }
+}
+```
+
+CSS 选择器优先级要注意：如果原始规则是 `.parent .child { ... }`，`@media` 里只写 `.child { ... }` 不够，必须写同等或更高优先级的选择器，否则媒体查询不会覆盖。
+
+### 12.2 Canvas 高度陷阱
+
+`canvas { height: 100% }` 在父元素只有 `min-height` 时**不生效**，canvas 会回退到 HTML 默认高度 **150px**，导致图表只渲染一小条。
+
+根本原因：百分比高度的解析要求父元素有明确的 `height` 值；`min-height` 不算明确高度。
+
+**有效的父元素高度来源：**
+- 父元素在 CSS Grid 中，由 `align-items: stretch`（默认）使格子有确定高度 → `height: 100%` 生效。
+- 父元素设了明确的 `height: Xpx` → `height: 100%` 生效，即使 `min-height` 更大也没关系（浏览器取 `max(height, min-height)` 作为实际高度）。
+- 父元素只有 `min-height` 且不在 grid/flex 内 → `height: 100%` **不生效**。
+
+修复方式：把 `min-height: Xpx` 改为 `height: Xpx`，或在移动端媒体查询里加一条：
+
+```css
+@media (max-width: 560px) {
+  .gamma-layout .canvas-box,
+  .transfer-layout .canvas-box { height: 380px; min-height: 0; }
+}
+```
+
+如果 canvas-box 有 inline style `min-height`，也要改成 `height`：
+
+```html
+<!-- 改前 -->
+<div class="canvas-box" style="min-height:240px">
+<!-- 改后 -->
+<div class="canvas-box" style="height:240px">
+```
+
+### 12.3 导航栏手机端
+
+子页面导航链接用 `overflow-x: auto` + `white-space: nowrap` 实现横向滚动即可，不需要额外处理。
+
+首页导航（链接数量多、纵深跳转）：在 `≤640px` 隐藏桌面导航条，改用汉堡按钮 + 下拉面板，JS 切换 `aria-expanded` 和 `.open` 类。点击任意链接后自动关闭菜单。
+
+### 12.4 range 滑块
+
+`input[type="range"]` 如果有 `min-width` 设定，在窄屏会溢出。在 `≤560px` 需要覆盖：
+
+```css
+@media (max-width: 560px) {
+  input[type="range"] { min-width: 0; width: 100%; }
+}
+```
+
+### 12.5 发布前手机端核查重点
+
+新增或修改交互图表时，用 DevTools 模拟 375px 宽度，检查：
+
+1. 多列布局是否正确折叠为单列。
+2. Canvas 实际渲染高度（`canvas.getBoundingClientRect().height`）是否接近设计值，而不是 150px。
+3. readout / tooltip 是否遮挡图表主体内容（加 `max-width` 限制）。
+4. range 滑块是否在容器内，没有横向溢出。
+
+## 13. 文案语气规范
+
+项目定位是技术科普和工作流说明，文案应保持清晰、克制、可验证。避免使用明显营销化、拟人化或 AI 腔的比喻。
+
+优先使用：
+- “观察者差异”
+- “实际问题”
+- “明显偏差”
+- “显著上升”
+- “光谱限制”
+- “形成完整工作链路”
+- “设计特征”
+
+避免使用：
+- “时代的新痛”
+- “踩坑 / 翻车”
+- “奥秘 / 玄学”
+- “突然连成一条线”
+- “隐性代价 / 物理学的代价”
+- “神器 / 救命”
+
+如果需要解释复杂现象，先写触发条件、影响范围和工作流后果，再给出示例。不要用夸张比喻替代因果关系。
