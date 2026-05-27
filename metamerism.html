@@ -246,6 +246,10 @@
       border-color: rgba(70,217,232,.4);
       background: linear-gradient(180deg, rgba(70,217,232,.08), rgba(255,255,255,.02));
     }
+    .match-card[data-status="limited"] {
+      border-color: rgba(255,209,102,.45);
+      background: linear-gradient(180deg, rgba(255,209,102,.10), rgba(255,255,255,.02));
+    }
     .match-metric .lbl {
       color: var(--soft);
       font-size: 12px;
@@ -276,6 +280,18 @@
     .match-card[data-status="close"] .match-status {
       background: rgba(70,217,232,.22);
       color: var(--cyan);
+    }
+    .match-card[data-status="limited"] .match-status {
+      background: rgba(255,209,102,.18);
+      color: var(--gold);
+    }
+    .match-detail {
+      grid-column: 1 / -1;
+      color: var(--soft);
+      font-size: 13px;
+      line-height: 1.6;
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 12px;
     }
 
     /* Comparison swatches */
@@ -1255,11 +1271,12 @@
             <span class="num" id="deltaE">—</span>
           </div>
           <div class="match-status" id="matchStatus">差异明显</div>
+          <div class="match-detail" id="matchDetail">移动滑块或点击匹配按钮，观察两组光谱是否能落到同一组 XYZ。</div>
         </div>
 
         <div class="actions">
-          <button class="primary" id="findMatch">让 B 匹配 A</button>
-          <button id="findReverse">让 A 匹配 B</button>
+          <button class="primary" id="findMatch">让 B 尝试匹配 A</button>
+          <button id="findReverse">让 A 尝试匹配 B</button>
           <button id="resetDemo">重置</button>
         </div>
 
@@ -1267,6 +1284,7 @@
           <div class="card">
             <h4>你刚才看到了什么</h4>
             <p>左右两条光谱在 380–780 nm 上形状完全不同——一边是三个尖锐的窄峰，一边是三个平滑的宽峰。但当 ΔE 小于 1 时，<b>人眼无法区分</b>这两种光。把这两块色卡贴在一起，看到的是同一种颜色。</p>
+            <p>匹配按钮不是保证成功的“自动调色”。它只允许三个峰做 0–100 的非负加法；如果精确解需要负峰值，或需要把某个峰推到 100 以上，就只能给出最接近的结果。</p>
           </div>
           <div class="card">
             <h4>为什么会这样</h4>
@@ -1721,11 +1739,11 @@
       // Solve M · (amps/100) = targetXYZ
       const v = [targetXYZ.X, targetXYZ.Y, targetXYZ.Z];
       const a = solve3x3(M, v);
-      if (!a) return { amps: spec.defaults.slice(), exact: false };
+      if (!a) return { amps: spec.defaults.slice(), exact: false, raw: null, reason: "singular" };
       const ampsRaw = a.map(x => x * 100);
       const amps = ampsRaw.map(x => Math.max(0, Math.min(100, Math.round(x))));
       const exact = ampsRaw.every(x => x >= 0 && x <= 100);
-      return { amps, exact };
+      return { amps, exact, raw: ampsRaw, reason: exact ? "inside" : "clipped" };
     }
 
     // ===== Canvas drawing =====
@@ -1880,6 +1898,18 @@
       }
     }
 
+    function formatRawAmps(raw) {
+      if (!raw) return "无法求出稳定的三峰组合";
+      return raw.map(v => `${Math.round(v)}`).join(" / ");
+    }
+
+    function describeClippedMatch(result, targetLabel) {
+      if (result.reason === "singular") {
+        return `${targetLabel} 的三个峰无法形成可逆的 XYZ 组合，因此只能回到默认值重新调节。`;
+      }
+      return `${targetLabel} 的精确 XYZ 解需要峰值 ${formatRawAmps(result.raw)}。其中小于 0 或大于 100 的部分会被截断到滑块范围内，所以即使色块看起来并不鲜艳，也可能无法精确匹配。`;
+    }
+
     function update() {
       const ampsA = readAmps("A");
       const ampsB = readAmps("B");
@@ -1930,18 +1960,23 @@
       // Match status
       const card = $("matchCard");
       const stat = $("matchStatus");
+      const detail = $("matchDetail");
       if (dE < 1) {
         card.dataset.status = "match";
         stat.textContent = "✓ 同色异谱匹配";
+        detail.textContent = "两条光谱的 XYZ 已接近到视觉上难以分辨，但它们的光谱形状仍然不同。";
       } else if (dE < 3) {
         card.dataset.status = "close";
         stat.textContent = "几乎一致";
+        detail.textContent = "两组 XYZ 已经很接近；继续微调峰值，通常可以看出剩余差异来自哪一段波长。";
       } else if (dE < 10) {
         card.dataset.status = "diff";
         stat.textContent = "可见差异";
+        detail.textContent = "当前两组 XYZ 仍有可见差异。点击匹配按钮时，系统会尝试用另一组光谱的三个峰复现这个目标。";
       } else {
         card.dataset.status = "diff";
         stat.textContent = "明显不同";
+        detail.textContent = "两组光谱现在对应的 XYZ 差异较大。先用滑块靠近，再尝试自动匹配会更容易观察限制。";
       }
     }
 
@@ -1954,21 +1989,27 @@
     $("findMatch").addEventListener("click", () => {
       const ampsA = readAmps("A");
       const targetXYZ = computeXYZ(buildSPD(SPEC_A, ampsA));
-      const { amps, exact } = solveMetamericMatch(SPEC_B, targetXYZ);
+      const result = solveMetamericMatch(SPEC_B, targetXYZ);
+      const { amps, exact } = result;
       setAmps("B", amps);
       update();
       if (!exact) {
-        $("matchStatus").textContent = "已尽量逼近（含负值/超量已截断）";
+        $("matchCard").dataset.status = "limited";
+        $("matchStatus").textContent = "受光谱范围限制";
+        $("matchDetail").textContent = describeClippedMatch(result, "光谱 B");
       }
     });
     $("findReverse").addEventListener("click", () => {
       const ampsB = readAmps("B");
       const targetXYZ = computeXYZ(buildSPD(SPEC_B, ampsB));
-      const { amps, exact } = solveMetamericMatch(SPEC_A, targetXYZ);
+      const result = solveMetamericMatch(SPEC_A, targetXYZ);
+      const { amps, exact } = result;
       setAmps("A", amps);
       update();
       if (!exact) {
-        $("matchStatus").textContent = "已尽量逼近（含负值/超量已截断）";
+        $("matchCard").dataset.status = "limited";
+        $("matchStatus").textContent = "受光谱范围限制";
+        $("matchDetail").textContent = describeClippedMatch(result, "光谱 A");
       }
     });
     $("resetDemo").addEventListener("click", () => {
