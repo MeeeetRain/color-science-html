@@ -411,10 +411,47 @@
     }
 
     /* Concept summary (核心直觉) */
+    .concept-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .concept-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(255,255,255,.035);
+      min-height: 150px;
+    }
+    .concept-step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      background: rgba(70,217,232,.16);
+      color: var(--cyan);
+      font-weight: 780;
+      font-size: 13px;
+    }
+    .concept-step h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+    .concept-step p {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
     .concept-line {
       max-width: 880px;
-      font-size: clamp(20px, 2.8vw, 28px);
-      line-height: 1.4;
+      font-size: clamp(18px, 2.2vw, 23px);
+      line-height: 1.55;
       color: var(--ink);
       font-weight: 600;
     }
@@ -437,6 +474,51 @@
     }
     .concept-formula b { color: var(--gold); }
     .concept-formula em { color: var(--cyan); font-style: normal; }
+    .concept-example {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .spectrum-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(255,255,255,.035);
+    }
+    .spectrum-card h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+    .spectrum-card p {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .spectrum-strip {
+      height: 34px;
+      border-radius: 6px;
+      margin: 12px 0;
+      border: 1px solid rgba(255,255,255,.16);
+    }
+    .spectrum-strip.wide {
+      background: linear-gradient(90deg, rgba(255,40,40,.12), rgba(255,180,40,.55), rgba(120,255,120,.50), rgba(40,180,255,.55), rgba(130,80,255,.12));
+    }
+    .spectrum-strip.narrow {
+      background:
+        linear-gradient(90deg, transparent 0 18%, #2d7bff 19% 22%, transparent 23% 47%, #4dff70 48% 51%, transparent 52% 73%, #ff4040 74% 78%, transparent 79% 100%),
+        rgba(255,255,255,.035);
+    }
+    .concept-equal {
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 24px;
+      font-weight: 820;
+    }
 
     /* Definition cards */
     .def-grid {
@@ -803,6 +885,9 @@
     @media (max-width: 920px) {
       .section-head, .grid-2 { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .concept-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .concept-example { grid-template-columns: 1fr; }
+      .concept-equal { transform: rotate(90deg); }
       .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid { grid-template-columns: 1fr; }
       .fail-row { grid-template-columns: 1fr; gap: 8px; }
       .fail-row .ftag { justify-self: start; }
@@ -815,6 +900,7 @@
       .hero { min-height: 56vh; }
       h1 { font-size: 40px; }
       .grid-4 { grid-template-columns: 1fr; }
+      .concept-flow { grid-template-columns: 1fr; }
       .compare-swatches { height: 80px; }
       .swatch-pair { grid-template-columns: 1fr; }
     }
@@ -887,18 +973,58 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. 核心直觉：3 维压缩无穷维</h2>
-            <p>所有同色异谱现象都来自同一个事实：视觉系统把光的全部光谱信息压缩成 3 个数字。</p>
+            <h2>2. 核心直觉：颜色是光谱的简化结果</h2>
+            <p>同色异谱并不是一个孤立术语。它来自一条很简单的链路：物体或屏幕发出一段光谱，人眼只保留其中能刺激三类视锥细胞的部分，最后大脑得到一个颜色感受。</p>
+          </div>
+          <div class="note">先记住一句话：<b>眼睛不保存完整光谱，只保存三类视锥的响应结果。</b>因此，两条形状不同的光谱，只要三类响应相同，就可能被看成同一个颜色。</div>
+        </div>
+
+        <div class="concept-example" aria-label="同色异谱直观例子">
+          <div class="spectrum-card">
+            <h4>光谱 A：连续、宽峰</h4>
+            <div class="spectrum-strip wide" aria-hidden="true"></div>
+            <p>例如日光、荧光粉背光或某些反射材料。它在很多波长上都有能量，形状比较平滑。</p>
+          </div>
+          <div class="concept-equal">≈</div>
+          <div class="spectrum-card">
+            <h4>光谱 B：窄峰、离散</h4>
+            <div class="spectrum-strip narrow" aria-hidden="true"></div>
+            <p>例如 OLED、量子点或激光原色组合。它只在少数波长附近有明显能量。</p>
           </div>
         </div>
-        <p class="concept-line">人眼只有 <b>3 种锥细胞</b>。任何到达视网膜的光，无论它由几百个波长组成，最终都被压成 <b>3 个数字（XYZ）</b>。无穷多种光谱可以产生同一组 XYZ——它们对眼睛就是"同一个颜色"。</p>
+
+        <p class="concept-line">这两条光谱在物理上并不相同，但如果它们让 L、M、S 三类视锥细胞产生相同响应，人眼就会把它们归为同一个颜色。色彩管理里的 XYZ，就是把这种三类响应整理成标准化的 3 个数。</p>
+
+        <div class="concept-flow">
+          <div class="concept-step">
+            <span class="num">1</span>
+            <h4>真实世界先给出光谱</h4>
+            <p>光谱可以很复杂：可能来自太阳、LED、OLED 像素、油墨反射或金属漆反射。</p>
+          </div>
+          <div class="concept-step">
+            <span class="num">2</span>
+            <h4>眼睛只采样三类响应</h4>
+            <p>L、M、S 三类视锥对不同波长敏感。它们不会记录完整光谱，只输出三类响应强度。</p>
+          </div>
+          <div class="concept-step">
+            <span class="num">3</span>
+            <h4>XYZ 是标准化记录</h4>
+            <p>CIE 色匹配函数把标准观察者的三类响应整理成 X、Y、Z，方便设备和软件计算颜色。</p>
+          </div>
+          <div class="concept-step">
+            <span class="num">4</span>
+            <h4>信息丢失导致同色异谱</h4>
+            <p>从完整光谱到 3 个数的过程中，很多细节被丢掉。因此不同光谱可以得到同一组 XYZ。</p>
+          </div>
+        </div>
+
         <div class="concept-formula">
-          <div><em>三刺激值定义：</em></div>
+          <div><em>数学写法：三刺激值定义</em></div>
           <div>X = ∫ S(λ) · <b>x̄</b>(λ) dλ &nbsp;&nbsp;&nbsp; Y = ∫ S(λ) · <b>ȳ</b>(λ) dλ &nbsp;&nbsp;&nbsp; Z = ∫ S(λ) · <b>z̄</b>(λ) dλ</div>
-          <div style="margin-top:10px"><em>同色异谱条件：</em></div>
+          <div style="margin-top:10px"><em>同色异谱成立条件</em></div>
           <div>S₁(λ) ≠ S₂(λ) &nbsp;&nbsp; <b>但</b> &nbsp;&nbsp; (X, Y, Z)₁ = (X, Y, Z)₂</div>
           <div style="margin-top:10px;color:var(--muted);font-family:inherit;font-size:13px;line-height:1.6">
-            S(λ) = 进入眼睛的光谱功率分布；x̄/ȳ/z̄ = 三条色匹配函数（颜色锥细胞响应的线性组合）。积分把无穷维函数压成 3 个标量。
+            S(λ) 是进入眼睛的光谱功率分布；x̄/ȳ/z̄ 是 CIE 色匹配函数。积分的作用可以理解为：把完整光谱按三条响应曲线加权求和，得到 X、Y、Z 三个数。
           </div>
         </div>
       </div>
