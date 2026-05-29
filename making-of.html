@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一个章节是怎么做出来的 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="以同色异谱章节为例，复盘一个新章节从确定选题方向、资料核对、写大纲、做交互演示、移动端适配到发布的完整制作流程与真实踩坑经验。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101217;
+      --panel: #181c24;
+      --panel-2: #202632;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --soft: #8994a6;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 6%, rgba(70,217,232,.13), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(154,140,255,.10), transparent 26%),
+        linear-gradient(180deg, #101217 0%, #141821 42%, #101217 100%);
+      color: var(--ink);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose), var(--violet));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 60;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16,18,23,.86);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { font-weight: 780; }
+    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .links a {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.08);
+    }
+    main { overflow: hidden; }
+    section {
+      padding: 72px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; }
+
+    .hero {
+      min-height: 58vh;
+      display: grid;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(115deg, rgba(15,18,24,.94), rgba(15,18,24,.58)),
+        linear-gradient(90deg, #1f3aff 0%, #00b3ff 22%, #00f0a8 44%, #a9e55f 66%, #ffd166 100%);
+      filter: saturate(.7) brightness(.5);
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 780;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      max-width: 980px;
+      font-size: clamp(40px, 5.4vw, 70px);
+      line-height: 1.04;
+      margin: 0 0 20px;
+      text-wrap: balance;
+    }
+    h2 {
+      font-size: clamp(26px, 3.6vw, 38px);
+      line-height: 1.1;
+      margin: 0 0 14px;
+    }
+    h3 { font-size: 18px; line-height: 1.3; margin: 0; }
+    p { color: var(--muted); margin: 0 0 14px; }
+    .lead {
+      max-width: 780px;
+      color: #e9eef7;
+      font-size: clamp(17px, 2vw, 21px);
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(280px, .48fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 12px 0 12px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .phase-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 720;
+      letter-spacing: .08em;
+      color: var(--cyan);
+      background: rgba(70,217,232,.14);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    /* Cards */
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      padding: 18px;
+      min-width: 0;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    /* Good vs bad comparison */
+    .gb-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .gb {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+    }
+    .gb h4 {
+      font-size: 13px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+    .gb.good { border-color: rgba(169,229,95,.4); }
+    .gb.good h4 { color: var(--lime); }
+    .gb.bad { border-color: rgba(255,107,122,.4); }
+    .gb.bad h4 { color: var(--rose); }
+    .gb ul { list-style: none; margin: 0; padding: 0; }
+    .gb li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 5px 0 5px 20px;
+      position: relative;
+      line-height: 1.55;
+    }
+    .gb.good li::before { content: "✓"; color: var(--lime); position: absolute; left: 0; }
+    .gb.bad li::before { content: "✕"; color: var(--rose); position: absolute; left: 0; }
+
+    /* Step list */
+    .steps { display: grid; gap: 12px; margin-top: 18px; }
+    .step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 16px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+    }
+    .step .n {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(154,140,255,.16);
+      color: var(--violet);
+      font-weight: 780;
+      font-size: 14px;
+    }
+    .step h4 { font-size: 15px; margin: 0 0 5px; color: var(--ink); }
+    .step p { font-size: 14px; margin: 0; line-height: 1.6; }
+    .step p + p { margin-top: 6px; }
+
+    /* Pitfall callout */
+    .pitfall {
+      border: 1px solid rgba(255,209,102,.34);
+      border-left: 3px solid var(--gold);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,209,102,.07), rgba(255,255,255,.02));
+      padding: 18px 20px;
+      margin: 16px 0;
+    }
+    .pitfall .ptitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 740;
+      color: var(--gold);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .pitfall dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 14px;
+      margin: 0;
+    }
+    .pitfall dt {
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+    .pitfall dd {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .pitfall dd b { color: var(--ink); }
+
+    /* Code block */
+    pre {
+      margin: 12px 0 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0b0e13;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.65;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      color: #d7dee9;
+    }
+    pre .cmt { color: #6f7b8c; }
+    pre .bad { color: #ff8b97; }
+    pre .good { color: #b7e87a; }
+
+    /* Inline */
+    code {
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: .9em;
+      background: rgba(255,255,255,.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #e6ecf5;
+    }
+    .card h4 { font-size: 15px; margin: 0 0 8px; color: var(--ink); }
+    .card p { font-size: 14px; margin: 0; line-height: 1.6; }
+    .card p + p { margin-top: 8px; }
+    .card .kicker {
+      font-size: 12px;
+      color: var(--cyan);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 720;
+      margin-bottom: 6px;
+    }
+
+    /* Takeaway */
+    .takeaways {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .takeaway {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      background: linear-gradient(180deg, rgba(154,140,255,.08), rgba(255,255,255,.02));
+    }
+    .takeaway .big {
+      font-size: clamp(20px, 2.4vw, 26px);
+      font-weight: 780;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .takeaway p { font-size: 14px; margin: 0; }
+
+    /* checklist */
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 24px;
+      margin-top: 16px;
+    }
+    .checklist div {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 7px 0 7px 26px;
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .checklist div::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 11px;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--lime);
+      border-radius: 3px;
+    }
+    .checklist div::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 12px;
+      width: 4px;
+      height: 8px;
+      border: solid var(--lime);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .source-list { display: grid; gap: 10px; }
+    .source-list a {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      background: rgba(255,255,255,.035);
+      transition: border-color .15s, background .15s;
+    }
+    .source-list a:hover {
+      border-color: rgba(70,217,232,.4);
+      background: rgba(70,217,232,.06);
+    }
+    .source-list small {
+      display: block;
+      color: var(--soft);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--soft);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--cyan); }
+
+    @media (max-width: 920px) {
+      .section-head, .grid-2, .grid-3, .gb-grid, .takeaways, .checklist { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 32px 1fr; gap: 12px; }
+    }
+    @media (max-width: 560px) {
+      section { padding: 54px 16px; }
+      .hero { min-height: 52vh; }
+      h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="index.html">← 色彩与显示指南</a>
+      <div class="links" id="navLinks">
+        <a href="#why">为什么复盘</a>
+        <a href="#topic">选题</a>
+        <a href="#research">资料</a>
+        <a href="#outline">大纲</a>
+        <a href="#demo">交互演示</a>
+        <a href="#mobile">细节适配</a>
+        <a href="#ship">收尾发布</a>
+        <a href="#method">方法论</a>
+        <a href="#sources">参考</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap">
+        <div class="eyebrow">Making of · 制作复盘</div>
+        <h1>一个章节是怎么做出来的</h1>
+        <p class="lead">以「同色异谱」这一章为例，从确定选题方向、资料核对、写大纲，到做交互演示、移动端适配，再到收尾发布，把整个流程和真实踩过的坑完整复盘一遍。重点不是结果，而是每一步的判断依据。</p>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">开场</span>
+            <h2>为什么用同色异谱复盘</h2>
+            <p>这一章覆盖了一个章节会遇到的全部环节：抽象概念、必须查证的标准数据、两个从零写的交互演示、移动端布局陷阱、文案语气把控。流程跑通一遍，方法就能复用到下一章。</p>
+          </div>
+          <div class="note">本项目的定位是<b>技术科普 + 工作流说明</b>，不是参数百科。所有方法都服务于一个目标：让读者建立直觉，而不是记住名词。</div>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker">这章的难点</div>
+            <h4>概念抽象</h4>
+            <p>「不同光谱产生同一颜色」无法靠文字讲清楚，必须做出可以拖动、能看到颜色塌缩的演示。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">这章的难点</div>
+            <h4>数据要查证</h4>
+            <p>CIE 色匹配函数、各光源光谱、ISO 同色异谱指数，都不能凭记忆，必须回到标准原文。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">这章的难点</div>
+            <h4>演示要可信</h4>
+            <p>两个 Canvas 演示要让匹配真的成立又真的失效，背后是一套需要调参的数值模型。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="topic">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第一阶段</span>
+            <h2>确定选题方向</h2>
+            <p>每篇文章先回答一个具体问题，而不是从名词百科开始。选题阶段只做两件事：把问题问对，把它挂到工作流上。</p>
+          </div>
+        </div>
+        <div class="gb-grid">
+          <div class="gb good">
+            <h4>好选题：先有困惑</h4>
+            <ul>
+              <li>为什么手机屏看色卡总差一点</li>
+              <li>为什么不同人看同一台 OLED 颜色不一致</li>
+              <li>Assign 和 Convert 为什么不是一回事</li>
+            </ul>
+          </div>
+          <div class="gb bad">
+            <h4>坏选题：名词罗列</h4>
+            <ul>
+              <li>同色异谱知识点汇总</li>
+              <li>CIE 色度学参数介绍</li>
+              <li>Metamerism Index 标准说明</li>
+            </ul>
+          </div>
+        </div>
+        <p>同色异谱最终被定位成「<b>色彩管理一切难题的根</b>」——这句话决定了它在工作流里的位置：放在最前面的「基础」段，后面拍摄、后期、显示三段的问题都能回头挂到它身上。选题不只是定标题，更是定它和其他章节的关系。</p>
+      </div>
+    </section>
+
+    <section id="research">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第二阶段</span>
+            <h2>资料核对与立论</h2>
+            <p>涉及标准参数、格式、厂商曲线时必须查资料，不凭记忆写。引用优先级：ITU-R / SMPTE / ICC / W3C / 厂商官方文档。</p>
+          </div>
+          <div class="note">最重要的一条纪律：<b>「示意算法」和「真实测量」必须在页面里分清楚</b>。读者要能判断哪些数字可以引用，哪些只是为了建立直觉。</div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h4>必须查证的数据</h4>
+            <p>CIE 1931 2° 色匹配函数（逐 5nm 的 x̄ ȳ z̄ 表）、D65/D50/A/F2 等光源光谱、ISO 18314-4 的同色异谱指数分级。这些直接写进了演示的计算核心，错一个数演示就不可信。</p>
+          </div>
+          <div class="card">
+            <h4>标注为「示意」的部分</h4>
+            <p>演示里用三个高斯峰合成的光谱不是真实测量光谱，是为了让读者能拖动、能直观比较而设计的模型。页面里明确说明这是示意模型，避免被当成实测数据引用。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="outline">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第三阶段</span>
+            <h2>写大纲与章节结构</h2>
+            <p>用项目推荐的结构搭骨架：问题场景 → 核心直觉 → 基础定义 → 可交互演示 → 工作流落地 → 常见误区 → 资料来源。每段只讲一个要点，先讲「为什么」再讲「公式是什么」。</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><h4>问题场景</h4><p>四个真实困惑（跨屏、打样、不同人看 OLED、相机偏色）先让读者认出自己被影响过。</p></div></div>
+          <div class="step"><span class="n">2</span><div><h4>核心直觉</h4><p>一句话点破：人眼把无穷维光谱压成三维 XYZ，所以无穷多种光谱可以同色。</p></div></div>
+          <div class="step"><span class="n">3</span><div><h4>基础定义</h4><p>只解释后文要用到的术语：三刺激值 / CMF、同色异谱匹配、Luther 条件。</p></div></div>
+          <div class="step"><span class="n">4</span><div><h4>五种失败</h4><p>把抽象概念拆成光源、观察者、视场、几何、相机五类可识别的失效场景。</p></div></div>
+          <div class="step"><span class="n">5–7</span><div><h4>两个交互演示 + 工作流落地</h4><p>演示 A 证明「不同光谱可同色」，演示 B 证明「换光源会失配」，再落到摄影/印刷/显示/HDR。</p></div></div>
+          <div class="step"><span class="n">8–10</span><div><h4>误区 + 资料来源</h4><p>澄清常见误解，列出可点击的权威链接收尾。</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第四阶段</span>
+            <h2>做交互演示：最难也最容易翻车</h2>
+            <p>交互图表是为了建立直觉，不是让页面显得复杂。坐标轴、单位、刻度、曲线来源都要标清楚。这一阶段的两个坑，是整章花时间最多的地方。</p>
+          </div>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 1 · 演示 A 的匹配不对称</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>用 B 给一个看起来不鲜艳的颜色，让 A 去匹配，<b>怎么调都匹配不上</b>。</dd>
+            <dt>原因</dt>
+            <dd>A 用窄高斯峰、B 用宽高斯峰。振幅相同时，宽峰的积分能量是窄峰的 3–4 倍，A 永远追不上 B 的亮度。</dd>
+            <dt>修复</dt>
+            <dd>对高斯峰<b>按面积归一化</b>，让振幅直接等于总功率，宽窄峰就能对称匹配。</dd>
+          </dl>
+<pre><span class="cmt">// 改前：振幅相同，宽峰积分能量是窄峰的 3–4 倍 → A 永远追不上 B</span>
+<span class="bad">sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w);</span>
+
+<span class="cmt">// 改后：按面积归一化，振幅 = 总功率，宽窄峰可对称匹配</span>
+<span class="good">const norm = 1 / (peak.w * Math.sqrt(2 * Math.PI));
+sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 2 · 演示 B 换光源后 ΔE 不够明显</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>换光源后两个样本的色差只有 ΔE≈1.7，肉眼几乎看不出，<b>失去教学冲击力</b>。</dd>
+            <dt>原因</dt>
+            <dd>样本反射率太平、太亮，对波长不够敏感，换光源时颜色变化被平均掉了。</dd>
+            <dt>修复</dt>
+            <dd>把样本 A 设计成<b>对波长高度选择性</b>（黄橙窄峰、低底噪），样本 B 用三个分离峰。结果：D65 下 ΔE=0.48（匹配），换到白炽灯 A 光源 ΔE=6.72、F2 荧光 ΔE=4.35、商用 LED ΔE=4.62（明显失配）。</dd>
+          </dl>
+        </div>
+
+        <div class="note">两条经验：关键公式要<b>单独命名成函数</b>（如 <code>buildSPD()</code>、<code>planckianSPD()</code>），不要写进绘图循环；演示的「成功」和「失败」都要能稳定复现，否则读者拖两下就破功。</div>
+      </div>
+    </section>
+
+    <section id="mobile">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第五阶段</span>
+            <h2>细节调整与移动端适配</h2>
+            <p>桌面端写完只是一半。多列布局、Canvas 高度、滑块溢出在手机上都会出问题，必须用 375px 宽度逐项核查。</p>
+          </div>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 3 · Canvas 在手机上塌成 150px</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>图表在手机上只渲染成一条窄带，高度约 150px。</dd>
+            <dt>原因</dt>
+            <dd><code>canvas { height: 100% }</code> 需要父元素有<b>明确的 height</b> 才能解析；父元素只有 <code>min-height</code> 时百分比高度失效，canvas 回退到 HTML 默认的 150px。</dd>
+            <dt>修复</dt>
+            <dd>把父元素的 <code>min-height</code> 改成明确的 <code>height</code>（或让父元素进入 grid/flex 由布局给出确定高度）。</dd>
+          </dl>
+<pre><span class="cmt">/* 失效：父元素只有 min-height，canvas 塌回 150px */</span>
+<span class="bad">.canvas-box { min-height: 240px; }
+canvas { height: 100%; }</span>
+
+<span class="cmt">/* 有效：父元素给明确 height，height:100% 才能解析 */</span>
+<span class="good">.canvas-box { height: 240px; }</span></pre>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 4 · 媒体查询里的选择器优先级</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>媒体查询里写了单列规则，但手机上多列布局没折叠。</dd>
+            <dt>原因</dt>
+            <dd>原规则是 <code>.parent .child</code>（两级），媒体查询里只写 <code>.child</code>（一级），优先级更低，覆盖不掉。</dd>
+            <dt>修复</dt>
+            <dd>媒体查询里用<b>同等或更高优先级</b>的选择器。</dd>
+          </dl>
+<pre><span class="cmt">/* 不生效：优先级低于原规则 */</span>
+<span class="bad">@media (max-width:560px){ .summary-chain{ grid-template-columns:1fr; } }</span>
+
+<span class="cmt">/* 生效：保持同等优先级 */</span>
+<span class="good">@media (max-width:560px){ .gamma-summary .summary-chain{ grid-template-columns:1fr; } }</span></pre>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <h4>375px 发布前四项核查</h4>
+          <p>1. 多列布局是否折叠为单列。&nbsp; 2. Canvas 实际渲染高度是否接近设计值，而不是 150px。&nbsp; 3. readout / tooltip 是否遮挡图表主体（加 <code>max-width</code> 限制）。&nbsp; 4. <code>input[type=range]</code> 是否在容器内、没有横向溢出（窄屏要 <code>min-width:0; width:100%</code>）。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="ship">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第六阶段</span>
+            <h2>收尾与发布</h2>
+            <p>文案语气要克制、可验证，避免营销腔和 AI 腔。最后过一遍发布清单，确认入口接好。</p>
+          </div>
+        </div>
+        <div class="gb-grid">
+          <div class="gb good">
+            <h4>优先用</h4>
+            <ul>
+              <li>观察者差异 / 明显偏差 / 显著上升</li>
+              <li>光谱限制 / 设计特征</li>
+              <li>形成完整工作链路</li>
+            </ul>
+          </div>
+          <div class="gb bad">
+            <h4>避免用</h4>
+            <ul>
+              <li>时代的新痛 / 踩坑翻车</li>
+              <li>奥秘 / 玄学 / 神器救命</li>
+              <li>突然连成一条线 / 物理学的代价</li>
+            </ul>
+          </div>
+        </div>
+        <h3 style="margin:24px 0 0">发布前清单</h3>
+        <div class="checklist">
+          <div>页面标题和 meta description 已更新</div>
+          <div>所有资料来源链接可点击</div>
+          <div>图表坐标轴、单位、刻度完整</div>
+          <div>交互控件默认状态清晰</div>
+          <div>移动端无文字溢出或按钮挤压</div>
+          <div>首页工作流入口已接好</div>
+          <div>JS 改完跑过一次语法检查</div>
+          <div><code>git status</code> 只含本次要发布的文件</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="method">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">收尾</span>
+            <h2>可复用的方法论</h2>
+            <p>把整章的流程压缩成三句话，下一章可以直接套用。</p>
+          </div>
+        </div>
+        <div class="takeaways">
+          <div class="takeaway">
+            <div class="big">先有问题<br>再有内容</div>
+            <p>每章开头是一个真实困惑，不是名词定义。选题阶段就把它挂到工作流上。</p>
+          </div>
+          <div class="takeaway">
+            <div class="big">先有直觉<br>再有公式</div>
+            <p>交互演示先让读者看到现象，再给计算模型。示意算法和真实数据要分清。</p>
+          </div>
+          <div class="takeaway">
+            <div class="big">先在手机上<br>看一眼再发布</div>
+            <p>375px 宽度逐项核查 Canvas 高度、网格折叠、滑块溢出，再走发布清单。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">参考</span>
+            <h2>相关文档</h2>
+            <p>这页是经验复盘，落地规范都写在项目文档里，新章节请以文档为准。</p>
+          </div>
+        </div>
+        <div class="source-list">
+          <a href="EDITING_GUIDE.md">
+            EDITING_GUIDE.md · 编辑规范
+            <small>内容定位、文章结构、交互图表规范、移动端适配经验、文案语气、发布清单的完整约定</small>
+          </a>
+          <a href="metamerism.html">
+            同色异谱章节 · 本文的贯穿案例
+            <small>看成品如何落地：四个问题场景、两个交互演示、五种失败、工作流落地</small>
+          </a>
+          <a href="index.html">
+            首页 · 工作流管线
+            <small>基础 → 拍摄 → 后期 → 显示，看新章节如何接入整体导航</small>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>影像色彩与显示技术指南 · <a href="index.html">返回首页</a></p>
+  </footer>
+
+  <script>
+    window.addEventListener("scroll", () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? h.scrollTop / max : 0;
+      document.getElementById("progress").style.transform = `scaleX(${p})`;
+    });
+  </script>
+</body>
+</html>

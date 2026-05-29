@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一张 HDR 照片怎么变成 HDR 视频 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="复盘 HDR Relay 转换引擎从想法到落地的完整过程：手机 HDR 照片里的增益图原理、C++ 引擎的模块设计、增益图合并算法，以及根据导出结果反复修正的几个关键算法 bug。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101217;
+      --panel: #181c24;
+      --panel-2: #202632;
+      --ink: #f4f6fb;
+      --muted: #b7c0ce;
+      --soft: #8994a6;
+      --line: rgba(255,255,255,.14);
+      --cyan: #46d9e8;
+      --lime: #a9e55f;
+      --gold: #ffd166;
+      --rose: #ff6b7a;
+      --violet: #9a8cff;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 6%, rgba(70,217,232,.13), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(154,140,255,.10), transparent 26%),
+        linear-gradient(180deg, #101217 0%, #141821 42%, #101217 100%);
+      color: var(--ink);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--lime), var(--gold), var(--rose), var(--violet));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      z-index: 60;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16,18,23,.86);
+      backdrop-filter: blur(16px);
+    }
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { font-weight: 780; }
+    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .links a {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .links a:hover, .links a.active {
+      color: var(--ink);
+      background: rgba(255,255,255,.08);
+    }
+    main { overflow: hidden; }
+    section {
+      padding: 58px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; }
+
+    .hero {
+      min-height: 48vh;
+      display: grid;
+      align-items: center;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(115deg, rgba(15,18,24,.94), rgba(15,18,24,.58)),
+        linear-gradient(90deg, #1f3aff 0%, #00b3ff 22%, #00f0a8 44%, #a9e55f 66%, #ffd166 100%);
+      filter: saturate(.7) brightness(.5);
+    }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 780;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      max-width: 980px;
+      font-size: clamp(40px, 5.4vw, 70px);
+      line-height: 1.04;
+      margin: 0 0 16px;
+      text-wrap: balance;
+    }
+    h2 {
+      font-size: clamp(26px, 3.6vw, 38px);
+      line-height: 1.1;
+      margin: 0 0 14px;
+    }
+    h3 { font-size: 18px; line-height: 1.3; margin: 0; }
+    p { color: var(--muted); margin: 0 0 14px; }
+    .lead {
+      max-width: 800px;
+      color: #e9eef7;
+      font-size: clamp(17px, 2vw, 21px);
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(280px, .48fr);
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 12px 0 12px 16px;
+      color: #dce8f7;
+      background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
+    }
+    .phase-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 720;
+      letter-spacing: .08em;
+      color: var(--cyan);
+      background: rgba(70,217,232,.14);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    /* Cards */
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026));
+      padding: 16px;
+      min-width: 0;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    /* Good vs bad comparison */
+    .gb-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .gb {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+    }
+    .gb h4 {
+      font-size: 13px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+    .gb.good { border-color: rgba(169,229,95,.4); }
+    .gb.good h4 { color: var(--lime); }
+    .gb.bad { border-color: rgba(255,107,122,.4); }
+    .gb.bad h4 { color: var(--rose); }
+    .gb ul { list-style: none; margin: 0; padding: 0; }
+    .gb li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 5px 0 5px 20px;
+      position: relative;
+      line-height: 1.55;
+    }
+    .gb.good li::before { content: "✓"; color: var(--lime); position: absolute; left: 0; }
+    .gb.bad li::before { content: "✕"; color: var(--rose); position: absolute; left: 0; }
+
+    /* Video demo / comparison */
+    .vid-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0 4px;
+    }
+    .vid-figure {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+    }
+    .vid-figure.bad { border-color: rgba(255,107,122,.45); }
+    .vid-figure.good { border-color: rgba(169,229,95,.45); }
+    .vid-figure video, .vid-figure img { display: block; width: 100%; height: auto; background: #000; }
+    .vid-figure.layer { border-color: rgba(124,196,255,.4); }
+    .vid-figure.layer .vid-cap b { color: var(--cyan); }
+    .vid-cap {
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      background: rgba(255,255,255,.04);
+      border-top: 1px solid var(--line);
+    }
+    .vid-cap b { letter-spacing: .03em; }
+    .vid-figure.bad .vid-cap b { color: var(--rose); }
+    .vid-figure.good .vid-cap b { color: var(--lime); }
+    .vid-cap small { display: block; margin-top: 3px; color: var(--soft); font-size: 12px; }
+    .vid-solo {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      margin: 20px 0 6px;
+      max-width: 760px;
+    }
+    .vid-solo video { display: block; width: 100%; height: auto; background: #000; }
+    .vid-note { font-size: 12.5px; color: var(--soft); margin: 8px 0 0; }
+
+    /* Step list */
+    .steps { display: grid; gap: 10px; margin-top: 14px; }
+    .step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 14px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      background: rgba(255,255,255,.035);
+    }
+    .step .n {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(154,140,255,.16);
+      color: var(--violet);
+      font-weight: 780;
+      font-size: 14px;
+    }
+    .step h4 { font-size: 15px; margin: 0 0 5px; color: var(--ink); }
+    .step p { font-size: 14px; margin: 0; line-height: 1.6; }
+    .step p + p { margin-top: 6px; }
+
+    /* Pitfall callout */
+    .pitfall {
+      border: 1px solid rgba(255,209,102,.34);
+      border-left: 3px solid var(--gold);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,209,102,.07), rgba(255,255,255,.02));
+      padding: 16px 18px;
+      margin: 14px 0;
+    }
+    .pitfall .ptitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 740;
+      color: var(--gold);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .pitfall dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 14px;
+      margin: 0;
+    }
+    .pitfall dt {
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+    .pitfall dd {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .pitfall dd b { color: var(--ink); }
+
+    /* Code block */
+    pre {
+      margin: 12px 0 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0b0e13;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.65;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      color: #d7dee9;
+    }
+    pre .cmt { color: #6f7b8c; }
+    pre .bad { color: #ff8b97; }
+    pre .good { color: #b7e87a; }
+    pre .kw { color: #9a8cff; }
+
+    /* Inline */
+    code {
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: .9em;
+      background: rgba(255,255,255,.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #e6ecf5;
+    }
+    .card h4 { font-size: 15px; margin: 0 0 8px; color: var(--ink); }
+    .card p { font-size: 14px; margin: 0; line-height: 1.6; }
+    .card p + p { margin-top: 8px; }
+    .card .kicker {
+      font-size: 12px;
+      color: var(--cyan);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 720;
+      margin-bottom: 6px;
+    }
+
+    /* Formula highlight */
+    .formula {
+      border: 1px solid rgba(154,140,255,.34);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(154,140,255,.10), rgba(255,255,255,.02));
+      padding: 20px 22px;
+      margin: 14px 0;
+      text-align: center;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: clamp(14px, 2vw, 18px);
+      color: #ece9ff;
+      letter-spacing: .02em;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .formula .v { color: var(--gold); }
+    .formula small { display: block; margin-top: 10px; font-size: 12.5px; color: var(--soft); font-family: -apple-system, sans-serif; letter-spacing: 0; }
+
+    /* Pipeline */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin: 16px 0 4px;
+      align-items: stretch;
+    }
+    .pipe {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      padding: 12px 11px;
+      position: relative;
+    }
+    .pipe .pn {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--cyan);
+      letter-spacing: .06em;
+    }
+    .pipe h4 { font-size: 13.5px; margin: 6px 0 4px; color: var(--ink); line-height: 1.3; }
+    .pipe p { font-size: 12px; margin: 0; color: var(--soft); line-height: 1.5; }
+    .pipe:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--violet);
+      font-size: 15px;
+      z-index: 2;
+    }
+
+    /* Takeaway */
+    .takeaways {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .takeaway {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px;
+      background: linear-gradient(180deg, rgba(154,140,255,.08), rgba(255,255,255,.02));
+    }
+    .takeaway .big {
+      font-size: clamp(20px, 2.4vw, 26px);
+      font-weight: 780;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .takeaway p { font-size: 14px; margin: 0; }
+
+    /* checklist */
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 24px;
+      margin-top: 16px;
+    }
+    .checklist div {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 7px 0 7px 26px;
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .checklist div::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 11px;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--lime);
+      border-radius: 3px;
+    }
+    .checklist div::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 12px;
+      width: 4px;
+      height: 8px;
+      border: solid var(--lime);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .source-list { display: grid; gap: 10px; }
+    .source-list a {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      background: rgba(255,255,255,.035);
+      transition: border-color .15s, background .15s;
+    }
+    .source-list a:hover {
+      border-color: rgba(70,217,232,.4);
+      background: rgba(70,217,232,.06);
+    }
+    .source-list small {
+      display: block;
+      color: var(--soft);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--soft);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--cyan); }
+
+    @media (max-width: 920px) {
+      .section-head, .grid-2, .grid-3, .gb-grid, .takeaways, .checklist { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 32px 1fr; gap: 12px; }
+      .pipeline { grid-template-columns: 1fr; gap: 14px; }
+      .pipe:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -11px; transform: translateX(50%); }
+    }
+    @media (max-width: 560px) {
+      section { padding: 54px 16px; }
+      .hero { min-height: 52vh; }
+      h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header>
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="index.html">← 色彩与显示指南</a>
+      <div class="links" id="navLinks">
+        <a href="#idea">起点</a>
+        <a href="#design">架构</a>
+        <a href="#core">核心算法</a>
+        <a href="#parse">解析输入</a>
+        <a href="#video">转成视频</a>
+        <a href="#optimize">看结果调算法</a>
+        <a href="#refwhite">203 nits</a>
+        <a href="#evolve">形态进化</a>
+        <a href="#method">方法论</a>
+        <a href="#sources">参考</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="wrap">
+        <div class="eyebrow">Making of · 工程复盘</div>
+        <h1>一张 HDR 照片<br>怎么变成一段 HDR 视频</h1>
+        <p class="lead">手机拍的 HDR 照片，里面藏着一张「增益图」。这篇复盘从这个观察出发，讲 HDR Relay 转换引擎是怎么设计、写出来、测出来的——尤其是那几个靠「导出结果不对劲」才被发现、然后回头改算法的关键时刻。</p>
+      </div>
+    </section>
+
+    <section id="idea">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">起点</span>
+            <h2>想法是从一个矛盾开始的</h2>
+            <p>矛盾是这样的：手机拍的 HDR 照片，在手机屏上高光透亮、明暗层次都在；可一想搬到客厅那台 HDR 电视的大屏上看，就尴尬了——电视明明播 HDR 视频（HDR10）毫无压力，却偏偏认不出这种带增益图的 HDR 照片，要么当成普通 SDR 图显示、HDR 效果当场全丢，要么干脆打不开。<b>设备有 HDR 显示的本事，却因为「照片」这个格式用不上。</b></p>
+          </div>
+          <div class="note">一句话目标：既然电视早就能正常解码 HDR <b>视频</b>，那就把 HDR <b>照片</b>还原成真实 HDR 亮度、再编码成电视认得的 HDR 视频（H.265 / HDR10）——把原本只能在手机上发挥的 HDR，搬上电视大屏。</div>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker">矛盾</div>
+            <h4>电视点不亮 HDR 照片</h4>
+            <p>同一台 HDR 电视，播 HDR10 视频毫无压力，可它的相册 / 图片浏览根本不认带增益图的 HDR 照片——只能当普通 SDR 图显示，或者直接打不开。屏幕有 HDR 能力，却因为「照片」这个格式用不上。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">原理</div>
+            <h4>增益图里就存着 HDR</h4>
+            <p>手机存的其实是「一张 SDR 图 + 一张增益图（Gain Map）」。HEIC 里是 Apple 的 <code>tmap</code>，UltraHDR JPEG 里是 <code>hdrgm:</code> 命名空间，本质都是「逐像素的 log2 提亮量」。两层合起来才是完整 HDR。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">方案</div>
+            <h4>HDR 视频兼容性最好</h4>
+            <p>静态 HDR 格式（JXL）电视基本不认，但 H.265 HDR10 的 MOV 在电视、QuickTime、剪辑软件里都能直接放。把一张 HDR 照片做成静止 HDR 视频，就能直接用上电视本来就支持的 HDR 视频解码。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="design">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">架构</span>
+            <h2>把流程拆成五个能单独测的模块</h2>
+            <p>核心是一个 C++ 引擎 <code>hdr2jxl</code>，外面套一层 Flask + WKWebView 的本地界面。引擎按「一件事一个文件」拆开，每个环节都能单独喂数据、单独验证，避免一条长函数从头错到尾。</p>
+          </div>
+        </div>
+
+        <div class="pipeline">
+          <div class="pipe"><div class="pn">01 读取</div><h4>格式检测 + 解码</h4><p>heic_reader / jpeg_reader：认出格式，拆出 base 层、增益图、元数据</p></div>
+          <div class="pipe"><div class="pn">02 合并</div><h4>增益图 → 线性 HDR</h4><p>gainmap：按 log2 公式把 SDR 提亮成线性光</p></div>
+          <div class="pipe"><div class="pn">03 编码</div><h4>线性 → PQ</h4><p>SMPTE ST 2084 绝对亮度编码，并写入 HDR10 色彩标签</p></div>
+          <div class="pipe"><div class="pn">04 落地</div><h4>JXL / HEVC</h4><p>jxl_writer 出静态图；video_writer 调 ffmpeg 出视频</p></div>
+          <div class="pipe"><div class="pn">05 旁证</div><h4>导出中间层</h4><p>image_writer：base 层 + 增益图灰度，供核对</p></div>
+        </div>
+
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><h4>读取层只负责「拆」</h4><p>判断是 HEIC 还是 JPEG，把 base 图、增益图、元数据（gamma、hdrCapacityMin/Max、offset）原样吐出来，不做任何亮度计算。读取出错就早退，不让坏数据流进算法。</p></div></div>
+          <div class="step"><span class="n">2</span><div><h4>合并层是唯一的「数学中心」</h4><p>所有亮度相关的公式都集中在 <code>gainmap.cpp</code>：增益合并、sRGB↔线性、PQ↔线性、HLG↔线性。后面所有 bug 几乎都在这里改，集中放好处巨大。</p></div></div>
+          <div class="step"><span class="n">3</span><div><h4>写出层只负责「编码 + 容器」</h4><p>JXL 走 libjxl，写入 PQ / HDR 色彩信息；视频走 ffmpeg，补齐 HDR10 的编码与容器标签。写出层不重新调亮度，只把已经算好的线性 HDR 编进文件。</p></div></div>
+          <div class="step"><span class="n">4</span><div><h4>主程序只做编排</h4><p><code>Main.cpp</code> 解析参数、串起读取→合并→写出，并且<b>无论成不成功都导出 base 层和增益图</b>。这条「总是导出旁证」的设计，是后面定位过曝 bug 的关键。</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="core">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">核心算法</span>
+            <h2>增益图合并：一条指数公式</h2>
+            <p>增益图的值是 0–1 的归一化数，代表「在最小和最大提亮量之间插到哪」。真正的提亮是 2 的指数次方——这点决定了后面所有调参都得在 log2 域里做。</p>
+          </div>
+        </div>
+
+        <div class="formula">
+          HDR = base × 2<sup>(<span class="v">g</span> × (capMax − capMin) + capMin)</sup> + offset
+          <small>g = 增益图像素值（先按 1/gamma 校正）；capMin / capMax / offset 来自图片元数据</small>
+        </div>
+
+        <p>实现上逐像素跑这条公式，刻意<b>不把结果裁剪到 1.0 以内</b>——超过 1.0 的部分正是 HDR 高光，裁掉就退回 SDR 了。算完线性 HDR，再用 PQ（SMPTE ST 2084）曲线编码进 16-bit，交给 JXL 或 ffmpeg。</p>
+
+<pre><span class="cmt">// gainmap.cpp — 合并的核心循环（节选）</span>
+<span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;   <span class="cmt">// 映射到 log2 提亮量</span>
+<span class="kw">float</span> factor   = std::pow(2.0f, log2Gain);             <span class="cmt">// 指数 → 线性增益因子</span>
+<span class="kw">float</span> hdr      = base * factor + offsetHdr;
+hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只保非负，不裁上限（保住高光）</span></pre>
+
+        <div class="note" style="margin-top:18px">关键判断：PQ 是一条<b>绝对亮度</b>曲线——编码值直接对应「多少 nits」，1.0 = 10000 nits。这句话听起来无害，却正是整个项目最大那个坑的根源（见下面「看结果调算法」第一条）。</div>
+      </div>
+    </section>
+
+    <section id="parse">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">解析输入</span>
+            <h2>难的不是算，是先把增益图找出来</h2>
+            <p>三家厂商把增益图藏在三个不同的地方。读取层要足够健壮：标准路径走不通时要有退路，否则一张被压过的图就让整个转换失败。</p>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker">iPhone · HEIC</div>
+            <h4>tmap 辅助图</h4>
+            <p>遍历 HEIF 容器里的 item，按 fourcc <code>'t','m','a','p'</code> 找到增益图项，单独解码成单通道亮度图。位深可能是 8/10/12/16 位，按最大值归一化到 0–1。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">安卓 · UltraHDR</div>
+            <h4>XMP + 内嵌 JPEG</h4>
+            <p>从 <code>hdrgm:</code> 命名空间正则提取 gamma、capacity、offset；增益图本身是文件尾部第二张内嵌 JPEG，靠 <code>Container:Item</code> 长度定位。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">退路</div>
+            <h4>双阶段定位</h4>
+            <p>优先用 MPF 段里的绝对偏移直接跳到增益图；MPF 缺失或被改写时，<b>退回全文件扫描 JPEG 起始标记</b>（<code>0xFFD8</code>）找第二张图。两条路都留着。</p>
+          </div>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 0 · 增益图尺寸常常小于主图</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>增益图像素数和主图对不上，直接套用就<b>错位甚至崩溃</b>。</dd>
+            <dt>原因</dt>
+            <dd>为省空间，厂商常把增益图存成主图的 1/2 或 1/4 分辨率。</dd>
+            <dt>修复</dt>
+            <dd>读取层先把增益图<b>双线性放大</b>到主图尺寸再交给合并层，让后续逐像素公式能直接一一对齐。</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section id="video">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">转成视频</span>
+            <h2>静态图怎么变成 HDR10 视频</h2>
+            <p>没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><h4>先出一张临时 HDR 图</h4><p>用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</p></div></div>
+          <div class="step"><span class="n">2</span><div><h4>ffmpeg 循环成视频</h4><p><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</p></div></div>
+          <div class="step"><span class="n">3</span><div><h4>打满 HDR10 颜色三件套</h4><p><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</p></div></div>
+          <div class="step"><span class="n">4</span><div><h4>硬件优先，软件兜底</h4><p>先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</p></div></div>
+        </div>
+
+        <h3 style="margin:30px 0 0">拆开看：HDR 其实是两层叠出来的</h3>
+        <p style="margin-top:10px">还是这张 OPPO UltraHDR 原图，导出它内部的两个中间层就能看清 HDR 是怎么合成出来的——<b>SDR base 层</b>是普通屏幕能显示的部分（参考白封顶、招牌已经有点发灰），<b>增益图</b>是一张灰度图，记录每个像素还要往上提多少 stop：灰度越亮提得越多。两层按指数公式 <code>base × 2<sup>g</sup></code> 相乘，灯箱、招牌就被抬到 SDR 顶不住的亮度，得到下面那段 HDR 视频。</p>
+        <div class="vid-compare">
+          <div class="vid-figure layer">
+            <img src="assets/hdr-demo/hdr_base.jpg" alt="SDR base 层" loading="lazy">
+            <div class="vid-cap"><b>① SDR base 层</b><small>普通屏幕看到的样子，亮度被参考白封顶，招牌高光已经顶格、开始发灰</small></div>
+          </div>
+          <div class="vid-figure layer">
+            <img src="assets/hdr-demo/hdr_gainmap.jpg" alt="增益图 gain map" loading="lazy">
+            <div class="vid-cap"><b>② 增益图 gain map</b><small>灰度=提亮量：灯箱、招牌处最亮（提得最多），夜空和路面接近黑（基本不提）</small></div>
+          </div>
+        </div>
+        <p class="vid-note">注意增益图里发亮的区域，正好对应成品里冲破 SDR 上限的高光——这就是「base 决定底色、增益图决定哪里该更亮」。</p>
+
+        <p style="margin:24px 0 0">把这两层按 203 nits 锚定 + PQ 编码合并，再循环成视频，就是整条流水线跑通后的成品：</p>
+        <div class="vid-solo">
+          <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
+        </div>
+        <p class="vid-note">真正的 HDR10（HEVC / PQ / BT.2020）视频。在支持 HDR 的屏幕上，灯箱和高光会冲破 SDR 上限真正「亮」起来；这里是浏览器压回 SDR 后的预览。下一节就从这段视频回看——同一条算法稍微写错一步，画面会变成什么样。</p>
+      </div>
+    </section>
+
+    <section id="optimize">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">看结果调算法</span>
+            <h2>真正的算法，是被导出结果逼出来的</h2>
+          </div>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 1 · 整张图严重过曝，白得刺眼</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>导出的 JXL / 视频整体过亮，本该是参考白的区域亮得发光。</dd>
+            <dt>原因</dt>
+            <dd>PQ 是绝对亮度曲线，<b>线性 1.0 = 10000 nits</b>。直接把 sRGB 满亮度 1.0 喂进 PQ，等于把「纸面白」当成了 10000 nits 的超亮高光。</dd>
+            <dt>修复</dt>
+            <dd>合并前先把 base 层<b>锚定到 SDR 参考白</b>：乘以 <code>sdrWhiteNits / 10000</code>。203 nits 来自 ITU-R BT.2408 / libultrahdr 推荐值，让「SDR 1.0」对应到 PQ 的 203 nits 而不是满量程。</dd>
+          </dl>
+<pre><span class="cmt">// 改前：sRGB 1.0 直接进 PQ → 被当成 10000 nits，全图过曝</span>
+<span class="bad">float baseR = baseImage[idx];</span>
+
+<span class="cmt">// 改后：先把 SDR 参考白锚到 203 nits 的绝对亮度位置</span>
+<span class="good">const float k = sdrWhiteNits / 10000.0f;   // 203 / 10000
+float baseR = baseImage[idx] * k;</span></pre>
+
+          <p style="margin:16px 0 0">同一张 OPPO UltraHDR 原图，分别用「漏掉锚定」的旧算法和修好的算法转成 HDR 视频，差别一眼可见——左边整屏发光、招牌和路面全糊成一片白，右边夜景层次正常、只有灯箱该亮的地方亮：</p>
+          <div class="vid-compare">
+            <div class="vid-figure bad">
+              <video src="assets/hdr-demo/hdr_wrong.mov" poster="assets/hdr-demo/hdr_wrong_poster.jpg" autoplay muted loop playsinline></video>
+              <div class="vid-cap"><b>错误算法 · 漏掉 SDR 锚定</b><small>base 直接进 PQ，平均亮度 ≈ 785 nits、峰值顶到 10000 nits，整图过曝</small></div>
+            </div>
+            <div class="vid-figure good">
+              <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
+              <div class="vid-cap"><b>正确算法 · 锚定到 203 nits</b><small>base 先乘 203/10000，平均亮度 ≈ 16 nits、峰值 ≈ 828 nits，高光只留给该亮的地方</small></div>
+            </div>
+          </div>
+          <p class="vid-note">注：两段都是真正的 HDR10（HEVC / PQ / BT.2020）视频。在 HDR 屏上差距更夸张；这里看到的已是浏览器把 HDR 压回 SDR 后的效果，过曝那条仍然惨白。</p>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 2 · 把强度拖到「纯 SDR」反而又过曝了</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>增益强度 = 1（完整 HDR）正常，可一拖到 0（纯 SDR）画面又爆掉。</dd>
+            <dt>原因</dt>
+            <dd>强度为 0 时为了省事走了一条快捷分支，<b>忘了同样乘 <code>sdrWhiteNits/10000</code></b>，于是 sRGB 1.0 又变回 10000 nits。两条代码路径不一致。</dd>
+            <dt>修复</dt>
+            <dd>让所有强度分支共用同一个 <code>k = sdrWhiteNits/10000</code> 系数，保证 0、1 和中间值落在同一套亮度坐标里。</dd>
+          </dl>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 3 · 中间强度档位高光发灰、不自然</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>增益强度取 0.5 这类中间值时，高光过渡浑浊，不像「一半 HDR」。</dd>
+            <dt>原因</dt>
+            <dd>一开始在<b>像素值上线性插值</b>（(1−s)·SDR + s·HDR）。但提亮是 2 的指数关系，对指数结果做线性混合会破坏曝光的几何级数。</dd>
+            <dt>修复</dt>
+            <dd>把插值挪到 <b>log2 域</b>：直接缩放指数 <code>log2Gain × gainStrength</code>，再做 <code>2^</code>。强度 0 = 不提亮，强度 1 = 完整提亮，中间是平滑的曝光过渡。</dd>
+          </dl>
+<pre><span class="cmt">// 在指数上插值，而不是在像素上插值</span>
+<span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;
+log2Gain *= gainStrength;                 <span class="cmt">// ← 关键：缩放的是指数</span>
+<span class="kw">float</span> factor = std::pow(2.0f, log2Gain);</pre>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 4 · 视频在 QuickTime 里打不开 / 不走 HDR</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>ffmpeg 编出来的 MOV，QuickTime 要么打不开，要么当成普通 SDR 播放。</dd>
+            <dt>原因</dt>
+            <dd>QuickTime 只认 <code>hvc1</code> 标签的 HEVC（不认默认的 <code>hev1</code>），而且必须带齐 HDR10 的颜色元数据才会进 HDR 通路。</dd>
+            <dt>修复</dt>
+            <dd>编码时显式加 <code>-tag:v hvc1</code>、用 10-bit <code>p010le</code>，并补全 BT.2020 / ST.2084 / BT.2020-ncl 三件套。</dd>
+          </dl>
+<pre><span class="cmt"># 让 QuickTime 认得、且走 HDR10 通路的关键参数</span>
+ffmpeg -loop 1 -i tmp.jxl \
+  -c:v hevc_videotoolbox -profile:v main10 -pix_fmt p010le \
+  <span class="good">-tag:v hvc1</span> \
+  <span class="good">-color_primaries bt2020 -color_trc smpte2084 -colorspace bt2020_ncl</span> ...</pre>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 5 · 声明 16-bit 却传了浮点数据，解码花屏</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>JXL 文件能写出来，但解码时颜色错乱 / 花屏。</dd>
+            <dt>原因</dt>
+            <dd>basic_info 里声明的位深，必须和实际像素的数据类型严格对应；混用 16-bit 声明 + float 数据会让解码器按错误布局读取。</dd>
+            <dt>修复</dt>
+            <dd>分成两条干净的路径：<b>16-bit 走整型量化</b>（<code>uint16</code>），<b>32-bit 走浮点</b>（<code>JXL_TYPE_FLOAT</code>），声明与数据一一对应。</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section id="refwhite">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">深挖</span>
+            <h2>203 nits：从过曝现象追到标准锚点</h2>
+            <p>代码里有一行毫不起眼的常量：<code>k = sdrWhiteNits / 10000</code>。它解决的不是「画面再压暗一点」这种主观调色问题，而是一个坐标转换问题：SDR base 层是相对参考白编码，PQ 输出却要求绝对亮度。203 nits 就是把这两套坐标接起来的参考白锚点。</p>
+          </div>
+          <div class="note">一句话总结：不是先决定「203 好不好看」，而是先确认「SDR 的 1.0 在 HDR 时间轴上应该落到哪里」。BT.2408 和 libultrahdr 给出的工程答案都是 203 nits。</div>
+        </div>
+
+        <h3 style="margin:6px 0 0">问题不是亮度不够，而是坐标系错了</h3>
+        <p style="margin-top:10px">SDR base 层里的 1.0 表示「到达 SDR 参考白」，它本身不是一个固定物理亮度；PQ（SMPTE ST 2084）则完全相反，编码值直接对应显示亮度，满刻度对应 <code>10000 nits</code>。如果把 SDR 的 1.0 原样送进 PQ，就等于把普通白纸声明成 10000 nits 的极端高光，结果当然会整屏过曝。正确做法是：合并出的线性 HDR 在进入 PQ 前，先乘一个系数，把 SDR 参考白落到 HDR 系统里的漫反射白位置。</p>
+
+        <div class="formula">
+          k = L<sub>white</sub> ÷ 10000 = 203 ÷ 10000 ≈ <span class="v">0.0203</span>
+          <small>L<sub>white</sub> = HDR 中的漫反射白 / 图文白亮度；10000 = PQ 满刻度亮度。这个 k 把 SDR 的 1.0 锚到 203 nits，203 以上的空间留给灯光、反射和太阳等高光</small>
+        </div>
+
+<pre><span class="cmt">// gainmap.cpp — 进 PQ 前的曝光锚定</span>
+<span class="kw">const float</span> baseExposureCompensation = sdrWhiteNits / 10000.0f;  <span class="cmt">// 203/10000 ≈ 0.0203</span>
+<span class="cmt">// 所有强度路径都必须乘它：gainStrength=0 是 SDR 参考白，</span>
+<span class="cmt">// gainStrength=1 是完整 HDR；两者都要落在同一套绝对亮度坐标里</span></pre>
+
+        <h3 style="margin:30px 0 0">从症状反推出缺失变量</h3>
+        <p style="margin-top:10px">最早暴露出来的症状是「算法公式看起来没错，但导出视频整体白得不正常」。继续打印亮度统计后可以看到，原本应该只是参考白的区域被推到了很高的 PQ 亮度。于是问题从「增益图是不是太强」变成了「base 层进 PQ 前有没有先定参考白」。用不同系数临时测试时，0.02 附近会回到合理范围，0.05 又开始偏亮；这不是为了靠肉眼定最终值，而是在确认：这里确实缺了一个 <code>Lwhite / 10000</code> 的绝对亮度换算。</p>
+
+        <h3 style="margin:30px 0 0">用标准把变量定下来</h3>
+        <p style="margin-top:10px">确认缺的是 <code>Lwhite</code> 之后，再去查「SDR 参考白进入 HDR/PQ 时应该是多少 nits」，资料就不再是泛泛而读，而是直接回答工程问题。几份文档和实现交叉指向同一个答案：</p>
+        <div class="grid-2">
+          <div class="card">
+            <div class="kicker">ITU-R BT.2408</div>
+            <h4>HDR 参考白 = 203 cd/m²</h4>
+            <p>ITU 给 HDR 制作定义的「漫反射白 / 图文白」标准亮度是 203 cd/m²。它不是峰值，而是普通白纸、字幕、图文内容在 HDR 画面里的基准位置。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">SMPTE ST 2084</div>
+            <h4>PQ 是绝对亮度曲线</h4>
+            <p>定义 PQ 编码与亮度的对应关系，满刻度为 10000 nits。这条曲线解释了「为什么必须有 k」：不锚定，SDR 的 1.0 就会被当成一万尼特。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">ITU-R BT.2100</div>
+            <h4>PQ / HLG / BT.2020 体系</h4>
+            <p>把 PQ、HLG 传递函数和 BT.2020 色域绑成一套 HDR 体系，JXL / HEVC 输出打的颜色标签都来自这里。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">Google libultrahdr</div>
+            <h4>增益图实现也用 203</h4>
+            <p>UltraHDR 的官方增益图合并实现也把 SDR 参考白放在 203 nits。和上游实现对齐，能减少不同设备、不同软件之间的亮度漂移。</p>
+          </div>
+        </div>
+
+        <h3 style="margin:30px 0 0">203 是「白纸」，不是「最亮」</h3>
+        <p style="margin-top:10px">这一步最容易误解：203 nits <b>不是画面的峰值亮度</b>，而是 <b>漫反射白（diffuse / paper white）</b>。它描述的是白纸、白墙、字幕这类普通白在 HDR 系统里的位置。HDR 真正要保留的是 203 之上的余量：灯箱、镜面反射、太阳和其他高光可以继续冲到上千 nits，甚至接近 PQ 的 10000 nits 上限。增益图的作用，正是把这些超过漫反射白的区域撑起来。所以把 SDR 白锚到 203，等于给高光留出 headroom；如果把 203 当成峰值，整张图会被整体压到亮度上限，高光反而没有余量。换算到信号上，203 nits 对应 <b>75% 的 HLG 信号</b>、<b>约 58% 的 PQ 信号</b>，这也是它在 HDR 工作流里反复出现的原因。</p>
+
+        <div class="gb-grid">
+          <div class="gb bad">
+            <h4>问题暴露阶段</h4>
+            <ul>
+              <li>画面过曝，但增益图公式本身没有明显错误</li>
+              <li>亮度统计显示 SDR 白被推到过高 PQ 亮度</li>
+              <li>临时系数只能说明缺了映射，不能当最终答案</li>
+              <li>如果不区分参考白和峰值，解释会越来越乱</li>
+              <li>不同图片、不同屏幕下很难保持一致</li>
+            </ul>
+          </div>
+          <div class="gb good">
+            <h4>标准化之后</h4>
+            <ul>
+              <li>203 = BT.2408 定义的 HDR 漫反射参考白</li>
+              <li><code>k = 203/10000</code>，一个有出处的常量</li>
+              <li>base 层、增益层和 PQ 编码落在同一亮度坐标</li>
+              <li>明确 203 之上的空间专门留给高光</li>
+              <li>与 libultrahdr 上游一致，行为可预期</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:18px">为什么界面里还留着 <b>100 nits</b> 这个选项？100 nits 是传统 SDR 参考白的常用锚点，更适合老素材或亮度空间有限的输出；203 nits 是现代 HDR 制作里更合适的漫反射白位置。两者的差别不是「哪个更好看」，而是面向不同素材和显示目标选择不同参考白。</div>
+      </div>
+    </section>
+
+    <section id="evolve">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">形态进化</span>
+            <h2>三种形态，同一个内核</h2>
+            <p>引擎 <code>hdr2jxl</code> 写好之后，能力就固定了。真正变化的是外层的交互方式——从命令行到网页再到 Mac App，每一层都只解决一个问题：<b>上一层，谁还用不了</b>。内核一行没改，受众却一级一级扩大。</p>
+          </div>
+          <div class="note">设计思路很克制：<b>不重写内核，只换交互层</b>。Web 把「命令」翻译成「界面」，App 把「环境依赖」收进「双击」。每一跳都是纯收益，没有为了好用牺牲引擎能力。</div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker">第一形态 · CLI</div>
+            <h4>命令行内核</h4>
+            <p>交互式问路径，或一串 <code>-g -e -w -v -d -f</code> 参数。引擎能力 100%，但门槛也 100%：得会用终端、记得住参数、还要先装好 Homebrew 那套库。基本只有作者自己用得动。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">第二形态 · Web UI</div>
+            <h4>浏览器界面</h4>
+            <p>同一个内核外面包一层 Flask，浏览器打开就是图形界面。拖拽上传、可视化调参、实时预览。<b>会用浏览器就能用</b>——这一跳把「会背命令」的门槛彻底拆掉。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">第三形态 · Mac App</div>
+            <h4>双击即用</h4>
+            <p>用 py2app 把 Python、Flask、WKWebView 和所有 dylib 打进一个 <code>.app</code>：独立窗口、原生文件选择/保存面板、零依赖。DMG 拖进 Applications 就能用，全程不碰终端。</p>
+          </div>
+        </div>
+
+        <h3 style="margin:30px 0 0">关键的一跳：命令行 → 网页，易用性提升在哪</h3>
+        <p style="margin-top:10px">这一跳收益最大。同样的转换能力，交互方式换了，「能用」的人一下子从「会终端的少数」变成「会浏览器的所有人」。具体提升可以拆成五个维度：</p>
+        <div class="gb-grid">
+          <div class="gb bad">
+            <h4>命令行的摩擦</h4>
+            <ul>
+              <li>参数靠记：<code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code> 一长串</li>
+              <li>输入靠手打完整文件路径，错一个字符就失败</li>
+              <li>转换前看不到这张图是不是 HDR、增益图在不在</li>
+              <li>调一次参数就重跑一次，还得另开看图器看效果</li>
+              <li>成功还是失败，只能从一屏终端日志里找</li>
+            </ul>
+          </div>
+          <div class="gb good">
+            <h4>网页消除了它</h4>
+            <ul>
+              <li>滑块 + 按钮，参数自带范围约束，填不出非法值</li>
+              <li>拖拽上传，文件名和路径自动带过去</li>
+              <li>上传即解析：相机、ISO、HDR 格式、增益图容量一目了然</li>
+              <li>实时预览 + 原图／成品左右对比，所见即所得</li>
+              <li>进度条反馈 + 一键下载到本地，不用盯日志</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step"><span class="n">→</span><div><h4>把「命令」变成「界面」</h4><p>CLI 的每个 flag 在网页里都对应一个控件：<code>-g</code> 变增益滑块、<code>-w</code> 变 203/100 nits 切换、<code>-v -d -f</code> 变视频时长帧率输入。用户不再需要知道参数叫什么，只需要知道自己想要什么效果。</p></div></div>
+          <div class="step"><span class="n">→</span><div><h4>把「盲转」变成「先看后转」</h4><p>命令行是把文件丢进去碰运气；网页在上传瞬间就解析 EXIF 和 HDR 元数据并显示出来，用户在转换前就知道这张图有没有增益图、是哪家的 HDR 格式，再决定参数。</p></div></div>
+          <div class="step"><span class="n">→</span><div><h4>把「重跑」变成「实时反馈」</h4><p>调参从「改命令 → 回车 → 等 → 另开软件看 → 不满意再来」压缩成「拖滑块 → 预览里直接看到原图和成品的差别」。反馈回路从几十秒缩短到几乎即时。</p></div></div>
+        </div>
+
+        <div class="note" style="margin-top:18px">最后这一步交给 App：网页虽好，仍要 <code>./start_webui.sh</code>、装 Python 和 Homebrew、再手动打开浏览器。Mac App 这一层把这些<b>环境依赖也一并消灭</b>——双击图标，独立窗口直接弹出，对完全不懂技术的人也成立。</div>
+      </div>
+    </section>
+
+    <section id="method">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">方法论</span>
+            <h2>这个项目教会的三件事</h2>
+            <p>把整个过程压缩成三句话，换个图像处理项目也能套用。</p>
+          </div>
+        </div>
+        <div class="takeaways">
+          <div class="takeaway">
+            <div class="big">先锚定绝对亮度<br>再谈 HDR</div>
+            <p>PQ 是绝对亮度曲线，任何 SDR 数据进 PQ 前都得先映射到参考白（203 nits），否则必然过曝。</p>
+          </div>
+          <div class="takeaway">
+            <div class="big">指数关系<br>要在指数域里调</div>
+            <p>增益是 2 的指数次方，强度、插值、曝光补偿都该在 log2 域操作，在像素值上线性混合一定走样。</p>
+          </div>
+          <div class="takeaway">
+            <div class="big">永远导出旁证<br>用结果反推 bug</div>
+            <p>每次转换都吐出 base 层、增益图和亮度统计。画面不对时，靠这些中间结果几分钟就能定位是哪一步算错。</p>
+          </div>
+        </div>
+
+        <h3 style="margin:28px 0 0">每改一版算法后的核对清单</h3>
+        <div class="checklist">
+          <div>成品画面在 HDR 屏上不过曝、不发灰</div>
+          <div>min / max / avg 亮度统计落在合理区间</div>
+          <div>增益强度 0 / 0.5 / 1 三档过渡平滑</div>
+          <div>base 层导出图本身是正常 SDR</div>
+          <div>视频在 QuickTime 能播且标为 HDR</div>
+          <div>硬件编码失败时软件兜底跑通</div>
+          <div>HEIC / UltraHDR / 普通 JPEG 都跑一遍</div>
+          <div>16-bit 与 32-bit 路径都能正确解码</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">参考</span>
+            <h2>相关资料</h2>
+            <p>想看成品和背后的色彩科学，可以从这几处继续。</p>
+          </div>
+        </div>
+        <div class="source-list">
+          <a href="hdr-color-science.html">
+            SDR 到 HDR 色彩科学 · 本项目的理论底座
+            <small>PQ / HLG 传递函数、BT.2020 色域、绝对亮度与参考白——理解上面所有算法决策的前提</small>
+          </a>
+          <a href="log-gamma.html">
+            为什么相机用 Log 拍摄 · 曝光与指数编码
+            <small>解释「为什么提亮要在 log 域做」的同一套直觉，和坑 3 的修复思路相通</small>
+          </a>
+          <a href="index.html">
+            首页 · 工作流管线
+            <small>基础 → 拍摄 → 后期 → 显示，看这篇复盘在整体导航里的位置</small>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>影像色彩与显示技术指南 · <a href="index.html">返回首页</a></p>
+  </footer>
+
+  <script>
+    window.addEventListener("scroll", () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? h.scrollTop / max : 0;
+      document.getElementById("progress").style.transform = `scaleX(${p})`;
+    });
+  </script>
+</body>
+</html>
