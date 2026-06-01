@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>一个章节是怎么做出来的 | 影像色彩与显示技术指南</title>
-  <meta name="description" content="以同色异谱章节为例，复盘一个新章节从确定选题方向、资料核对、写大纲、做交互演示、移动端适配到发布的完整制作流程与真实踩坑经验。">
+  <meta name="description" content="以同色异谱章节为例，复盘一个新章节从确定选题方向、资料核对、写大纲、AI 协作、交互演示、移动端适配到发布的完整制作流程与真实踩坑经验。">
   <style>
     :root {
       color-scheme: dark;
@@ -417,6 +417,7 @@
         <a href="#outline">大纲</a>
         <a href="#demo">交互演示</a>
         <a href="#mobile">细节适配</a>
+        <a href="#ai-collab">AI 协作</a>
         <a href="#ship">收尾发布</a>
         <a href="#method">方法论</a>
         <a href="#sources">参考</a>
@@ -429,7 +430,7 @@
       <div class="wrap">
         <div class="eyebrow">Making of · 制作复盘</div>
         <h1>一个章节是怎么做出来的</h1>
-        <p class="lead">以「同色异谱」这一章为例，从确定选题方向、资料核对、写大纲，到做交互演示、移动端适配，再到收尾发布，把整个流程和真实踩过的坑完整复盘一遍。重点不是结果，而是每一步的判断依据。</p>
+        <p class="lead">以「同色异谱」这一章为例，从确定选题方向、资料核对、写大纲，到和 AI 一起做交互演示、逐条批注修改、移动端适配，再到收尾发布，把整个流程和真实踩过的坑完整复盘一遍。重点不是结果，而是每一步的判断依据。</p>
       </div>
     </section>
 
@@ -566,7 +567,19 @@ sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 2 · 演示 B 换光源后 ΔE 不够明显</div>
+          <div class="ptitle">坑 2 · 「自动匹配」不等于一定匹配成功</div>
+          <dl>
+            <dt>症状</dt>
+            <dd>演示 A 里有些颜色看起来并不鲜艳，但点击自动匹配后仍然只能逼近，读者会以为算法坏了。</dd>
+            <dt>原因</dt>
+            <dd>另一组光谱基函数只能做 <b>0–100 的非负加法</b>。精确解可能需要负峰值，或需要某个峰超过滑块上限。视觉上的「不鲜艳」不等于落在另一组光谱模型的可达 XYZ 范围内。</dd>
+            <dt>修复</dt>
+            <dd>按钮改成「尝试匹配」，失败状态改为「受光谱范围限制」，并把求解出的原始峰值显示给读者。交互演示不只要展示成功，也要解释失败为什么合理。</dd>
+          </dl>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">坑 3 · 演示 B 换光源后 ΔE 不够明显</div>
           <dl>
             <dt>症状</dt>
             <dd>换光源后两个样本的色差只有 ΔE≈1.7，肉眼几乎看不出，<b>失去教学冲击力</b>。</dd>
@@ -577,7 +590,7 @@ sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
           </dl>
         </div>
 
-        <div class="note">两条经验：关键公式要<b>单独命名成函数</b>（如 <code>buildSPD()</code>、<code>planckianSPD()</code>），不要写进绘图循环；演示的「成功」和「失败」都要能稳定复现，否则读者拖两下就破功。</div>
+        <div class="note">两条经验：关键公式要<b>单独命名成函数</b>（如 <code>buildSPD()</code>、<code>planckianSPD()</code>），不要写进绘图循环；演示的「成功」和「失败」都要能稳定复现，而且失败原因也要在界面上说清楚。</div>
       </div>
     </section>
 
@@ -592,7 +605,7 @@ sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 3 · Canvas 在手机上塌成 150px</div>
+          <div class="ptitle">坑 4 · Canvas 在手机上塌成 150px</div>
           <dl>
             <dt>症状</dt>
             <dd>图表在手机上只渲染成一条窄带，高度约 150px。</dd>
@@ -610,7 +623,7 @@ canvas { height: 100%; }</span>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 4 · 媒体查询里的选择器优先级</div>
+          <div class="ptitle">坑 5 · 媒体查询里的选择器优先级</div>
           <dl>
             <dt>症状</dt>
             <dd>媒体查询里写了单列规则，但手机上多列布局没折叠。</dd>
@@ -633,11 +646,82 @@ canvas { height: 100%; }</span>
       </div>
     </section>
 
-    <section id="ship">
+    <section id="ai-collab">
       <div class="wrap">
         <div class="section-head">
           <div>
             <span class="phase-tag">第六阶段</span>
+            <h2>和 AI 协作：让它快，但不要让它定稿</h2>
+            <p>这个项目不是让 AI 一次性生成网页，而是把 AI 当成「研究助理 + 前端执行者 + 反复修改的搭档」。真正决定质量的，是人如何指出问题、要求查证、并把含糊的反馈变成可验证的修改项。</p>
+          </div>
+          <div class="note">最有效的协作方式不是写一个很长的万能 prompt，而是持续用浏览器批注指出：哪里看不懂、哪里不严谨、哪里不符合专业语气。</div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker">AI 适合做</div>
+            <h4>搭骨架和快速试错</h4>
+            <p>先让 AI 把章节结构、交互控件、Canvas 图表、响应式布局做出来。第一版不追求完美，重点是尽快变成可以看的页面。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">人必须做</div>
+            <h4>判断内容是否成立</h4>
+            <p>PQ / HLG 曲线、CIE 马蹄图、Luther 条件、EDID、gain map 这类内容不能只靠 AI 记忆。关键数据要回到标准、厂商文档或论文。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">反复做</div>
+            <h4>用批注压实页面</h4>
+            <p>「这个图为什么从中间开始」「坐标轴没有数字」「公式看不懂」「文案太像 AI」这类具体批注，比抽象地说「优化一下」有效得多。</p>
+          </div>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">经验 1 · 让 AI 先解释，再让它改页面</div>
+          <dl>
+            <dt>做法</dt>
+            <dd>遇到争议点时，先问「为什么会这样」，再让 AI 修改。比如演示 A 里淡色也匹配失败，先确认原因是非负峰值约束，而不是直接改成「看起来能匹配」。</dd>
+            <dt>价值</dt>
+            <dd>这样能避免把真实限制藏掉。好的科普页面不是把所有问题美化成成功，而是让读者知道失败在物理上为什么合理。</dd>
+          </dl>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">经验 2 · 交互图表必须可读，不只是可动</div>
+          <dl>
+            <dt>常见问题</dt>
+            <dd>曲线有了，但没有坐标轴数字；图能拖动，但横纵比例不对；模式切换按钮有了，但读者不知道当前看的是哪一种模式。</dd>
+            <dt>改法</dt>
+            <dd>每个交互图表都要回答三件事：X 轴是什么、Y 轴是什么、当前模式是什么。PQ / HLG / SDR 同图对比时，必须写明是线性亮度、对数亮度，还是分段线性亮度。</dd>
+          </dl>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">经验 3 · 公式不要只「写出来」，要排成读者能读的形状</div>
+          <dl>
+            <dt>问题</dt>
+            <dd>ST 2084、HLG、OOTF 这类公式如果挤成一行，读者只会跳过。AI 很容易把公式当成普通文本堆上去。</dd>
+            <dt>改法</dt>
+            <dd>把公式拆成步骤：先定义输入输出，再列分段条件，再列常数。需要时用「先算 N」「再算亮度比例」这样的短句代替一整条长公式。</dd>
+          </dl>
+        </div>
+
+        <div class="pitfall">
+          <div class="ptitle">经验 4 · 文案要克制，少用漂亮但空的比喻</div>
+          <dl>
+            <dt>问题</dt>
+            <dd>「时代的新痛」「奥秘」「神器」「物理学的代价」这类说法看起来顺，但会让技术页面显得不可信。</dd>
+            <dt>改法</dt>
+            <dd>把比喻改成可验证的描述：例如「OLED / QD-OLED 显示中的观察者差异」「窄峰原色会放大观察者同色异谱」。标题也要直接告诉读者这一节解决什么问题。</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section id="ship">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag">第七阶段</span>
             <h2>收尾与发布</h2>
             <p>文案语气要克制、可验证，避免营销腔和 AI 腔。最后过一遍发布清单，确认入口接好。</p>
           </div>

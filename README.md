@@ -81,4 +81,9 @@ Cloudflare Pages 的常见设置：
 
 ## License
 
-当前仓库尚未明确许可证。正式对外开放前，建议补充一个适合内容与代码复用的 License。
+本仓库采用双许可证：
+
+- 代码（HTML/CSS/JS、脚本与配置）：[MIT License](LICENSE)。
+- 内容（教程正文、图表、插图、图片与其他非代码素材，除另有说明）：[Creative Commons Attribution 4.0 International License](LICENSE-CONTENT.md)（CC BY 4.0）。
+
+第三方资料、商标、引用标准、外部链接资源及单独标注来源或许可的素材，仍遵循其各自权利方的声明。

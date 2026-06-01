@@ -1,6 +1,25 @@
 {
-  "updated": "2026-05-29",
+  "updated": "2026-06-01",
   "days": [
+    {
+      "date": "2026-06-01",
+      "picks": [
+        {
+          "tag": "科普",
+          "source": "ARRI · Image Science",
+          "title": "Log C",
+          "description": "这篇值得读，因为它把很多人日常在用、却常常只停留在“平灰画面”印象里的 Log 重新讲回到底层：为什么它按曝光档位编码、为什么更适合承载场景信息、以及为什么最终一定还要经过显示变换。文中还顺手把 LogC3 与 LogC4 的差异、混用限制和 SDR/HDR/P3 输出关系串起来，非常适合建立摄影机编码与后期显示之间的整体直觉。",
+          "url": "https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c"
+        },
+        {
+          "tag": "讨论",
+          "source": "ACESCentral · HDR/SDR 工作流",
+          "title": "Use same LUT for HDR/SDR",
+          "description": "这条讨论的价值在于它直接击中真实项目里最常见的误区之一：在 HDR 里做好的创意 LUT，为什么一套到 SDR 就会炸高光。回复不仅指出 ACEScc 不是理想交换格式，还把“灰卡应留在什么场景值附近”“HDR 监看为什么会诱导你把整体推得过亮”这些判断讲得很具体，能帮助读者理解创意调整、工作空间和输出变换不能混成一件事。",
+          "url": "https://community.acescentral.com/t/use-same-lut-for-hdr-sdr/4282"
+        }
+      ]
+    },
     {
       "date": "2026-05-29",
       "picks": [
