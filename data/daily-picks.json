@@ -1,6 +1,25 @@
 {
-  "updated": "2026-06-01",
+  "updated": "2026-06-02",
   "days": [
+    {
+      "date": "2026-06-02",
+      "picks": [
+        {
+          "tag": "科普",
+          "source": "Prolost · Log/Linear 工作流",
+          "title": "Know When to Log ’em, Know When to Lin ’em",
+          "description": "这篇最值得读的地方在于它没有把“线性更物理、log 更平”停留在口号层面，而是直接把常见操作拆开来看：模糊、叠加、光效、缩放为什么更适合在线性里做，压黑、反相、某些感知型锐化和胶片式处理为什么反而更像是在 log 或 video 空间里工作。对正在搭建 HDR/VFX/调色整体直觉的读者，它能帮助你把“数学正确”和“观感正确”区分开。",
+          "url": "https://prolost.com/blog/2006/6/4/know-when-to-log-em-know-when-to-lin-em.html"
+        },
+        {
+          "tag": "讨论",
+          "source": "ACESCentral · ACES 合成工作流",
+          "title": "What's the correct way to composit with ACES, considering the difference in white values?",
+          "description": "这条讨论非常适合建立 scene-referred 的真实尺度感。回复没有停在“ACES 里 1.0 不是显示白”这种抽象说法，而是进一步把 1.0 解释成接近场景里的漫反射白，并说明为什么你在 Rec.709 里觉得应该炸掉的元素，放进 ACES/HDR 后往往只会显得发灰或半透明。它能把很多人第一次做字幕、图形、光效或发光元素时的困惑讲透。",
+          "url": "https://community.acescentral.com/t/whats-the-correct-way-to-composit-with-aces-considering-the-difference-in-white-values/3459"
+        }
+      ]
+    },
     {
       "date": "2026-06-01",
       "picks": [
