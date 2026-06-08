@@ -1,6 +1,44 @@
 {
-  "updated": "2026-06-02",
+  "updated": "2026-06-08",
   "days": [
+    {
+      "date": "2026-06-08",
+      "picks": [
+        {
+          "tag": "科普",
+          "source": "Frame.io Insider · Gamma / 调色直觉",
+          "title": "What is Gamma? And How Does a Pro Colorist Use It?",
+          "description": "这篇值得读，因为它没有把 gamma 只讲成一个抽象名词，而是直接用波形和调色轮解释：为什么 gamma 主要推动中间调、却能相对钉住黑位和白位，以及它和 offset 在 display-referred 工作里手感为什么完全不同。更重要的是，作者也明确提醒在 color managed 的 scene-referred 流程里不要把 gamma 当万能曝光工具，而应把它当作更细腻的局部明度与色彩平衡手段。",
+          "url": "https://blog.frame.io/2024/09/02/what-is-gamma-a-pro-colorist-explains/"
+        },
+        {
+          "tag": "科普",
+          "source": "Adobe Blog · HDR 摄影工作流",
+          "title": "High Dynamic Range - Explained",
+          "description": "这篇值得读，因为它把“HDR 比 SDR 多出来的到底是什么”讲得非常落地，不只谈更亮的高光，还强调额外高光余量如何带来更好的色彩分离与层次。更有用的是，作者把实际编辑时最常见的失控点也点出来了，比如 HDR 很容易越调越亮、在单张图上看似没问题但放到相册里会彼此失衡，并给出用白底参考、直方图和 clipping 提示来约束判断的方法。",
+          "url": "https://blog.adobe.com/en/publish/2023/10/10/hdr-explained"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-03",
+      "picks": [
+        {
+          "tag": "讨论",
+          "source": "ACESCentral · ACES / SDR 素材处理",
+          "title": "How do I apply ACES to SDR images?",
+          "description": "这条讨论值得读，因为它把很多人实际会做、但理论上并不干净的操作摊开说清楚了：当你只有 Rec.709/SDR 成片或板底，却又想放进 ACEScg 里合成时，所谓 inverse ODT 到底是在“补救”什么、又会在哪些高饱和色和高光处变脆。更有价值的是，帖内并没有假装存在完美答案，而是把“临时可用的折中”和“真正正确的 scene-referred 交付”明确区分开，特别适合教学时拿来解释工作流边界。",
+          "url": "https://community.acescentral.com/t/how-do-i-apply-aces-to-sdr-images/5408"
+        },
+        {
+          "tag": "科普",
+          "source": "Greg Benz Photography · Web HDR",
+          "title": "HDR: gain maps vs tone mapping",
+          "description": "这篇最值得读的地方在于它没有把 Web HDR 讲成格式清单，而是直接回答一个实际问题：为什么单纯丢一张 HDR 图给浏览器做自动 tone mapping，往往不等于创作者想让 SDR 用户看到的版本。文章把 gain map 解释成“同时照顾 HDR 与 SDR 观看体验的交付策略”，并进一步说明它为什么比仅靠更高位深更关键。对理解网页广色域/HDR 发布链路非常有帮助。",
+          "url": "https://gregbenzphotography.com/hdr-photos/hdr-gain-maps-vs-tone-mapping/"
+        }
+      ]
+    },
     {
       "date": "2026-06-02",
       "picks": [
