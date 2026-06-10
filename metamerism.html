@@ -577,6 +577,78 @@
       padding: 1px 6px;
       border-radius: 4px;
     }
+    .observer-compare {
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+    }
+    .observer-compare h3 {
+      font-size: 22px;
+      margin: 0 0 10px;
+      color: var(--ink);
+    }
+    .observer-compare > p {
+      max-width: 860px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .observer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .observer-card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+    }
+    .observer-card .eyebrow {
+      margin-bottom: 8px;
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+    .observer-card h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: var(--ink);
+    }
+    .observer-card p {
+      margin: 0 0 8px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .observer-points {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .observer-points div {
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .observer-points b,
+    .observer-summary b,
+    .observer-card p b {
+      color: var(--ink);
+    }
+    .observer-summary {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--lime);
+      background: linear-gradient(90deg, rgba(169,229,95,.10), transparent);
+      color: #dce8f7;
+      font-size: 14px;
+      line-height: 1.7;
+    }
 
     /* Failure types table */
     .fail-grid {
@@ -937,7 +1009,7 @@
       .concept-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .concept-example { grid-template-columns: 1fr; }
       .concept-equal { transform: rotate(90deg); }
-      .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid, .camera-display-grid { grid-template-columns: 1fr; }
+      .def-grid, .wf-grid, .myth-grid, .bridge-grid, .source-list, .display-tech-grid, .camera-display-grid, .observer-grid { grid-template-columns: 1fr; }
       .fail-row { grid-template-columns: 1fr; gap: 8px; }
       .fail-row .ftag { justify-self: start; }
       .match-card { grid-template-columns: 1fr 1fr; }
@@ -1114,6 +1186,39 @@
             <p>现实里几乎没有相机精确满足。相机的 RGB 滤色片需要同时兼顾噪声、灵敏度、红外抑制和制造一致性，通常只能接近人眼三刺激值。白平衡和矩阵校正能修正灰轴与一部分色卡，但不能把所有光谱都变成人眼会看到的颜色。</p>
           </div>
         </div>
+
+        <div class="observer-compare">
+          <h3>CIE 1931 和 CIE 2015 到底差在哪</h3>
+          <p><b>先说结论：</b>CIE 2015 不是说 1931 错了，也不是要把现有 RGB/XYZ 体系推翻。它更像是把“标准观察者”从一个固定模板，推进成了一个更接近真实生理差异的模型，所以它对解释<b>为什么同一台窄峰显示器会让不同人看到不同白点</b>更有帮助。</p>
+
+          <div class="observer-grid">
+            <div class="observer-card">
+              <div class="eyebrow">CIE 1931 2°</div>
+              <h4>历史上最重要，也最方便工程统一</h4>
+              <p>1931 模型来自颜色匹配实验，核心价值是给行业一个统一坐标系。今天的 <b>XYZ、xy、Lab、ICC、Rec.709/P3/Rec.2020 白点与色域表达</b>，本质上都还建立在这个共同参考上。</p>
+              <div class="observer-points">
+                <div><b>优点：</b>链路统一、设备兼容、标准与软件实现完整，适合做设备之间的“共同语言”。</div>
+                <div><b>局限：</b>它把观察者压缩成一个固定 2° 标准人眼，没有显式描述年龄、黄斑色素、晶状体老化和视场变化。</div>
+                <div><b>结果：</b>对宽光谱设备通常够用，但遇到 OLED、QD-OLED、激光这类窄峰光谱时，真实人眼差异会比 1931 模型预测得更明显。</div>
+              </div>
+            </div>
+
+            <div class="observer-card">
+              <div class="eyebrow">CIE 2015 Physiologically-Relevant Observer</div>
+              <h4>把“标准观察者”往真实人眼又推近了一步</h4>
+              <p>2015 模型建立在锥细胞光谱响应、生理透镜与黄斑吸收数据之上，可以按<b>视场大小</b>、<b>年龄</b>等参数生成观察者函数。它不是只问“平均人怎么配色”，而是更接近“不同类型的人可能怎么响应”。</p>
+              <div class="observer-points">
+                <div><b>优化点 1：</b>比 1931 更好地描述短波段与窄峰原色下的观察者差异，尤其适合解释现代广色域显示器上的白点分歧。</div>
+                <div><b>优化点 2：</b>可以把观察者差异显式带进模型，而不是默认所有人都等于同一个 2° 平均眼。</div>
+                <div><b>优化点 3：</b>给“观察者同色异谱补偿”提供基础，方便研究多原色显示、个体化白点和年龄相关补偿。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="observer-summary">
+            <b>它对同色异谱的真正优化，不是“让同色异谱消失”，而是更准确地预测它什么时候会失败。</b> 1931 更适合当行业通用坐标；2015 更适合解释和建模现代窄峰显示设备上的观察者差异。对教学来说，这个更新最重要的意义是：我们终于有了一个更合理的框架，去说明“仪器明明测准了，为什么不同人还是看不一样”。 
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1221,7 +1326,7 @@
           <div class="card">
             <h3>校准为什么不能彻底解决</h3>
             <p>常规校准把显示器对齐到一个标准观察者和一个目标白点，例如 CIE 1931 2° 的 D65。它能减少设备误差，但不能消除人眼个体差异。</p>
-            <p>更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。</p>
+            <p>更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。CIE 2015 这类生理观察者模型的价值，不是替代校准，而是帮助我们更诚实地描述“校准后的剩余差异”。</p>
           </div>
         </div>
 

@@ -1,6 +1,44 @@
 {
-  "updated": "2026-06-08",
+  "updated": "2026-06-10",
   "days": [
+    {
+      "date": "2026-06-10",
+      "picks": [
+        {
+          "tag": "科普",
+          "source": "GTI Graphic Technology",
+          "title": "What Is Metamerism?",
+          "description": "这篇值得读，因为它把同色异谱拆成 observer、illuminant、geometric 三类失效，并且强调多光源目测、受控观察环境和光谱测量为什么必须一起用，能把“仪器读数一样、现场还是不一样”这类困惑拉回到可操作的判断框架。它和站内最近更新的同色异谱章节衔接很强，尤其适合作为从概念走向实际审核流程的延伸阅读。",
+          "url": "https://www.gtilite.com/2019/05/understanding-metamerism/"
+        },
+        {
+          "tag": "教程",
+          "source": "OpenColorIO Docs",
+          "title": "Displays & Views",
+          "description": "这篇值得读，因为它没有把 scene-referred / display-referred 停留在术语层面，而是直接用 display、view、view transform、display colorspace 解释监看菜单背后到底在切什么。更有价值的是，它明确指出 view transform 就是在 scene 参考空间和 display 参考空间之间做映射，这对理解站内最近更新的 HDR 色彩科学章节里 Output Transform、HDR/SDR 视图和最终交付之间的关系非常有帮助。",
+          "url": "https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-09",
+      "picks": [
+        {
+          "tag": "讨论",
+          "source": "IMAGO · 影像技术委员会",
+          "title": "Metamerism Experts’ Day Debrief",
+          "description": "这篇值得读，因为它不是只给出同色异谱定义，而是把摄影机、LED 光源、激光放映和 QD/OLED 显示里真正会出问题的环节串成了一次行业复盘。它和站内最近更新的同色异谱章节衔接很强，尤其适合读者建立“为什么新显示技术更容易暴露观察者差异与白点失配”这层工作流直觉。",
+          "url": "https://imago.org/committees/technical/metamerism-experts-day-debrief/"
+        },
+        {
+          "tag": "科普",
+          "source": "Portrait Displays · HDR 显示与色彩体积",
+          "title": "Why Gamut Rings Is a Better Way to Visualize Display Color",
+          "description": "这篇值得读，因为它不是停留在二维色域三角形，而是用更接近实际显示能力的方式解释亮度变化如何改变颜色边界，能直接补上“色域大不等于 HDR 颜色都更丰富”这层直觉。它与站内刚更新的 HDR 色彩科学章节高度相关，尤其适合把色彩体积、峰值亮度和广色域显示之间的关系看得更立体。",
+          "url": "https://www.portrait.com/blog/why-gamut-rings-is-a-better-way-to-visualize-display-color/"
+        }
+      ]
+    },
     {
       "date": "2026-06-08",
       "picks": [

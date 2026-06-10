@@ -959,7 +959,7 @@
 
         <div class="note" style="margin-top:18px;border-left-color:var(--gold)">
           <strong style="color:var(--gold)">🔑 HDR 参考白：203 nit（BT.2408 规定）</strong>
-          <p style="margin:8px 0 4px">PQ 和 HLG 共用同一参考白亮度 <b>203 cd/m²</b>，但对应的信号电平不同：</p>
+          <p style="margin:8px 0 4px">参考白不是 HDR 的“最亮白”，而是普通漫反射白、字幕/图形白、SDR 内容嵌入 HDR 工作流时的<b>亮度锚点</b>。PQ 和 HLG 共用同一参考白亮度 <b>203 cd/m²</b>，但对应的信号电平不同：</p>
           <div class="grid-2" style="gap:10px;margin-top:10px">
             <div class="card" style="padding:12px">
               <b style="color:var(--cyan)">PQ：58% 电平 = 203 nit</b>
@@ -968,6 +968,29 @@
             <div class="card" style="padding:12px">
               <b style="color:var(--lime)">HLG：75% 电平 = 203 nit（HLG75）</b>
               <p style="margin:6px 0 0;font-size:13px">HLG 参考白基准定在 75%（BT.2390 / BT.2408），早期曾用 50%（HLG50，已废弃）。波形监视器上的"1000 nit"刻度即指 75% HLG 电平。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:14px;border-left-color:var(--cyan)">
+          <strong style="color:var(--cyan)">Headroom：参考白以上才是 HDR 的“高光余量”</strong>
+          <p style="margin:8px 0 4px">如果把 203 nit 当作普通白，那么显示器峰值亮度中超过 203 nit 的部分就是 headroom。它不是拿来把整张画面都变亮，而是留给太阳反光、金属高光、火焰、霓虹、雪地闪光等短暂或局部的亮度。</p>
+          <div class="grid-4" style="gap:10px;margin-top:10px">
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">600 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 3× headroom<br>高光余量有限</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">1000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 4.9× headroom<br>常见 HDR 母版目标</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">2000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 9.9× headroom<br>高光层次更宽</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">4000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 19.7× headroom<br>接近高峰值创作空间</p>
             </div>
           </div>
         </div>
@@ -1100,7 +1123,7 @@
         <div class="section-head">
           <div>
             <h2>6. HDR 格式与对比：元数据决定“如何适配显示器”</h2>
-            <p>HDR10、HDR10+、Dolby Vision、HLG、HDR Vivid 都可承载 HDR，但它们对 EOTF、元数据、授权、兼容性和场景适配的选择不同。</p>
+            <p>HDR10、HDR10+、Dolby Vision、HLG、HDR Vivid、Eclipsa Video 都可承载 HDR，但它们对 EOTF、元数据、授权、兼容性和场景适配的选择不同。</p>
           </div>
           <div class="note">先切换标签理解每种格式，再用下方表格横向比较。核心判断不是“谁更亮”，而是谁能把创作者意图更稳定地映射到不同峰值、黑位和色域的终端上。</div>
         </div>
@@ -1111,6 +1134,7 @@
           <button type="button" class="tabBtn" data-tab="dv" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-dv">Dolby Vision</button>
           <button type="button" class="tabBtn" data-tab="hlg" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-hlg">HLG</button>
           <button type="button" class="tabBtn" data-tab="vivid" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-vivid">HDR Vivid</button>
+          <button type="button" class="tabBtn" data-tab="eclipsa" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-eclipsa">Eclipsa Video</button>
         </div>
 
         <div class="tab-panel active" id="tab-hdr10" role="tabpanel">
@@ -1171,6 +1195,28 @@
             </div>
           </div>
         </div>
+        <div class="tab-panel" id="tab-eclipsa" role="tabpanel">
+          <h3>Eclipsa Video：围绕参考白和 Headroom 的开放动态元数据</h3>
+          <p>Eclipsa Video 是基于 <b>SMPTE ST 2094-50</b> 的 HDR 视频方案，由 Google、Apple、NBCUniversal 等推动，并由 HDR10+ Technologies 启动相关项目。它不是简单追求更高峰值亮度，而是把“标准内容的参考白”和“参考白以上的 HDR headroom”显式写进适配逻辑，让同一屏幕上的 SDR、网页 UI 与 HDR 视频更稳定地共存。</p>
+          <div class="grid-2" style="gap:12px;margin-top:12px">
+            <div class="card" style="padding:14px">
+              <span class="tag" style="background:var(--gold)">Reference White Anchor</span>
+              <h3 style="font-size:17px;margin-top:8px">先固定“普通白”的锚点</h3>
+              <p style="font-size:13px;margin:0">显示器先知道标准内容、网页背景或普通白应该落在哪个亮度基准上；参考白以上的亮度能力，才留给 HDR 高光。这样 HDR 视频插在网页或系统界面里时，不会把周围 SDR 内容一起拉亮或压暗。</p>
+            </div>
+            <div class="card" style="padding:14px">
+              <span class="tag" style="background:var(--cyan)">Headroom-Adaptive Gain Curves</span>
+              <h3 style="font-size:17px;margin-top:8px">再按设备余量改映射曲线</h3>
+              <p style="font-size:13px;margin:0">创作者可以给视频附带适配曲线。显示端如果 headroom 不足，就按曲线压缩阴影和中间调、保留高光层次；如果屏幕余量更大，就能更接近创作者指定的 HDR 外观。</p>
+            </div>
+          </div>
+          <div class="specs" style="margin-top:12px">
+            <div class="spec"><small>标准基础</small>SMPTE ST 2094-50</div>
+            <div class="spec"><small>核心元数据</small>Reference White Anchor + Headroom-Adaptive Gain Curves</div>
+            <div class="spec"><small>目标场景</small>浏览器、手机、笔记本、混合 SDR/HDR 界面</div>
+            <div class="spec"><small>生态</small>开放 HDR 视频项目，HDR10+ Technologies 负责项目推进</div>
+          </div>
+        </div>
 
         <div class="section-head" id="compare" style="margin-top:42px">
           <div>
@@ -1226,6 +1272,8 @@
           <div class="term"><strong>HLG</strong><p>相对 HDR 传递函数，暗部 gamma、亮部 log，适合广播兼容。</p></div>
           <div class="term"><strong>MaxCLL</strong><p>整段内容中最高像素亮度，用于显示端判断高光映射。</p></div>
           <div class="term"><strong>MaxFALL</strong><p>最大帧平均亮度，反映一帧总体发光负载。</p></div>
+          <div class="term"><strong>参考白</strong><p>HDR 工作流中普通漫反射白或图形白的亮度锚点，BT.2408 推荐 203 nit。</p></div>
+          <div class="term"><strong>Headroom</strong><p>显示峰值亮度高于参考白的余量，用于承载镜面反射、火焰、霓虹等局部高光。</p></div>
           <div class="term"><strong>色彩体积</strong><p>色域面积与亮度范围共同构成，决定“亮而有色”的可表达范围。</p></div>
         </div>
       </div>
@@ -1250,6 +1298,7 @@
             <li><a href="https://www.arib.or.jp/english/html/overview/doc/2-STD-B67v2_0.pdf" target="_blank" rel="noreferrer">ARIB STD-B67</a>：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
             <li><a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA 005-2021 / HDR Vivid</a>：中国超高清视频产业联盟动态元数据 HDR 标准。</li>
             <li><a href="https://hdr10plus.org/" target="_blank" rel="noreferrer">HDR10+ Technologies</a>、<a href="https://professional.dolby.com/tv/dolby-vision/" target="_blank" rel="noreferrer">Dolby Vision</a>、<a href="https://professionalsupport.dolby.com/s/article/Dolby-Vision-Recommended-Source-Formats" target="_blank" rel="noreferrer">Dolby Vision Recommended Source Formats</a>（Profile 8.4 HLG base layer）官方技术资料。</li>
+            <li><a href="https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/" target="_blank" rel="noreferrer">Google Chromium Blog: Bringing a clearer, more consistent HDR video experience to Chrome</a>、<a href="https://github.com/SMPTE/st2094-50" target="_blank" rel="noreferrer">SMPTE ST 2094-50 public repository</a> 与 <a href="https://hdr10plus.org/wp-content/uploads/2026/05/EclipsaVideo-release-final.html" target="_blank" rel="noreferrer">HDR10+ Technologies: Eclipsa Video Program</a>：Eclipsa Video、Reference White Anchor 与 Headroom-Adaptive Gain Curves 资料。</li>
           </ul>
         </div>
       </div>
@@ -2238,6 +2287,7 @@
       { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：ST 2094-10 / Dolby RPU，逐帧映射", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
       { name: "HLG", eotf: "HLG OETF + 可变系统γ", bit: "10/12", metadata: "可无，依靠识别符 / 约定", gamut: "BT.2020", license: "广播开放标准（BBC/NHK/ITU）", use: "直播、体育、新闻、电视播出" },
       { name: "HDR Vivid", eotf: "PQ 或 HLG（双模式）", bit: "常见 10", metadata: "动态：CUVA 005-2021", gamut: "BT.2020 容器", license: "中国超高清产业生态（CUVA）", use: "IPTV、OTT、国产终端、超高清平台" },
+      { name: "Eclipsa Video", eotf: "PQ / ST 2084，围绕显示 headroom 适配", bit: "常见 10 bit HEVC/AVC 工作流", metadata: "动态：SMPTE ST 2094-50，Reference White Anchor 与 Headroom-Adaptive Gain Curves", gamut: "BT.2020 容器，常见 P3 内容", license: "开放 HDR 视频项目，HDR10+ Technologies 认证生态", use: "Chrome / Android / 移动端与混合 SDR-HDR 界面中的 HDR 视频" },
       { name: "SL-HDR1/2/3", eotf: "PQ/HLG 与 SDR 兼容重建", bit: "10", metadata: "动态或静态重建信息（ETSI TS 103 433）", gamut: "BT.709/BT.2020", license: "ETSI/Technicolor/Philips 相关", use: "SDR-HDR 兼容分发" }
     ];
     let sortKey = "name", sortAsc = true;
