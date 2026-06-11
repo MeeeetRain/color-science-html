@@ -217,6 +217,65 @@
       background: var(--cyan);
       box-shadow: 0 0 24px rgba(69,215,238,.35);
     }
+    .prep-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .prep-card {
+      position: relative;
+      min-height: 176px;
+      display: grid;
+      align-content: space-between;
+      gap: 16px;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(69,215,238,.10), rgba(255,255,255,.025) 42%, rgba(255,209,102,.055)),
+        rgba(255,255,255,.035);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .prep-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(69,215,238,.55);
+      background:
+        linear-gradient(135deg, rgba(69,215,238,.16), rgba(255,255,255,.035) 42%, rgba(255,209,102,.09)),
+        rgba(255,255,255,.045);
+    }
+    .prep-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      color: var(--soft);
+      font-size: 16px;
+      font-weight: 820;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .prep-num {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #061014;
+      background: var(--cyan);
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+    .prep-card h3 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+    .prep-card p {
+      margin: 0;
+      max-width: none;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.38;
+    }
 
     .pipeline {
       display: grid;
@@ -523,6 +582,12 @@
       .step { min-height: 160px; }
       .step h3 { font-size: 20px; }
       .step p { font-size: 15px; }
+      .prep-grid { gap: 12px; }
+      .prep-card { min-height: 130px; padding: 16px; gap: 10px; }
+      .prep-top { font-size: 13px; }
+      .prep-num { width: 28px; height: 28px; font-size: 14px; }
+      .prep-card h3 { font-size: 21px; margin-bottom: 5px; }
+      .prep-card p { font-size: 14.5px; line-height: 1.28; }
       .compact-check .card { padding: 16px; }
       .compact-check .tag { min-height: 24px; padding: 3px 10px; margin-bottom: 10px; font-size: 14px; }
       .compact-check h3 { margin-bottom: 10px; }
@@ -570,6 +635,7 @@
       .grid-2,
       .grid-3,
       .grid-4,
+      .prep-grid,
       .compare-bars,
       .pipeline {
         grid-template-columns: 1fr;
@@ -649,12 +715,24 @@
         <h2>课前预习</h2>
       </div>
       <div class="content">
-        <ul class="bullets">
-          <li><a href="hdr-color-science.html">SDR 到 HDR 色彩科学</a></li>
-          <li><a href="scene-display-referred.html">Scene vs Display-referred</a></li>
-          <li><a href="log-gamma.html">为什么相机使用 Log 拍摄</a></li>
-          <li><a href="https://professionalsupport.dolby.com/s/article/Quick-Start-Guide-Dolby-Vision-DaVinci-Resolve-Studio" target="_blank" rel="noreferrer">Dolby Vision Quick Start Guide for DaVinci Resolve Studio</a></li>
-        </ul>
+        <div class="prep-grid">
+          <a class="prep-card" href="hdr-color-science.html">
+            <div class="prep-top"><span>HDR 基础</span><span class="prep-num">1</span></div>
+            <div><h3>SDR 到 HDR 色彩科学</h3><p>PQ、HLG、参考白、动态范围和 HDR 格式。</p></div>
+          </a>
+          <a class="prep-card" href="scene-display-referred.html">
+            <div class="prep-top"><span>工作流</span><span class="prep-num">2</span></div>
+            <div><h3>Scene vs Display-referred</h3><p>区分素材、工作空间、输出变换和显示目标。</p></div>
+          </a>
+          <a class="prep-card" href="log-gamma.html">
+            <div class="prep-top"><span>素材输入</span><span class="prep-num">3</span></div>
+            <div><h3>为什么相机使用 Log 拍摄</h3><p>理解 Log / Gamut、曝光锚点和输入解释。</p></div>
+          </a>
+          <a class="prep-card" href="https://professionalsupport.dolby.com/s/article/Quick-Start-Guide-Dolby-Vision-DaVinci-Resolve-Studio" target="_blank" rel="noreferrer">
+            <div class="prep-top"><span>Dolby Vision</span><span class="prep-num">4</span></div>
+            <div><h3>Dolby Vision Quick Start Guide</h3><p>Resolve Studio 里的 analysis、trim 和 metadata 流程。</p></div>
+          </a>
+        </div>
       </div>
     </section>
 

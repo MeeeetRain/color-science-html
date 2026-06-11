@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>为什么相机使用 Log 拍摄 | 影像色彩与显示技术指南</title>
-  <meta name="description" content="从传感器线性数据、编码位深、18%灰锚点、厂商Log曲线和广色域工作流解释相机为什么使用Log拍摄。">
+  <meta name="description" content="从线性传感器、码值分配、Cineon 渊源、公式逐项解剖、位深与量化、厂商曲线、Log/RAW/Gamma 对比和后期色彩管理，完整讲解相机 Log 编码的设计与使用。">
   <style>
     :root {
       color-scheme: dark;
@@ -50,6 +50,7 @@
       z-index: 50;
       border-bottom: 1px solid var(--line);
       background: rgba(16,18,23,.86);
+      -webkit-backdrop-filter: blur(16px);
       backdrop-filter: blur(16px);
     }
     .nav {
@@ -85,7 +86,7 @@
       margin: 0 auto;
     }
     .hero {
-      min-height: 76vh;
+      min-height: 72vh;
       display: grid;
       align-items: center;
       position: relative;
@@ -109,28 +110,26 @@
       margin-bottom: 12px;
     }
     h1 {
-      max-width: 12ch;
+      max-width: 14ch;
       font-size: clamp(42px, 7vw, 84px);
       line-height: .98;
-      letter-spacing: 0;
       margin: 0 0 20px;
     }
     h2 {
-      font-size: clamp(30px, 4vw, 46px);
+      font-size: clamp(28px, 4vw, 44px);
       line-height: 1.08;
-      letter-spacing: 0;
       margin: 0 0 14px;
     }
     h3 {
-      font-size: 20px;
-      line-height: 1.22;
+      font-size: 19px;
+      line-height: 1.25;
       margin: 0 0 10px;
     }
     p { color: var(--muted); margin: 0 0 14px; }
     .lead {
-      max-width: 760px;
+      max-width: 780px;
       color: #e9eef7;
-      font-size: clamp(18px, 2vw, 22px);
+      font-size: clamp(17px, 2vw, 21px);
     }
     .section-head {
       display: grid;
@@ -145,6 +144,7 @@
       color: #dce8f7;
       background: linear-gradient(90deg, rgba(70,217,232,.10), transparent);
     }
+    .note.gold { border-left-color: var(--gold); background: linear-gradient(90deg, rgba(255,209,102,.10), transparent); }
     .grid-2, .grid-3, .grid-4 {
       display: grid;
       gap: 16px;
@@ -159,6 +159,7 @@
       padding: 20px;
       min-width: 0;
     }
+    .card.accent { border-color: rgba(70,217,232,.35); }
     .tag {
       display: inline-flex;
       align-items: center;
@@ -171,6 +172,10 @@
       font-weight: 760;
       margin-bottom: 10px;
     }
+    .tag.gold { background: rgba(255,209,102,.16); color: var(--gold); }
+    .tag.rose { background: rgba(255,107,122,.16); color: var(--rose); }
+    .tag.lime { background: rgba(169,229,95,.16); color: var(--lime); }
+    .tag.violet { background: rgba(154,140,255,.18); color: var(--violet); }
     .small { color: var(--soft); font-size: 13px; }
     .metric {
       color: var(--ink);
@@ -187,11 +192,10 @@
       background: #0a0d12;
       overflow: hidden;
     }
-    .curve-box {
-      height: 360px;
-      min-height: 0;
-    }
-    canvas { width: 100%; height: 100%; display: block; }
+    .curve-box { height: 400px; min-height: 0; }
+    .codes-box { height: 340px; min-height: 0; }
+    .band-box { height: 300px; min-height: 0; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
     .readout {
       position: absolute;
       right: 12px;
@@ -200,29 +204,35 @@
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: rgba(10,13,18,.82);
+      background: rgba(10,13,18,.85);
       color: #eef5ff;
       font-size: 13px;
       pointer-events: none;
     }
     .controls {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
       margin-bottom: 12px;
     }
-    button, select, input {
-      font: inherit;
-      color: var(--ink);
+    .controls .lbl {
+      font-size: 12px;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 720;
+      margin-right: 2px;
     }
+    button, select, input { font: inherit; color: var(--ink); }
     button {
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: rgba(255,255,255,.07);
-      min-height: 38px;
-      padding: 8px 12px;
+      min-height: 36px;
+      padding: 7px 12px;
       cursor: pointer;
+      font-size: 14px;
     }
     button.active, button[aria-pressed="true"] {
       background: var(--cyan);
@@ -230,9 +240,14 @@
       border-color: transparent;
       font-weight: 780;
     }
+    button.ref[aria-pressed="true"] {
+      background: rgba(255,255,255,.18);
+      color: var(--ink);
+      border-color: rgba(255,255,255,.3);
+    }
     input[type="range"] {
       accent-color: var(--cyan);
-      min-width: 240px;
+      min-width: 220px;
     }
     .formula {
       border: 1px solid rgba(255,255,255,.12);
@@ -241,13 +256,37 @@
       padding: 14px 16px;
       color: #e8edf7;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      line-height: 1.7;
+      font-size: 14px;
+      line-height: 1.8;
       overflow-x: auto;
     }
-    .formula b {
-      color: var(--gold);
-      font-family: inherit;
+    .formula b { color: var(--gold); font-family: inherit; }
+    .formula em { color: var(--cyan); font-style: normal; }
+    .formula .cm { color: var(--soft); font-size: 12.5px; }
+    .anno {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
     }
+    .anno > div {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 12px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      background: rgba(0,0,0,.22);
+      font-size: 13.5px;
+      align-items: baseline;
+    }
+    .anno code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--gold);
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .anno span { color: var(--muted); line-height: 1.6; }
+    .anno span b { color: var(--ink); }
     .flow {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -277,15 +316,39 @@
       padding: 11px 12px;
       text-align: left;
       vertical-align: top;
+      font-size: 14.5px;
     }
     th {
       background: rgba(255,209,102,.92);
       color: #111318;
       font-weight: 820;
+      white-space: nowrap;
     }
     td { color: var(--muted); }
     td b { color: var(--ink); }
-    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    td code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--cyan);
+      background: rgba(70,217,232,.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); }
+    .table-wrap table { min-width: 760px; }
+    .diag-wrap table { min-width: 860px; }
+    .diag-wrap td:first-child { color: var(--rose); font-weight: 600; }
+    .myth {
+      padding: 16px 18px;
+      border: 1px solid rgba(255,107,122,.25);
+      border-left: 3px solid var(--rose);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,107,122,.06), rgba(255,255,255,.02));
+    }
+    .myth .wrong { color: var(--rose); font-weight: 720; font-size: 14.5px; margin: 0 0 6px; }
+    .myth .truth { color: var(--muted); font-size: 14px; line-height: 1.65; margin: 0; }
+    .myth .truth b { color: var(--ink); }
     .source-list {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -298,6 +361,11 @@
       padding: 14px;
       background: rgba(255,255,255,.04);
       color: #e9f6ff;
+      transition: border-color .15s, background .15s;
+    }
+    .source-list a:hover {
+      border-color: rgba(70,217,232,.4);
+      background: rgba(70,217,232,.06);
     }
     .source-list a span {
       display: block;
@@ -305,18 +373,76 @@
       color: var(--soft);
       font-size: 13px;
     }
+    .band-info {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    .band-info b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .steps {
+      counter-reset: step;
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      list-style: none;
+    }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 12px 14px 12px 46px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(70,217,232,.16);
+      color: var(--cyan);
+      font-weight: 780;
+      font-size: 13px;
+    }
+    .steps li b { color: var(--ink); }
+    .steps code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--cyan);
+      background: rgba(70,217,232,.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
     @media (max-width: 920px) {
       .section-head, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
       .flow { grid-template-columns: 1fr; }
       .source-list { grid-template-columns: 1fr; }
+      .anno > div { grid-template-columns: 1fr; gap: 4px; }
     }
     @media (max-width: 560px) {
       section { padding: 54px 16px; }
-      .hero { min-height: 66vh; }
+      .hero { min-height: 62vh; }
       h1 { font-size: 42px; }
-      .canvas-box { min-height: 360px; }
-      .curve-box { height: 320px; }
+      .curve-box { height: 340px; }
+      .codes-box { height: 300px; }
+      .band-box { height: 280px; }
       input[type="range"] { min-width: 100%; }
+      .readout { font-size: 12px; padding: 8px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .source-list a, button { transition: none; }
     }
   </style>
 </head>
@@ -327,10 +453,13 @@
       <a class="brand" href="index.html">← 色彩与显示指南</a>
       <div class="links" id="navLinks">
         <a href="#why">问题</a>
-        <a href="#design">设计逻辑</a>
+        <a href="#math">数学</a>
+        <a href="#bits">位深</a>
         <a href="#curve">曲线</a>
         <a href="#brands">厂商</a>
+        <a href="#vs">Log·RAW·709</a>
         <a href="#workflow">工作流</a>
+        <a href="#myths">误区</a>
         <a href="#sources">来源</a>
       </div>
     </nav>
@@ -341,7 +470,7 @@
       <div class="wrap">
         <div class="eyebrow">Camera Log Encoding</div>
         <h1>为什么相机使用 Log 拍摄</h1>
-        <p class="lead">Log 不是把画面调灰，也不是万能动态范围按钮。它是相机把线性传感器数据压进有限码值时，为高光、阴影、18% 灰和后期调色做出的编码设计。</p>
+        <p class="lead">Log 不是把画面调灰，也不是万能动态范围按钮。它是一个码值分配问题的答案：传感器以线性方式捕获 14–17 档亮度信息，而视频文件只有 10 或 12 bit 可用——Log 曲线决定每一档曝光分到多少个数字，决定哪些层次活下来、哪些被量化抹掉。这一页从数学推导、位深量化、厂商实现到后期色彩管理，把这条曲线讲透。</p>
       </div>
     </section>
 
@@ -349,50 +478,184 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. Log 先解决“码值怎么分”</h2>
-            <p>传感器接收光是近似线性的：亮一档，光量翻倍。如果直接线性记录，最亮的一档会吃掉一半可用码值，而暗部很多档会挤在很小的范围里。Log 的核心，是按“曝光档位”重新分配码值。</p>
+            <h2>1. 问题：线性记录把一半码值给了最亮一档</h2>
+            <p>传感器对光是近似线性的：进光量翻一倍（+1 档），信号数值翻一倍。这个特性在物理上很诚实，但在编码上是灾难——<b>从剪切点往下数，第一档曝光独占全部码值的一半，第二档占四分之一</b>，而摄影师真正在意的中灰和暗部，只能挤在剩下的零头里。</p>
+            <p>下面的演示按"每一档曝光分到多少个码值"统计了四种编码。点击切换，注意线性编码的柱状分布有多么倾斜，而 Log 编码几乎是平的。</p>
           </div>
-          <div class="note">直觉：Log 不是创造更多动态范围，而是让相机已经捕获到的动态范围更适合被 10/12 bit 编码、监看、调色和交换。</div>
+          <div class="note">直觉：Log 不创造动态范围。传感器捕获多少档由硬件决定；Log 决定的是这些档<b>写进文件时的存活质量</b>——尤其是中灰以下的暗部层次。</div>
         </div>
-        <div class="grid-4">
-          <div class="card"><span class="tag">传感器</span><div class="metric">线性</div><p>光量翻倍，信号翻倍。高光天然占用更多数值空间。</p></div>
-          <div class="card"><span class="tag">编码</span><div class="metric">Log</div><p>把每一档曝光分得更均匀，暗部与高光都保留可调空间。</p></div>
-          <div class="card"><span class="tag">锚点</span><div class="metric">18%</div><p>中灰位置是现场曝光、假色、波形和后期还原的共同参照。</p></div>
-          <div class="card"><span class="tag">色域</span><div class="metric">Gamut</div><p>Log 曲线通常必须和对应广色域一起使用，不能只选 Gamma。</p></div>
+
+        <div class="card">
+          <div class="controls">
+            <span class="lbl">编码方式</span>
+            <button class="codesMode active" data-enc="linear" aria-pressed="true">12-bit 线性</button>
+            <button class="codesMode" data-enc="rec709" aria-pressed="false">10-bit Rec.709</button>
+            <button class="codesMode" data-enc="slog3" aria-pressed="false">10-bit S-Log3</button>
+            <button class="codesMode" data-enc="logc4" aria-pressed="false">12-bit LogC4</button>
+          </div>
+          <div class="canvas-box codes-box">
+            <canvas id="codesCanvas" aria-label="每档曝光的码值分配柱状图"></canvas>
+          </div>
+          <p class="small" style="margin:10px 0 0" id="codesSummary"></p>
+        </div>
+
+        <div class="grid-4" style="margin-top:16px">
+          <div class="card"><span class="tag">传感器</span><div class="metric">线性</div><p>光量翻倍，信号翻倍。高光天然占用更多数值空间，暗部档位被压缩到个位数码值。</p></div>
+          <div class="card"><span class="tag">显示 Gamma</span><div class="metric">~2.5 档</div><p>Rec.709 OETF 分配较均匀，但中灰以上约 2.5 档就到 1.0——为直出显示设计，装不下电影机的高光。</p></div>
+          <div class="card"><span class="tag">Log</span><div class="metric">≈ 每档等宽</div><p>纯对数区内每档分到几乎相同的码值。S-Log3 每档约 79 个 10-bit 码值，恒定不变。</p></div>
+          <div class="card"><span class="tag">代价</span><div class="metric">位深</div><p>覆盖的档数越多，每档分到的码值越少。这就是 LogC4 要求 12 bit 的原因（见第 3 节）。</p></div>
         </div>
       </div>
     </section>
 
-    <section id="design">
+    <section id="math">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. 厂商设计 Log 时在取舍什么</h2>
-            <p>各家 Log 曲线看起来都“灰”，但设计目标不一样。ARRI LogC4 重视 12 bit 编码精度和 EI 无关解码；Sony S-Log3 靠近 Cineon 负片扫描习惯；Canon 把 Log 2 和 Log 3 分成不同后期负担；Panasonic V-Log 让 Varicam 与 LUMIX 保持一致；RED 把 Log3G10 放进 IPP2 管线。</p>
+            <h2>2. 数学：从线性、Gamma 到 Log</h2>
+            <p>三种映射对应三种"看待亮度"的方式。理解它们的数学差异，比背任何一条厂商曲线都更有用——因为所有 Log 曲线都是同一套思路加上不同的工程参数。</p>
           </div>
-          <div class="note">判断一个 Log，不要只问“有几档”。更重要的是：中灰落点、黑位处理、高光余量、色域搭配、位深要求和输出变换。</div>
-        </div>
-
-        <div class="flow" aria-label="Log 设计链路">
-          <div class="flow-node"><b>传感器线性数据</b><span>Scene linear</span></div>
-          <div class="flow-node"><b>曝光基准</b><span>18% grey / EI</span></div>
-          <div class="flow-node"><b>Log 编码曲线</b><span>Code allocation</span></div>
-          <div class="flow-node"><b>相机广色域</b><span>Camera gamut</span></div>
-          <div class="flow-node"><b>监看与输出变换</b><span>LUT / CST / ACES</span></div>
+          <div class="note">核心一句话：摄影以"档"（倍率）思考，对数把<b>等比关系变成等差关系</b>——每一档曝光在编码轴上占据同样的宽度。这正是"按档分配码值"的数学实现。</div>
         </div>
 
         <div class="grid-3">
           <div class="card">
-            <h3>中灰不是随便放</h3>
-            <p>18% 灰如果放得高，暗部有更多码值但高光空间变少；放得低，高光更宽但监看更暗。Sony S-Log3 和 Panasonic V-Log 都把中灰放在约 41-42 IRE 附近，Canon Log 3 更低一些。</p>
+            <span class="tag">线性</span>
+            <h3>y = k·x</h3>
+            <p>等比进，等比出。+1 档输出翻倍，所以最亮一档永远占据剩余空间的一半。传感器 ADC、RAW 文件、CG 渲染都工作在这个域——<b>适合计算，不适合存储</b>。</p>
+            <div class="formula">y(2x) = 2·y(x)<br><span class="cm">每档宽度：逐档减半</span></div>
           </div>
           <div class="card">
-            <h3>黑位需要一段“脚趾”</h3>
-            <p>很多曲线在极暗部不是纯对数，而是线性或缓变段。这样能避免数学奇点，也能控制噪声、量化和负值处理。</p>
+            <span class="tag">Gamma（幂函数）</span>
+            <h3>y = x<sup>γ</sup></h3>
+            <p>对数域中的直线：log y = γ·log x。它把暗部"撑开"了（γ&lt;1 时），但每档宽度仍然不相等，且曲线必须在 x=1 处到顶——<b>本质是为显示设备设计的，编码范围有限</b>。</p>
+            <div class="formula">y(2x) = 2<sup>γ</sup>·y(x)<br><span class="cm">每档宽度：仍逐档收缩，但比线性缓和</span></div>
+          </div>
+          <div class="card accent">
+            <span class="tag">Log（对数）</span>
+            <h3>y = m·log₂(x) + k</h3>
+            <p>等比进，<b>等差出</b>。无论这一档在高光还是阴影，输出都增加相同的 m。这让"档"成为编码轴上的天然单位——曝光表、波形、假色、调色都能直接对话。</p>
+            <div class="formula">y(2x) = y(x) + m<br><span class="cm">每档宽度：恒定 m（纯对数区内）</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="card">
+            <h3>为什么对数恰好"贴合"摄影与人眼</h3>
+            <p><b>人眼：</b>韦伯-费希纳定律指出，人对亮度的感知近似与刺激的对数成正比——我们感觉"亮了一点"对应的是亮度的固定<b>百分比</b>变化，不是固定增量。对数编码让每个码值步进对应大致相等的感知步长，量化误差被均匀摊开。</p>
+            <p><b>摄影：</b>光圈、快门、ISO、ND 全部以倍率（档）工作。负片的特性曲线（密度 vs log 曝光）本身就是对数坐标——Log 编码是这个百年传统的数字延续。</p>
+            <p><b>信号：</b>传感器光子散粒噪声的标准差约与信号的平方根成正比，亮部"天生"有更多噪声掩盖量化误差；对数分配把码值从噪声充裕的高光挪给干净的中暗部，恰好和噪声分布互补。</p>
           </div>
           <div class="card">
-            <h3>广色域才是另一半</h3>
-            <p>Log 负责亮度编码，Gamut 负责颜色边界。S-Log3 通常配 S-Gamut3.Cine，LogC4 配 AWG4，V-Log 配 V-Gamut，Log3G10 配 REDWideGamutRGB。</p>
+            <h3>Cineon：所有现代 Log 的祖先</h3>
+            <p>1990 年代初，Kodak 的 Cineon 系统要把胶片负片扫描成数字文件。胶片密度本身就是对数量，于是 Cineon 直接采用 <b>10 bit 对数编码打印密度</b>：黑位放在 CV 95（保留负值余量），90% 白放在 CV 685（上方留高光肩部），每 0.002 密度一个码值，约 <b>90 个码值/档</b>。</p>
+            <p>这套"95 / 685 / 10-bit log"的骨架影响深远：Sony 官方文档明确说 S-Log3 沿用 Cineon 式工作流习惯；DPX 文件格式、Resolve 里的 Cineon Film Log 解码，都源自这里。可以说现代相机 Log = Cineon 思路 + 各家传感器参数。</p>
+            <div class="formula">CV = 685 + 300·log₁₀(x / 0.9)<br><span class="cm">x = 场景反射率（0.9 = 90% 白）；300 CV/十倍 ≈ 90 CV/档</span></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h3>公式解剖 ①：Sony S-Log3（10 bit）</h3>
+          <p>S-Log3 是公开公式中最容易读懂的一条，每个常数都有明确职责：</p>
+          <div class="formula">
+            y = ( <b>420</b> + log₁₀( (x + <em>0.01</em>) / (0.18 + <em>0.01</em>) ) × <b>261.5</b> ) / 1023&nbsp;&nbsp;<span class="cm">x ≥ 0.01125</span><br>
+            y = ( x × (171.21 − 95) / 0.01125 + <b>95</b> ) / 1023&nbsp;&nbsp;<span class="cm">x &lt; 0.01125（线性脚趾段）</span>
+          </div>
+          <div class="anno">
+            <div><code>420</code><span><b>中灰锚点。</b>场景 18% 灰精确落在 10-bit 码值 420（约 41% 信号电平）。波形监视器上的 S-Log3 曝光参考线就是它。</span></div>
+            <div><code>261.5</code><span><b>斜率 = 码值分配密度。</b>每十倍曝光 261.5 个码值，换算成档：261.5 × log₁₀2 ≈ <b>79 CV/档</b>，全范围恒定。这一个数就决定了"每档质量"。</span></div>
+            <div><code>+0.01</code><span><b>偏置（toe 控制）。</b>给输入加一个小常数，避免 log(0) = −∞，同时压缓极暗部的斜率，防止把传感器底噪放大记录。</span></div>
+            <div><code>95</code><span><b>黑位码值。</b>直接继承 Cineon 的 CV 95：黑不放在 0，给负向噪声和后期留缓冲。</span></div>
+            <div><code>x &lt; 0.01125</code><span><b>线性脚趾段。</b>极暗部改用直线连接到黑位，与对数段在拼接点斜率连续——纯对数在 0 附近会无限陡，必须截断。</span></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h3>公式解剖 ②：ARRI LogC4（12 bit）</h3>
+          <p>LogC4 是更现代的设计：以 2 为底（直接对应档位）、EI 无关（任何曝光指数下解码公式相同）、面向 17 档级传感器：</p>
+          <div class="formula">
+            y = ( ( log₂( <b>a</b>·x + <em>64</em> ) − 6 ) / <b>14</b> ) · b + c<br>
+            <span class="cm">a = (2¹⁸ − 16) / 117.45 ≈ 2231.8&nbsp;&nbsp;b = (1023 − 95)/1023 ≈ 0.907&nbsp;&nbsp;c = 95/1023 ≈ 0.0928</span><br>
+            <span class="cm">x &lt; t 时使用线性段 (x − t)/s，与对数段在 t 处值与斜率均连续</span>
+          </div>
+          <div class="anno">
+            <div><code>log₂</code><span><b>以 2 为底。</b>x 每翻一倍（+1 档），log₂ 项加 1——档位直接成为公式的内部坐标。</span></div>
+            <div><code>/ 14</code><span><b>14 档对数窗口。</b>把 14 档的 log₂ 跨度归一化到 0–1。每档占据 b/14 ≈ 6.5% 的信号范围，即 12-bit 下约 <b>265 CV/档</b>。</span></div>
+            <div><code>+64, −6</code><span><b>黑锚点。</b>x = 0 时 log₂(64) = 6，减 6 后恰好为 0——纯黑精确落在编码起点，无需截断负数。</span></div>
+            <div><code>a</code><span><b>传感器满量程缩放。</b>把相机线性信号的最大值对齐到编码窗口顶端，18% 灰则落在约 0.278（27.8%）。</span></div>
+            <div><code>b, c</code><span><b>Cineon 式装配。</b>把结果装进"黑位 95、满程 1023"的传统框架——又见 95。</span></div>
+          </div>
+          <p class="small" style="margin-top:10px">对比一下斜率就明白位深要求的来源：LogC4 覆盖 14 档对数窗口，折算 10-bit 只有约 66 CV/档，低于 S-Log3 的 79——所以 ARRI 明确要求 LogC4 至少以 12 bit 编码用于采集与交换（12-bit 下为 265 CV/档）。</p>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="card">
+            <h3>为什么所有 Log 都有"脚趾"（toe）</h3>
+            <p>纯对数函数有两个工程缺陷：x→0 时输出趋向 −∞（数学奇点）；且在极暗部斜率无限大，意味着<b>把传感器读出噪声和暗电流放大后写进文件</b>。所以每条实用曲线都在暗部做处理：S-Log3 和 V-Log 用线性段拼接，LogC4 用线性段加精确的连续性约束，Log3G10 给输入加 0.01 偏置后允许负值线性延伸。</p>
+            <p>拼接点的选择是设计决策：拼得高，暗部更"安全"但牺牲阴影层次；拼得低，阴影信息多但噪声占码值。</p>
+          </div>
+          <div class="card">
+            <h3>为什么各家中灰落点不同</h3>
+            <p>中灰放哪里 = 高光与暗部的预算分配。S-Log3 把 18% 灰放在 41%，灰上约 7.7 档到达编码上限（受 Cineon 习惯影响，暗部预算充足）；LogC4 放在 27.8%，灰上留出更多编码空间给 ALEXA 35 的高光；Log3G10 放在 1/3，明确按"灰上 10 档到 1.0"设计。</p>
+            <p>这就是为什么<b>不能拿同一条监看 LUT 通吃不同机型</b>：中灰锚点不同，LUT 输入假设就不同，画面整体明暗立即错位。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bits">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>3. 位深与量化：banding 从哪里来</h2>
+            <p>把连续的光编码成离散码值必然丢信息；问题是丢在哪。下面的演示用同一条"阴影渐变"（中灰下 6 档到中灰）分别走线性和 S-Log3 编码，量化到指定位深后再像后期一样提亮——<b>线性编码的暗部断层会直接可见</b>。</p>
+          </div>
+          <div class="note">操作：选位深 → 拖"后期提亮"滑块。8-bit 线性在提亮 2 档后明显碎裂成色阶；同位深的 Log 依然平滑。这就是"8 bit 拍 Log 风险高、8 bit 拍线性根本不可行"的原因。</div>
+        </div>
+
+        <div class="card">
+          <div class="controls">
+            <span class="lbl">量化位深</span>
+            <button class="bandBits" data-bits="8" aria-pressed="true">8 bit</button>
+            <button class="bandBits" data-bits="10" aria-pressed="false">10 bit</button>
+            <button class="bandBits" data-bits="12" aria-pressed="false">12 bit</button>
+            <span class="lbl" style="margin-left:14px">后期提亮</span>
+            <input id="liftSlider" type="range" min="0" max="4" step="0.1" value="2">
+            <strong id="liftReadout">+2.0 档</strong>
+          </div>
+          <div class="canvas-box band-box">
+            <canvas id="bandCanvas" aria-label="线性与Log编码量化对比渐变条"></canvas>
+          </div>
+          <div class="band-info">
+            <span>线性编码在此渐变内可用码值：<b id="bandLinearLevels">—</b></span>
+            <span>S-Log3 编码在此渐变内可用码值：<b id="bandLogLevels">—</b></span>
+            <span class="small">渐变范围：18% 灰下 6 档 → 18% 灰；显示经 Rec.709 OETF</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="card">
+            <h3>每档码值：主要曲线横向对比</h3>
+            <div class="table-wrap">
+              <table style="min-width:0">
+                <thead><tr><th>曲线</th><th>容器</th><th>纯对数区每档码值</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Cineon</b></td><td>10 bit</td><td>≈ 90 CV/档</td></tr>
+                  <tr><td><b>S-Log3</b></td><td>10 bit</td><td>≈ 79 CV/档</td></tr>
+                  <tr><td><b>V-Log</b></td><td>10 bit</td><td>≈ 74 CV/档</td></tr>
+                  <tr><td><b>Log3G10</b></td><td>10 bit</td><td>≈ 69 CV/档（高位区）</td></tr>
+                  <tr><td><b>LogC4</b></td><td><b>12 bit</b></td><td>≈ 265 CV/档（折算 10-bit 仅 ≈ 66）</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small" style="margin-top:10px">规律：曲线想覆盖的档数越多，每档分到的码值越少。Cineon 只需服务负片密度域所以最阔绰；LogC4 要装下 17 档级传感器，10 bit 已经不够体面，必须上 12 bit。</p>
+          </div>
+          <div class="card">
+            <h3>位深的实用判断</h3>
+            <p><b>8 bit（256 级）：</b>拍 Log 时每档只剩约 20 个码值，调色一动就 banding。8 bit 机型直接拍显示 Gamma（709/HLG）反而更稳。</p>
+            <p><b>10 bit（1024 级）：</b>当前专业视频的主流底线。S-Log3、V-Log、Log3G10 都按 10 bit 设计，正常曝光 + 适度调色是安全的。</p>
+            <p><b>12 bit（4096 级）：</b>LogC4 的最低要求，也是大幅度重打光式调色的舒适区。ARRI 明确说明 10 bit 的 LogC4 不应用于归档或交换。</p>
+            <p><b>注意色度抽样：</b>位深之外，4:2:0 对 Log 调色同样致命——绿幕、肤色微调需要 4:2:2 以上。位深管亮度阶梯，抽样管颜色分辨率，两个都要看。</p>
           </div>
         </div>
       </div>
@@ -402,19 +665,23 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. 互动看：一档曝光对应多少码值</h2>
-            <p>拖动曝光档位，观察不同 Log 曲线如何把相对于 18% 灰的场景亮度映射到视频信号。图中 ARRI LogC4、Sony S-Log3、Panasonic V-Log 使用公开公式；RED Log3G10 用官方“18% 灰约 1/3、灰上 10 档到 1.0”的锚点做示意曲线。</p>
+            <h2>4. 互动曲线：一档曝光对应多少信号</h2>
+            <p>拖动曝光档位或在图上滑动，读取每条曲线把"相对 18% 灰的场景亮度"映射到的信号电平。四条厂商曲线（ARRI LogC4、Sony S-Log3、Panasonic V-Log、RED Log3G10）均使用官方公开公式；可叠加 Rec.709 OETF 和 Cineon 作参照。</p>
           </div>
-          <div class="note">横轴是相对 18% 灰的曝光档位；纵轴是归一化视频信号，不是最终显示亮度。</div>
+          <div class="note">读图要点：① 各曲线在 0 档（18% 灰）处的落点就是各家的中灰锚点；② 纯对数区里曲线是直线——斜率即每档码值；③ Rec.709 在 +2.5 档左右触顶剪切，而 Log 曲线还远未用完。</div>
         </div>
 
         <div class="card">
           <div class="controls">
+            <span class="lbl">曲线</span>
             <button class="curveMode active" data-mode="all" aria-pressed="true">多曲线对比</button>
-            <button class="curveMode" data-mode="arri" aria-pressed="false">ARRI LogC4</button>
-            <button class="curveMode" data-mode="sony" aria-pressed="false">Sony S-Log3</button>
-            <button class="curveMode" data-mode="panasonic" aria-pressed="false">Panasonic V-Log</button>
-            <button class="curveMode" data-mode="red" aria-pressed="false">RED Log3G10</button>
+            <button class="curveMode" data-mode="arri" aria-pressed="false">LogC4</button>
+            <button class="curveMode" data-mode="sony" aria-pressed="false">S-Log3</button>
+            <button class="curveMode" data-mode="panasonic" aria-pressed="false">V-Log</button>
+            <button class="curveMode" data-mode="red" aria-pressed="false">Log3G10</button>
+            <span class="lbl" style="margin-left:10px">参照</span>
+            <button class="ref" id="refRec709" aria-pressed="false">+ Rec.709 OETF</button>
+            <button class="ref" id="refCineon" aria-pressed="false">+ Cineon</button>
           </div>
           <div class="controls">
             <label>曝光档位 <input id="stopSlider" type="range" min="-8" max="8" step="0.1" value="0"></label>
@@ -422,28 +689,21 @@
           </div>
           <div class="canvas-box curve-box">
             <canvas id="curveCanvas" aria-label="Log 曲线对比"></canvas>
-            <div class="readout" id="curveReadout">移动鼠标或拖动滑块读取曲线</div>
+            <div class="readout" id="curveReadout">移动指针或拖动滑块读取曲线</div>
           </div>
+          <p class="small" style="margin-top:10px">信号 % 为满量程归一化值，CV 为 10-bit 数据电平（信号 × 1023）。LogC4 实际应在 12-bit 容器中看待（CV × 4）。广播 IRE 与数据电平的换算：IRE ≈ (CV − 64) / 876 × 100。</p>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
             <h3>ARRI LogC4 的关键变化</h3>
-            <p>LogC4 是 LogC3 的后继，用于 ARRI REVEAL / ALEXA 35 等流程。它的正式曲线是 EI 无关的，解码不需要根据拍摄 EI 换函数；ARRI 也明确指出 LogC4 以 12 bit 编码为最低量化目标，10 bit 不应用于归档或交换。</p>
-            <div class="formula">
-              <b>LogC4 编码核心：</b><br>
-              E' = ((log2(a · E + 64) - 6) / 14) · b + c<br>
-              其中 E 是相对场景线性值，18% 灰约映射到 0.278。
-            </div>
+            <p>LogC4 是 LogC3 的后继，服务 ARRI REVEAL 色彩科学与 ALEXA 35 / ALEXA 265。两个工程决定值得注意：<b>EI 无关</b>——LogC3 的编码随 EI 改变（每个 EI 一条曲线），LogC4 任何 EI 下编码解码公式唯一，LUT 和 IDT 管理大幅简化；<b>12 bit 最低量化</b>——因为 14 档对数窗口摊薄了每档码值。LogC4 配套色域为 ARRI Wide Gamut 4（AWG4，D65 白点）。</p>
+            <p class="small">18% 灰 → 信号 27.8%；不要把 LogC3 的 LUT 套在 LogC4 素材上，两者中灰相差约 11 个百分点。</p>
           </div>
           <div class="card">
             <h3>S-Log3 的设计特征</h3>
-            <p>Sony 官方技术资料把 S-Log3 描述为更接近“纯 Log / Cineon 工作流”的曲线：中灰比 S-Log2 更亮，暗部 toe 减少，高光动态范围比 S-Log2 延展约 1.5 档。S-Gamut3.Cine 则略宽于 DCI-P3，便于影视调色。</p>
-            <div class="formula">
-              <b>S-Log3 公开公式锚点：</b><br>
-              18% 灰 → 约 41% / 10bit CV 420<br>
-              90% 白 → 约 61% / 10bit CV 598
-            </div>
+            <p>Sony 官方资料把 S-Log3 描述为贴近"Cineon / 负片扫描"习惯的曲线：相比 S-Log2，中灰更亮（41% vs 32%）、暗部脚趾更短、向高光延展约 1.5 档，整体更接近纯对数。搭配色域 S-Gamut3.Cine 比 DCI-P3 略宽，便于常规影视调色；S-Gamut3 则更接近传感器原生色域，留给深度色彩管理。</p>
+            <p class="small">18% 灰 → CV 420（41%）；90% 白 → CV 598（61 IRE）；黑位 → CV 95。</p>
           </div>
         </div>
       </div>
@@ -453,10 +713,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. 各家 Log 不是同一种“灰”</h2>
-            <p>不同厂商的 Log 不是随意调一条低反差曲线，而是围绕传感器、位深、监看 LUT、输出变换和自家色彩科学做的一整套设计。</p>
+            <h2>5. 各家 Log 不是同一种"灰"</h2>
+            <p>不同厂商的 Log 围绕自家传感器、位深、监看 LUT、输出变换和色彩科学整体设计。选错任何一半（Gamma 或 Gamut），后面全错。</p>
           </div>
-          <div class="note">实操时要同时选择 Input Gamma 和 Input Color Space。只写“S-Log3”或“C-Log3”还不够，通常还要写 S-Gamut3.Cine、Cinema Gamut、V-Gamut、AWG4 等。</div>
+          <div class="note">实操规则：输入变换必须<b>同时</b>指定 Gamma 和 Color Space。只写 "S-Log3" 不完整——是 S-Gamut3 还是 S-Gamut3.Cine，调色结果不同。</div>
         </div>
 
         <div class="table-wrap">
@@ -474,47 +734,128 @@
               <tr>
                 <td><b>ARRI</b></td>
                 <td>LogC4 + ARRI Wide Gamut 4</td>
-                <td>ALEXA 35 / 265 的 REVEAL 色彩科学；EI 无关解码；面向 12 bit 编码精度。</td>
-                <td>18% 灰约 0.278；AWG4 白点 D65。</td>
-                <td>不要把 LogC3 LUT 直接套到 LogC4；需使用对应 LUT、CST 或 ACES IDT。</td>
+                <td>ALEXA 35 / 265 的 REVEAL 色彩科学；EI 无关解码；14 档对数窗口，面向 12 bit。</td>
+                <td>18% 灰 → 27.8%；黑位 CV 95（12-bit 域为 380）。</td>
+                <td>LogC3 与 LogC4 不通用；需配对应 LUT、CST 或 ACES IDT。</td>
               </tr>
               <tr>
                 <td><b>Sony</b></td>
                 <td>S-Log3 + S-Gamut3.Cine / S-Gamut3</td>
-                <td>贴近 Cineon / 负片扫描式 Log；S-Gamut3.Cine 更适合常规调色，S-Gamut3 更接近相机原生色域。</td>
-                <td>18% 灰约 41% / CV 420。</td>
-                <td>8 bit 机型使用 S-Log3 容易暴露量化与噪声问题；建议至少 10 bit。</td>
+                <td>Cineon 式纯 Log；每档约 79 CV；S-Gamut3.Cine 面向常规调色。</td>
+                <td>18% 灰 → CV 420 / 41%；90% 白 → CV 598。</td>
+                <td>8 bit 机型拍 S-Log3 量化余量小；建议 10 bit 起，曝光偏亮保护暗部。</td>
               </tr>
               <tr>
                 <td><b>Canon</b></td>
                 <td>Canon Log 2 / Log 3 + Cinema Gamut</td>
-                <td>Log 2 偏最大动态范围与暗部层次；Log 3 偏易用性和高光延展。</td>
-                <td>Canon 官方资料按 10% 或 18% 灰给出曲线与相对档位；Log 3 常见中灰约 34%。</td>
-                <td>Log 2 后期空间大但暗部噪声更明显；Log 3 更适合一般制作。</td>
+                <td>Log 2 偏最大动态范围与暗部层次；Log 3 偏易用与高光延展。</td>
+                <td>官方按 10% / 18% 灰给出锚点；Log 3 常见中灰约 34%。</td>
+                <td>Log 2 后期空间大但暗部噪声更明显；一般制作 Log 3 更稳。</td>
               </tr>
               <tr>
                 <td><b>Panasonic</b></td>
                 <td>V-Log + V-Gamut</td>
-                <td>源自 VariCam，强调跨机型一致的 14+ 档宽容度与 V709 监看/转换。</td>
-                <td>18% 灰约 42 IRE / 10bit CV 433；90% 白约 61 IRE。</td>
-                <td>V-Log L 与完整 V-Log 可编码范围不同，调色时先确认机型和元数据。</td>
+                <td>源自 VariCam，跨机型一致；纯对数区每档约 74 CV；V709 监看变换。</td>
+                <td>18% 灰 → CV 433 / 42 IRE；90% 白 → 61 IRE。</td>
+                <td>V-Log L（GH/S 系微单）与完整 V-Log 编码范围不同，先确认机型。</td>
               </tr>
               <tr>
                 <td><b>RED</b></td>
-                <td>REDWideGamutRGB + Log3G10</td>
-                <td>IPP2 把 RAW 开发、Log 工作空间、输出变换分层；Log3G10 以灰上 10 档作为上限设计。</td>
-                <td>18% 灰约 1/3；灰上 10 档接近 1.0。</td>
-                <td>调色时区分 Legacy 与 IPP2；输出变换不是普通 LUT 装饰，而是显示适配的一部分。</td>
+                <td>Log3G10 + REDWideGamutRGB</td>
+                <td>IPP2 三段式管线（RAW 开发 → Log 工作空间 → 输出变换）；按"灰上 10 档"设计。</td>
+                <td>18% 灰 → 1/3（33.3%）；灰上 10 档 → 1.0。</td>
+                <td>区分 Legacy 与 IPP2；输出变换是显示适配的一部分，不是装饰 LUT。</td>
               </tr>
               <tr>
                 <td><b>Blackmagic</b></td>
-                <td>Blackmagic Film / Gen 5 或 DaVinci Wide Gamut Intermediate</td>
-                <td>围绕 Resolve 色彩管理和 BRAW 元数据工作；常把相机 Log 转到宽色域中间空间再调色。</td>
-                <td>不同机型与 Gen 版本不同。</td>
-                <td>确认 Gen 4 / Gen 5、BMD Film 与 DWG Intermediate，别只看“Film”字样。</td>
+                <td>BMD Film Gen 5 / DaVinci Wide Gamut</td>
+                <td>围绕 Resolve 色彩管理与 BRAW 元数据；常转入 DWG/Intermediate 再调色。</td>
+                <td>不同机型与 Gen 版本各异。</td>
+                <td>确认 Gen 4 / Gen 5、BMD Film 与 DWG Intermediate，别只看 "Film" 字样。</td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="vs">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>6. Log vs RAW vs 显示 Gamma：三种记录哲学</h2>
+            <p>这三者不是"画质从高到低"，而是<b>把哪些决定烘焙进文件、把哪些留给后期</b>的三种取舍。Log 的位置很特别：它已经是"显像后"的视频，却尽力保留"显像前"的调整空间。</p>
+          </div>
+          <div class="note">一个判断框架：问自己"后期需要反悔什么"。要反悔白平衡和 ISO → RAW；要反悔影调与色彩风格 → Log；什么都不反悔 → 直接拍显示 Gamma。</div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>维度</th>
+                <th>RAW</th>
+                <th>Log（10/12 bit）</th>
+                <th>显示 Gamma（709 / HLG）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>数据形态</b></td>
+                <td>传感器马赛克线性数据，未去拜耳</td>
+                <td>已去拜耳的三通道视频，亮度经 Log 编码进专业编解码器</td>
+                <td>已烘焙显示曲线与色域的成品视频</td>
+              </tr>
+              <tr>
+                <td><b>白平衡 / ISO</b></td>
+                <td>多为元数据，后期近乎无损改动</td>
+                <td>已烘焙进画面，后期只能近似补偿</td>
+                <td>完全烘焙，改动即画质损失</td>
+              </tr>
+              <tr>
+                <td><b>位深与体积</b></td>
+                <td>12–16 bit，体积最大（压缩 RAW 可缓解）</td>
+                <td>10–12 bit，ProRes / XAVC / BRAW 级体积</td>
+                <td>8–10 bit，体积最小</td>
+              </tr>
+              <tr>
+                <td><b>动态范围存留</b></td>
+                <td>传感器全部（受 RAW 压缩比影响极小）</td>
+                <td>接近传感器全部——前提是曝光正确</td>
+                <td>受显示曲线剪切，高光最先丢</td>
+              </tr>
+              <tr>
+                <td><b>后期成本</b></td>
+                <td>最高：RAW 开发 + 色彩管理 + 调色</td>
+                <td>中：色彩管理 + 调色</td>
+                <td>最低：可直接剪辑出片</td>
+              </tr>
+              <tr>
+                <td><b>适合场景</b></td>
+                <td>电影、广告、重后期、视效素材</td>
+                <td>绝大多数专业视频制作的甜点区</td>
+                <td>新闻、直播、活动记录、快速交付</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-3" style="margin-top:16px">
+          <div class="card">
+            <span class="tag gold">边界情况</span>
+            <h3>"部分开发"的 RAW</h3>
+            <p>BRAW 和 ProRes RAW 在机内做了部分处理（降噪、部分去拜耳运算），严格说是"半开发 RAW"。白平衡 / ISO 仍以元数据方式可调，但不要按"完全未处理"理解它们。</p>
+          </div>
+          <div class="card">
+            <span class="tag gold">容易混淆</span>
+            <h3>RAW 里也有 Log</h3>
+            <p>很多压缩 RAW 在<b>存储层</b>内部使用对数或类对数量化来省位深——这与"拍 Log 视频"是两回事。前者是文件内部实现，后者是交付给后期的色彩空间约定。</p>
+          </div>
+          <div class="card">
+            <span class="tag gold">实用结论</span>
+            <h3>Log 是性价比拐点</h3>
+            <p>从显示 Gamma 升级到 Log，调色空间的提升立竿见影；从 Log 升级到 RAW，提升集中在白平衡反悔权与极端调色场景。预算和存储有限时，<b>10 bit Log + 正确曝光</b>是收益最大的一档投入。</p>
+          </div>
         </div>
       </div>
     </section>
@@ -523,43 +864,149 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. 正确使用 Log 的流程</h2>
-            <p>Log 的价值在于保留场景信息，但它要求更严格的流程：曝光不能只看“画面灰不灰”，监看要加正确变换，后期要先做技术转换，再做创意调色。</p>
+            <h2>7. 后期工作流：把 Log 正确"翻译"回去</h2>
+            <p>Log 素材的一切价值都要靠正确的色彩管理兑现。这一节讲清三个工具的本质区别（CST / LUT / ACES）、Resolve 的两种标准做法，以及一张常见故障诊断表。</p>
           </div>
-          <div class="note">Log 工作流不是“拍灰，再加对比度”。它应该是：识别输入 → 转换到工作空间 → 调色 → 输出到目标显示。</div>
+          <div class="note">心智模型：Log 文件是"加密"的场景信息，输入变换是解密钥匙——<b>钥匙必须与拍摄时的 Gamma + Gamut 完全对应</b>，差一点整条链路都歪。</div>
         </div>
 
-        <div class="grid-4">
+        <div class="grid-3">
           <div class="card">
-            <span class="tag">拍摄</span>
-            <h3>按中灰和高光曝光</h3>
-            <p>用波形、假色、斑马或监看 LUT 判断。中灰落点要按曲线查官方值，高光不要靠“后期能拉回来”赌博。</p>
+            <span class="tag">CST / 色彩空间变换</span>
+            <h3>解析公式，精确可逆</h3>
+            <p>Color Space Transform 用厂商公式做数学变换，<b>没有网格插值误差</b>，超出范围的值可保留（取决于设置），方向可逆。Resolve 的 CST 节点和色彩管理内部都是这种方式。</p>
+            <p class="small">适合：技术转换（Log→工作空间→交付空间）的全部环节。</p>
           </div>
           <div class="card">
-            <span class="tag">监看</span>
-            <h3>使用官方或可信 LUT</h3>
-            <p>现场监看 LUT 是显示变换，不应该改变记录素材本身。给导演和摄影看正常画面，同时保留 Log 原始记录。</p>
+            <span class="tag">LUT / 查找表</span>
+            <h3>采样网格，近似固化</h3>
+            <p>LUT 把变换烘焙成 17³/33³/65³ 网格点，运行时插值。<b>输入域之外的值会被剪切</b>，精度受网格密度限制，且不可逆。优势是能固化任意复杂的创意外观、跨软硬件交换（监视器、交换给剪辑）。</p>
+            <p class="small">适合：现场监看、创意外观分发；不适合：当作万能技术转换。</p>
           </div>
           <div class="card">
-            <span class="tag">后期</span>
-            <h3>先技术转换</h3>
-            <p>在 Resolve、ACES 或 OCIO 中指定正确 Input Gamma / Gamut。确认 LogC4、S-Log3、V-Log 等输入没有选错。</p>
-          </div>
-          <div class="card">
-            <span class="tag">输出</span>
-            <h3>按目标显示交付</h3>
-            <p>Rec.709、P3、PQ HDR、HLG 的输出变换不同。最终画面好不好，取决于输出端适配，而不是 Log 曲线本身。</p>
+            <span class="tag">ACES</span>
+            <h3>标准化框架，不是工具</h3>
+            <p>ACES 规定一条固定管线：相机素材经 <b>IDT</b> 进入场景线性的 ACES2065-1（调色常用 ACEScct），输出经 <b>RRT + ODT</b> 适配显示。价值在于多机型统一、跨机构交换和长期归档，而非"更好看"。</p>
+            <p class="small">适合：多机位混拍、视效协作、需要归档交换的项目。</p>
           </div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>什么时候适合拍 Log</h3>
-            <p>高反差场景、广告/短片/电影、需要风格化调色、需要与多机位色彩管理统一时，Log 很有价值。</p>
+            <h3>Resolve 做法 A：自动色彩管理（推荐起点）</h3>
+            <ol class="steps">
+              <li>项目设置 → 色彩科学选 <code>DaVinci YRGB Color Managed</code>，模式选 <code>DaVinci Wide Gamut Intermediate</code>。</li>
+              <li>让 Resolve 按剪辑元数据<b>自动识别</b>每条素材的输入空间；无元数据的素材，右键 → <code>Input Color Space</code> 手动指定（Gamma 和 Gamut 一起选）。</li>
+              <li>时间线在宽色域中间空间调色；输出色彩空间按交付目标设 <code>Rec.709 Gamma 2.4</code> / P3 / PQ。</li>
+              <li>检查点：拉一条曝光正常的素材，中灰应落在波形约 38–45%（取决于输出曲线），肤色不偏——否则九成是输入空间错了。</li>
+            </ol>
           </div>
           <div class="card">
-            <h3>什么时候不要硬拍 Log</h3>
-            <p>8 bit 低码率、极低照度、快速交付、没有监看 LUT 或没有后期转换能力时，普通视频 Gamma 或 HLG 可能更稳。</p>
+            <h3>Resolve 做法 B：手动 CST 节点（精确可控）</h3>
+            <ol class="steps">
+              <li>保持项目为 <code>DaVinci YRGB</code>（非托管），时间线色彩空间设为 DWG/Intermediate。</li>
+              <li>每条素材第一个节点放 CST：<code>输入 = 素材实际 Gamma/Gamut</code> → <code>输出 = DWG / Intermediate</code>。</li>
+              <li>中间节点自由调色（此时工作在统一的宽色域空间，工具行为跨机型一致）。</li>
+              <li>节点链<b>最末端</b>放输出 CST：<code>DWG → Rec.709 / Gamma 2.4</code>（或目标交付空间），并打开 Tone/Gamut Mapping 处理超范围值。</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h3>故障诊断表：症状 → 原因 → 修复</h3>
+          <div class="table-wrap diag-wrap">
+            <table>
+              <thead><tr><th>症状</th><th>最可能原因</th><th>修复</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>画面整体发灰、对比饱和都低</td>
+                  <td>直接在看 Log 原始信号，没有做任何输出/监看变换</td>
+                  <td>启用色彩管理或在末端加 CST/官方 LUT；Log 素材"看起来灰"是正常的中间态</td>
+                </tr>
+                <tr>
+                  <td>暗部死黑、高光断层、肤色过饱和</td>
+                  <td>双重变换：素材已在机内烘焙了 709（或已带 LUT），又叠了一次 Log→709</td>
+                  <td>用示波器确认素材实际状态（Log 素材波形通常集中在 20–60%），删掉多余的一次变换</td>
+                </tr>
+                <tr>
+                  <td>整体明暗错位，波形整体偏高或偏低</td>
+                  <td>输入 Gamma 选错：S-Log2 当 S-Log3、LogC3 当 LogC4、V-Log L 当 V-Log</td>
+                  <td>核对拍摄元数据和场记，按机型与固件确认实际记录曲线</td>
+                </tr>
+                <tr>
+                  <td>亮度正常但颜色不对，红绿色相偏移</td>
+                  <td>Gamut 选错：只对了 Gamma，Color Space 用了默认或别家</td>
+                  <td>输入变换同时指定 Gamut（S-Gamut3.Cine、AWG4、V-Gamut、RWG 等）</td>
+                </tr>
+                <tr>
+                  <td>暗部一提亮就出现条带 banding</td>
+                  <td>8 bit（或重压缩）记录的 Log，或严重曝光不足后强提</td>
+                  <td>至少 10 bit 记录；现场按厂商建议曝光（多数 Log 建议偏亮 0.5–1 档保护暗部）</td>
+                </tr>
+                <tr>
+                  <td>套用别人的 LUT 完全不对劲</td>
+                  <td>LUT 的输入假设不同：机型、Gamma、Gamut 或电平范围（Legal/Full）不匹配</td>
+                  <td>查明 LUT 期望的输入空间，先用 CST 把素材转换到该空间，再挂 LUT</td>
+                </tr>
+                <tr>
+                  <td>高光一调就剪切，信息找不回来</td>
+                  <td>LUT 或输出变换放在节点链太靠前，后续调整工作在被剪切的显示域</td>
+                  <td>曝光、白平衡等"场景域"调整放在输出变换之前；LUT 永远放链路末端</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid-4" style="margin-top:16px">
+          <div class="card">
+            <span class="tag lime">拍摄</span>
+            <h3>按锚点曝光</h3>
+            <p>用波形对中灰锚点（S-Log3 看 41%、V-Log 看 42%、LogC4 看 28%），高光看斑马/假色。不要赌"后期拉得回来"。</p>
+          </div>
+          <div class="card">
+            <span class="tag lime">监看</span>
+            <h3>LUT 只管显示</h3>
+            <p>现场监看 LUT 是显示变换，不写入素材。给导演看正常画面，机器记录 Log 原文。</p>
+          </div>
+          <div class="card">
+            <span class="tag lime">后期</span>
+            <h3>先技术后创意</h3>
+            <p>先把输入空间认对、转进工作空间，再开始创意调色。顺序反了，所有调整都建立在错误地基上。</p>
+          </div>
+          <div class="card">
+            <span class="tag lime">输出</span>
+            <h3>按交付适配</h3>
+            <p>Rec.709、P3、PQ、HLG 各有输出变换。最终观感由输出端决定，Log 只是中间载体。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="myths">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>8. 常见误区</h2>
+            <p>这几句话流传很广，每一条都把 Log 的某个侧面绝对化了。</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="myth">
+            <p class="wrong">❌ "拍 Log = 动态范围更大"</p>
+            <p class="truth"><b>动态范围由传感器决定，Log 只决定编码质量。</b>同一台相机拍 Log 和拍 709，传感器捕获的档数相同；区别是 709 在编码时把装不下的高光剪掉了，而 Log 把它们压进了文件。Log 保全，而非创造。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "Log 素材必须看起来很灰才专业"</p>
+            <p class="truth"><b>灰是中间态，不是目标。</b>Log 画面灰是因为对数信号直接被显示器当作显示信号解读。正确流程永远配监看/输出变换。以"灰"为美开拍、不做变换直接交付，是对 Log 的双重误用。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "一个 LUT 可以通吃所有机型"</p>
+            <p class="truth"><b>LUT 是针对特定输入空间的函数。</b>各家中灰锚点（28%–42%）和色域都不同，同一 LUT 喂不同 Log，明暗和色彩立即错位。跨机型统一的正确做法是先 CST 到共同工作空间。</p>
+          </div>
+          <div class="myth">
+            <p class="wrong">❌ "8 bit 也能拍 Log，反正后期能救"</p>
+            <p class="truth"><b>8 bit 拍 Log 每档只剩约 20 个码值。</b>轻度调色或许侥幸，提亮暗部、拉肤色立刻 banding。8 bit 机器更稳的选择是拍显示 Gamma 或 HLG，把量化预算用在最终影调上。</p>
           </div>
         </div>
       </div>
@@ -570,19 +1017,21 @@
         <div class="section-head">
           <div>
             <h2>资料来源</h2>
-            <p>本页优先参考厂商技术资料和官方白皮书。曲线图中未完整复现的厂商曲线，会明确标为示意或锚点解释。</p>
+            <p>本页曲线全部使用厂商公开公式实现；常数与锚点可在下列文档中核对。</p>
           </div>
-          <div class="note">后续如果加入更多机型曲线，应先补官方公式或官方 LUT/IDT 来源，再画进图表。</div>
+          <div class="note">扩展更多机型曲线前，先补官方公式或官方 LUT/IDT 来源，再画进图表。</div>
         </div>
         <div class="source-list">
-          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C / LogC4 技术下载<span>LogC4 specification, AWG4, REVEAL color science</span></a>
-          <a href="https://www.arri.com/resource/blob/278790/f3318e8c9c65617d8c5ca3f8b3e32051/2023-05-arri-logc4-specification-data.pdf" target="_blank" rel="noreferrer">ARRI LogC4 Specification PDF<span>LogC4 公式、AWG4 原色、12 bit 编码说明</span></a>
-          <a href="https://pro.sony/s3/cms-static-content/uploadfile/06/1237494271406.pdf" target="_blank" rel="noreferrer">Sony S-Gamut3.Cine / S-Log3 Technical Summary<span>S-Log3 公式、中灰码值、S-Gamut3.Cine 设计说明</span></a>
-          <a href="https://www.usa.canon.com/content/dam/canon-assets/white-papers/pro/white-paper-canon-log-gamma-curves.pdf" target="_blank" rel="noreferrer">Canon Log Gamma Curves White Paper<span>Canon Log / Log 2 / Log 3 的动态范围和曲线设计</span></a>
-          <a href="https://pro-av.panasonic.net/cn/cinema_camera_varicam_eva/support/pdf/VARICAM_V-Log_V-Gamut.pdf" target="_blank" rel="noreferrer">Panasonic V-Log / V-Gamut Reference Manual<span>V-Log 曲线、18% 灰、V-Gamut 技术资料</span></a>
-          <a href="https://www.red.com/download/white-paper-on-redwidegamutrgb-and-log3g10" target="_blank" rel="noreferrer">REDWideGamutRGB and Log3G10 White Paper<span>RED IPP2 工作空间、Log3G10 设计与矩阵</span></a>
-          <a href="https://docs.red.com/915-0201/REV-A/PDF/915-0201%20Rev-A%20%20%20RED%20OPS%2C%20IPP2%20Output%20Transforms.pdf" target="_blank" rel="noreferrer">RED IPP2 Output Transforms<span>Primary RAW development、grading、output transform 三段式管线</span></a>
+          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C / LogC4 技术页<span>LogC4 specification、AWG4、REVEAL color science</span></a>
+          <a href="https://www.arri.com/resource/blob/278790/f3318e8c9c65617d8c5ca3f8b3e32051/2023-05-arri-logc4-specification-data.pdf" target="_blank" rel="noreferrer">ARRI LogC4 Specification PDF<span>LogC4 公式与常数、AWG4 原色、12 bit 编码要求</span></a>
+          <a href="https://pro.sony/s3/cms-static-content/uploadfile/06/1237494271406.pdf" target="_blank" rel="noreferrer">Sony S-Gamut3.Cine / S-Log3 Technical Summary<span>S-Log3 公式、CV 420/598 锚点、S-Gamut3.Cine 设计说明</span></a>
+          <a href="https://www.usa.canon.com/content/dam/canon-assets/white-papers/pro/white-paper-canon-log-gamma-curves.pdf" target="_blank" rel="noreferrer">Canon Log Gamma Curves White Paper<span>Canon Log / Log 2 / Log 3 动态范围与曲线设计</span></a>
+          <a href="https://pro-av.panasonic.net/cn/cinema_camera_varicam_eva/support/pdf/VARICAM_V-Log_V-Gamut.pdf" target="_blank" rel="noreferrer">Panasonic V-Log / V-Gamut Reference Manual<span>V-Log 公式、CV 433 中灰、V-Gamut 技术资料</span></a>
+          <a href="https://www.red.com/download/white-paper-on-redwidegamutrgb-and-log3g10" target="_blank" rel="noreferrer">REDWideGamutRGB and Log3G10 White Paper<span>Log3G10 公式（a/b/c/g 常数）、IPP2 工作空间与矩阵</span></a>
+          <a href="https://docs.red.com/915-0201/REV-A/PDF/915-0201%20Rev-A%20%20%20RED%20OPS%2C%20IPP2%20Output%20Transforms.pdf" target="_blank" rel="noreferrer">RED IPP2 Output Transforms<span>RAW 开发、调色、输出变换三段式管线</span></a>
           <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span>Resolve 宽色域中间工作空间说明</span></a>
+          <a href="https://en.wikipedia.org/wiki/Cineon" target="_blank" rel="noreferrer">Cineon System（历史资料）<span>Kodak 10-bit log 打印密度编码、CV 95/685 渊源</span></a>
+          <a href="https://docs.acescentral.com/" target="_blank" rel="noreferrer">ACES Documentation<span>IDT / RRT / ODT 架构、ACES2065-1 与 ACEScct</span></a>
         </div>
       </div>
     </section>
@@ -594,13 +1043,10 @@
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
     const lerp = (a, b, t) => a + (b - a) * t;
 
-    let curveMode = "all";
-    let pointerStop = 0;
-
     function resizeCanvas(canvas) {
       const rect = canvas.parentElement.getBoundingClientRect();
       const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const h = Math.max(320, rect.height);
+      const h = Math.max(260, rect.height);
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(h * dpr);
       const ctx = canvas.getContext("2d");
@@ -608,6 +1054,8 @@
       return { ctx, w: rect.width, h };
     }
 
+    // ===== Transfer functions (official public formulas) =====
+    // ARRI LogC4 (2023 spec). x = relative scene linear, 18% grey -> ~0.278
     function logC4(x) {
       const a = (Math.pow(2, 18) - 16) / 117.45;
       const b = (1023 - 95) / 1023;
@@ -617,37 +1065,285 @@
       return x < t ? (x - t) / s : ((Math.log2(a * x + 64) - 6) / 14) * b + c;
     }
 
+    // Sony S-Log3. Output normalized full-range (CV = y*1023). 18% grey -> CV 420.
     function sLog3(x) {
       if (x >= 0.01125) {
         return (420 + Math.log10((x + 0.01) / (0.18 + 0.01)) * 261.5) / 1023;
       }
       return (x * (171.2102946929 - 95) / 0.01125 + 95) / 1023;
     }
+    function sLog3Inv(y) {
+      const cv = y * 1023;
+      if (cv >= 171.2102946929) {
+        return (0.18 + 0.01) * Math.pow(10, (cv - 420) / 261.5) - 0.01;
+      }
+      return (cv - 95) * 0.01125 / (171.2102946929 - 95);
+    }
 
+    // Panasonic V-Log. 18% grey -> ~0.423 (CV 433).
     function vLog(x) {
       return x < 0.01 ? 5.6 * x + 0.125 : 0.241514 * Math.log10(x + 0.00873) + 0.598206;
     }
 
-    function redLog3G10Approx(x) {
-      const relativeToGrey = Math.max(0, x / 0.18);
-      const a = (-3 + Math.sqrt(4093)) / 2;
-      const d = Math.log10(1024 * a + 1);
-      return Math.log10(a * relativeToGrey + 1) / d;
+    // RED Log3G10 (official, REDWideGamutRGB and Log3G10 white paper).
+    // 18% grey -> 1/3; 10 stops above grey -> 1.0.
+    function log3G10(x) {
+      const a = 0.224282, b = 155.975327, c = 0.01, g = 15.1927;
+      const xs = x + c;
+      return xs < 0 ? xs * g : a * Math.log10(xs * b + 1);
     }
+
+    // Kodak Cineon printing-density log (historic reference). 18% grey -> ~CV 475.
+    function cineon(x) {
+      return clamp((685 + 300 * Math.log10(Math.max(x, 1e-5) / 0.9)) / 1023, 0, 1);
+    }
+
+    // Rec.709 OETF (camera/display-referred gamma, clips at scene 1.0).
+    function rec709Oetf(x) {
+      const v = clamp(x, 0, 1);
+      return v < 0.018 ? 4.5 * v : 1.099 * Math.pow(v, 0.45) - 0.099;
+    }
+
+    const reflectanceFromStop = stop => 0.18 * Math.pow(2, stop);
+    const codeValue = y => Math.round(clamp(y, 0, 1) * 1023);
+
+    // ============================================================
+    // Demo 1: codes-per-stop bar chart
+    // ============================================================
+    // Each encoding: enc(x) -> normalized [0,1] over its own container.
+    const CODES_ENCODINGS = {
+      linear: {
+        label: "12-bit 线性（中灰在剪切点下 4 档）",
+        bits: 12,
+        color: "#ff6b7a",
+        enc: x => clamp(x / 2.88, 0, 1) // grey 0.18 -> 1/16 of clip (4 stops)
+      },
+      rec709: {
+        label: "10-bit Rec.709 OETF（场景 1.0 = 剪切，中灰上约 2.5 档）",
+        bits: 10,
+        color: "#ffd166",
+        enc: x => rec709Oetf(x)
+      },
+      slog3: {
+        label: "10-bit Sony S-Log3",
+        bits: 10,
+        color: "#a9e55f",
+        enc: x => clamp(sLog3(x), 0, 1)
+      },
+      logc4: {
+        label: "12-bit ARRI LogC4",
+        bits: 12,
+        color: "#46d9e8",
+        enc: x => clamp(logC4(x), 0, 1)
+      }
+    };
+    let codesEnc = "linear";
+
+    function drawCodesChart() {
+      const canvas = $("#codesCanvas");
+      if (!canvas) return;
+      const { ctx, w, h } = resizeCanvas(canvas);
+      const cfg = CODES_ENCODINGS[codesEnc];
+      const maxCV = Math.pow(2, cfg.bits) - 1;
+      const stops = [];
+      for (let s = -6; s < 8; s++) {
+        const lo = cfg.enc(reflectanceFromStop(s));
+        const hi = cfg.enc(reflectanceFromStop(s + 1));
+        stops.push({ s, codes: Math.max(0, Math.round((hi - lo) * maxCV)) });
+      }
+      const maxCodes = Math.max(...stops.map(d => d.codes), 1);
+
+      const pad = { l: 56, r: 16, t: 40, b: 46 };
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0a0d12";
+      ctx.fillRect(0, 0, w, h);
+
+      // grid lines
+      ctx.strokeStyle = "rgba(255,255,255,.09)";
+      ctx.fillStyle = "#8994a6";
+      ctx.font = "11px system-ui";
+      for (let i = 0; i <= 4; i++) {
+        const v = maxCodes * i / 4;
+        const y = h - pad.b - (h - pad.t - pad.b) * (i / 4);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        ctx.fillText(String(Math.round(v)), 10, y + 4);
+      }
+
+      const n = stops.length;
+      const slotW = (w - pad.l - pad.r) / n;
+      const barW = Math.min(slotW * 0.66, 46);
+
+      stops.forEach((d, i) => {
+        const x = pad.l + slotW * i + (slotW - barW) / 2;
+        const bh = (h - pad.t - pad.b) * (d.codes / maxCodes);
+        const y = h - pad.b - bh;
+        const isGrey = d.s === 0;
+        ctx.fillStyle = isGrey ? "#ffffff" : cfg.color;
+        ctx.globalAlpha = d.codes === 0 ? 0.18 : (isGrey ? 1 : 0.85);
+        ctx.fillRect(x, y, barW, Math.max(bh, d.codes > 0 ? 2 : 0));
+        ctx.globalAlpha = 1;
+        // value label
+        ctx.fillStyle = isGrey ? "#ffffff" : "#b7c0ce";
+        ctx.font = d.codes >= 1000 ? "10px system-ui" : "11px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(d.codes === 0 ? "剪切" : String(d.codes), x + barW / 2, y - 6);
+        // stop label
+        ctx.fillStyle = isGrey ? "#ffd166" : "#8994a6";
+        ctx.fillText(isGrey ? "中灰" : (d.s >= 0 ? "+" + d.s : String(d.s)), x + barW / 2, h - pad.b + 16);
+        ctx.textAlign = "left";
+      });
+
+      // axis labels & title
+      ctx.fillStyle = "#dbe7f7";
+      ctx.font = "12.5px system-ui";
+      ctx.fillText(cfg.label, pad.l, 20);
+      ctx.fillStyle = "#8994a6";
+      ctx.font = "11px system-ui";
+      ctx.fillText("横轴：相对 18% 灰的曝光档（每柱 = 1 档区间）｜纵轴：该档分到的码值数量", pad.l, h - 10);
+
+      // summary
+      const at = s => stops.find(d => d.s === s);
+      const top = stops.slice().reverse().find(d => d.codes > 0);
+      const grey = at(0), dark = at(-6);
+      $("#codesSummary").innerHTML =
+        `中灰那一档（0 → +1）：<b style="color:var(--ink)">${grey.codes}</b> 个码值 ｜ ` +
+        `最亮可用档（${top.s >= 0 ? "+" + top.s : top.s} → ${top.s + 1 >= 0 ? "+" + (top.s + 1) : top.s + 1}）：<b style="color:var(--ink)">${top.codes}</b> 个 ｜ ` +
+        `最暗一档（−6 → −5）：<b style="color:var(--ink)">${dark.codes}</b> 个` +
+        (codesEnc === "linear" ? " —— 注意最亮一档独占了近一半码值，而暗部只剩个位数。" :
+         codesEnc === "rec709" ? " —— 分配比线性均匀，但 +2.5 档以上全部剪切：装不下电影机的高光。" :
+         codesEnc === "slog3" ? " —— 纯对数区每档恒定约 79 个码值，暗部与高光同等待遇。" :
+         " —— 12-bit 下每档约 265 个码值；同曲线若装入 10-bit 仅剩约 66，故 ARRI 要求 12-bit。");
+    }
+
+    $$(".codesMode").forEach(btn => {
+      btn.addEventListener("click", () => {
+        codesEnc = btn.dataset.enc;
+        $$(".codesMode").forEach(b => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        drawCodesChart();
+      });
+    });
+
+    // ============================================================
+    // Demo 2: quantization / banding strips
+    // ============================================================
+    let bandBits = 8;
+    let bandLift = 2;
+
+    function drawBandDemo() {
+      const canvas = $("#bandCanvas");
+      if (!canvas) return;
+      const { ctx, w, h } = resizeCanvas(canvas);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0a0d12";
+      ctx.fillRect(0, 0, w, h);
+
+      const maxCV = Math.pow(2, bandBits) - 1;
+      const pad = { l: 16, r: 16 };
+      const stripH = (h - 110) / 2;
+      const y1 = 40, y2 = y1 + stripH + 40;
+      const innerW = w - pad.l - pad.r;
+
+      // encode/decode pairs
+      const LIN_MAX = 2.88; // grey 4 stops below clip
+      const encLin = x => clamp(x / LIN_MAX, 0, 1);
+      const decLin = y => y * LIN_MAX;
+      const encLog = x => clamp(sLog3(x), 0, 1);
+      const decLog = y => sLog3Inv(y);
+
+      const gain = Math.pow(2, bandLift);
+      const linLevels = new Set(), logLevels = new Set();
+
+      for (let px = 0; px < innerW; px++) {
+        const t = px / (innerW - 1);
+        const stop = lerp(-6, 0, t);
+        const L = reflectanceFromStop(stop);
+
+        // linear pipeline
+        const qLin = Math.round(encLin(L) * maxCV);
+        linLevels.add(qLin);
+        const dLin = decLin(qLin / maxCV) * gain;
+        const vLin = rec709Oetf(clamp(dLin, 0, 1));
+
+        // log pipeline
+        const qLog = Math.round(encLog(L) * maxCV);
+        logLevels.add(qLog);
+        const dLog = decLog(qLog / maxCV) * gain;
+        const vLog2 = rec709Oetf(clamp(dLog, 0, 1));
+
+        const gLin = Math.round(clamp(vLin, 0, 1) * 255);
+        const gLog = Math.round(clamp(vLog2, 0, 1) * 255);
+        ctx.fillStyle = `rgb(${gLin},${gLin},${gLin})`;
+        ctx.fillRect(pad.l + px, y1, 1.5, stripH);
+        ctx.fillStyle = `rgb(${gLog},${gLog},${gLog})`;
+        ctx.fillRect(pad.l + px, y2, 1.5, stripH);
+      }
+
+      // borders + labels
+      ctx.strokeStyle = "rgba(255,255,255,.22)";
+      ctx.strokeRect(pad.l, y1, innerW, stripH);
+      ctx.strokeRect(pad.l, y2, innerW, stripH);
+      ctx.font = "12.5px system-ui";
+      ctx.fillStyle = "#ff8e9b";
+      ctx.fillText(`线性编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, pad.l, y1 - 10);
+      ctx.fillStyle = "#bfe88a";
+      ctx.fillText(`S-Log3 编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, pad.l, y2 - 10);
+      ctx.fillStyle = "#8994a6";
+      ctx.font = "11px system-ui";
+      ctx.fillText("← 中灰下 6 档", pad.l, y2 + stripH + 18);
+      ctx.textAlign = "right";
+      ctx.fillText("18% 中灰 →", w - pad.r, y2 + stripH + 18);
+      ctx.textAlign = "left";
+
+      $("#bandLinearLevels").textContent = `${linLevels.size} 级`;
+      $("#bandLogLevels").textContent = `${logLevels.size} 级`;
+    }
+
+    $$(".bandBits").forEach(btn => {
+      btn.addEventListener("click", () => {
+        bandBits = Number(btn.dataset.bits);
+        $$(".bandBits").forEach(b => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        drawBandDemo();
+      });
+    });
+    $("#liftSlider").addEventListener("input", e => {
+      bandLift = Number(e.target.value);
+      $("#liftReadout").textContent = `+${bandLift.toFixed(1)} 档`;
+      drawBandDemo();
+    });
+
+    // ============================================================
+    // Demo 3: transfer-curve explorer
+    // ============================================================
+    let curveMode = "all";
+    let pointerStop = 0;
+    let showRec709 = false;
+    let showCineon = false;
 
     const curves = {
       arri: { label: "ARRI LogC4", color: "#46d9e8", fn: logC4, note: "官方公式" },
       sony: { label: "Sony S-Log3", color: "#a9e55f", fn: sLog3, note: "官方公式" },
-      panasonic: { label: "Panasonic V-Log", color: "#ffd166", fn: vLog, note: "公开公式" },
-      red: { label: "RED Log3G10", color: "#ff6b7a", fn: redLog3G10Approx, note: "官方锚点示意" }
+      panasonic: { label: "Panasonic V-Log", color: "#ffd166", fn: vLog, note: "官方公式" },
+      red: { label: "RED Log3G10", color: "#ff6b7a", fn: log3G10, note: "官方公式" }
+    };
+    const refCurves = {
+      rec709: { label: "Rec.709 OETF", color: "rgba(255,255,255,.55)", fn: rec709Oetf, note: "显示导向参照" },
+      cineon: { label: "Cineon", color: "#9a8cff", fn: cineon, note: "历史参照" }
     };
 
-    function reflectanceFromStop(stop) {
-      return 0.18 * Math.pow(2, stop);
-    }
-
-    function codeValue(y) {
-      return Math.round(clamp(y, 0, 1) * 1023);
+    function activeCurveList() {
+      const keys = curveMode === "all" ? Object.keys(curves) : [curveMode];
+      const list = keys.map(k => curves[k]);
+      if (showRec709) list.push(refCurves.rec709);
+      if (showCineon) list.push(refCurves.cineon);
+      return list;
     }
 
     function drawGrid(ctx, w, h, pad, xOf, yOf) {
@@ -656,27 +1352,21 @@
       ctx.font = "12px system-ui";
       for (let s = -8; s <= 8; s += 2) {
         const x = xOf(s);
-        ctx.beginPath();
-        ctx.moveTo(x, pad.t);
-        ctx.lineTo(x, h - pad.b);
-        ctx.stroke();
-        ctx.fillText(String(s), x - 6, h - 22);
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+        ctx.fillText(String(s), x - 6, h - 24);
       }
       for (let i = 0; i <= 10; i++) {
         const yv = i / 10;
         const y = yOf(yv);
-        ctx.beginPath();
-        ctx.moveTo(pad.l, y);
-        ctx.lineTo(w - pad.r, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
         ctx.fillText(i === 10 ? "1.0" : yv.toFixed(1), 24, y + 4);
       }
       ctx.fillStyle = "#dbe7f7";
-      ctx.fillText("相对 18% 灰曝光档位 / stop", w - 190, h - 8);
+      ctx.fillText("相对 18% 灰曝光档位 / stop", w - 200, h - 8);
       ctx.save();
-      ctx.translate(16, pad.t + (h - pad.t - pad.b) / 2 + 56);
+      ctx.translate(16, pad.t + (h - pad.t - pad.b) / 2 + 60);
       ctx.rotate(-Math.PI / 2);
-      ctx.fillText("归一化 Log 信号 / 10bit code", 0, 0);
+      ctx.fillText("归一化信号 / 10-bit CV", 0, 0);
       ctx.restore();
     }
 
@@ -694,6 +1384,7 @@
       ctx.fillRect(0, 0, w, h);
       drawGrid(ctx, w, h, pad, xOf, yOf);
 
+      // 18% grey vertical line
       ctx.setLineDash([6, 6]);
       ctx.strokeStyle = "rgba(255,255,255,.35)";
       ctx.beginPath();
@@ -702,25 +1393,34 @@
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = "rgba(255,255,255,.62)";
-      ctx.fillText("18% 灰", xOf(0) + 8, pad.t + 18);
+      ctx.fillText("18% 灰", xOf(0) + 8, pad.t + 16);
 
-      const visibleKeys = curveMode === "all" ? Object.keys(curves) : [curveMode];
-      visibleKeys.forEach(key => {
-        const curve = curves[key];
+      const list = activeCurveList();
+      list.forEach(curve => {
         ctx.beginPath();
         for (let i = 0; i <= 480; i++) {
           const stop = lerp(xMin, xMax, i / 480);
           const y = curve.fn(reflectanceFromStop(stop));
           const x = xOf(stop);
           const py = yOf(y);
-          if (i) ctx.lineTo(x, py);
-          else ctx.moveTo(x, py);
+          if (i) ctx.lineTo(x, py); else ctx.moveTo(x, py);
         }
         ctx.strokeStyle = curve.color;
-        ctx.lineWidth = curveMode === "all" ? 2.5 : 3.5;
+        ctx.lineWidth = curveMode === "all" ? 2.4 : 3.2;
         ctx.stroke();
+        // 18% grey anchor dot + CV label
+        const gy = curve.fn(0.18);
+        ctx.fillStyle = curve.color;
+        ctx.beginPath();
+        ctx.arc(xOf(0), yOf(gy), 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        if (curveMode !== "all" || list.length <= 4) {
+          ctx.font = "11px system-ui";
+          ctx.fillText(`CV ${codeValue(gy)}`, xOf(0) + 9, yOf(gy) + 4);
+        }
       });
 
+      // pointer line
       const stop = pointerStop;
       const x = xOf(stop);
       ctx.strokeStyle = "rgba(255,255,255,.45)";
@@ -731,44 +1431,29 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      const rows = visibleKeys.map(key => {
-        const curve = curves[key];
+      const rows = list.map(curve => {
         const y = clamp(curve.fn(reflectanceFromStop(stop)), 0, 1);
-        const px = xOf(stop);
-        const py = yOf(y);
         ctx.fillStyle = curve.color;
         ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.arc(xOf(stop), yOf(y), 4, 0, Math.PI * 2);
         ctx.fill();
         return `<span style="color:${curve.color}">${curve.label}: ${(y * 100).toFixed(1)}% / CV ${codeValue(y)}</span>`;
       });
 
+      // legend
       const legendX = pad.l + 12;
-      let legendY = pad.t + 8;
-      visibleKeys.forEach(key => {
-        const curve = curves[key];
+      let legendY = pad.t + 10;
+      ctx.font = "12px system-ui";
+      list.forEach(curve => {
         ctx.fillStyle = curve.color;
-        ctx.font = "12px system-ui";
         ctx.fillText(`${curve.label}（${curve.note}）`, legendX, legendY);
-        legendY += 18;
+        legendY += 17;
       });
 
       $("#stopReadout").textContent = `${stop.toFixed(1)} stop`;
-      $("#curveReadout").innerHTML = `相对中灰 ${stop.toFixed(1)} stop · 场景反射率约 ${(reflectanceFromStop(stop) * 100).toFixed(2)}%<br>${rows.join("<br>")}`;
+      $("#curveReadout").innerHTML =
+        `相对中灰 ${stop.toFixed(1)} 档 · 场景反射率 ${(reflectanceFromStop(stop) * 100).toFixed(2)}%<br>${rows.join("<br>")}`;
     }
-
-    function updateProgress() {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      $("#progress").style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
-      const pos = scrollY + 90;
-      $$("section[id]").forEach(sec => {
-        const link = $(`#navLinks a[href="#${sec.id}"]`);
-        if (link) link.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
-      });
-    }
-
-    addEventListener("scroll", updateProgress, { passive: true });
-    addEventListener("resize", drawCurveChart);
 
     $$(".curveMode").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -781,13 +1466,21 @@
         drawCurveChart();
       });
     });
-
+    $("#refRec709").addEventListener("click", () => {
+      showRec709 = !showRec709;
+      $("#refRec709").setAttribute("aria-pressed", showRec709 ? "true" : "false");
+      drawCurveChart();
+    });
+    $("#refCineon").addEventListener("click", () => {
+      showCineon = !showCineon;
+      $("#refCineon").setAttribute("aria-pressed", showCineon ? "true" : "false");
+      drawCurveChart();
+    });
     $("#stopSlider").addEventListener("input", e => {
       pointerStop = Number(e.target.value);
       drawCurveChart();
     });
-
-    $("#curveCanvas").addEventListener("mousemove", e => {
+    $("#curveCanvas").addEventListener("pointermove", e => {
       const rect = e.currentTarget.getBoundingClientRect();
       const pad = { l: 70, r: 28 };
       const t = clamp((e.clientX - rect.left - pad.l) / (rect.width - pad.l - pad.r), 0, 1);
@@ -796,11 +1489,36 @@
       drawCurveChart();
     });
 
+    // ============================================================
+    // Page chrome
+    // ============================================================
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      $("#progress").style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+      const pos = scrollY + 90;
+      $$("section[id]").forEach(sec => {
+        const link = $(`#navLinks a[href="#${sec.id}"]`);
+        if (link) link.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
+      });
+    }
+    addEventListener("scroll", updateProgress, { passive: true });
+
+    function redrawAll() {
+      drawCodesChart();
+      drawBandDemo();
+      drawCurveChart();
+    }
+    let resizeTimer = null;
+    addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(redrawAll, 80);
+    });
+
     setTimeout(() => {
       pointerStop = Number($("#stopSlider").value);
-      drawCurveChart();
+      redrawAll();
       updateProgress();
-    }, 80);
+    }, 60);
   </script>
 </body>
 </html>
