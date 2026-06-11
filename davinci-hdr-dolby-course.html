@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DaVinci Resolve HDR 与 Dolby Vision 制作课 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="DaVinci Resolve HDR 制作与 Dolby Vision 制作的幻灯片式课程页面。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a0e;
+      --panel: #111722;
+      --panel-2: #172131;
+      --ink: #f5f7fb;
+      --muted: #aeb8c8;
+      --soft: #7f8b9e;
+      --line: rgba(255,255,255,.14);
+      --cyan: #45d7ee;
+      --green: #9ee870;
+      --gold: #ffd166;
+      --red: #ff6b7a;
+      --blue: #77a7ff;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      background:
+        linear-gradient(180deg, rgba(8,10,14,.75), var(--bg) 62%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 120px),
+        #080a0e;
+      color: var(--ink);
+      font: 24px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    b { color: var(--ink); }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--cyan);
+      background: rgba(69,215,238,.10);
+      border: 1px solid rgba(69,215,238,.18);
+      border-radius: 5px;
+      padding: 1px 7px;
+      font-size: .9em;
+    }
+
+    .deck {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .slide {
+      position: absolute;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      aspect-ratio: 16 / 9;
+      padding: 86px 112px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 34px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(42px) scale(.985);
+      transition: opacity .22s ease, transform .22s ease;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012)),
+        #0b0f16;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 26px 90px rgba(0,0,0,.38);
+      overflow: hidden;
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(69,215,238,.10), transparent 18%),
+        linear-gradient(180deg, transparent, rgba(0,0,0,.30));
+      z-index: -1;
+    }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0) scale(1);
+    }
+    .slide.past { transform: translateX(-42px) scale(.985); }
+
+    .cover {
+      background:
+        linear-gradient(100deg, rgba(8,10,14,.94), rgba(8,10,14,.62)),
+        url("assets/hdr_compare.jpg") center / cover;
+    }
+    .cover::before {
+      background:
+        linear-gradient(180deg, rgba(8,10,14,.18), rgba(8,10,14,.86)),
+        linear-gradient(90deg, rgba(8,10,14,.90), transparent 72%);
+    }
+
+    .kicker {
+      color: var(--gold);
+      font-size: 18px;
+      font-weight: 820;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    h1 {
+      max-width: 1180px;
+      font-size: 72px;
+      line-height: 1.06;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    h2 {
+      max-width: 1180px;
+      font-size: 54px;
+      line-height: 1.12;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    h3 {
+      font-size: 30px;
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+    p {
+      color: var(--muted);
+      max-width: 1050px;
+      margin-bottom: 18px;
+    }
+    .lead {
+      color: #e6edf7;
+      font-size: 32px;
+      line-height: 1.5;
+      max-width: 1080px;
+      margin-top: 26px;
+    }
+
+    .content {
+      min-height: 0;
+      display: grid;
+      align-content: center;
+      gap: 24px;
+    }
+    .content.top { align-content: start; }
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 18px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.025));
+      padding: 24px;
+    }
+    .card p {
+      font-size: 23px;
+      line-height: 1.45;
+      margin: 0;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: rgba(69,215,238,.14);
+      color: var(--cyan);
+      font-size: 16px;
+      font-weight: 820;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+    .tag.gold { background: rgba(255,209,102,.16); color: var(--gold); }
+    .tag.green { background: rgba(158,232,112,.16); color: var(--green); }
+    .tag.red { background: rgba(255,107,122,.16); color: var(--red); }
+    .metric {
+      font-size: 56px;
+      line-height: 1;
+      font-weight: 880;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .bullets {
+      list-style: none;
+      display: grid;
+      gap: 16px;
+      max-width: 1120px;
+    }
+    .bullets li {
+      position: relative;
+      padding-left: 32px;
+      color: var(--muted);
+      font-size: 30px;
+      line-height: 1.42;
+    }
+    .bullets li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .62em;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 24px rgba(69,215,238,.35);
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .step {
+      position: relative;
+      min-height: 246px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+    }
+    .step .num {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(69,215,238,.16);
+      color: var(--cyan);
+      font-weight: 840;
+      margin-bottom: 16px;
+    }
+    .step h3 { font-size: 25px; margin-bottom: 10px; }
+    .step p { font-size: 20px; line-height: 1.42; }
+
+    .table {
+      display: grid;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: .78fr 1fr 1.1fr;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+    .row:last-child { border-bottom: 0; }
+    .row > div {
+      padding: 18px 22px;
+      border-right: 1px solid rgba(255,255,255,.09);
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1.45;
+    }
+    .row > div:last-child { border-right: 0; }
+    .row.head > div {
+      color: var(--ink);
+      background: rgba(255,255,255,.07);
+      font-weight: 820;
+      font-size: 18px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .settings-stack {
+      display: grid;
+      gap: 16px;
+      max-width: 1160px;
+    }
+    .setting-line {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 18px;
+      align-items: start;
+      padding: 20px 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+    }
+    .setting-line b {
+      color: var(--gold);
+      font-size: 24px;
+    }
+    .setting-line p {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.36;
+    }
+    .setting-note {
+      padding: 18px 22px;
+      border-left: 4px solid var(--cyan);
+      background: linear-gradient(90deg, rgba(69,215,238,.12), transparent);
+      color: #e4eef8;
+      font-size: 26px;
+      line-height: 1.4;
+    }
+
+    .compare-bars {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .signal {
+      position: relative;
+      min-height: 310px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 28px);
+    }
+    .bar {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      height: 26px;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #111 0%, #555 34%, #d8d8d8 68%, #fff 100%);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .signal.hdr .bar {
+      background: linear-gradient(90deg, #050505 0%, #4c5260 26%, #d5d7dc 47%, #ffe29a 70%, #ffffff 100%);
+    }
+    .signal.dv .bar {
+      background: linear-gradient(90deg, #050505 0%, #596072 22%, #d7d9df 43%, #ffd166 62%, #45d7ee 80%, #ffffff 100%);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 16px;
+    }
+    .check {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+    }
+    .check span {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(158,232,112,.16);
+      color: var(--green);
+      font-weight: 860;
+      font-size: 18px;
+    }
+    .check p { font-size: 23px; margin: 4px 0 0; }
+    .mini-table {
+      display: grid;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+    .mini-row {
+      display: grid;
+      grid-template-columns: .72fr .9fr 1.3fr;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+    .mini-row:last-child { border-bottom: 0; }
+    .mini-row > div {
+      padding: 14px 16px;
+      border-right: 1px solid rgba(255,255,255,.09);
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.35;
+    }
+    .mini-row > div:last-child { border-right: 0; }
+    .mini-row.head > div {
+      color: var(--ink);
+      background: rgba(255,255,255,.07);
+      font-size: 16px;
+      font-weight: 820;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .profile-slide .content {
+      gap: 14px;
+    }
+    .profile-slide .card {
+      padding: 18px;
+    }
+    .profile-slide .card p {
+      font-size: 20px;
+      line-height: 1.34;
+    }
+    .profile-slide .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .profile-pill {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.035);
+      padding: 16px;
+    }
+    .profile-pill b {
+      display: block;
+      color: var(--gold);
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .profile-pill span {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 760;
+      margin-bottom: 6px;
+    }
+    .profile-pill p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.32;
+    }
+    .compact-check .content {
+      align-content: start;
+    }
+    .compact-check .card {
+      padding: 20px;
+    }
+    .compact-check .checklist {
+      gap: 12px;
+    }
+    .compact-check .check {
+      min-height: 0;
+      padding: 14px;
+    }
+    .compact-check .check p {
+      font-size: 21px;
+      line-height: 1.35;
+    }
+
+    .footer {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 30;
+      width: min(100vw, calc(100vh * 16 / 9));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 28px;
+      color: rgba(245,247,251,.70);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .hint { justify-self: start; }
+    .counter {
+      justify-self: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress {
+      justify-self: end;
+      width: 220px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.15);
+      overflow: hidden;
+    }
+    .progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--gold));
+    }
+
+    .controls {
+      position: fixed;
+      right: 24px;
+      top: 24px;
+      z-index: 40;
+      display: flex;
+      gap: 8px;
+    }
+    .ctrl {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      background: rgba(8,10,14,.62);
+      color: var(--ink);
+      font: inherit;
+      font-size: 20px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+    }
+    .ctrl:hover { background: rgba(255,255,255,.10); }
+
+    @media (max-width: 1400px) {
+      body { font-size: 18px; }
+      .slide { padding: 52px 64px; gap: 20px; }
+      h1 { font-size: 50px; }
+      h2 { font-size: 38px; }
+      h3 { font-size: 22px; }
+      .lead { font-size: 23px; }
+      .bullets li { font-size: 22px; }
+      .metric { font-size: 38px; }
+      .card p, .check p, .row > div { font-size: 17px; }
+      .pipeline { grid-template-columns: repeat(3, 1fr); }
+      .step { min-height: 160px; }
+      .step h3 { font-size: 20px; }
+      .step p { font-size: 15px; }
+      .compact-check .card { padding: 16px; }
+      .compact-check .tag { min-height: 24px; padding: 3px 10px; margin-bottom: 10px; font-size: 14px; }
+      .compact-check h3 { margin-bottom: 10px; }
+      .compact-check .checklist { gap: 10px; }
+      .compact-check .check { grid-template-columns: 34px 1fr; gap: 10px; padding: 12px; }
+      .compact-check .check span { width: 30px; height: 30px; font-size: 15px; }
+      .compact-check .check p { font-size: 15.5px; line-height: 1.32; }
+      .mini-row > div { font-size: 15.5px; padding: 10px 12px; }
+      .mini-row.head > div { font-size: 13px; }
+      .setting-line { grid-template-columns: 150px 1fr; padding: 14px 16px; gap: 12px; }
+      .setting-line b { font-size: 17px; }
+      .setting-line p,
+      .setting-note { font-size: 17px; line-height: 1.32; }
+      .setting-note { padding: 14px 16px; }
+      .profile-slide .content { gap: 10px; }
+      .profile-slide .card { padding: 14px; }
+      .profile-slide .tag { min-height: 24px; padding: 3px 10px; margin-bottom: 8px; font-size: 14px; }
+      .profile-slide h3 { font-size: 20px; margin-bottom: 8px; }
+      .profile-slide .card p { font-size: 15px; line-height: 1.28; }
+      .profile-slide .profile-grid { gap: 10px; }
+      .profile-pill { padding: 12px; }
+      .profile-pill b { font-size: 19px; margin-bottom: 3px; }
+      .profile-pill span { font-size: 14px; margin-bottom: 4px; }
+      .profile-pill p { font-size: 13px; line-height: 1.24; }
+    }
+    @media (max-height: 760px) and (min-width: 821px) {
+      .slide { padding-top: 40px; padding-bottom: 48px; gap: 14px; }
+      .kicker { margin-bottom: 8px; }
+      h2 { font-size: 34px; }
+      .compact-check .grid-2 { gap: 12px; }
+      .compact-check .card { padding: 14px; }
+      .compact-check h3 { font-size: 20px; margin-bottom: 8px; }
+      .compact-check .tag { margin-bottom: 8px; }
+      .compact-check .checklist { gap: 8px; }
+      .compact-check .check { padding: 10px; }
+      .compact-check .check p { font-size: 14.5px; line-height: 1.26; }
+    }
+    @media (max-width: 820px) {
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        aspect-ratio: auto;
+        padding: 54px 24px 74px;
+      }
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .compare-bars,
+      .pipeline {
+        grid-template-columns: 1fr;
+      }
+      .row { grid-template-columns: 1fr; }
+      .row > div { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+      .row > div:last-child { border-bottom: 0; }
+      .setting-line { grid-template-columns: 1fr; }
+      .mini-row { grid-template-columns: 1fr; }
+      .mini-row > div { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+      .mini-row > div:last-child { border-bottom: 0; }
+      .profile-slide .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .footer { width: 100vw; grid-template-columns: 1fr auto; gap: 16px; }
+      .hint { display: none; }
+      .progress { width: 120px; }
+      .controls { right: 12px; top: 12px; }
+    }
+
+    @media print {
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+      html,
+      body {
+        width: auto;
+        height: auto;
+        overflow: visible;
+        background: #080a0e;
+      }
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .deck {
+        position: static;
+        display: block;
+        overflow: visible;
+      }
+      .slide {
+        position: relative;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        transition: none;
+        width: 16in;
+        height: 9in;
+        page-break-after: always;
+        break-after: page;
+        box-shadow: none;
+        border: 0;
+      }
+      .slide:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      .controls,
+      .footer {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck" aria-live="polite">
+    <section class="slide cover active" data-title="封面">
+      <div>
+        <div class="kicker">DaVinci Resolve / HDR / Dolby Vision</div>
+        <h1>HDR 与 Dolby Vision 制作</h1>
+        <p class="lead">制作概念、项目设置、HDR 母版流程和 Dolby Vision 元数据流程。</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="课程目标">
+      <div>
+        <div class="kicker">01 / Objectives</div>
+        <h2>先掌握五件事</h2>
+      </div>
+      <div class="content">
+        <ul class="bullets">
+          <li>素材的 Gamma / Gamut 必须先被正确解释。</li>
+          <li>调色发生在时间线工作空间，不直接等于最终显示空间。</li>
+          <li>PQ HDR master 是 display-referred 交付目标。</li>
+          <li>HDR10 使用静态元数据；Dolby Vision 使用动态元数据和 trim。</li>
+          <li>监看链路、示波器读法和导出设置必须一致。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-title="制作链路">
+      <div>
+        <div class="kicker">02 / Pipeline</div>
+        <h2>HDR 制作链路</h2>
+      </div>
+      <div class="content">
+        <div class="pipeline">
+          <div class="step"><span class="num">1</span><h3>素材</h3><p>确认 Log / RAW / Rec.709，以及对应的输入 Gamma 和 Gamut。</p></div>
+          <div class="step"><span class="num">2</span><h3>工作空间</h3><p>进入 DaVinci Wide Gamut Intermediate 或 ACES。</p></div>
+          <div class="step"><span class="num">3</span><h3>监看</h3><p>设置 Rec.2100 ST2084 / PQ 输出和 HDR 参考显示器。</p></div>
+          <div class="step"><span class="num">4</span><h3>调色</h3><p>完成镜头匹配、曝光、白平衡、对比和高光分配。</p></div>
+          <div class="step"><span class="num">5</span><h3>检查</h3><p>检查波形、CIE、MaxCLL / MaxFALL、字幕和高饱和色。</p></div>
+          <div class="step"><span class="num">6</span><h3>交付</h3><p>输出 HDR master、HDR10 元数据或 Dolby Vision 元数据。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="核心概念">
+      <div>
+        <div class="kicker">03 / Concepts</div>
+        <h2>四个概念必须分开</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-4">
+          <div class="card"><span class="tag">Input</span><div class="metric">素材</div><p>相机文件当前如何编码，不能只看画面是否发灰。</p></div>
+          <div class="card"><span class="tag gold">Timeline</span><div class="metric">工作</div><p>调色计算发生的空间，建议使用 DWG Intermediate 或 ACES。</p></div>
+          <div class="card"><span class="tag green">Output</span><div class="metric">监看</div><p>通过 Output Transform 生成 Rec.709、PQ HDR 或其他显示目标。</p></div>
+          <div class="card"><span class="tag red">Delivery</span><div class="metric">交付</div><p>导出文件、元数据、编码器和平台要求属于最后一层。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Scene-referred 设置">
+      <div>
+        <div class="kicker">04 / Resolve Setup</div>
+        <h2>Scene-referred 时间线设置</h2>
+      </div>
+      <div class="content">
+        <div class="settings-stack">
+          <div class="setting-line"><b>Input</b><p>按素材指定相机 Log / Gamut，例如 S-Log3 / S-Gamut3.Cine、LogC4 / AWG4、BRAW Gen 5。</p></div>
+          <div class="setting-line"><b>Timeline</b><p>使用 DaVinci Wide Gamut / DaVinci Intermediate，或 ACEScct。不要把 Timeline 直接设成 Rec.2100 PQ。</p></div>
+          <div class="setting-line"><b>Output</b><p>HDR 母版输出设 Rec.2100 ST2084；SDR 版本输出设 Rec.709 Gamma 2.4。</p></div>
+          <div class="setting-note">Timeline 是调色计算空间；Output 才是显示目标。同一条时间线可以输出 HDR、SDR 或 Dolby Vision 版本。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="多机位输入管理">
+      <div>
+        <div class="kicker">05 / Multi-camera Input</div>
+        <h2>不同摄影机素材的色彩管理</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-3">
+          <div class="card"><span class="tag">Project Default</span><h3>默认输入设主机位</h3><p>如果主机位占比最高，可以把项目默认 Input Color Space / Gamma 设为主机位的 Log / Gamut。</p></div>
+          <div class="card"><span class="tag gold">Clip Override</span><h3>其它机位手动指定</h3><p>副机位、无人机、运动相机、素材包等，在 Media Pool 或 Color 页按 clip 指定正确输入色彩空间。</p></div>
+          <div class="card"><span class="tag green">Same Timeline</span><h3>统一进入同一时间线</h3><p>每种输入先被转换到 DWG / Intermediate 或 ACEScct，再进行镜头匹配和整体调色。</p></div>
+        </div>
+        <div class="settings-stack">
+          <div class="setting-line"><b>主机位</b><p>Project Input：例如 Sony S-Log3 / S-Gamut3.Cine。</p></div>
+          <div class="setting-line"><b>副机位</b><p>Clip Input：例如 Canon Log 3 / Cinema Gamut、DJI D-Log、ARRI LogC4 / AWG4。</p></div>
+          <div class="setting-note">判断顺序：先做输入色彩管理，再做镜头匹配。不要用白平衡、曲线或 LUT 去补偿错误的 Input Color Space。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Log 和 PQ">
+      <div>
+        <div class="kicker">06 / Log vs PQ</div>
+        <h2>Log 和 PQ 不是同一层</h2>
+      </div>
+      <div class="content top">
+        <div class="table" role="table" aria-label="Log 与 PQ 对比">
+          <div class="row head" role="row"><div>项目</div><div>Log / RAW 素材</div><div>PQ HDR Master</div></div>
+          <div class="row" role="row"><div><b>性质</b></div><div>Scene-referred 或接近 scene-referred。</div><div>Display-referred，码值对应绝对显示亮度。</div></div>
+          <div class="row" role="row"><div><b>用途</b></div><div>保留拍摄动态范围，等待显示转换和调色。</div><div>作为 HDR 显示目标和交付母版。</div></div>
+          <div class="row" role="row"><div><b>错误做法</b></div><div>把 Log 当低对比度成片直接调。</div><div>把 PQ 当相机编码或工作空间。</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="HDR 母版">
+      <div>
+        <div class="kicker">07 / HDR Master</div>
+        <h2>HDR master 要检查什么</h2>
+      </div>
+      <div class="content">
+        <ul class="bullets">
+          <li>普通白、字幕白、肤色和镜面高光应有不同亮度位置。</li>
+          <li>1000 nit 是常见母版峰值，不是画面整体亮度目标。</li>
+          <li>高饱和高亮颜色需要检查色域压缩和 hue shift。</li>
+          <li>暗场需要检查黑位、噪声、局部调光和压缩风险。</li>
+          <li>MaxCLL / MaxFALL 是交付信息，不替代画面判断。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-title="三种交付">
+      <div>
+        <div class="kicker">08 / Delivery</div>
+        <h2>SDR、HDR10、Dolby Vision</h2>
+      </div>
+      <div class="content top">
+        <div class="compare-bars">
+          <div class="signal">
+            <span class="tag">SDR</span>
+            <h3>Rec.709 / Gamma 2.4</h3>
+            <p>100 nit 参考显示，亮度范围小，兼容性最高。</p>
+            <div class="bar" aria-hidden="true"></div>
+          </div>
+          <div class="signal hdr">
+            <span class="tag gold">HDR10</span>
+            <h3>PQ + 静态元数据</h3>
+            <p>整片一组 mastering display、MaxCLL 和 MaxFALL。</p>
+            <div class="bar" aria-hidden="true"></div>
+          </div>
+          <div class="signal dv">
+            <span class="tag green">Dolby Vision</span>
+            <h3>PQ + 动态元数据</h3>
+            <p>逐镜头或逐帧分析，并通过 trim 指定目标显示映射。</p>
+            <div class="bar" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide compact-check" data-title="Resolve 设置">
+      <div>
+        <div class="kicker">09 / Resolve Setup</div>
+        <h2>达芬奇项目设置</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-2">
+          <div class="card">
+            <span class="tag">Color Management</span>
+            <h3>项目级色彩管理</h3>
+            <div class="checklist">
+              <div class="check"><span>1</span><div><b>Input</b><p>为每种素材指定正确 Input Color Space / Gamma。</p></div></div>
+              <div class="check"><span>2</span><div><b>Timeline</b><p>使用 DaVinci Wide Gamut / Intermediate 或 ACEScct。</p></div></div>
+              <div class="check"><span>3</span><div><b>Output</b><p>HDR 输出设 Rec.2100 ST2084；SDR 输出设 Rec.709 Gamma 2.4。</p></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="tag gold">Monitoring</span>
+            <h3>监看链路</h3>
+            <div class="checklist">
+              <div class="check"><span>1</span><div><b>Video I/O</b><p>优先通过 DeckLink / UltraStudio 输出到参考显示器。</p></div></div>
+              <div class="check"><span>2</span><div><b>Display</b><p>确认白点、峰值亮度、EOTF、色域和限幅状态。</p></div></div>
+              <div class="check"><span>3</span><div><b>Scopes</b><p>确认波形单位和 HDR 标尺读法。</p></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="调色顺序">
+      <div>
+        <div class="kicker">10 / Grade Order</div>
+        <h2>HDR 调色顺序</h2>
+      </div>
+      <div class="content">
+        <ul class="bullets">
+          <li>先做技术设置，再做主观调整。</li>
+          <li>先匹配镜头，再建立整体风格。</li>
+          <li>先控制曝光和对比，再处理局部高光。</li>
+          <li>先检查肤色和中性灰，再检查高饱和颜色。</li>
+          <li>先完成 HDR master，再进入 Dolby Vision。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Dolby Vision">
+      <div>
+        <div class="kicker">11 / Dolby Vision</div>
+        <h2>Dolby Vision 多了什么</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-3">
+          <div class="card">
+            <span class="tag">Analysis</span>
+            <h3>分析 HDR 母版</h3>
+            <p>读取 HDR grade 的亮度和色彩分布，生成基础动态元数据。</p>
+          </div>
+          <div class="card">
+            <span class="tag gold">Trim</span>
+            <h3>目标显示修正</h3>
+            <p>针对 100 nit SDR、600 nit、1000 nit 等目标显示调整映射结果。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">Metadata</span>
+            <h3>交付元数据</h3>
+            <p>通过 XML、RPU 或封装文件进入编码、平台和播放链路。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Dolby Vision 流程">
+      <div>
+        <div class="kicker">12 / Dolby Vision Workflow</div>
+        <h2>Dolby Vision 制作流程</h2>
+      </div>
+      <div class="content">
+        <ul class="bullets">
+          <li>完成 PQ HDR master。</li>
+          <li>执行 Dolby Vision analysis。</li>
+          <li>选择目标显示并检查自动映射结果。</li>
+          <li>对关键镜头做 trim。</li>
+          <li>导出 metadata，并检查时间线、版本和封装要求。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide profile-slide" data-title="EL 与 Profile">
+      <div>
+        <div class="kicker">13 / EL & Profiles</div>
+        <h2>增强层 EL 和 Profile 选择</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-3">
+          <div class="card"><span class="tag">BL</span><h3>Base Layer</h3><p>基础视频层。Profile 8.1 是 HDR10 兼容，8.4 是 HLG 兼容。</p></div>
+          <div class="card"><span class="tag gold">RPU</span><h3>动态元数据</h3><p>记录 Dolby Vision 映射信息。5.0、8.1、8.4 都是单层 + RPU。</p></div>
+          <div class="card"><span class="tag green">EL</span><h3>Enhancement Layer</h3><p>Profile 7 UHD Blu-ray 双层工作流才涉及 EL，普通导出通常没有。</p></div>
+        </div>
+        <div class="profile-grid" aria-label="Dolby Vision Profile 选择">
+          <div class="profile-pill"><b>5.0</b><span>单层 + RPU</span><p>纯 Dolby Vision；没有 HDR10 fallback。</p></div>
+          <div class="profile-pill"><b>8.1</b><span>HDR10 BL + RPU</span><p>PQ / BT.2020；非 DV 设备可按 HDR10 播放。</p></div>
+          <div class="profile-pill"><b>8.4</b><span>HLG BL + RPU</span><p>HLG 兼容；常见于广播或 HLG 文件。</p></div>
+          <div class="profile-pill"><b>7</b><span>BL + EL + RPU</span><p>UHD Blu-ray 双层；MEL/FEL 需授权编码流程。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="QC">
+      <div>
+        <div class="kicker">14 / QC</div>
+        <h2>QC 重点</h2>
+      </div>
+      <div class="content top">
+        <div class="grid-3">
+          <div class="card"><span class="tag">技术合法</span><h3>信号范围</h3><p>检查 clipping、非法码值、色域越界、MaxCLL / MaxFALL 和元数据一致性。</p></div>
+          <div class="card"><span class="tag gold">目标版本</span><h3>映射结果</h3><p>检查 SDR、HDR、600 nit、1000 nit 等目标版本的暗部、高光和肤色。</p></div>
+          <div class="card"><span class="tag red">常见风险</span><h3>逐镜头检查</h3><p>字幕过亮、暗场压死、转场元数据不连续、高饱和高光偏色。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="延伸资料">
+      <div>
+        <div class="kicker">15 / References</div>
+        <h2>延伸阅读</h2>
+      </div>
+      <div class="content">
+        <ul class="bullets">
+          <li><a href="log-gamma.html">为什么相机使用 Log 拍摄</a></li>
+          <li><a href="scene-display-referred.html">Scene vs Display-referred</a></li>
+          <li><a href="hdr-color-science.html">SDR 到 HDR 色彩科学</a></li>
+          <li><a href="https://documents.blackmagicdesign.com/UserManuals/DaVinci-Resolve-20-Colorist-Guide.pdf" target="_blank" rel="noreferrer">DaVinci Resolve Colorist Guide</a></li>
+          <li><a href="https://professionalsupport.dolby.com/s/article/Quick-Start-Guide-Dolby-Vision-DaVinci-Resolve-Studio" target="_blank" rel="noreferrer">Dolby Vision Quick Start Guide for DaVinci Resolve Studio</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <div class="controls" aria-label="幻灯片控制">
+    <button class="ctrl" id="prevBtn" type="button" aria-label="上一页">‹</button>
+    <button class="ctrl" id="nextBtn" type="button" aria-label="下一页">›</button>
+  </div>
+  <div class="footer" aria-hidden="true">
+    <div class="hint">Space / → 下一页　← 上一页　F 全屏</div>
+    <div class="counter" id="counter">01 / 16</div>
+    <div class="progress"><span id="progressBar"></span></div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const counter = document.querySelector("#counter");
+    const progressBar = document.querySelector("#progressBar");
+    const prevBtn = document.querySelector("#prevBtn");
+    const nextBtn = document.querySelector("#nextBtn");
+    let current = 0;
+
+    const pad = value => String(value).padStart(2, "0");
+
+    function updateSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, i) => {
+        slide.classList.toggle("active", i === current);
+        slide.classList.toggle("past", i < current);
+      });
+      counter.textContent = `${pad(current + 1)} / ${pad(slides.length)}`;
+      progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+      document.title = `${slides[current].dataset.title} | DaVinci HDR 与 Dolby Vision 制作课`;
+    }
+
+    function next() { updateSlide(current + 1); }
+    function prev() { updateSlide(current - 1); }
+
+    document.addEventListener("keydown", event => {
+      const key = event.key;
+      if (key === " " || key === "ArrowRight" || key === "PageDown") {
+        event.preventDefault();
+        next();
+      }
+      if (key === "ArrowLeft" || key === "PageUp") {
+        event.preventDefault();
+        prev();
+      }
+      if (key === "Home") updateSlide(0);
+      if (key === "End") updateSlide(slides.length - 1);
+      if (key.toLowerCase() === "f" && document.fullscreenEnabled) {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+      }
+    });
+
+    prevBtn.addEventListener("click", prev);
+    nextBtn.addEventListener("click", next);
+    updateSlide(0);
+  </script>
+</body>
+</html>

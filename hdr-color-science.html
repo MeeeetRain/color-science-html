@@ -53,6 +53,7 @@
       z-index: 40;
       border-bottom: 1px solid var(--line);
       background: rgba(17,19,24,.82);
+      -webkit-backdrop-filter: blur(16px);
       backdrop-filter: blur(16px);
     }
     .nav {
@@ -101,9 +102,10 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      justify-content: end;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
+    .links a:first-child { margin-left: auto; }
     .links a {
       padding: 7px 10px;
       border-radius: 999px;
@@ -435,7 +437,7 @@
       background: #0d1015;
       overflow: hidden;
     }
-    canvas { width: 100%; height: 100%; display: block; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
     .readout {
       position: absolute;
       right: 12px;
@@ -618,7 +620,8 @@
       white-space: nowrap;
     }
     tr:hover td { background: rgba(255,255,255,.04); }
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #formatTable { min-width: 760px; }
 
     .glossary {
       display: grid;
@@ -651,7 +654,7 @@
 
     @media (max-width: 920px) {
       .nav { grid-template-columns: 1fr; gap: 8px; }
-      .links { justify-content: start; }
+      .links a:first-child { margin-left: 0; }
       .hero-grid, .section-head, .grid-2, .grid-3, .grid-4, .cie-wrap, .volume-grid {
         grid-template-columns: 1fr;
       }
@@ -671,6 +674,13 @@
       .gamma-summary .summary-chain { grid-template-columns: 1fr; }
       h1 { font-size: 42px; }
       th, td { font-size: 14px; }
+      #formatSearch { width: 100%; }
+      .section-head .controls { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .hero::before { animation: none; }
+      .back-home { transition: none; }
     }
   </style>
 </head>
@@ -727,7 +737,7 @@
           <div class="kpi-item">
             <span class="kpi-label">HDR 参考白（图形安全白）</span>
             <span class="kpi-val" style="color:var(--gold)">203 nit</span>
-            <span class="kpi-sub">BT.2408 规定，比 SDR 亮 2 倍</span>
+            <span class="kpi-sub">BT.2408 规定，约为 SDR 参考白的 2 倍</span>
           </div>
           <div class="kpi-item">
             <span class="kpi-label">当前 HDR 峰值</span>
@@ -884,7 +894,7 @@
               <div class="arrow">→</div>
               <div class="node"><b>显示光</b><br><span class="mini">EOTF 解码</span></div>
             </div>
-            <div class="warn" id="gammaModeNote">当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。</div>
+            <div class="warn" id="gammaModeNote">当前只看编码端：Y 轴是归一化视频信号，不是 nit。BT.709 与 HLG 是真正的场景 OETF；PQ 曲线是按 L×参考峰值换算后的编码参考，可在 ② 中取消其他曲线单独查看。</div>
           </div>
         </div>
       </div>
@@ -947,7 +957,7 @@
             <div class="card">
               <span class="tag" style="background:var(--rose)">PQ流程</span>
               <h3>通知模式（Notify）</h3>
-              <p>PQ 制作需要传递母版显示信息（ST 2086）、MaxCLL、MaxFALL 等静态元数据；动态格式（HDR10+/Dolby Vision）还会逐场景或逐镜头给出映射建议，指导显示端自适应 Tone Mapping。</p>
+              <p>PQ 制作需要传递母版显示信息（ST 2086）以及 MaxCLL、MaxFALL（CTA-861.3）等静态元数据；动态格式（HDR10+/Dolby Vision）还会逐场景或逐镜头给出映射建议，指导显示端自适应 Tone Mapping。</p>
             </div>
             <div class="card">
               <span class="tag" style="background:var(--blue)">HLG流程</span>
@@ -1139,7 +1149,7 @@
 
         <div class="tab-panel active" id="tab-hdr10" role="tabpanel">
           <h3>HDR10：PQ + BT.2020 + 静态元数据</h3>
-          <p>HDR10 是最基础、最广泛的 HDR 媒体配置。它使用 ST 2084 / PQ EOTF、10 bit、BT.2020 容器，以及 ST 2086 母版显示信息、MaxCLL、MaxFALL。弱点是静态元数据只给整部内容一个全局描述，显示适配较粗。</p>
+          <p>HDR10 是最基础、最广泛的 HDR 媒体配置。它使用 ST 2084 / PQ EOTF、10 bit、BT.2020 容器，以及 ST 2086 母版显示信息和 CTA-861.3 定义的 MaxCLL、MaxFALL。弱点是静态元数据只给整部内容一个全局描述，显示适配较粗。</p>
           <div class="specs"><div class="spec"><small>EOTF</small>PQ / ST 2084</div><div class="spec"><small>元数据</small>静态</div><div class="spec"><small>位深</small>10 bit</div><div class="spec"><small>适合</small>UHD Blu-ray、流媒体基础层</div></div>
         </div>
         <div class="tab-panel" id="tab-hdr10p" role="tabpanel">
@@ -1293,7 +1303,7 @@
           </ul>
           <ul class="sources">
             <li><a href="https://www.itu.int/rec/R-REC-BT.709" target="_blank" rel="noreferrer">ITU-R BT.709</a> 与 <a href="https://www.itu.int/rec/R-REC-BT.2020" target="_blank" rel="noreferrer">BT.2020</a>：HDTV / UHDTV 色域原色与图像参数。</li>
-            <li><a href="https://pub.smpte.org/latest/st2084/st2084-2014.pdf" target="_blank" rel="noreferrer">SMPTE ST 2084</a>：PQ EOTF 规范；<a href="https://pub.smpte.org/latest/st2086/st2086-2018.pdf" target="_blank" rel="noreferrer">SMPTE ST 2086</a>：母版显示色域元数据（MaxCLL/MaxFALL 容器）。</li>
+            <li><a href="https://pub.smpte.org/latest/st2084/st2084-2014.pdf" target="_blank" rel="noreferrer">SMPTE ST 2084</a>：PQ EOTF 规范；<a href="https://pub.smpte.org/latest/st2086/st2086-2018.pdf" target="_blank" rel="noreferrer">SMPTE ST 2086</a>：母版显示色彩体积元数据（原色、白点、最大/最小亮度）；MaxCLL/MaxFALL 由 CTA-861.3 定义。</li>
             <li><a href="https://pub.smpte.org/latest/st2094-10/st2094-10-2021.pdf" target="_blank" rel="noreferrer">SMPTE ST 2094-10</a>（Dolby）/ <a href="https://pub.smpte.org/latest/st2094-40/st2094-40-2020.pdf" target="_blank" rel="noreferrer">ST 2094-40</a>（HDR10+）：动态元数据框架规范。</li>
             <li><a href="https://www.arib.or.jp/english/html/overview/doc/2-STD-B67v2_0.pdf" target="_blank" rel="noreferrer">ARIB STD-B67</a>：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
             <li><a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA 005-2021 / HDR Vivid</a>：中国超高清视频产业联盟动态元数据 HDR 标准。</li>
@@ -1413,7 +1423,7 @@
       $("#peakValue").textContent = `${peak.toLocaleString()} nit`;
       if ($("#statPeak")) $("#statPeak").textContent = `${peak.toLocaleString()} nit`;
       if ($("#statRatio")) $("#statRatio").textContent = `${ratio % 1 === 0 ? ratio : ratio.toFixed(1)}×`;
-      $("#rangeReadout").textContent = `当前 HDR 峰值：${peak.toLocaleString()} nit，比 SDR 参考白（100 nit）亮 ${ratio % 1 === 0 ? ratio : ratio.toFixed(1)} 倍`;
+      $("#rangeReadout").textContent = `当前 HDR 峰值：${peak.toLocaleString()} nit，是 SDR 峰值白（100 nit）的 ${ratio % 1 === 0 ? ratio : ratio.toFixed(1)} 倍`;
 
       const pad = { l: 64, r: 28, t: 28, b: 54 };
       ctx.clearRect(0, 0, w, h);
@@ -1586,7 +1596,7 @@
       oetf: {
         title: "OETF：拍摄/编码端",
         text: "OETF 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可切到“PQ 编码”单独查看。",
-        note: "当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。",
+        note: "当前只看编码端：Y 轴是归一化视频信号，不是 nit。BT.709 与 HLG 是真正的场景 OETF；PQ 曲线是按 L×参考峰值换算后的编码参考，可在 ② 中取消其他曲线单独查看。",
         xLabel: "场景相对亮度 L",
         yLabel: "归一化视频信号 V",
         xKind: "signal",
@@ -2282,7 +2292,7 @@
 
     const tableRows = [
       { name: "SDR / BT.709", eotf: "BT.709 OETF + BT.1886 EOTF (γ≈2.4)", bit: "8", metadata: "无（固定显示环境假定）", gamut: "BT.709（35.9% CIE）", license: "ITU 开放广播标准", use: "标清/高清电视、电脑显示、传统广播（基准参考）" },
-      { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086, MaxCLL, MaxFALL", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
+      { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086 + MaxCLL/MaxFALL（CTA-861.3）", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
       { name: "HDR10+", eotf: "PQ / ST 2084", bit: "10", metadata: "动态：ST 2094-40，逐场景映射", gamut: "BT.2020 容器", license: "HDR10+ 认证生态（相对开放）", use: "流媒体、电视、移动端" },
       { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：ST 2094-10 / Dolby RPU，逐帧映射", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
       { name: "HLG", eotf: "HLG OETF + 可变系统γ", bit: "10/12", metadata: "可无，依靠识别符 / 约定", gamut: "BT.2020", license: "广播开放标准（BBC/NHK/ITU）", use: "直播、体育、新闻、电视播出" },
@@ -2429,10 +2439,10 @@
       const rect = e.currentTarget.getBoundingClientRect();
       const svgX = (e.clientX - rect.left) * (720 / rect.width);
       const svgY = (e.clientY - rect.top)  * (640 / rect.height);
-      const cx = (svgX - 70) / 760;
-      const cy = (595 - svgY) / 660;
+      const cx = (svgX - cieChart.left) / cieChart.scale;
+      const cy = (cieChart.bottom - svgY) / cieChart.scale;
       const el = $("#cieHoverInfo");
-      if (cx >= 0 && cx <= 0.85 && cy >= 0 && cy <= 0.9) {
+      if (cx >= 0 && cx <= cieChart.xMax && cy >= 0 && cy <= cieChart.yMax) {
         el.innerHTML = `<b style="color:var(--ink)">x = ${cx.toFixed(4)}, y = ${cy.toFixed(4)}</b>&ensp;·&ensp;CIE 1931 xy 色度坐标`;
       } else {
         el.textContent = "在色度图上移动鼠标可读取 xy 坐标";
@@ -2441,14 +2451,6 @@
     $("#cieSvg").addEventListener("mouseleave", () => {
       $("#cieHoverInfo").textContent = "在色度图上移动鼠标可读取 xy 坐标";
     });
-
-    /* Hero range-row: set SDR marker to correct log-scale position */
-    (function() {
-      const minLog = Math.log10(0.01), maxLog = Math.log10(10000);
-      const sdrPct = ((Math.log10(100) - minLog) / (maxLog - minLog) * 100).toFixed(1);
-      const row = document.querySelector(".range-row");
-      if (row) row.style.setProperty("--w", `${sdrPct}%`);
-    })();
 
     addEventListener("scroll", updateProgress, { passive: true });
     addEventListener("resize", redrawAll);

@@ -8,14 +8,14 @@
           "tag": "科普",
           "source": "GTI Graphic Technology",
           "title": "What Is Metamerism?",
-          "description": "这篇值得读，因为它把同色异谱拆成 observer、illuminant、geometric 三类失效，并且强调多光源目测、受控观察环境和光谱测量为什么必须一起用，能把“仪器读数一样、现场还是不一样”这类困惑拉回到可操作的判断框架。它和站内最近更新的同色异谱章节衔接很强，尤其适合作为从概念走向实际审核流程的延伸阅读。",
+          "description": "这篇值得读，因为它把同色异谱拆成 observer、illuminant、geometric、device 几类典型失效，并直接落到多光源检查、统一观察环境和设备一致性这些实务动作上。它和站内最近更新的同色异谱章节衔接很强，尤其适合作为“为什么仪器接近、肉眼仍可能分歧”的工作流延伸阅读。",
           "url": "https://www.gtilite.com/2019/05/understanding-metamerism/"
         },
         {
           "tag": "教程",
           "source": "OpenColorIO Docs",
           "title": "Displays & Views",
-          "description": "这篇值得读，因为它没有把 scene-referred / display-referred 停留在术语层面，而是直接用 display、view、view transform、display colorspace 解释监看菜单背后到底在切什么。更有价值的是，它明确指出 view transform 就是在 scene 参考空间和 display 参考空间之间做映射，这对理解站内最近更新的 HDR 色彩科学章节里 Output Transform、HDR/SDR 视图和最终交付之间的关系非常有帮助。",
+          "description": "这篇值得读，因为它没有把 scene-referred / display-referred 停留在术语层面，而是直接用 display、view、view transform、display colorspace 解释监看视图背后到底在切什么。更有价值的是，它把 view transform 明确写成 scene 参考空间到 display 参考空间的映射，这对理解站内最近更新章节里 Output Transform、HDR/SDR 视图与最终交付之间的关系非常有帮助。",
           "url": "https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html"
         }
       ]

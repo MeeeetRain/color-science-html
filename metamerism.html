@@ -49,6 +49,7 @@
       z-index: 50;
       border-bottom: 1px solid var(--line);
       background: rgba(16,18,23,.86);
+      -webkit-backdrop-filter: blur(16px);
       backdrop-filter: blur(16px);
     }
     .nav {
@@ -1025,6 +1026,11 @@
       .compare-swatches { height: 80px; }
       .swatch-pair { grid-template-columns: 1fr; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .swatch, .compare-swatches > div, .swatch-tile .swatch-large,
+      button, .bridge, .source-list a { transition: none; }
+    }
   </style>
 </head>
 <body>
@@ -1177,12 +1183,12 @@
             <div class="term">Metameric Black</div>
             <h4>同色异谱黑</h4>
             <p>一种<b>非零光谱</b>，但它的 X、Y、Z 三个积分都精确为零。把它叠加到任何光谱上，颜色不变——这就是为什么同色异谱必然存在：CMF 的"零空间"里有无穷多种可加光谱。</p>
-            <p>直观理解：负反卷积、负频率成分等数学概念在色彩空间的体现。任何 XYZ 相同的两条光谱，差值就是一条 metameric black。</p>
+            <p>直观理解：metameric black 必然有正有负的波段（物理光谱非负，所以它只能以两条光谱的"差"的形式存在）。任何 XYZ 相同的两条光谱，差值就是一条 metameric black。</p>
           </div>
           <div class="def">
             <div class="term">Luther condition</div>
             <h4>Luther 条件</h4>
-            <p>一台设备（相机、扫描仪、分光仪）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</p>
+            <p>一台三通道设备（相机、扫描仪、滤色片式色度计）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</p>
             <p>现实里几乎没有相机精确满足。相机的 RGB 滤色片需要同时兼顾噪声、灵敏度、红外抑制和制造一致性，通常只能接近人眼三刺激值。白平衡和矩阵校正能修正灰轴与一部分色卡，但不能把所有光谱都变成人眼会看到的颜色。</p>
           </div>
         </div>
@@ -1492,7 +1498,7 @@
           <div class="card">
             <div class="spec-head">
               <h3>样本 B 反射率峰值</h3>
-              <span class="label">3 个高斯峰（FWHM ≈ 50 nm）</span>
+              <span class="label">3 个高斯峰（FWHM ≈ 65 nm）</span>
             </div>
             <div class="sliders">
               <label>蓝峰 · 460 nm <span class="val" id="rBlueVal">25</span><input id="rBlue" type="range" min="0" max="100" value="25"></label>
@@ -1535,7 +1541,7 @@
           </div>
           <div class="card">
             <h4>为什么 F2 特别凶猛</h4>
-            <p>D65 是<b>平滑日光</b>，F2 是<b>带尖锐汞蒸气发射线的荧光</b>（435/546/611 nm 三条强线）。F2 在不同波长上能量分布完全不均，<b>对样本反射率的某些波段格外敏感</b>。任何在 D65 下匹配但依赖不同波段反射的两个样本，在 F2 下都很容易产生可见差异。</p>
+            <p>D65 是<b>平滑日光</b>，F2 是<b>带尖锐汞蒸气发射线的荧光</b>（405/436/546 nm 等强线）。F2 在不同波长上能量分布完全不均，<b>对样本反射率的某些波段格外敏感</b>。任何在 D65 下匹配但依赖不同波段反射的两个样本，在 F2 下都很容易产生可见差异。</p>
           </div>
         </div>
       </div>
@@ -1568,14 +1574,14 @@
           <div class="wf">
             <span class="ctx">显示 · 观察者同色异谱</span>
             <h4>OLED / QD-OLED 显示中的观察者差异</h4>
-            <p>传统 LCD 用宽峰荧光粉，不同观察者看到的颜色差异较小。OLED 和 QD-OLED 用<b>窄峰发光体</b>（OLED 的窄带蓝、量子点的极窄绿/红），同样的 XYZ 在不同人眼里能产生 ΔE 5–18 的差距（Optica Express 2020 等多项实测）。</p>
+            <p>传统 LCD 用宽峰荧光粉，不同观察者看到的颜色差异较小。OLED 和 QD-OLED 用<b>窄峰发光体</b>（OLED 的窄带蓝、量子点的极窄绿/红），同样的 XYZ 在不同人眼里能产生 ΔE 5–18 的差距（Optics Express 2020 等多项实测）。</p>
             <p>这就是为什么"有人觉得新 iPhone 偏绿、有人觉得正常"——校色仪用的是 CIE 1931 标准观察者，<b>你的眼睛不是</b>。色域越宽、原色越窄，问题越严重。</p>
             <p>方向：CIE 2015 生理观察者模型、Asano 八参数个体观察者、显示器自适应观察者补偿——业界还在探索。</p>
           </div>
           <div class="wf">
             <span class="ctx">HDR · 广色域副作用</span>
             <h4>Rec.2020 / 广色域的光谱限制</h4>
-            <p>Rec.2020 用接近单色光的 RGB 原色（630 / 532 / 467 nm），色域比 Rec.709 大 75%。<b>但单色光原色 = 极窄峰</b>——意味着观察者同色异谱效应被推到极限。</p>
+            <p>Rec.2020 用接近单色光的 RGB 原色（630 / 532 / 467 nm），xy 色域面积约为 Rec.709 的 1.9 倍。<b>但单色光原色 = 极窄峰</b>——意味着观察者同色异谱效应被推到极限。</p>
             <p>实务后果：HDR 母带在不同型号 OLED 上、不同观看角度、不同观察者眼里的偏色比 SDR 显示更明显。这不一定是"屏幕没校准"，也可能来自显示光谱与观察者差异。</p>
             <p>BT.2100 没有规定补偿方案，目前只能靠：1) 使用相同型号监视器交付；2) 多观察者交叉评估；3) 关键颜色避免落在窄峰原色附近。</p>
           </div>
@@ -1598,7 +1604,7 @@
           </div>
           <div class="myth">
             <p class="wrong">❌ "校色仪准就是眼睛看也准"</p>
-            <p class="truth"><b>校色仪是另一个观察者。</b>它有自己的光谱灵敏度，等价于 CIE 1931 标准观察者。你的眼睛不是 CIE 1931——尤其在 OLED 窄峰前差异最大。校准只是"对仪器对准"，不保证"你看上去对"。</p>
+            <p class="truth"><b>校色仪是另一个观察者。</b>它的读数按 CIE 1931 标准观察者计算（滤色片式仪器甚至只是近似这组 CMF）。你的眼睛不是 CIE 1931——尤其在 OLED 窄峰前差异最大。校准只是"对仪器对准"，不保证"你看上去对"。</p>
           </div>
           <div class="myth">
             <p class="wrong">❌ "广色域屏幕颜色更准"</p>
@@ -1627,7 +1633,7 @@
               CIE 15:2018 Colorimetry, 4th edition
               <small>三刺激值、CMF、Special Metamerism Index 的官方定义</small>
             </a>
-            <a href="https://www.iso.org/standard/85116.html" target="_blank" rel="noreferrer">
+            <a href="https://www.iso.org/standard/72315.html" target="_blank" rel="noreferrer">
               ISO 18314-4:2020 Metamerism index for change of illuminant — Calculation and grading (A–E)
               <small>光源同色异谱指数 (MI) 的计算与分级（A–E）</small>
             </a>
@@ -1649,7 +1655,7 @@
               <small>四种同色异谱失败的完整定义和示例</small>
             </a>
             <a href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-28-14-20305&id=432907" target="_blank" rel="noreferrer">
-              Observer metamerism to display white point — Optica Express 2020
+              Observer metamerism to display white point — Optics Express 2020
               <small>实测窄峰显示器在不同观察者间的 ΔE 偏移</small>
             </a>
             <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10607170/" target="_blank" rel="noreferrer">
@@ -2251,11 +2257,6 @@
         const x = computeXYZUnderIlluminant(r, SPD_D65);
         P.push([x.X, x.Y, x.Z]);
       }
-      const M = [
-        [P[0][0], P[1][0], P[2][0]],
-        [P[0][1], P[1][1], P[2][1]],
-        [P[0][2], P[1][2], P[2][2]]
-      ];
       const v = [targetXYZ.X, targetXYZ.Y, targetXYZ.Z];
       const a = solve3x3(P, v);
       if (!a) return null;
