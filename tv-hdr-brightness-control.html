@@ -522,6 +522,7 @@
     <nav class="nav">
       <a href="index.html" class="logo">色彩与显示指南</a>
       <div class="nav-links">
+        <a href="#terms">名称约定</a>
         <a href="#idea">核心逻辑</a>
         <a href="#modes">两套模式</a>
         <a href="#lab">曲线模型</a>
@@ -551,6 +552,39 @@
             <div class="meter"><span>Peak_eff</span><strong id="hero-peak">900 nits</strong></div>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <section class="section" id="terms">
+      <div class="section-head">
+        <h2>名称约定</h2>
+        <p>为了避免把电视菜单里的“亮度”、HDR 标准里的“参考白”和面板物理峰值混在一起，本文先固定下面这些名称。</p>
+      </div>
+      <div class="principle-grid">
+        <div class="principle">
+          <b>Reference White / RW</b>
+          <p>普通白的亮度锚点。字幕、UI、SDR 白和 HDR diffuse white 都应围绕它对齐；本文默认标准参考值是 203 nits。</p>
+        </div>
+        <div class="principle">
+          <b>Peak_eff</b>
+          <p>当前帧真正可用的有效峰值亮度。它不是面板标称峰值，而是经过 ABL、窗口面积和功率预算折算后的结果。</p>
+        </div>
+        <div class="principle">
+          <b>Headroom</b>
+          <p>参考白以上留给高光的余量，计算为 <code>Peak_eff / RW_final</code>。它是结果，不是用户直接调的滑杆。</p>
+        </div>
+        <div class="principle">
+          <b>用户亮度意图</b>
+          <p>页面里的“亮度滑杆”表示用户希望普通白更亮或更暗，主要影响 RW_target，不等同于直接拉高整块面板或整条曲线。</p>
+        </div>
+        <div class="principle">
+          <b>高光窗口占比 / ABL</b>
+          <p>画面中接近峰值亮度的面积比例。窗口越大，电视越可能因功耗、热量或背光预算降低 Peak_eff。</p>
+        </div>
+        <div class="principle">
+          <b>Tone Mapping / Panel Drive</b>
+          <p>Tone Mapping 决定内容亮度如何映射到可用显示范围；Panel Drive 是最终驱动 OLED 电流或 Mini-LED 背光/LCD 透过率的硬件层。</p>
+        </div>
       </div>
     </section>
 
