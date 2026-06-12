@@ -214,27 +214,6 @@
       grid-template-columns: minmax(290px, .72fr) minmax(0, 1.28fr);
       gap: 18px;
     }
-    .segmented {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .segmented button {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      min-height: 44px;
-      color: var(--muted);
-      background: rgba(255,255,255,.035);
-      font: inherit;
-      font-weight: 780;
-      cursor: pointer;
-    }
-    .segmented button[aria-pressed="true"] {
-      color: #06100d;
-      border-color: transparent;
-      background: linear-gradient(135deg, var(--cyan), var(--green));
-    }
     .control { margin-top: 17px; }
     .control label {
       display: flex;
@@ -277,24 +256,6 @@
       line-height: 1.65;
     }
     .abl-explainer b { color: var(--cyan); }
-    .abl-scale {
-      position: relative;
-      height: 8px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--green), var(--amber), var(--coral));
-    }
-    .abl-marker {
-      position: absolute;
-      top: 50%;
-      width: 14px;
-      height: 14px;
-      border: 2px solid #07100e;
-      border-radius: 50%;
-      background: var(--cyan);
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 0 2px rgba(255,255,255,.5);
-    }
     .chart {
       position: relative;
       border: 1px solid rgba(255,255,255,.12);
@@ -323,6 +284,7 @@
     .hover-tip .seg { color: var(--amber); font-size: 11.5px; }
     .chart svg { display: block; width: 100%; height: auto; }
     .axis { stroke: rgba(255,255,255,.28); stroke-width: 1; }
+    .plot-frame { fill: none; stroke: rgba(255,255,255,.32); stroke-width: 1; pointer-events: none; }
     .grid-line { stroke: rgba(255,255,255,.09); stroke-width: 1; }
     .grid-label, .chart text { fill: var(--muted); font-size: 12px; }
     .headroom-band { fill: rgba(245,195,91,.10); }
@@ -337,19 +299,13 @@
       fill: none;
       stroke: var(--cyan);
       stroke-width: 4;
-      stroke-linecap: round;
+      stroke-linecap: butt;
       stroke-linejoin: round;
     }
     .rw-line { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 4 5; }
-    .knee-line { stroke: var(--coral); stroke-width: 2; stroke-dasharray: 4 5; }
     .anchor-dot {
       fill: var(--bg);
       stroke: var(--amber);
-      stroke-width: 3;
-    }
-    .knee-dot {
-      fill: var(--bg);
-      stroke: var(--coral);
       stroke-width: 3;
     }
     code {
@@ -477,7 +433,7 @@
       <div class="nav-links">
         <a href="#terms">名称约定</a>
         <a href="#idea">核心逻辑</a>
-        <a href="#modes">两套模式</a>
+        <a href="#modes">控制链路</a>
         <a href="#lab">曲线模型</a>
         <a href="#walkthrough">计算链路</a>
         <a href="#algorithm">算法框架</a>
@@ -492,7 +448,7 @@
         <div>
           <div class="eyebrow">HDR Brightness Control</div>
           <h1>电视亮度，不再只是<span class="accent">背光强弱</span></h1>
-          <p class="lead">把 HDR 亮度控制重新定义为 Reference White、Display Headroom、Tone Mapping 与 Panel Drive 的联合决策。核心原则只有一句：<b>锚住普通白，让面板峰值的波动只体现在高光 roll-off 上，绝不污染中间调和 UI。</b></p>
+          <p class="lead">在 HDR 显示链路中，电视菜单里的“亮度”并不等同于背光或面板峰值。本文把它拆成一组可计算的约束：Reference White 决定画面白点，Peak_eff 决定高光上限，Tone Mapping 在两者之间建立平滑过渡。<b>50% 是还原锚点；继续调亮时，参考白与 UI、字幕、视频白点一起上移，高光再由 shoulder 吸收进当前 headroom。</b></p>
         </div>
       </div>
     </section>
@@ -505,7 +461,7 @@
       <div class="principle-grid">
         <div class="principle">
           <b>Reference White / RW</b>
-          <p>普通白的亮度锚点。字幕、UI、SDR 白和 HDR diffuse white 都应围绕它对齐；本文默认标准参考值是 203 nits。</p>
+          <p>普通白的亮度锚点。字幕、UI、SDR 白和 HDR diffuse white 都围绕它对齐；本文把 203 nits 作为 50% 亮度下的还原参考。</p>
         </div>
         <div class="principle">
           <b>Peak_eff</b>
@@ -517,7 +473,7 @@
         </div>
         <div class="principle">
           <b>用户亮度意图</b>
-          <p>页面里的“亮度滑杆”表示用户希望普通白更亮或更暗，主要影响 RW_target，不等同于直接拉高整块面板或整条曲线。</p>
+          <p>页面里的“亮度滑杆”表示用户希望整条观看亮度上移或下移。它会改变 RW，也会让视频、UI、字幕等内容按同一白点增益一起变化；超过 50% 后，曲线不再追求绝对 1:1，而是优先保持观感上的亮度关系。</p>
         </div>
         <div class="principle">
           <b>高光窗口占比 / ABL</b>
@@ -533,49 +489,49 @@
     <section class="section" id="idea">
       <div class="section-head">
         <h2>核心逻辑</h2>
-        <p>用户调亮度时，系统真正调整的是普通白有多亮、高光保留多少空间、中间调如何适配观看环境，而不是简单把整块面板推亮。Headroom 不是可调输入，它是 Peak_eff 与 Reference White 的比值——一个被动导出的余量。极暗部要被保护，不能跟着亮度滑杆被直接拉高或压低。</p>
+        <p>用户调亮度时，系统真正调整的是普通白有多亮、高光保留多少空间、中间调如何适配观看环境，而不是简单把整块面板推亮。Headroom 不是可调输入，它是 Peak_eff 与 Reference White 的比值——一个被动导出的余量。50% 时 0-1000 nits 作为还原段；超过 50% 后，白点增益抬高画面，shoulder 起点再从 1000 nits 平滑前移，避免刚调亮时中间调反而变暗。</p>
       </div>
       <div class="callout">电视 HDR 亮度控制不再直接等同于背光强弱，而是由 Reference White、Display Headroom、Tone Mapping 和 Panel Drive 共同决定。</div>
       <div class="principle-grid">
         <div class="principle">
           <b>① Reference White 是锚点</b>
-          <p>SDR 白、HDR diffuse white、UI、字幕都对齐到它。它是用户"亮度"真正改变的量。</p>
+          <p>SDR 白、HDR diffuse white、UI、字幕都对齐到它。它是用户"亮度"真正改变的量，也是整条曲线的白点增益来源。</p>
         </div>
         <div class="principle">
           <b>② Peak 是窗口的函数</b>
           <p>OLED/Mini-LED 受 ABL 限制，峰值随高光窗口面积逐场景漂移。Peak_eff 不是常数。</p>
         </div>
         <div class="principle">
-          <b>③ 波动吸收进高光</b>
-          <p>Peak_eff 起伏时，diffuse white 锚死不动，所有变化都被 knee 之后的 roll-off 吸收。</p>
+          <b>③ 高光收敛进 headroom</b>
+          <p>RW_final 决定画面白点，Peak_eff 决定高光天花板。两者之间由动态 shoulder 连接，把超过当前余量的高光平滑压缩，而不是硬切或突然变暗。</p>
         </div>
       </div>
     </section>
 
     <section class="section" id="modes">
       <div class="section-head">
-        <h2>两套核心模式</h2>
-        <p>一个模式负责准确，一个模式负责环境适配。产品层越清楚，底层曲线越不容易互相打架。</p>
+        <h2>亮度意图的两条控制链路</h2>
+        <p>页面只保留一个用户可控量：亮度意图。它同时进入白点链路和面板驱动链路，前者决定整条信号的白点增益，后者决定高光区还能保留多少空间。</p>
       </div>
       <div class="mode-grid">
         <article class="mode-card">
-          <h3>Filmmaker / 准确模式</h3>
-          <p>尊重内容原始 HDR 意图：亮度调的是 Reference White 锚点，中灰到参考白逐渐跟随白点变化；极暗部保留原始 PQ 暗部结构，优先保留 headroom，knee 之前严格跟随 PQ EOTF 的相对关系。</p>
+          <h3>白点链路：RW_final</h3>
+          <p>亮度意图先决定普通白锚点，并把它用于 UI、字幕和图形平面的白点控制。50% 是还原锚点；50% 以上白点增益会让视频与图形一起变亮，因此曲线不再是绝对 1:1。</p>
           <ul>
-            <li><b>RW</b><span>用户亮度在 100-300 nits 区间调白点（暗室影院到明亮客厅），仅受 Peak_eff / 4 物理上限约束。</span></li>
-            <li><b>Headroom</b><span>建议不低于 4x，用来保留高光层次。</span></li>
-            <li><b>Tone Mapping</b><span>knee 前保持 PQ 斜率（RW=203 时与 1:1 完全重合），超出面板能力时才进入 soft roll-off。</span></li>
-            <li><b>用户控制</b><span>亮度影响 Reference White 与中灰以上观感，暗部用 toe 保护平滑过渡，绝不去抬黑位变成明亮模式。</span></li>
+            <li><b>输入</b><span>用户亮度意图 0-100%。</span></li>
+            <li><b>中性点</b><span>50% 时 RW_final = 203 nits，0-1000 nits 输出等于输入。</span></li>
+            <li><b>范围</b><span>RW_final 从 100 nits 到 600 nits。</span></li>
+            <li><b>信号</b><span>50% 时 1:1；50% 以上按 RW_final / 203 提高视频与图形白点。</span></li>
           </ul>
         </article>
         <article class="mode-card">
-          <h3>明亮模式 / Bright Room HDR</h3>
-          <p>提高高环境光下的可见性：提高普通白，并按环境光在中段抬升暗部（黑端锚定、细节按比例保留），允许压缩部分高光层次。</p>
+          <h3>面板链路：Peak_cap</h3>
+          <p>同一个亮度意图也会提高面板驱动允许的峰值能力。这样 RW 升高时，headroom 关系会同步变化；50% 时 0-1000 nits 还原，50% 以上则让 shoulder 起点从 1000 nits 平滑移向 203 nits，最后用官方 tone mapping 常见的 shoulder 吸收限制。</p>
           <ul>
-            <li><b>RW</b><span>约 200-450 nits，由用户亮度和环境光共同决定 RW_target。</span></li>
-            <li><b>Headroom</b><span>保底 2.2x-3x，不能让普通白吃光 HDR 空间。</span></li>
-            <li><b>Tone Mapping</b><span>RW 以下做可见性增益，RW 以上更早进入 shoulder。</span></li>
-            <li><b>用户控制</b><span>亮度滑杆影响 RW target，而不是直接拉满背光。</span></li>
+            <li><b>输入</b><span>同一个用户亮度意图。</span></li>
+            <li><b>范围</b><span>Peak_cap 从 600 nits 到 4000 nits。</span></li>
+            <li><b>ABL</b><span>示例固定用 10% 高光窗口折算 Peak_eff。</span></li>
+            <li><b>结果</b><span>Headroom 由 Peak_eff / RW_final 被动导出。</span></li>
           </ul>
         </article>
       </div>
@@ -584,61 +540,49 @@
     <section class="section" id="lab">
       <div class="section-head">
         <h2>真实可用的曲线模型</h2>
-        <p>横轴是输入 PQ 绝对亮度（对数），纵轴是显示输出亮度（对数）。亮度滑杆改变 Reference White 锚点；极暗部保持黑位和暗部层次，中灰到参考白逐渐过渡到新的白点增益。而拖动「高光窗口」让 ABL 改变 Peak_eff 时，<b>RW 锚点不随面板波动漂移</b>，只有 knee 之后的 roll-off 在吸收变化。黄色带是当前可用的高光 headroom。</p>
+        <p>横轴是输入 PQ 绝对亮度（线性 nits），纵轴是显示输出亮度（线性 nits）。这里把电视菜单里的“亮度”建模成一个综合控制量：它改变 Reference White，也改变面板驱动峰值能力。50% 时 0-1000 nits 保持 1:1；超过 50% 后参考白提高，shoulder 起点从 1000 nits 平滑移向 203 nits，避免刚调亮时中间调反而变暗。</p>
       </div>
       <div class="lab">
         <div class="controls">
-          <div class="segmented" aria-label="模式切换">
-            <button type="button" id="film-btn" aria-pressed="false">Filmmaker</button>
-            <button type="button" id="bright-btn" aria-pressed="true">明亮 HDR</button>
-          </div>
           <div class="control">
-            <label for="peak">面板峰值能力 (10% 窗口) <output id="peak-out">1000 nits</output></label>
-            <input id="peak" type="range" min="600" max="4000" value="1000" step="50">
+            <label for="user-brightness">用户亮度意图 <output id="brightness-out">50%</output></label>
+            <input id="user-brightness" type="range" min="0" max="100" value="50" step="1">
           </div>
-          <div class="control">
-            <label for="window">高光窗口占比 (ABL) <output id="window-out">10% → Peak_eff 1000</output></label>
-            <input id="window" type="range" min="1" max="100" value="10" step="1">
-          </div>
-          <div class="abl-explainer" id="abl-explainer">
-            <div><b>高光窗口占比</b>表示画面里有多少面积在请求接近峰值亮度。小窗口高光更容易维持峰值；窗口越大，电视会因为功耗、热量或背光预算触发 ABL，把可用峰值压低。</div>
-            <div class="abl-scale" aria-hidden="true"><span class="abl-marker" id="abl-marker"></span></div>
-            <div id="abl-explain-readout">当前属于小窗口高光，Peak_eff 接近面板峰值。</div>
-          </div>
-          <div class="control">
-            <label for="user-brightness">用户亮度意图 <output id="brightness-out">60%</output></label>
-            <input id="user-brightness" type="range" min="0" max="100" value="60" step="1">
-          </div>
-          <div class="control">
-            <label for="ambient">环境光 <output id="ambient-out">300 lux</output></label>
-            <input id="ambient" type="range" min="0" max="1200" value="300" step="10">
+          <div class="abl-explainer" id="brightness-explainer">
+            <div><b>单一亮度控制</b>同时影响两条链路：一条是视频与 UI/字幕/图形共同参考的白点 <code>RW_final</code>，另一条是面板驱动允许的峰值能力 <code>Peak_cap</code>。50% 是还原中性点；超过 50% 时参考白提高，shoulder 起点提前，曲线自然不再是 1:1。</div>
+            <div id="brightness-explain-readout">当前亮度意图会生成一组 RW、Peak 与 headroom 关系。</div>
           </div>
         </div>
         <div class="output-panel">
           <div class="stats">
-            <div class="stat"><span>Peak_eff</span><strong id="peak-eff">1000</strong></div>
-            <div class="stat"><span>RW_final</span><strong id="rw-final">300</strong></div>
-            <div class="stat"><span>Headroom</span><strong id="headroom">3.0x</strong></div>
-            <div class="stat"><span>Stops</span><strong id="stops">1.58</strong></div>
+            <div class="stat"><span>参考白 / Reference White</span><strong id="rw-final">203 nits</strong></div>
+            <div class="stat"><span>有效峰值 / Effective Peak</span><strong id="peak-eff">1000 nits</strong></div>
+            <div class="stat"><span>高光余量 / Headroom</span><strong id="headroom">3.0x</strong></div>
+            <div class="stat"><span>压缩起点 / Roll-off Start</span><strong id="rolloff-start">1000 nits</strong></div>
           </div>
           <div class="chart">
             <svg viewBox="0 0 720 360" role="img" aria-label="Tone mapping 曲线">
-              <rect class="headroom-band" id="headroom-band" x="76" y="38" width="592" height="0"></rect>
+              <defs>
+                <clipPath id="plot-clip">
+                  <rect x="76" y="38" width="592" height="256"></rect>
+                </clipPath>
+              </defs>
               <g id="x-grid"></g>
               <g id="y-grid"></g>
               <line class="axis" x1="76" y1="294" x2="668" y2="294"></line>
               <line class="axis" x1="76" y1="38" x2="76" y2="294"></line>
-              <path class="curve-reference" id="pq-reference" d=""></path>
-              <line class="peak-line" id="peak-line" x1="76" y1="38" x2="668" y2="38"></line>
-              <line class="rw-line" id="rw-line-v" x1="0" y1="294" x2="0" y2="38"></line>
-              <line class="rw-line" id="rw-line-h" x1="76" y1="0" x2="668" y2="0"></line>
-              <line class="knee-line" id="knee-line-v" x1="0" y1="294" x2="0" y2="38"></line>
-              <line class="knee-line" id="knee-line-h" x1="76" y1="0" x2="668" y2="0"></line>
-              <path class="curve-active" id="active-curve" d=""></path>
-              <circle class="anchor-dot" id="rw-dot" cx="0" cy="0" r="5"></circle>
-              <circle class="knee-dot" id="knee-dot" cx="0" cy="0" r="5"></circle>
-              <text x="76" y="326">Input PQ luminance / nits</text>
-              <text x="86" y="58">Output display luminance / nits</text>
+              <g clip-path="url(#plot-clip)">
+                <rect class="headroom-band" id="headroom-band" x="76" y="38" width="592" height="0"></rect>
+                <path class="curve-reference" id="pq-reference" d=""></path>
+                <line class="peak-line" id="peak-line" x1="76" y1="38" x2="668" y2="38"></line>
+                <line class="rw-line" id="rw-line-v" x1="0" y1="294" x2="0" y2="38"></line>
+                <line class="rw-line" id="rw-line-h" x1="76" y1="0" x2="668" y2="0"></line>
+                <path class="curve-active" id="active-curve" d=""></path>
+                <circle class="anchor-dot" id="rw-dot" cx="0" cy="0" r="5"></circle>
+              </g>
+              <rect class="plot-frame" x="76" y="38" width="592" height="256"></rect>
+              <text x="76" y="326">Input PQ luminance / nits · linear</text>
+              <text x="86" y="58">Output display luminance / nits · linear</text>
               <text x="470" y="58">dashed: 1:1 PQ then hard clip</text>
               <g id="hover-layer" style="display:none">
                 <line class="hover-line" id="hover-line-v" x1="0" y1="294" x2="0" y2="38"></line>
@@ -649,10 +593,10 @@
             <div class="hover-tip" id="hover-tip"></div>
           </div>
           <div class="readouts">
-            <div class="readout"><span>RW anchor</span><strong id="rw-anchor">203 → 300 nits</strong></div>
-            <div class="readout"><span>Knee · shoulder</span><strong id="knee-anchor">520 → 470 nits</strong></div>
-            <div class="readout"><span>阴影提亮（中段峰值）</span><strong id="shadow-anchor">+0%</strong></div>
-            <div class="readout"><span>UI &amp; 字幕 clamp</span><strong id="ui-clamp">≤ 300 nits</strong></div>
+            <div class="readout"><span>参考白输入 / 203 Input</span><strong id="rw-anchor">203 → 203 nits</strong></div>
+            <div class="readout"><span>中亮度输入 / 1000 Input</span><strong id="mid-anchor">1000 → 1000 nits</strong></div>
+            <div class="readout"><span>高光输入 / 4000 Highlight</span><strong id="highlight-anchor">4000 → 1000 nits</strong></div>
+            <div class="readout"><span>白点增益 / White Gain</span><strong id="white-gain">1.00x</strong></div>
           </div>
           <p class="lab-note" id="lab-note"></p>
         </div>
@@ -667,22 +611,22 @@
       <div class="calc-steps">
         <div class="calc-step">
           <div>
-            <h4>① 有效峰值 Peak_eff（ABL 折算）</h4>
-            <p>面板峰值能力是在 10% 窗口下标定的。高光窗口越大，功率越分散、可持续峰值越低，由 ABL 折算系数体现。它不会直接改变 Reference White 的目标，而是先降低 Peak_eff，再通过 RW 上限和高光 shoulder 改变曲线形状。</p>
+            <h4>① 有效峰值 Peak_eff（亮度意图 + ABL 折算）</h4>
+            <p>用户亮度意图先决定面板驱动峰值能力 Peak_cap；示例再用固定 10% 高光窗口做 ABL 折算，得到当前可用的 Peak_eff。Peak_eff 是高光最终能到达的上限。</p>
             <span class="calc-val" id="cs-abl"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
             <h4>② Reference White 目标 RW_target</h4>
-            <p>这是用户「亮度」真正改变的量。准确模式只缩放白点；明亮模式在基础白点上叠加环境光与用户增益。</p>
+            <p>同一个用户亮度意图也决定普通白目标。50% 是中性点，RW_target = 203 nits；低于 50% 降低白点，高于 50% 提高白点。</p>
             <span class="calc-val" id="cs-target"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
             <h4>③ RW 物理上限 RW_max</h4>
-            <p>为了给高光留出至少 H_min 倍的余量，普通白不能超过 Peak_eff / H_min。这一步保证 headroom 有下限。</p>
+            <p>为了给高光留出至少 H_min 倍的余量，普通白不能超过 Peak_eff / H_min。这一步只在亮度过高或峰值能力不足时生效。</p>
             <span class="calc-val" id="cs-rwmax"></span>
           </div>
         </div>
@@ -696,40 +640,40 @@
         <div class="calc-step">
           <div>
             <h4>⑤ 高光 Headroom（结构性保底）</h4>
-            <p>因为 RW_final ≤ Peak_eff / H_min，所以 headroom = Peak_eff / RW_final 必然 ≥ H_min。白点永远吃不光 HDR 空间。</p>
+            <p>headroom = Peak_eff / RW_final。调亮时 RW 和 Peak 都会变化，所以这里能直接看到普通白与高光余量之间的关系。</p>
             <span class="calc-val" id="cs-headroom"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>⑥ Knee 拐点</h4>
-            <p>从 RW 往上数 availableStops × kneeFraction 档进入 shoulder。knee 之前按 midSlope 线性跟随，之后开始 roll-off。</p>
+            <h4>⑥ 还原段与 Shoulder 起点</h4>
+            <p>50% 时 0-1000 nits 保持 1:1，还原中低亮度和常见 HDR diffuse 区域；超过 50% 后，RW_final / 203 成为新的白点增益，shoulder 起点从 1000 nits 平滑过渡到 203 nits。</p>
             <span class="calc-val" id="cs-knee"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>⑦ Shoulder 收敛 + 暗部保护</h4>
-            <p>knee 之上用指数 shoulder 渐近（不硬切）Peak_eff；RW 之下不做整段纯增益，而是先保护极暗部，再用 smoothstep toe 把 1 nit 以上的暗部/中间调平滑过渡到 RW 增益。环境光提亮只作用在中段，黑端与 RW 端斜率均为 0。</p>
+            <h4>⑦ Shoulder 收敛</h4>
+            <p>shoulder 起点之后使用 BT.2390 风格的 Hermite shoulder：从当前白点增益平滑进入压缩，并在 Peak_eff 附近逐渐收敛。它的作用是吸收高光，而不是让曲线硬切。</p>
             <span class="calc-val" id="cs-tail"></span>
           </div>
         </div>
       </div>
       <p class="note-block">
-        <b>为什么是 203 nits：</b>ITU-R BT.2408 把 HDR Reference White（diffuse / graphics white）定在 203 nits。PQ（SMPTE ST 2084）是<b>绝对亮度</b>编码，所以"调亮"不能简单整体加增益，而要重新选定这个锚点再决定锚点之上如何 roll-off。
+        <b>为什么是 203 nits：</b>ITU-R BT.2408 把 HDR Reference White（diffuse / graphics white）定在 203 nits。PQ（SMPTE ST 2084）是<b>绝对亮度</b>编码，所以本文把 203 nits 作为 50% 亮度的还原锚点；离开中性点时，RW_final / 203 就是视频、UI 与字幕共同采用的白点增益。
       </p>
     </section>
 
     <section class="section" id="algorithm">
       <div class="section-head">
         <h2>算法框架</h2>
-        <p>页面里的曲线不是装饰图，而是用这组约束动态生成：203 nits 内容白映射到 RW_final，Peak_eff 由面板能力经 ABL 折算，knee 由剩余 headroom 决定，高光用指数 shoulder 接近 Peak_eff，极暗部用 toe 保护避免亮度滑杆直接裁切或抬黑。</p>
+        <p>页面里的曲线不是装饰图，而是用这组约束动态生成：RW_final 决定视频、UI/字幕/图形白点，Peak_eff 决定可用高光上限；50% 时 0-1000 nits 还原，超过 50% 后白点增益提高，shoulder 起点逐步提前，并使用 BT.2390 风格 Hermite shoulder 接近 Peak_eff。</p>
       </div>
       <div class="formulas">
         <div class="formula"><span>有效峰值</span><strong><code>Peak_eff = ABL(Peak_cap, window)</code></strong></div>
         <div class="formula"><span>RW 上限</span><strong><code>RW_max = Peak_eff / Headroom_min</code></strong></div>
-        <div class="formula"><span>最终 RW</span><strong><code>RW_final = min(RW_target, RW_max)</code></strong></div>
-        <div class="formula"><span>暗部 toe</span><strong><code>gain = mix(1, RW/203, smoothstep)</code></strong></div>
+        <div class="formula"><span>白点增益</span><strong><code>gain = RW_final / 203</code></strong></div>
+        <div class="formula"><span>50% 还原段</span><strong><code>0-1000 nits = 1:1</code></strong></div>
       </div>
     </section>
 
@@ -756,7 +700,7 @@
           </div>
           <div class="pipe-body">
             <p>YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到线性光 RGB——数值直接对应绝对亮度 nits（0.0001 ~ 10000）。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</p>
-            <p class="pipe-key"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的暗部细节会量化成 banding——这正是前面暗部模型强调"深黑锚定"的硬件前提。</p>
+            <p class="pipe-key"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的低亮度细节会量化成 banding，也会让白点增益和 shoulder 过渡显得粗糙。</p>
           </div>
         </div>
         <div class="pipe-stage">
@@ -766,7 +710,7 @@
           </div>
           <div class="pipe-body">
             <p>解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision、ST 2094-50 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</p>
-            <p class="pipe-key"><b>要点：</b>demo 里手动拖的「高光窗口」滑杆，在真机上就来自这一步的实时统计。这里也是 RW_target（用户亮度 + 环境光传感器）汇入的地方。</p>
+            <p class="pipe-key"><b>要点：</b>真机中的高光窗口来自实时统计，而不是用户手动控制。本文 demo 将窗口固定在 10%，让唯一的用户亮度意图同时进入 RW_final 与 Peak_cap 两条控制链路。</p>
           </div>
         </div>
         <div class="pipe-stage">
@@ -775,8 +719,8 @@
             <span class="pipe-tag">线性光 RGB · 本页核心</span>
           </div>
           <div class="pipe-body">
-            <p>在线性光域执行暗部保护 + RW 锚定 + knee + shoulder——就是「计算链路」生成的那条曲线。工程关键：<b>不要逐通道（per-channel R/G/B）套曲线</b>，高光会偏色（白炽灯变黄、天空转青）。正确做法是取亮度代理 m = max(R,G,B)（或 ICtCp 的 I 通道），算增益 g = T(m) / m，再三通道同乘 g，保住色相与饱和度比例。</p>
-            <p class="pipe-key"><b>要点：</b>曲线每帧由控制面更新成 1D LUT，数据面逐像素只做查表 + 乘法——RW / headroom 决策的全部计算量都在控制面，像素侧零额外成本。</p>
+            <p>在线性光域执行白点增益 + 动态 shoulder——就是「计算链路」生成的那条曲线。工程关键：<b>不要逐通道（per-channel R/G/B）套曲线</b>，高光会偏色（白炽灯变黄、天空转青）。正确做法是取亮度代理 m = max(R,G,B)（或 ICtCp 的 I 通道），算增益 g = T(m) / m，再三通道同乘 g，保住色相与饱和度比例。</p>
+            <p class="pipe-key"><b>要点：</b>曲线每帧由控制面更新成 1D LUT。50% 亮度时 0-1000 nits LUT 等于 1:1；超过 50% 时参考白提高，shoulder 起点从 1000 nits 平滑提前，避免 203-1000 nits 区域在刚调亮时反而变暗。</p>
           </div>
         </div>
         <div class="pipe-stage">
@@ -821,45 +765,36 @@
   <script>
     const SOURCE_RW = 203;
     const SOURCE_PEAK = 4000;
-    const DARK_PROTECT_NIT = 1;
+    const NEUTRAL_RESTORE_LIMIT = 1000;
+    const FIXED_ABL_WINDOW = 10;
+    const PEAK_MIN = 600;
+    const PEAK_MAX = 4000;
+    const NEUTRAL_BRIGHTNESS = 50;
+    const BRIGHT_ROLLOFF_FULL = 70;
+    const RW_MIN = 100;
+    const RW_MAX_TARGET = 600;
     const ABL_MIN_RATIO = 0.22; // 100% 全白窗口时相对 10% 窗口峰值的折算比
     const chart = {
       left: 76,
       right: 668,
       top: 38,
       bottom: 294,
-      inputMin: 0.1,
+      inputMin: 0,
       inputMax: SOURCE_PEAK,
-      outputMin: 0.1,
+      outputMin: 0,
       outputMax: 4000
     };
     const state = {
-      mode: "bright",
-      peakCap: 1000,
-      windowPct: 10,
-      userBrightness: 60,
-      ambient: 300
+      userBrightness: 50
     };
     const $ = selector => document.querySelector(selector);
     let liveCurve = null; // 最新一次 render 的 {model, params, peakEff}，供曲线悬浮读数使用
     const controls = {
-      filmBtn: $("#film-btn"),
-      brightBtn: $("#bright-btn"),
-      peak: $("#peak"),
-      window: $("#window"),
-      userBrightness: $("#user-brightness"),
-      ambient: $("#ambient")
+      userBrightness: $("#user-brightness")
     };
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
-    }
-    function log10(value) {
-      return Math.log(value) / Math.LN10;
-    }
-    function smoothstep(edge0, edge1, value) {
-      const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
-      return t * t * (3 - 2 * t);
     }
     // ABL: 小窗口接近满峰值，全屏白被压到 ABL_MIN_RATIO。10% 窗口标定为满峰值能力。
     function ablPeak(cap, windowPct) {
@@ -867,113 +802,122 @@
       const ratio = ABL_MIN_RATIO + (1 - ABL_MIN_RATIO) * Math.pow(clamp((1 - w) / 0.9, 0, 1), 1.25);
       return Math.round(cap * ratio);
     }
+    function brightnessRatio() {
+      return state.userBrightness / 100;
+    }
+    function peakCapFromBrightness() {
+      return Math.round(PEAK_MIN + brightnessRatio() * (PEAK_MAX - PEAK_MIN));
+    }
+    function rwTargetFromBrightness() {
+      if (state.userBrightness <= NEUTRAL_BRIGHTNESS) {
+        const t = state.userBrightness / NEUTRAL_BRIGHTNESS;
+        return RW_MIN + t * (SOURCE_RW - RW_MIN);
+      }
+      const t = (state.userBrightness - NEUTRAL_BRIGHTNESS) / (100 - NEUTRAL_BRIGHTNESS);
+      return SOURCE_RW + t * (RW_MAX_TARGET - SOURCE_RW);
+    }
     function xForInput(nits) {
       const v = clamp(nits, chart.inputMin, chart.inputMax);
-      const t = (log10(v) - log10(chart.inputMin)) / (log10(chart.inputMax) - log10(chart.inputMin));
+      const t = (v - chart.inputMin) / (chart.inputMax - chart.inputMin);
       return chart.left + t * (chart.right - chart.left);
     }
-    // Y 轴固定为 0.1 ~ 4000 nits：峰值/曲线变化时在坐标系里真实移动，刻度不再跟随缩放。
+    // Y 轴固定为线性 0 ~ 4000 nits：峰值/曲线变化时在坐标系里真实移动，刻度不再跟随缩放。
     function yForOutput(nits) {
       const v = clamp(nits, chart.outputMin, chart.outputMax);
-      const t = (log10(v) - log10(chart.outputMin)) / (log10(chart.outputMax) - log10(chart.outputMin));
+      const t = (v - chart.outputMin) / (chart.outputMax - chart.outputMin);
       return chart.bottom - t * (chart.bottom - chart.top);
     }
     function calculate(peakEff) {
-      if (state.mode === "film") {
-        const hMin = 4;
-        // 准确模式：用户亮度调的是 Reference White 锚点（100-300 nits），
-        // 整条曲线等比上移，保持相对结构和 PQ 跟随，而不是去抬暗部/中间调。
-        const target = 100 + state.userBrightness / 100 * 200;
-        return {
-          hMin,
-          target,
-          rwFinal: Math.min(target, peakEff / hMin),
-          tone: "参考跟随",
-          shadowLift: 0,
-          midSlope: 1,
-          kneeFraction: .74,
-          shoulder: 1.2
-        };
-      }
-
-      const ambientBoost = clamp(state.ambient / 1200, 0, 1) * 150;
-      const userBoost = state.userBrightness / 100 * 120;
-      const target = 180 + ambientBoost + userBoost;
-      const hMin = state.ambient > 800 ? 2.2 : state.ambient > 450 ? 2.6 : 3;
+      const target = rwTargetFromBrightness();
+      const hMin = 2.6;
+      const rwFinal = Math.min(target, peakEff / hMin);
       return {
         hMin,
         target,
-        rwFinal: Math.min(target, peakEff / hMin),
-        tone: "环境自适应",
-        // 阴影提亮只由环境光决定（对抗环境反射冲淡黑位），与用户亮度解耦——
-        // 改变亮度时暗部相对结构不变，既不丢细节也不抬纯黑。
-        shadowLift: clamp(state.ambient / 1200, 0, 1) * 0.5,
-        midSlope: clamp(.86 - state.ambient / 6400, .70, .86),
-        kneeFraction: state.ambient > 650 ? .46 : .55,
-        shoulder: state.ambient > 650 ? .66 : .80
+        rwFinal,
+        rwGain: rwFinal / SOURCE_RW,
+        toneGain: rwFinal / SOURCE_RW,
+        tone: "还原优先",
+        rolloffReserveStops: 1,
+        shoulderStartInput: shoulderStartFromBrightness()
       };
+    }
+    function shoulderStartFromBrightness() {
+      if (state.userBrightness <= NEUTRAL_BRIGHTNESS) return NEUTRAL_RESTORE_LIMIT;
+      const t = clamp((state.userBrightness - NEUTRAL_BRIGHTNESS) / (BRIGHT_ROLLOFF_FULL - NEUTRAL_BRIGHTNESS), 0, 1);
+      const eased = t * t * (3 - 2 * t);
+      return NEUTRAL_RESTORE_LIMIT + (SOURCE_RW - NEUTRAL_RESTORE_LIMIT) * eased;
     }
     function curveParams(model, peakEff) {
       const availableStops = Math.log2(peakEff / model.rwFinal);
-      const kneeStops = clamp(availableStops * model.kneeFraction, .45, Math.max(.5, availableStops - .15));
-      const kneeInput = SOURCE_RW * Math.pow(2, kneeStops);
-      const kneeOutput = model.rwFinal * Math.pow(2, kneeStops * model.midSlope);
+      const kneeStops = clamp(availableStops - model.rolloffReserveStops, .45, Math.max(.5, availableStops - .15));
+      const kneeInput = clamp(SOURCE_RW * Math.pow(2, kneeStops), SOURCE_RW * 1.1, SOURCE_PEAK * .92);
+      const shoulderStartInput = model.shoulderStartInput;
       return {
         availableStops,
-        kneeStops,
-        kneeInput: clamp(kneeInput, SOURCE_RW * 1.1, SOURCE_PEAK),
-        kneeOutput: clamp(kneeOutput, model.rwFinal * 1.05, peakEff * .94)
+        kneeStops: Math.log2(kneeInput / SOURCE_RW),
+        kneeInput,
+        kneeOutput: model.rwFinal,
+        shoulderStartInput,
+        shoulderStartOutput: Math.min(shoulderStartInput * model.toneGain, peakEff)
       };
     }
+    function hermiteShoulder(input, params, peakEff, toneGain) {
+      const x0 = params.shoulderStartInput;
+      const x1 = SOURCE_PEAK;
+      const y0 = params.shoulderStartOutput;
+      const y1 = Math.min(peakEff, SOURCE_PEAK);
+      if (x1 <= x0 || y1 <= y0) return Math.min(input, y1);
+      const t = clamp((input - x0) / (x1 - x0), 0, 1);
+      const t2 = t * t;
+      const t3 = t2 * t;
+      const h00 = 2 * t3 - 3 * t2 + 1;
+      const h10 = t3 - 2 * t2 + t;
+      const h01 = -2 * t3 + 3 * t2;
+      const h11 = t3 - t2;
+      const averageSlope = (y1 - y0) / (x1 - x0);
+      // BT.2390-style roll-off should be monotonic and gentle: preserve the
+      // incoming white-point gain where possible, but limit the tangent so the
+      // spline eases into the shoulder instead of folding into a hard shelf.
+      const entrySlope = Math.min(toneGain, averageSlope * 2.55);
+      const m0 = entrySlope * (x1 - x0);
+      const m1 = 0;
+      return h00 * y0 + h10 * m0 + h01 * y1 + h11 * m1;
+    }
     function toneMapOutput(input, model, params, peakEff) {
-      if (input <= SOURCE_RW) {
-        // 暗部不能跟着亮度滑杆整段纯增益，否则会抬黑或压掉 near-black。
-        // 1 nit 以下保持原 PQ 暗部结构；1 nit 到 RW 之间用 smoothstep toe
-        // 把增益从 1x 平滑过渡到 RW_final / 203。
-        const logInput = log10(Math.max(input, chart.inputMin));
-        const u = smoothstep(log10(DARK_PROTECT_NIT), log10(SOURCE_RW), logInput);
-        const rwGain = model.rwFinal / SOURCE_RW;
-        const protectedGain = 1 + (rwGain - 1) * u;
-        const base = input * protectedGain;
-        // 环境光提亮只在中段隆起：黑端与 RW 端斜率都为 0，
-        // 所以既不动极暗部、也不动 RW 锚点，只在中间调对抗环境反射。
-        const bump = Math.sin(Math.PI * u);
-        return base * (1 + model.shadowLift * bump * bump);
+      if (input <= params.shoulderStartInput) {
+        return Math.min(input * model.toneGain, peakEff);
       }
-      const inputStops = Math.log2(input / SOURCE_RW);
-      if (inputStops <= params.kneeStops) {
-        return model.rwFinal * Math.pow(2, inputStops * model.midSlope);
-      }
-      const shoulderProgress = 1 - Math.exp(-(inputStops - params.kneeStops) / model.shoulder);
-      return params.kneeOutput + (peakEff - params.kneeOutput) * shoulderProgress;
+      const mapped = hermiteShoulder(input, params, peakEff, model.toneGain);
+      return Math.min(peakEff, Math.max(params.shoulderStartOutput, mapped));
     }
     function sampleInputs(count = 124) {
-      const minLog = log10(chart.inputMin);
-      const maxLog = log10(chart.inputMax);
       return Array.from({ length: count }, (_, index) => {
         const t = index / (count - 1);
-        return Math.pow(10, minLog + t * (maxLog - minLog));
+        return chart.inputMin + t * (chart.inputMax - chart.inputMin);
       });
     }
     function buildPath(points) {
       return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
     }
     function renderGrid() {
-      const xTicks = [0.1, 1, 10, 100, SOURCE_RW, 1000, SOURCE_PEAK];
-      const yTicks = [0.1, 1, 10, 100, 1000, chart.outputMax];
+      const xTicks = [0, SOURCE_RW, 1000, 2000, 3000, SOURCE_PEAK];
+      const yTicks = [0, 500, 1000, 2000, 3000, chart.outputMax];
       $("#x-grid").innerHTML = xTicks.map(value => {
         const x = xForInput(value);
         const label = value === SOURCE_RW ? "203 RW" : value >= 1000 ? `${value / 1000}k` : String(value);
-        return `<line class="grid-line" x1="${x}" y1="${chart.top}" x2="${x}" y2="${chart.bottom}"></line><text class="grid-label" x="${x - 13}" y="313">${label}</text>`;
+        const labelX = value === 0 ? x - 8 : value === SOURCE_RW ? x - 16 : x - 12;
+        return `<line class="grid-line" x1="${x}" y1="${chart.top}" x2="${x}" y2="${chart.bottom}"></line><text class="grid-label" x="${labelX}" y="313">${label}</text>`;
       }).join("");
       $("#y-grid").innerHTML = yTicks.map(value => {
         const y = yForOutput(value);
-        const label = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value * 10) / 10);
+        const label = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value);
         return `<line class="grid-line" x1="${chart.left}" y1="${y}" x2="${chart.right}" y2="${y}"></line><text class="grid-label" x="34" y="${y + 4}">${label}</text>`;
       }).join("");
     }
     function renderToneCurve(model, peakEff) {
       const params = curveParams(model, peakEff);
+      params.kneeOutput = toneMapOutput(params.kneeInput, model, params, peakEff);
       const activePoints = sampleInputs().map(input => ({
         x: xForInput(input),
         y: yForOutput(toneMapOutput(input, model, params, peakEff))
@@ -1005,110 +949,63 @@
       $("#rw-line-v").setAttribute("x2", rwX.toFixed(1));
       $("#rw-line-h").setAttribute("y1", rwY.toFixed(1));
       $("#rw-line-h").setAttribute("y2", rwY.toFixed(1));
-      $("#knee-line-v").setAttribute("x1", kneeX.toFixed(1));
-      $("#knee-line-v").setAttribute("x2", kneeX.toFixed(1));
-      $("#knee-line-h").setAttribute("y1", kneeY.toFixed(1));
-      $("#knee-line-h").setAttribute("y2", kneeY.toFixed(1));
       $("#rw-dot").setAttribute("cx", rwX.toFixed(1));
       $("#rw-dot").setAttribute("cy", rwY.toFixed(1));
-      $("#knee-dot").setAttribute("cx", kneeX.toFixed(1));
-      $("#knee-dot").setAttribute("cy", kneeY.toFixed(1));
 
-      $("#rw-anchor").textContent = `${SOURCE_RW} → ${Math.round(model.rwFinal)} nits`;
-      $("#knee-anchor").textContent = `${Math.round(params.kneeInput)} → ${Math.round(params.kneeOutput)} nits`;
-      $("#shadow-anchor").textContent = `+${Math.round(model.shadowLift * 100)}%`;
-      $("#ui-clamp").textContent = `≤ ${Math.round(model.rwFinal)} nits`;
+      $("#rw-anchor").textContent = `${SOURCE_RW} → ${Math.round(toneMapOutput(SOURCE_RW, model, params, peakEff))} nits`;
+      $("#mid-anchor").textContent = `1000 → ${Math.round(toneMapOutput(1000, model, params, peakEff))} nits`;
+      $("#highlight-anchor").textContent = `${SOURCE_PEAK} → ${Math.round(toneMapOutput(SOURCE_PEAK, model, params, peakEff))} nits`;
+      $("#white-gain").textContent = `${model.toneGain.toFixed(2)}x`;
       return params;
     }
     function render() {
-      const peakEff = ablPeak(state.peakCap, state.windowPct);
+      const peakCap = peakCapFromBrightness();
+      const peakEff = ablPeak(peakCap, FIXED_ABL_WINDOW);
       const model = calculate(peakEff);
       const headroom = peakEff / model.rwFinal;
       const stops = Math.log2(headroom);
-      const modeName = state.mode === "film" ? "Filmmaker" : "Bright Room HDR";
       const headroomLimited = model.rwFinal < model.target - 0.5;
+      const rwGain = model.rwGain;
+      const toneGain = model.toneGain;
+      const isNeutral = Math.abs(toneGain - 1) < 0.01 && Math.abs(model.rwFinal - SOURCE_RW) < 0.5;
 
-      controls.filmBtn.setAttribute("aria-pressed", state.mode === "film" ? "true" : "false");
-      controls.brightBtn.setAttribute("aria-pressed", state.mode === "bright" ? "true" : "false");
-      $("#peak-out").textContent = `${state.peakCap} nits`;
-      $("#window-out").textContent = `${state.windowPct}% → Peak_eff ${peakEff}`;
       $("#brightness-out").textContent = `${state.userBrightness}%`;
-      $("#ambient-out").textContent = `${state.ambient} lux`;
-      $("#peak-eff").textContent = `${peakEff}`;
-      $("#rw-final").textContent = `${Math.round(model.rwFinal)}`;
+      $("#rw-final").textContent = `${Math.round(model.rwFinal)} nits`;
+      $("#peak-eff").textContent = `${peakEff} nits`;
       $("#headroom").textContent = `${headroom.toFixed(1)}x`;
-      $("#stops").textContent = stops.toFixed(2);
-      const marker = $("#abl-marker");
-      if (marker) marker.style.left = `${state.windowPct}%`;
-      const ablLoss = 1 - peakEff / state.peakCap;
-      const ablStage = state.windowPct <= 10
-        ? "小窗口高光"
-        : state.windowPct <= 35
-          ? "中等面积高光"
-          : "大面积亮场";
-      const ablEffect = headroomLimited
-        ? "Peak_eff 已经把 RW_final 钳低，整张 HDR 画面的普通白也开始受功率上限约束。"
-        : "RW_final 仍能保持目标值，曲线主要在 knee 之后更早进入 roll-off，高光层次被压缩。";
-      $("#abl-explain-readout").innerHTML = `当前是 <b>${ablStage}</b>：ABL 让 Peak_eff 从 ${state.peakCap} nits 变为 <b>${peakEff} nits</b>，损失约 <b>${Math.round(ablLoss * 100)}%</b>。${ablEffect}`;
-
       renderGrid();
       const params = renderToneCurve(model, peakEff);
       liveCurve = { model, params, peakEff };
+      $("#rolloff-start").textContent = `${Math.round(params.shoulderStartInput)} nits`;
+      $("#brightness-explain-readout").innerHTML = `当前亮度意图 <b>${state.userBrightness}%</b> → RW_final <b>${Math.round(model.rwFinal)} nits</b>，视频与 UI 白点增益 <b>${toneGain.toFixed(2)}x</b>${isNeutral ? "（50% 中性点，0-1000 nits 还原）" : ""}。Peak_cap <b>${peakCap} nits</b>，固定 ${FIXED_ABL_WINDOW}% 窗口下 Peak_eff <b>${peakEff} nits</b>，roll-off 起点 <b>${Math.round(params.shoulderStartInput)} nits</b>，headroom <b>${headroom.toFixed(1)}x</b>。`;
 
       // ── 计算链路实时复算 ──
-      const ablRatio = peakEff / state.peakCap;
+      const ablRatio = peakEff / peakCap;
       const rwMax = peakEff / model.hMin;
-      const gainOverRef = model.rwFinal / SOURCE_RW;
-      $("#cs-abl").innerHTML = `Peak_eff = ${state.peakCap} × ABL(${state.windowPct}%)=${ablRatio.toFixed(2)} → <em>${peakEff}</em> nits`;
-      if (state.mode === "film") {
-        $("#cs-target").innerHTML = `RW_target = 100 + 亮度 ${state.userBrightness}% × 200 → <em>${Math.round(model.target)}</em> nits`;
-      } else {
-        const aBoost = clamp(state.ambient / 1200, 0, 1) * 150;
-        const uBoost = state.userBrightness / 100 * 120;
-        $("#cs-target").innerHTML = `RW_target = 180 + 环境 ${Math.round(aBoost)} + 用户 ${Math.round(uBoost)} → <em>${Math.round(model.target)}</em> nits`;
-      }
+      $("#cs-abl").innerHTML = `Peak_cap = ${PEAK_MIN} + 亮度 ${state.userBrightness}% × ${PEAK_MAX - PEAK_MIN} → <em>${peakCap}</em> nits；Peak_eff = ${peakCap} × ABL(${FIXED_ABL_WINDOW}%)=${ablRatio.toFixed(2)} → <em>${peakEff}</em> nits`;
+      $("#cs-target").innerHTML = state.userBrightness <= NEUTRAL_BRIGHTNESS
+        ? `RW_target = ${RW_MIN} + 亮度 ${state.userBrightness}% / ${NEUTRAL_BRIGHTNESS}% × (${SOURCE_RW} - ${RW_MIN}) → <em>${Math.round(model.target)}</em> nits`
+        : `RW_target = ${SOURCE_RW} + (亮度 ${state.userBrightness}% - ${NEUTRAL_BRIGHTNESS}%) / ${100 - NEUTRAL_BRIGHTNESS}% × (${RW_MAX_TARGET} - ${SOURCE_RW}) → <em>${Math.round(model.target)}</em> nits`;
       $("#cs-rwmax").innerHTML = `RW_max = Peak_eff ${peakEff} / H_min ${model.hMin} → <em>${Math.round(rwMax)}</em> nits`;
-      $("#cs-rwfinal").innerHTML = `RW_final = min(${Math.round(model.target)}, ${Math.round(rwMax)}) → <em>${Math.round(model.rwFinal)}</em> nits`;
+      $("#cs-rwfinal").innerHTML = `RW_final = min(${Math.round(model.target)}, ${Math.round(rwMax)}) → <em>${Math.round(model.rwFinal)}</em> nits；白点增益 = RW_final / 203 → <em>${toneGain.toFixed(2)}x</em>`;
       $("#cs-headroom").innerHTML = `H = ${peakEff} / ${Math.round(model.rwFinal)} → <em>${headroom.toFixed(2)}×</em> = ${stops.toFixed(2)} stops（保底 ≥ H_min ${model.hMin}）`;
-      $("#cs-knee").innerHTML = `knee = avail ${params.availableStops.toFixed(2)} × frac ${model.kneeFraction} = ${params.kneeStops.toFixed(2)} stops → 入 <em>${Math.round(params.kneeInput)}</em> · 出 <em>${Math.round(params.kneeOutput)}</em> nits`;
+      $("#cs-knee").innerHTML = `shoulder 起点 = <em>${Math.round(params.shoulderStartInput)}</em> nits；参考采样点 = RW × 2^(${params.availableStops.toFixed(2)} - reserve ${model.rolloffReserveStops}) → 入 <em>${Math.round(params.kneeInput)}</em> · 出 <em>${Math.round(params.kneeOutput)}</em> nits。${isNeutral ? "50% 时 0-1000 nits 保持 1:1。" : `50% 以上 shoulder 起点从 1000 nits 逐步提前到 203 nits，白点增益 ${toneGain.toFixed(2)}x。`}`;
       const blackOut = toneMapOutput(0.1, model, params, peakEff);
-      const toeOut = toneMapOutput(DARK_PROTECT_NIT, model, params, peakEff);
-      const shadowOut = toneMapOutput(10, model, params, peakEff);
+      const rwOut = toneMapOutput(SOURCE_RW, model, params, peakEff);
+      const midOut = toneMapOutput(1000, model, params, peakEff);
       const hiOut = toneMapOutput(SOURCE_PEAK, model, params, peakEff);
-      $("#cs-tail").innerHTML = `shoulder τ=${model.shoulder}：${SOURCE_PEAK}nit 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜暗部保护：0.1→<em>${blackOut.toFixed(2)}</em>，${DARK_PROTECT_NIT}→<em>${toeOut.toFixed(2)}</em>，10→<em>${shadowOut.toFixed(1)}</em>（toe 从 1× 平滑过渡到 RW/203=${gainOverRef.toFixed(2)}× · 阴影提亮峰值 +${Math.round(model.shadowLift * 100)}%）`;
+      $("#cs-tail").innerHTML = `BT.2390 风格 Hermite shoulder：${SOURCE_PEAK} nits 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜检查点：0.1→<em>${blackOut.toFixed(2)}</em>，203→<em>${Math.round(rwOut)}</em>，1000→<em>${Math.round(midOut)}</em>。${isNeutral ? "中性点下 1000 nits 仍保持 1:1。" : "50% 以上时，只有 shoulder 起点之后才进入 roll-off；1000 nits 的输出取决于当前起点与白点增益。"}`;
 
       const note = $("#lab-note");
       if (headroomLimited) {
-        note.innerHTML = `RW_target <b>${Math.round(model.target)}</b> 触及上限，被钳到 RW_final <b>${Math.round(model.rwFinal)} nits</b>（= Peak_eff ${peakEff} / H_min ${model.hMin}）。可能因为高光窗口偏大、面板峰值偏低、或目标本身偏高——都是真实功率约束，不是 bug。`;
-      } else if (state.mode === "film") {
-        note.innerHTML = `亮度把 Reference White 调到 <b>${Math.round(model.rwFinal)} nits</b>，但 <b>${DARK_PROTECT_NIT} nit 以下暗部保持原 PQ 结构</b>，从 ${DARK_PROTECT_NIT} nit 到 203 nit 才平滑过渡到 RW_final/203=<b>${gainOverRef.toFixed(2)}×</b> 的白点增益。再拖「高光窗口」让 Peak_eff 起伏时，<b>锚点不动，波动只被 knee 之后的 roll-off 吸收</b>。`;
+        note.innerHTML = `亮度意图要求 RW_target <b>${Math.round(model.target)} nits</b>，但它触及 headroom 上限，被钳到 RW_final <b>${Math.round(model.rwFinal)} nits</b>（= Peak_eff ${peakEff} / H_min ${model.hMin}）。视频、UI 与字幕都会按这个 RW 变化，高光再由 shoulder 压缩。`;
       } else {
-        note.innerHTML = `普通白抬到 <b>${Math.round(model.rwFinal)} nits</b> 以适配环境光，但 <b>${DARK_PROTECT_NIT} nit 以下不被亮度滑杆直接拉高</b>；暗部到中灰用平滑 toe 过渡，仍保留 <b>${headroom.toFixed(1)}x</b>（${stops.toFixed(2)} stops）高光 headroom。UI 与字幕钳在 RW 以下，不会被推进高光区抢功率。`;
+        note.innerHTML = `亮度意图把 Reference White 调到 <b>${Math.round(model.rwFinal)} nits</b>，视频、UI 与字幕白点按 <b>${toneGain.toFixed(2)}x</b> 变化${isNeutral ? "，因此这一段为严格 1:1 还原" : "，所以不再是 1:1"}。Peak_cap 为 <b>${peakCap} nits</b>，保留 <b>${headroom.toFixed(1)}x</b>（${stops.toFixed(2)} stops）高光 headroom。`;
       }
     }
 
-    controls.filmBtn.addEventListener("click", () => {
-      state.mode = "film";
-      render();
-    });
-    controls.brightBtn.addEventListener("click", () => {
-      state.mode = "bright";
-      render();
-    });
-    controls.peak.addEventListener("input", event => {
-      state.peakCap = Number(event.target.value);
-      render();
-    });
-    controls.window.addEventListener("input", event => {
-      state.windowPct = Number(event.target.value);
-      render();
-    });
     controls.userBrightness.addEventListener("input", event => {
       state.userBrightness = Number(event.target.value);
-      render();
-    });
-    controls.ambient.addEventListener("input", event => {
-      state.ambient = Number(event.target.value);
       render();
     });
 
@@ -1132,7 +1029,7 @@
         return;
       }
       const t = (vx - chart.left) / (chart.right - chart.left);
-      const input = Math.pow(10, log10(chart.inputMin) + t * (log10(chart.inputMax) - log10(chart.inputMin)));
+      const input = chart.inputMin + t * (chart.inputMax - chart.inputMin);
       const { model, params, peakEff } = liveCurve;
       const output = toneMapOutput(input, model, params, peakEff);
       const vy = yForOutput(output);
@@ -1145,12 +1042,12 @@
       $("#hover-dot").setAttribute("cy", vy.toFixed(1));
       hoverLayer.style.display = "";
 
-      const segment = input <= SOURCE_RW
-        ? (input <= DARK_PROTECT_NIT ? "极暗部：黑位保护段" : "锚点以下：toe 过渡 / 中间调")
-        : Math.log2(input / SOURCE_RW) <= params.kneeStops
-          ? "RW ~ knee：线性跟随段"
-          : "knee 之上：shoulder roll-off";
-      hoverTip.innerHTML = `输入 <b>${fmtNits(input)}</b> → 输出 <b>${fmtNits(output)}</b> nits（增益 ${(output / input).toFixed(2)}×）<br><span class="seg">${segment}</span>`;
+      const isNeutral = Math.abs(model.toneGain - 1) < 0.01 && Math.abs(model.rwFinal - SOURCE_RW) < 0.5;
+      const segment = input <= params.shoulderStartInput
+        ? (isNeutral ? "0-1000 nits：1:1 还原段" : `shoulder 起点以下：白点增益 ${model.toneGain.toFixed(2)}×`)
+        : "shoulder 起点之后：BT.2390-style 平滑压缩";
+      const gainText = input > 0 ? `${(output / input).toFixed(2)}×` : "0";
+      hoverTip.innerHTML = `输入 <b>${fmtNits(input)}</b> → 输出 <b>${fmtNits(output)}</b> nits（增益 ${gainText}）<br><span class="seg">${segment}</span>`;
       hoverTip.style.display = "block";
       const px = vx / 720 * rect.width;
       const py = vy / 360 * rect.height;
