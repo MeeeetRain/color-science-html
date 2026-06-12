@@ -80,8 +80,8 @@
       width: min(1180px, 100%);
       margin: 0 auto;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(330px, .82fr);
-      gap: 42px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
       align-items: center;
     }
     .eyebrow {
@@ -115,53 +115,6 @@
       color: #d9e2d5;
       font-size: clamp(18px, 2vw, 21px);
       line-height: 1.82;
-    }
-    .hero-card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      padding: 20px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.34);
-    }
-    .screen {
-      position: relative;
-      aspect-ratio: 16 / 9;
-      border: 2px solid rgba(255,255,255,.18);
-      border-radius: 8px;
-      overflow: hidden;
-      background:
-        linear-gradient(110deg, transparent 0 56%, rgba(255,255,255,.72) 57%, transparent 62%),
-        linear-gradient(180deg, #121914 0%, #263829 42%, #e9e6cc 57%, #fc8758 100%);
-    }
-    .chip {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      color: #07100e;
-      background: rgba(247,248,244,.9);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 840;
-    }
-    .subtitle {
-      position: absolute;
-      left: 50%;
-      bottom: 16px;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      color: white;
-      text-shadow: 0 2px 8px rgba(0,0,0,.95);
-      font-weight: 820;
-      padding: 2px 10px;
-      border-radius: 4px;
-      background: rgba(0,0,0,.34);
-    }
-    .hero-meters {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 14px;
     }
     .meter, .stat, .readout, .formula {
       border: 1px solid rgba(255,255,255,.12);
@@ -512,7 +465,7 @@
     @media (max-width: 720px) {
       .nav-links { display: none; }
       .hero { min-height: auto; padding-top: 44px; }
-      .mode-grid, .stats, .readouts, .formulas, .hero-meters, .principle-grid { grid-template-columns: 1fr; }
+      .mode-grid, .stats, .readouts, .formulas, .principle-grid { grid-template-columns: 1fr; }
       .mode-card li { grid-template-columns: 1fr; gap: 2px; }
     }
   </style>
@@ -541,17 +494,6 @@
           <h1>电视亮度，不再只是<span class="accent">背光强弱</span></h1>
           <p class="lead">把 HDR 亮度控制重新定义为 Reference White、Display Headroom、Tone Mapping 与 Panel Drive 的联合决策。核心原则只有一句：<b>锚住普通白，让面板峰值的波动只体现在高光 roll-off 上，绝不污染中间调和 UI。</b></p>
         </div>
-        <aside class="hero-card" aria-label="HDR 亮度控制示意">
-          <div class="screen">
-            <div class="chip" id="hero-mode">Bright Room HDR</div>
-            <div class="subtitle" id="hero-subtitle">字幕锚定在 Reference White 附近</div>
-          </div>
-          <div class="hero-meters">
-            <div class="meter"><span>Reference White</span><strong id="hero-rw">300 nits</strong></div>
-            <div class="meter"><span>Headroom</span><strong id="hero-headroom">3.0x</strong></div>
-            <div class="meter"><span>Peak_eff</span><strong id="hero-peak">900 nits</strong></div>
-          </div>
-        </aside>
       </div>
     </section>
 
@@ -1096,12 +1038,6 @@
       $("#rw-final").textContent = `${Math.round(model.rwFinal)}`;
       $("#headroom").textContent = `${headroom.toFixed(1)}x`;
       $("#stops").textContent = stops.toFixed(2);
-      $("#hero-mode").textContent = modeName;
-      $("#hero-rw").textContent = `${Math.round(model.rwFinal)} nits`;
-      $("#hero-headroom").textContent = `${headroom.toFixed(1)}x`;
-      $("#hero-peak").textContent = `${peakEff} nits`;
-      $("#hero-subtitle").textContent = state.mode === "film" ? "字幕不过亮，UI 不吃高光空间" : "字幕更清楚，但仍限制在 RW 附近";
-
       const marker = $("#abl-marker");
       if (marker) marker.style.left = `${state.windowPct}%`;
       const ablLoss = 1 - peakEff / state.peakCap;
