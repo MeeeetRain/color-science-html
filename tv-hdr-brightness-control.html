@@ -311,6 +311,37 @@
       line-height: 1.6;
     }
     .lab-note b { color: var(--amber); }
+    .abl-explainer {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      border: 1px solid rgba(74,219,216,.22);
+      border-radius: 8px;
+      background: rgba(74,219,216,.055);
+      padding: 13px 14px;
+      color: #d7e3dc;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+    .abl-explainer b { color: var(--cyan); }
+    .abl-scale {
+      position: relative;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--green), var(--amber), var(--coral));
+    }
+    .abl-marker {
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #07100e;
+      border-radius: 50%;
+      background: var(--cyan);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.5);
+    }
     .chart {
       position: relative;
       border: 1px solid rgba(255,255,255,.12);
@@ -593,6 +624,11 @@
             <label for="window">高光窗口占比 (ABL) <output id="window-out">10% → Peak_eff 1000</output></label>
             <input id="window" type="range" min="1" max="100" value="10" step="1">
           </div>
+          <div class="abl-explainer" id="abl-explainer">
+            <div><b>高光窗口占比</b>表示画面里有多少面积在请求接近峰值亮度。小窗口高光更容易维持峰值；窗口越大，电视会因为功耗、热量或背光预算触发 ABL，把可用峰值压低。</div>
+            <div class="abl-scale" aria-hidden="true"><span class="abl-marker" id="abl-marker"></span></div>
+            <div id="abl-explain-readout">当前属于小窗口高光，Peak_eff 接近面板峰值。</div>
+          </div>
           <div class="control">
             <label for="user-brightness">用户亮度意图 <output id="brightness-out">60%</output></label>
             <input id="user-brightness" type="range" min="0" max="100" value="60" step="1">
@@ -656,7 +692,7 @@
         <div class="calc-step">
           <div>
             <h4>① 有效峰值 Peak_eff（ABL 折算）</h4>
-            <p>面板峰值能力是在 10% 窗口下标定的。高光窗口越大，功率越分散、可持续峰值越低，由 ABL 折算系数体现。</p>
+            <p>面板峰值能力是在 10% 窗口下标定的。高光窗口越大，功率越分散、可持续峰值越低，由 ABL 折算系数体现。它不会直接改变 Reference White 的目标，而是先降低 Peak_eff，再通过 RW 上限和高光 shoulder 改变曲线形状。</p>
             <span class="calc-val" id="cs-abl"></span>
           </div>
         </div>
@@ -1014,6 +1050,7 @@
       const headroom = peakEff / model.rwFinal;
       const stops = Math.log2(headroom);
       const modeName = state.mode === "film" ? "Filmmaker" : "Bright Room HDR";
+      const headroomLimited = model.rwFinal < model.target - 0.5;
 
       controls.filmBtn.setAttribute("aria-pressed", state.mode === "film" ? "true" : "false");
       controls.brightBtn.setAttribute("aria-pressed", state.mode === "bright" ? "true" : "false");
@@ -1030,6 +1067,19 @@
       $("#hero-headroom").textContent = `${headroom.toFixed(1)}x`;
       $("#hero-peak").textContent = `${peakEff} nits`;
       $("#hero-subtitle").textContent = state.mode === "film" ? "字幕不过亮，UI 不吃高光空间" : "字幕更清楚，但仍限制在 RW 附近";
+
+      const marker = $("#abl-marker");
+      if (marker) marker.style.left = `${state.windowPct}%`;
+      const ablLoss = 1 - peakEff / state.peakCap;
+      const ablStage = state.windowPct <= 10
+        ? "小窗口高光"
+        : state.windowPct <= 35
+          ? "中等面积高光"
+          : "大面积亮场";
+      const ablEffect = headroomLimited
+        ? "Peak_eff 已经把 RW_final 钳低，整张 HDR 画面的普通白也开始受功率上限约束。"
+        : "RW_final 仍能保持目标值，曲线主要在 knee 之后更早进入 roll-off，高光层次被压缩。";
+      $("#abl-explain-readout").innerHTML = `当前是 <b>${ablStage}</b>：ABL 让 Peak_eff 从 ${state.peakCap} nits 变为 <b>${peakEff} nits</b>，损失约 <b>${Math.round(ablLoss * 100)}%</b>。${ablEffect}`;
 
       renderGrid();
       const params = renderToneCurve(model, peakEff);
@@ -1058,7 +1108,6 @@
       $("#cs-tail").innerHTML = `shoulder τ=${model.shoulder}：${SOURCE_PEAK}nit 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜暗部保护：0.1→<em>${blackOut.toFixed(2)}</em>，${DARK_PROTECT_NIT}→<em>${toeOut.toFixed(2)}</em>，10→<em>${shadowOut.toFixed(1)}</em>（toe 从 1× 平滑过渡到 RW/203=${gainOverRef.toFixed(2)}× · 阴影提亮峰值 +${Math.round(model.shadowLift * 100)}%）`;
 
       const note = $("#lab-note");
-      const headroomLimited = model.rwFinal < model.target - 0.5;
       if (headroomLimited) {
         note.innerHTML = `RW_target <b>${Math.round(model.target)}</b> 触及上限，被钳到 RW_final <b>${Math.round(model.rwFinal)} nits</b>（= Peak_eff ${peakEff} / H_min ${model.hMin}）。可能因为高光窗口偏大、面板峰值偏低、或目标本身偏高——都是真实功率约束，不是 bug。`;
       } else if (state.mode === "film") {
