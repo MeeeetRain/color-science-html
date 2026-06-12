@@ -1,6 +1,44 @@
 {
-  "updated": "2026-06-10",
+  "updated": "2026-06-12",
   "days": [
+    {
+      "date": "2026-06-12",
+      "picks": [
+        {
+          "tag": "教程",
+          "source": "Blackmagic Design",
+          "title": "DaVinci Resolve Wide Gamut Intermediate",
+          "description": "这篇值得读，因为它不是把 DaVinci Wide Gamut / Intermediate 当成一个“开关”，而是把工作空间、intermediate gamma、中灰位置和可承载的场景范围放在一起解释，能帮助读者把站内最近更新的 Log 章节里“码值分配、中灰锚点、Log 只是场景信息容器”真正连成一条线。对想理解为什么现代调色流程先在更宽的 scene-referred 空间里工作、最后再分别输出 HDR 或 SDR 的读者尤其有用。",
+          "url": "https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf"
+        },
+        {
+          "tag": "教程",
+          "source": "ACES Documentation",
+          "title": "Output Transforms",
+          "description": "这篇值得读，因为它把 Output Transform 明确拆成 tone scale、chroma compression、gamut compression 和显示编码几个环节，正好对应站内最近更新的 scene/display-referred 与 HDR 色彩科学章节。它的价值不在背术语，而在帮你建立一个更稳的工作流直觉：scene-referred 调色并不是“直接做给屏幕看”，而是先保留场景信息，再由输出变换按目标显示器把参考白、高光余量和颜色边界合理落地。",
+          "url": "https://docs.acescentral.com/system-components/output-transforms/"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-11",
+      "picks": [
+        {
+          "tag": "教程",
+          "source": "RED Digital Cinema",
+          "title": "WHITE PAPER ON REDWideGamutRGB and Log3G10",
+          "description": "这篇值得读，因为它把 Log 不只讲成“平灰画面”，而是直接给出一个很实用的尺度感：18% 中灰为什么落在 1/3，为什么 Log3G10 里的“10”指向中灰以上 10 档，以及这类曲线本来就是为了后续再转成 HDR、SDR 或其他显示编码。它和站内今天更新的 Log 章节衔接很强，尤其适合把“码值分配、中灰锚点、Log 只是承载场景信息而不是最终显示”这三件事一次看顺。",
+          "url": "https://docs.red.com/955-0187/PDF/915-0187%20Rev-C%20%20%20RED%20OPS%2C%20White%20Paper%20on%20REDWideGamutRGB%20and%20Log3G10.pdf"
+        },
+        {
+          "tag": "文章",
+          "source": "Chromium Blog",
+          "title": "Bringing a clearer, more consistent HDR video experience to Chrome",
+          "description": "这篇值得读，因为它把 HDR 参考白和 headroom 从标准术语翻成了网页与系统层面真正会遇到的问题：HDR 视频和 SDR 界面混排时，为什么会一起被拉亮、洗白，设备亮度余量不同时又该怎样保住高光。它和站内最近更新的 HDR 色彩科学、HDR Relay 以及 scene/display-referred 章节都能接上，特别适合理解“先固定普通白锚点，再把额外亮度留给 HDR 高光”这条现代显示适配逻辑。",
+          "url": "https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/"
+        }
+      ]
+    },
     {
       "date": "2026-06-10",
       "picks": [

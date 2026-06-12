@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>电视 HDR 亮度控制逻辑 | Reference White 与 Headroom</title>
+  <meta name="description" content="用 Reference White、Headroom、Tone Mapping 与 Panel Drive 重新定义电视 HDR 亮度控制。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07090c;
+      --ink: #f6f8f2;
+      --muted: #aeb7ad;
+      --soft: #778377;
+      --line: rgba(255,255,255,.13);
+      --panel: rgba(255,255,255,.055);
+      --cyan: #4adbd8;
+      --green: #98e36f;
+      --amber: #f5c35b;
+      --coral: #ff7a5f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #07090c 0%, #10140f 52%, #07090c 100%);
+      color: var(--ink);
+      font: 16px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+      background: rgba(7,9,12,.82);
+      backdrop-filter: blur(18px);
+    }
+    .nav {
+      width: min(1180px, calc(100% - 44px));
+      min-height: 62px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .logo { font-weight: 840; }
+    .nav-links { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 7px 10px;
+      border-radius: 8px;
+    }
+    .nav-links a:hover { color: var(--ink); background: rgba(255,255,255,.07); }
+
+    .hero {
+      position: relative;
+      min-height: 78vh;
+      display: grid;
+      align-items: center;
+      padding: 72px 22px 46px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(90deg, rgba(74,219,216,.11) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.065) 1px, transparent 1px);
+      background-size: 82px 82px;
+      mask-image: linear-gradient(180deg, black 0%, black 62%, transparent 100%);
+      opacity: .34;
+    }
+    .hero-inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(330px, .82fr);
+      gap: 42px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 840;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--amber); }
+    h1 {
+      max-width: 780px;
+      font-size: clamp(42px, 6.3vw, 82px);
+      line-height: 1.04;
+      letter-spacing: 0;
+      text-wrap: balance;
+      margin-bottom: 24px;
+    }
+    .accent {
+      color: transparent;
+      background: linear-gradient(100deg, var(--cyan), var(--green), var(--amber));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .lead {
+      max-width: 720px;
+      color: #d9e2d5;
+      font-size: clamp(18px, 2vw, 21px);
+      line-height: 1.82;
+    }
+    .hero-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      padding: 20px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.34);
+    }
+    .screen {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border: 2px solid rgba(255,255,255,.18);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(110deg, transparent 0 56%, rgba(255,255,255,.72) 57%, transparent 62%),
+        linear-gradient(180deg, #121914 0%, #263829 42%, #e9e6cc 57%, #fc8758 100%);
+    }
+    .chip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      color: #07100e;
+      background: rgba(247,248,244,.9);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 840;
+    }
+    .subtitle {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,.95);
+      font-weight: 820;
+      padding: 2px 10px;
+      border-radius: 4px;
+      background: rgba(0,0,0,.34);
+    }
+    .hero-meters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .meter, .stat, .readout, .formula {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+    }
+    .meter span, .stat span, .readout span, .formula span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .meter strong, .stat strong, .readout strong {
+      display: block;
+      font-size: clamp(18px, 2vw, 25px);
+      line-height: 1.15;
+    }
+
+    .section {
+      width: min(1180px, calc(100% - 44px));
+      margin: 0 auto;
+      padding: 58px 0;
+    }
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+    .section-head h2 {
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.12;
+      margin-bottom: 10px;
+    }
+    .section-head p {
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .callout {
+      border: 1px solid rgba(74,219,216,.28);
+      background: linear-gradient(135deg, rgba(74,219,216,.12), rgba(245,195,91,.08));
+      border-radius: 8px;
+      padding: 24px;
+      font-size: clamp(21px, 3vw, 34px);
+      line-height: 1.35;
+      font-weight: 820;
+      text-wrap: balance;
+    }
+    .principle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .principle {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 18px;
+    }
+    .principle b { color: var(--cyan); display: block; margin-bottom: 6px; font-size: 16px; }
+    .principle p { color: var(--muted); font-size: 14px; }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .mode-card, .controls, .output-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 22px;
+    }
+    .mode-card h3 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+    .mode-card p {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .mode-card ul {
+      display: grid;
+      gap: 10px;
+      list-style: none;
+    }
+    .mode-card li {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      color: #dfe7dd;
+    }
+    .mode-card b { color: var(--amber); }
+    .lab {
+      display: grid;
+      grid-template-columns: minmax(290px, .72fr) minmax(0, 1.28fr);
+      gap: 18px;
+    }
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .segmented button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 44px;
+      color: var(--muted);
+      background: rgba(255,255,255,.035);
+      font: inherit;
+      font-weight: 780;
+      cursor: pointer;
+    }
+    .segmented button[aria-pressed="true"] {
+      color: #06100d;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+    }
+    .control { margin-top: 17px; }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .control output { color: var(--ink); font-weight: 820; }
+    input[type="range"] { width: 100%; accent-color: var(--cyan); }
+    .stats, .readouts, .formulas {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .stats { margin-bottom: 18px; }
+    .readouts { margin-top: 12px; }
+    .lab-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(245,195,91,.26);
+      border-radius: 8px;
+      background: rgba(245,195,91,.07);
+      color: #ecdcb4;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .lab-note b { color: var(--amber); }
+    .chart {
+      position: relative;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      overflow: hidden;
+    }
+    .hover-line { stroke: rgba(255,255,255,.42); stroke-width: 1; stroke-dasharray: 3 4; }
+    .hover-dot { fill: var(--cyan); stroke: #07090c; stroke-width: 2.5; }
+    .hover-tip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      z-index: 5;
+      background: rgba(7,9,12,.93);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--ink);
+      white-space: nowrap;
+      box-shadow: 0 8px 26px rgba(0,0,0,.45);
+    }
+    .hover-tip b { color: var(--cyan); }
+    .hover-tip .seg { color: var(--amber); font-size: 11.5px; }
+    .chart svg { display: block; width: 100%; height: auto; }
+    .axis { stroke: rgba(255,255,255,.28); stroke-width: 1; }
+    .grid-line { stroke: rgba(255,255,255,.09); stroke-width: 1; }
+    .grid-label, .chart text { fill: var(--muted); font-size: 12px; }
+    .headroom-band { fill: rgba(245,195,91,.10); }
+    .peak-line { stroke: rgba(152,227,111,.55); stroke-width: 2; stroke-dasharray: 2 5; }
+    .curve-reference {
+      fill: none;
+      stroke: rgba(255,255,255,.28);
+      stroke-width: 2;
+      stroke-dasharray: 5 7;
+    }
+    .curve-active {
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .rw-line { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 4 5; }
+    .knee-line { stroke: var(--coral); stroke-width: 2; stroke-dasharray: 4 5; }
+    .anchor-dot {
+      fill: var(--bg);
+      stroke: var(--amber);
+      stroke-width: 3;
+    }
+    .knee-dot {
+      fill: var(--bg);
+      stroke: var(--coral);
+      stroke-width: 3;
+    }
+    code {
+      color: #07100e;
+      background: linear-gradient(135deg, var(--green), var(--amber));
+      border-radius: 6px;
+      padding: 3px 7px;
+      font: 700 15px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: normal;
+    }
+    .formula strong { display: block; font-size: 15px; }
+
+    .calc-steps { display: grid; gap: 10px; counter-reset: step; }
+    .calc-step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 14px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 15px 17px;
+    }
+    .calc-step::before {
+      counter-increment: step;
+      content: counter(step);
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #06100d;
+      font-weight: 840;
+      font-size: 14px;
+    }
+    .calc-step h4 { font-size: 15px; margin-bottom: 4px; }
+    .calc-step p { color: var(--muted); font-size: 13.5px; }
+    .calc-step .calc-val {
+      display: block;
+      margin-top: 7px;
+      color: var(--cyan);
+      font: 700 13.5px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-word;
+    }
+    .calc-step .calc-val em { color: var(--amber); font-style: normal; }
+    .note-block {
+      margin-top: 20px;
+      border-left: 3px solid var(--green);
+      padding: 6px 0 6px 16px;
+      color: #cdd6ca;
+      font-size: 14.5px;
+    }
+    .note-block b { color: var(--green); }
+
+    .pipe { display: grid; }
+    .pipe-stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: 168px 1fr;
+      gap: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 18px 20px;
+    }
+    .pipe-stage + .pipe-stage { margin-top: 30px; }
+    .pipe-stage + .pipe-stage::before {
+      content: "▼";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--cyan);
+      font-size: 13px;
+    }
+    .pipe-name b { display: block; font-size: 16px; line-height: 1.4; }
+    .pipe-tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 9px;
+      border: 1px solid rgba(74,219,216,.4);
+      border-radius: 999px;
+      color: var(--cyan);
+      font-size: 11.5px;
+      font-weight: 780;
+      letter-spacing: .04em;
+    }
+    .pipe-body p { color: #d4ddd1; font-size: 14.5px; }
+    .pipe-key {
+      margin-top: 9px;
+      color: #ecdcb4;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .pipe-key b { color: var(--amber); }
+    @media (max-width: 720px) {
+      .pipe-stage { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      text-align: center;
+      color: var(--muted);
+      padding: 34px 22px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-inner, .lab { grid-template-columns: 1fr; }
+      .stats, .readouts, .formulas, .principle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      .hero { min-height: auto; padding-top: 44px; }
+      .mode-grid, .stats, .readouts, .formulas, .hero-meters, .principle-grid { grid-template-columns: 1fr; }
+      .mode-card li { grid-template-columns: 1fr; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav">
+      <a href="index.html" class="logo">色彩与显示指南</a>
+      <div class="nav-links">
+        <a href="#idea">核心逻辑</a>
+        <a href="#modes">两套模式</a>
+        <a href="#lab">曲线模型</a>
+        <a href="#walkthrough">计算链路</a>
+        <a href="#algorithm">算法框架</a>
+        <a href="#pipeline">处理流程</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">HDR Brightness Control</div>
+          <h1>电视亮度，不再只是<span class="accent">背光强弱</span></h1>
+          <p class="lead">把 HDR 亮度控制重新定义为 Reference White、Display Headroom、Tone Mapping 与 Panel Drive 的联合决策。核心原则只有一句：<b>锚住普通白，让面板峰值的波动只体现在高光 roll-off 上，绝不污染中间调和 UI。</b></p>
+        </div>
+        <aside class="hero-card" aria-label="HDR 亮度控制示意">
+          <div class="screen">
+            <div class="chip" id="hero-mode">Bright Room HDR</div>
+            <div class="subtitle" id="hero-subtitle">字幕锚定在 Reference White 附近</div>
+          </div>
+          <div class="hero-meters">
+            <div class="meter"><span>Reference White</span><strong id="hero-rw">300 nits</strong></div>
+            <div class="meter"><span>Headroom</span><strong id="hero-headroom">3.0x</strong></div>
+            <div class="meter"><span>Peak_eff</span><strong id="hero-peak">900 nits</strong></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="idea">
+      <div class="section-head">
+        <h2>核心逻辑</h2>
+        <p>用户调亮度时，系统真正调整的是普通白有多亮、高光保留多少空间、中间调如何适配观看环境，而不是简单把整块面板推亮。Headroom 不是可调输入，它是 Peak_eff 与 Reference White 的比值——一个被动导出的余量。极暗部要被保护，不能跟着亮度滑杆被直接拉高或压低。</p>
+      </div>
+      <div class="callout">电视 HDR 亮度控制不再直接等同于背光强弱，而是由 Reference White、Display Headroom、Tone Mapping 和 Panel Drive 共同决定。</div>
+      <div class="principle-grid">
+        <div class="principle">
+          <b>① Reference White 是锚点</b>
+          <p>SDR 白、HDR diffuse white、UI、字幕都对齐到它。它是用户"亮度"真正改变的量。</p>
+        </div>
+        <div class="principle">
+          <b>② Peak 是窗口的函数</b>
+          <p>OLED/Mini-LED 受 ABL 限制，峰值随高光窗口面积逐场景漂移。Peak_eff 不是常数。</p>
+        </div>
+        <div class="principle">
+          <b>③ 波动吸收进高光</b>
+          <p>Peak_eff 起伏时，diffuse white 锚死不动，所有变化都被 knee 之后的 roll-off 吸收。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="modes">
+      <div class="section-head">
+        <h2>两套核心模式</h2>
+        <p>一个模式负责准确，一个模式负责环境适配。产品层越清楚，底层曲线越不容易互相打架。</p>
+      </div>
+      <div class="mode-grid">
+        <article class="mode-card">
+          <h3>Filmmaker / 准确模式</h3>
+          <p>尊重内容原始 HDR 意图：亮度调的是 Reference White 锚点，中灰到参考白逐渐跟随白点变化；极暗部保留原始 PQ 暗部结构，优先保留 headroom，knee 之前严格跟随 PQ EOTF 的相对关系。</p>
+          <ul>
+            <li><b>RW</b><span>用户亮度在 100-300 nits 区间调白点（暗室影院到明亮客厅），仅受 Peak_eff / 4 物理上限约束。</span></li>
+            <li><b>Headroom</b><span>建议不低于 4x，用来保留高光层次。</span></li>
+            <li><b>Tone Mapping</b><span>knee 前保持 PQ 斜率（RW=203 时与 1:1 完全重合），超出面板能力时才进入 soft roll-off。</span></li>
+            <li><b>用户控制</b><span>亮度影响 Reference White 与中灰以上观感，暗部用 toe 保护平滑过渡，绝不去抬黑位变成明亮模式。</span></li>
+          </ul>
+        </article>
+        <article class="mode-card">
+          <h3>明亮模式 / Bright Room HDR</h3>
+          <p>提高高环境光下的可见性：提高普通白，并按环境光在中段抬升暗部（黑端锚定、细节按比例保留），允许压缩部分高光层次。</p>
+          <ul>
+            <li><b>RW</b><span>约 200-450 nits，由用户亮度和环境光共同决定 RW_target。</span></li>
+            <li><b>Headroom</b><span>保底 2.2x-3x，不能让普通白吃光 HDR 空间。</span></li>
+            <li><b>Tone Mapping</b><span>RW 以下做可见性增益，RW 以上更早进入 shoulder。</span></li>
+            <li><b>用户控制</b><span>亮度滑杆影响 RW target，而不是直接拉满背光。</span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="lab">
+      <div class="section-head">
+        <h2>真实可用的曲线模型</h2>
+        <p>横轴是输入 PQ 绝对亮度（对数），纵轴是显示输出亮度（对数）。亮度滑杆改变 Reference White 锚点；极暗部保持黑位和暗部层次，中灰到参考白逐渐过渡到新的白点增益。而拖动「高光窗口」让 ABL 改变 Peak_eff 时，<b>RW 锚点不随面板波动漂移</b>，只有 knee 之后的 roll-off 在吸收变化。黄色带是当前可用的高光 headroom。</p>
+      </div>
+      <div class="lab">
+        <div class="controls">
+          <div class="segmented" aria-label="模式切换">
+            <button type="button" id="film-btn" aria-pressed="false">Filmmaker</button>
+            <button type="button" id="bright-btn" aria-pressed="true">明亮 HDR</button>
+          </div>
+          <div class="control">
+            <label for="peak">面板峰值能力 (10% 窗口) <output id="peak-out">1000 nits</output></label>
+            <input id="peak" type="range" min="600" max="4000" value="1000" step="50">
+          </div>
+          <div class="control">
+            <label for="window">高光窗口占比 (ABL) <output id="window-out">10% → Peak_eff 1000</output></label>
+            <input id="window" type="range" min="1" max="100" value="10" step="1">
+          </div>
+          <div class="control">
+            <label for="user-brightness">用户亮度意图 <output id="brightness-out">60%</output></label>
+            <input id="user-brightness" type="range" min="0" max="100" value="60" step="1">
+          </div>
+          <div class="control">
+            <label for="ambient">环境光 <output id="ambient-out">300 lux</output></label>
+            <input id="ambient" type="range" min="0" max="1200" value="300" step="10">
+          </div>
+        </div>
+        <div class="output-panel">
+          <div class="stats">
+            <div class="stat"><span>Peak_eff</span><strong id="peak-eff">1000</strong></div>
+            <div class="stat"><span>RW_final</span><strong id="rw-final">300</strong></div>
+            <div class="stat"><span>Headroom</span><strong id="headroom">3.0x</strong></div>
+            <div class="stat"><span>Stops</span><strong id="stops">1.58</strong></div>
+          </div>
+          <div class="chart">
+            <svg viewBox="0 0 720 360" role="img" aria-label="Tone mapping 曲线">
+              <rect class="headroom-band" id="headroom-band" x="76" y="38" width="592" height="0"></rect>
+              <g id="x-grid"></g>
+              <g id="y-grid"></g>
+              <line class="axis" x1="76" y1="294" x2="668" y2="294"></line>
+              <line class="axis" x1="76" y1="38" x2="76" y2="294"></line>
+              <path class="curve-reference" id="pq-reference" d=""></path>
+              <line class="peak-line" id="peak-line" x1="76" y1="38" x2="668" y2="38"></line>
+              <line class="rw-line" id="rw-line-v" x1="0" y1="294" x2="0" y2="38"></line>
+              <line class="rw-line" id="rw-line-h" x1="76" y1="0" x2="668" y2="0"></line>
+              <line class="knee-line" id="knee-line-v" x1="0" y1="294" x2="0" y2="38"></line>
+              <line class="knee-line" id="knee-line-h" x1="76" y1="0" x2="668" y2="0"></line>
+              <path class="curve-active" id="active-curve" d=""></path>
+              <circle class="anchor-dot" id="rw-dot" cx="0" cy="0" r="5"></circle>
+              <circle class="knee-dot" id="knee-dot" cx="0" cy="0" r="5"></circle>
+              <text x="76" y="326">Input PQ luminance / nits</text>
+              <text x="86" y="58">Output display luminance / nits</text>
+              <text x="470" y="58">dashed: 1:1 PQ then hard clip</text>
+              <g id="hover-layer" style="display:none">
+                <line class="hover-line" id="hover-line-v" x1="0" y1="294" x2="0" y2="38"></line>
+                <line class="hover-line" id="hover-line-h" x1="76" y1="0" x2="668" y2="0"></line>
+                <circle class="hover-dot" id="hover-dot" cx="0" cy="0" r="5"></circle>
+              </g>
+            </svg>
+            <div class="hover-tip" id="hover-tip"></div>
+          </div>
+          <div class="readouts">
+            <div class="readout"><span>RW anchor</span><strong id="rw-anchor">203 → 300 nits</strong></div>
+            <div class="readout"><span>Knee · shoulder</span><strong id="knee-anchor">520 → 470 nits</strong></div>
+            <div class="readout"><span>阴影提亮（中段峰值）</span><strong id="shadow-anchor">+0%</strong></div>
+            <div class="readout"><span>UI &amp; 字幕 clamp</span><strong id="ui-clamp">≤ 300 nits</strong></div>
+          </div>
+          <p class="lab-note" id="lab-note"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="walkthrough">
+      <div class="section-head">
+        <h2>计算链路 · 跟随滑杆实时复算</h2>
+        <p>上面的曲线不是画出来的，是用下面这条链路算出来的。每一步都把当前控件的数值代入，拖动滑杆时算式同步更新——可以逐步对照验证。</p>
+      </div>
+      <div class="calc-steps">
+        <div class="calc-step">
+          <div>
+            <h4>① 有效峰值 Peak_eff（ABL 折算）</h4>
+            <p>面板峰值能力是在 10% 窗口下标定的。高光窗口越大，功率越分散、可持续峰值越低，由 ABL 折算系数体现。</p>
+            <span class="calc-val" id="cs-abl"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>② Reference White 目标 RW_target</h4>
+            <p>这是用户「亮度」真正改变的量。准确模式只缩放白点；明亮模式在基础白点上叠加环境光与用户增益。</p>
+            <span class="calc-val" id="cs-target"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>③ RW 物理上限 RW_max</h4>
+            <p>为了给高光留出至少 H_min 倍的余量，普通白不能超过 Peak_eff / H_min。这一步保证 headroom 有下限。</p>
+            <span class="calc-val" id="cs-rwmax"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>④ 最终 RW_final</h4>
+            <p>取目标与上限的较小者。一旦上限生效（大窗口或低 peak），白点被钳住——这正是真实功率约束。</p>
+            <span class="calc-val" id="cs-rwfinal"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>⑤ 高光 Headroom（结构性保底）</h4>
+            <p>因为 RW_final ≤ Peak_eff / H_min，所以 headroom = Peak_eff / RW_final 必然 ≥ H_min。白点永远吃不光 HDR 空间。</p>
+            <span class="calc-val" id="cs-headroom"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>⑥ Knee 拐点</h4>
+            <p>从 RW 往上数 availableStops × kneeFraction 档进入 shoulder。knee 之前按 midSlope 线性跟随，之后开始 roll-off。</p>
+            <span class="calc-val" id="cs-knee"></span>
+          </div>
+        </div>
+        <div class="calc-step">
+          <div>
+            <h4>⑦ Shoulder 收敛 + 暗部保护</h4>
+            <p>knee 之上用指数 shoulder 渐近（不硬切）Peak_eff；RW 之下不做整段纯增益，而是先保护极暗部，再用 smoothstep toe 把 1 nit 以上的暗部/中间调平滑过渡到 RW 增益。环境光提亮只作用在中段，黑端与 RW 端斜率均为 0。</p>
+            <span class="calc-val" id="cs-tail"></span>
+          </div>
+        </div>
+      </div>
+      <p class="note-block">
+        <b>为什么是 203 nits：</b>ITU-R BT.2408 把 HDR Reference White（diffuse / graphics white）定在 203 nits。PQ（SMPTE ST 2084）是<b>绝对亮度</b>编码，所以"调亮"不能简单整体加增益，而要重新选定这个锚点再决定锚点之上如何 roll-off。
+      </p>
+    </section>
+
+    <section class="section" id="algorithm">
+      <div class="section-head">
+        <h2>算法框架</h2>
+        <p>页面里的曲线不是装饰图，而是用这组约束动态生成：203 nits 内容白映射到 RW_final，Peak_eff 由面板能力经 ABL 折算，knee 由剩余 headroom 决定，高光用指数 shoulder 接近 Peak_eff，极暗部用 toe 保护避免亮度滑杆直接裁切或抬黑。</p>
+      </div>
+      <div class="formulas">
+        <div class="formula"><span>有效峰值</span><strong><code>Peak_eff = ABL(Peak_cap, window)</code></strong></div>
+        <div class="formula"><span>RW 上限</span><strong><code>RW_max = Peak_eff / Headroom_min</code></strong></div>
+        <div class="formula"><span>最终 RW</span><strong><code>RW_final = min(RW_target, RW_max)</code></strong></div>
+        <div class="formula"><span>暗部 toe</span><strong><code>gain = mix(1, RW/203, smoothstep)</code></strong></div>
+      </div>
+    </section>
+
+    <section class="section" id="pipeline">
+      <div class="section-head">
+        <h2>电视内的色彩处理流程（HDR 输入）</h2>
+        <p>上面的亮度控制逻辑不是孤立的一条曲线，它嵌在电视 SoC 的完整色彩管线里。下面按信号流动顺序走一遍：哪一步该做什么、绝对不能做什么，以及本页的 RW / Peak_eff / tone curve 分别接在哪里。</p>
+      </div>
+      <div class="pipe">
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>① 解码与色度上采样</b>
+            <span class="pipe-tag">YCbCr 4:2:0 · 限范围</span>
+          </div>
+          <div class="pipe-body">
+            <p>HDMI / 流媒体解码后通常是 10-bit YCbCr 4:2:0、BT.2020-nc、PQ 编码、限范围（64–940）。先做色度 4:2:0 → 4:4:4 上采样，再展开到全范围。</p>
+            <p class="pipe-key"><b>要点：</b>这一步不做任何"亮度"操作。YCbCr 的 Y' 不是真实亮度（non-constant luminance），在这里调亮会顺带改变色度、引起色相偏移。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>② 矩阵变换 + EOTF 线性化</b>
+            <span class="pipe-tag">进入线性光 RGB</span>
+          </div>
+          <div class="pipe-body">
+            <p>YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到线性光 RGB——数值直接对应绝对亮度 nits（0.0001 ~ 10000）。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</p>
+            <p class="pipe-key"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的暗部细节会量化成 banding——这正是前面暗部模型强调"深黑锚定"的硬件前提。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>③ 元数据解析 + 帧统计</b>
+            <span class="pipe-tag">控制面</span>
+          </div>
+          <div class="pipe-body">
+            <p>解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision、ST 2094-50 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</p>
+            <p class="pipe-key"><b>要点：</b>demo 里手动拖的「高光窗口」滑杆，在真机上就来自这一步的实时统计。这里也是 RW_target（用户亮度 + 环境光传感器）汇入的地方。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>④ Tone Mapping</b>
+            <span class="pipe-tag">线性光 RGB · 本页核心</span>
+          </div>
+          <div class="pipe-body">
+            <p>在线性光域执行暗部保护 + RW 锚定 + knee + shoulder——就是「计算链路」生成的那条曲线。工程关键：<b>不要逐通道（per-channel R/G/B）套曲线</b>，高光会偏色（白炽灯变黄、天空转青）。正确做法是取亮度代理 m = max(R,G,B)（或 ICtCp 的 I 通道），算增益 g = T(m) / m，再三通道同乘 g，保住色相与饱和度比例。</p>
+            <p class="pipe-key"><b>要点：</b>曲线每帧由控制面更新成 1D LUT，数据面逐像素只做查表 + 乘法——RW / headroom 决策的全部计算量都在控制面，像素侧零额外成本。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>⑤ 色域映射</b>
+            <span class="pipe-tag">线性光 RGB</span>
+          </div>
+          <div class="pipe-body">
+            <p>BT.2020 只是容器，内容实际多为 P3 体积；面板原生约 90–98% P3。用 3×3 矩阵 + 边界软压缩（或 3D LUT）把超出面板色域的颜色压回来，避免硬裁剪让饱和色丢掉层次。</p>
+            <p class="pipe-key"><b>要点：</b>顺序在 tone mapping 之后——亮度改变后可显示的色域体积也变了（越亮可用饱和度越小），先 tone map 才知道每个像素真正落在哪个亮度层。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>⑥ 图形 / UI 合成</b>
+            <span class="pipe-tag">视频平面 + 图形平面</span>
+          </div>
+          <div class="pipe-body">
+            <p>视频平面（已 tone map）与图形平面（UI、字幕，通常 SDR/sRGB）分开处理：图形先线性化，把 SDR 白对齐到 RW_final 并 clamp ≤ RW，再与视频在线性域做 alpha 混合。</p>
+            <p class="pipe-key"><b>要点：</b>这就是读数区「UI &amp; 字幕 clamp」的落点。若在非线性域混合，半透明边缘会出现深色/亮色镶边；若不 clamp，白色 UI 会被推进高光区抢功率、刺眼。</p>
+          </div>
+        </div>
+        <div class="pipe-stage">
+          <div class="pipe-name">
+            <b>⑦ 校准与面板驱动</b>
+            <span class="pipe-tag">面板域</span>
+          </div>
+          <div class="pipe-body">
+            <p>过校准 3D LUT（白点、灰阶、色域微调），再转面板驱动信号。OLED：直接电流驱动 + ABL/TPC 钳制；Mini-LED：把目标图像分解为背光矩阵 × LCD 透过率两层，给高光区域保留功率预算。最后以 ≥10-bit + 时空抖动输出到面板位深。</p>
+            <p class="pipe-key"><b>要点：</b>第③步的 Peak_eff 估计和这里的功率分配是同一个闭环——本帧的分配结果决定下一帧统计到的 Peak_eff。</p>
+          </div>
+        </div>
+      </div>
+      <p class="note-block">
+        <b>控制面 / 数据面分离 + 时间平滑：</b>RW_final、Peak_eff、tone curve、色域压缩参数都属于控制面，按帧或场景更新；逐像素工作全部走 LUT。控制量更新必须做时间平滑（如 IIR 滤波）：场景内缓变、场景切换处允许快变——否则曲线跳变会被观众看成闪烁或"呼吸"。这也是把 ABL 波动吸收进高光 roll-off 之外，第二道防呼吸感的闸门。
+      </p>
+    </section>
+  </main>
+
+  <footer>影像色彩与显示技术分析</footer>
+
+  <script>
+    const SOURCE_RW = 203;
+    const SOURCE_PEAK = 4000;
+    const DARK_PROTECT_NIT = 1;
+    const ABL_MIN_RATIO = 0.22; // 100% 全白窗口时相对 10% 窗口峰值的折算比
+    const chart = {
+      left: 76,
+      right: 668,
+      top: 38,
+      bottom: 294,
+      inputMin: 0.1,
+      inputMax: SOURCE_PEAK,
+      outputMin: 0.1,
+      outputMax: 4000
+    };
+    const state = {
+      mode: "bright",
+      peakCap: 1000,
+      windowPct: 10,
+      userBrightness: 60,
+      ambient: 300
+    };
+    const $ = selector => document.querySelector(selector);
+    let liveCurve = null; // 最新一次 render 的 {model, params, peakEff}，供曲线悬浮读数使用
+    const controls = {
+      filmBtn: $("#film-btn"),
+      brightBtn: $("#bright-btn"),
+      peak: $("#peak"),
+      window: $("#window"),
+      userBrightness: $("#user-brightness"),
+      ambient: $("#ambient")
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+    function log10(value) {
+      return Math.log(value) / Math.LN10;
+    }
+    function smoothstep(edge0, edge1, value) {
+      const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+    // ABL: 小窗口接近满峰值，全屏白被压到 ABL_MIN_RATIO。10% 窗口标定为满峰值能力。
+    function ablPeak(cap, windowPct) {
+      const w = clamp(windowPct, 1, 100) / 100;
+      const ratio = ABL_MIN_RATIO + (1 - ABL_MIN_RATIO) * Math.pow(clamp((1 - w) / 0.9, 0, 1), 1.25);
+      return Math.round(cap * ratio);
+    }
+    function xForInput(nits) {
+      const v = clamp(nits, chart.inputMin, chart.inputMax);
+      const t = (log10(v) - log10(chart.inputMin)) / (log10(chart.inputMax) - log10(chart.inputMin));
+      return chart.left + t * (chart.right - chart.left);
+    }
+    // Y 轴固定为 0.1 ~ 4000 nits：峰值/曲线变化时在坐标系里真实移动，刻度不再跟随缩放。
+    function yForOutput(nits) {
+      const v = clamp(nits, chart.outputMin, chart.outputMax);
+      const t = (log10(v) - log10(chart.outputMin)) / (log10(chart.outputMax) - log10(chart.outputMin));
+      return chart.bottom - t * (chart.bottom - chart.top);
+    }
+    function calculate(peakEff) {
+      if (state.mode === "film") {
+        const hMin = 4;
+        // 准确模式：用户亮度调的是 Reference White 锚点（100-300 nits），
+        // 整条曲线等比上移，保持相对结构和 PQ 跟随，而不是去抬暗部/中间调。
+        const target = 100 + state.userBrightness / 100 * 200;
+        return {
+          hMin,
+          target,
+          rwFinal: Math.min(target, peakEff / hMin),
+          tone: "参考跟随",
+          shadowLift: 0,
+          midSlope: 1,
+          kneeFraction: .74,
+          shoulder: 1.2
+        };
+      }
+
+      const ambientBoost = clamp(state.ambient / 1200, 0, 1) * 150;
+      const userBoost = state.userBrightness / 100 * 120;
+      const target = 180 + ambientBoost + userBoost;
+      const hMin = state.ambient > 800 ? 2.2 : state.ambient > 450 ? 2.6 : 3;
+      return {
+        hMin,
+        target,
+        rwFinal: Math.min(target, peakEff / hMin),
+        tone: "环境自适应",
+        // 阴影提亮只由环境光决定（对抗环境反射冲淡黑位），与用户亮度解耦——
+        // 改变亮度时暗部相对结构不变，既不丢细节也不抬纯黑。
+        shadowLift: clamp(state.ambient / 1200, 0, 1) * 0.5,
+        midSlope: clamp(.86 - state.ambient / 6400, .70, .86),
+        kneeFraction: state.ambient > 650 ? .46 : .55,
+        shoulder: state.ambient > 650 ? .66 : .80
+      };
+    }
+    function curveParams(model, peakEff) {
+      const availableStops = Math.log2(peakEff / model.rwFinal);
+      const kneeStops = clamp(availableStops * model.kneeFraction, .45, Math.max(.5, availableStops - .15));
+      const kneeInput = SOURCE_RW * Math.pow(2, kneeStops);
+      const kneeOutput = model.rwFinal * Math.pow(2, kneeStops * model.midSlope);
+      return {
+        availableStops,
+        kneeStops,
+        kneeInput: clamp(kneeInput, SOURCE_RW * 1.1, SOURCE_PEAK),
+        kneeOutput: clamp(kneeOutput, model.rwFinal * 1.05, peakEff * .94)
+      };
+    }
+    function toneMapOutput(input, model, params, peakEff) {
+      if (input <= SOURCE_RW) {
+        // 暗部不能跟着亮度滑杆整段纯增益，否则会抬黑或压掉 near-black。
+        // 1 nit 以下保持原 PQ 暗部结构；1 nit 到 RW 之间用 smoothstep toe
+        // 把增益从 1x 平滑过渡到 RW_final / 203。
+        const logInput = log10(Math.max(input, chart.inputMin));
+        const u = smoothstep(log10(DARK_PROTECT_NIT), log10(SOURCE_RW), logInput);
+        const rwGain = model.rwFinal / SOURCE_RW;
+        const protectedGain = 1 + (rwGain - 1) * u;
+        const base = input * protectedGain;
+        // 环境光提亮只在中段隆起：黑端与 RW 端斜率都为 0，
+        // 所以既不动极暗部、也不动 RW 锚点，只在中间调对抗环境反射。
+        const bump = Math.sin(Math.PI * u);
+        return base * (1 + model.shadowLift * bump * bump);
+      }
+      const inputStops = Math.log2(input / SOURCE_RW);
+      if (inputStops <= params.kneeStops) {
+        return model.rwFinal * Math.pow(2, inputStops * model.midSlope);
+      }
+      const shoulderProgress = 1 - Math.exp(-(inputStops - params.kneeStops) / model.shoulder);
+      return params.kneeOutput + (peakEff - params.kneeOutput) * shoulderProgress;
+    }
+    function sampleInputs(count = 124) {
+      const minLog = log10(chart.inputMin);
+      const maxLog = log10(chart.inputMax);
+      return Array.from({ length: count }, (_, index) => {
+        const t = index / (count - 1);
+        return Math.pow(10, minLog + t * (maxLog - minLog));
+      });
+    }
+    function buildPath(points) {
+      return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+    }
+    function renderGrid() {
+      const xTicks = [0.1, 1, 10, 100, SOURCE_RW, 1000, SOURCE_PEAK];
+      const yTicks = [0.1, 1, 10, 100, 1000, chart.outputMax];
+      $("#x-grid").innerHTML = xTicks.map(value => {
+        const x = xForInput(value);
+        const label = value === SOURCE_RW ? "203 RW" : value >= 1000 ? `${value / 1000}k` : String(value);
+        return `<line class="grid-line" x1="${x}" y1="${chart.top}" x2="${x}" y2="${chart.bottom}"></line><text class="grid-label" x="${x - 13}" y="313">${label}</text>`;
+      }).join("");
+      $("#y-grid").innerHTML = yTicks.map(value => {
+        const y = yForOutput(value);
+        const label = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(Math.round(value * 10) / 10);
+        return `<line class="grid-line" x1="${chart.left}" y1="${y}" x2="${chart.right}" y2="${y}"></line><text class="grid-label" x="34" y="${y + 4}">${label}</text>`;
+      }).join("");
+    }
+    function renderToneCurve(model, peakEff) {
+      const params = curveParams(model, peakEff);
+      const activePoints = sampleInputs().map(input => ({
+        x: xForInput(input),
+        y: yForOutput(toneMapOutput(input, model, params, peakEff))
+      }));
+      const referencePoints = sampleInputs().map(input => ({
+        x: xForInput(input),
+        y: yForOutput(Math.min(input, peakEff))
+      }));
+
+      const rwX = xForInput(SOURCE_RW);
+      const rwY = yForOutput(model.rwFinal);
+      const kneeX = xForInput(params.kneeInput);
+      const kneeY = yForOutput(params.kneeOutput);
+      const peakY = yForOutput(peakEff);
+
+      $("#pq-reference").setAttribute("d", buildPath(referencePoints));
+      $("#active-curve").setAttribute("d", buildPath(activePoints));
+
+      // headroom 余量带：RW 之上到 Peak_eff 的输出区间（固定坐标系下随两条线移动）
+      const band = $("#headroom-band");
+      band.setAttribute("y", peakY.toFixed(1));
+      band.setAttribute("height", Math.max(0, rwY - peakY).toFixed(1));
+
+      // Peak_eff 线在固定坐标系中随 ABL/面板能力上下移动
+      $("#peak-line").setAttribute("y1", peakY.toFixed(1));
+      $("#peak-line").setAttribute("y2", peakY.toFixed(1));
+
+      $("#rw-line-v").setAttribute("x1", rwX.toFixed(1));
+      $("#rw-line-v").setAttribute("x2", rwX.toFixed(1));
+      $("#rw-line-h").setAttribute("y1", rwY.toFixed(1));
+      $("#rw-line-h").setAttribute("y2", rwY.toFixed(1));
+      $("#knee-line-v").setAttribute("x1", kneeX.toFixed(1));
+      $("#knee-line-v").setAttribute("x2", kneeX.toFixed(1));
+      $("#knee-line-h").setAttribute("y1", kneeY.toFixed(1));
+      $("#knee-line-h").setAttribute("y2", kneeY.toFixed(1));
+      $("#rw-dot").setAttribute("cx", rwX.toFixed(1));
+      $("#rw-dot").setAttribute("cy", rwY.toFixed(1));
+      $("#knee-dot").setAttribute("cx", kneeX.toFixed(1));
+      $("#knee-dot").setAttribute("cy", kneeY.toFixed(1));
+
+      $("#rw-anchor").textContent = `${SOURCE_RW} → ${Math.round(model.rwFinal)} nits`;
+      $("#knee-anchor").textContent = `${Math.round(params.kneeInput)} → ${Math.round(params.kneeOutput)} nits`;
+      $("#shadow-anchor").textContent = `+${Math.round(model.shadowLift * 100)}%`;
+      $("#ui-clamp").textContent = `≤ ${Math.round(model.rwFinal)} nits`;
+      return params;
+    }
+    function render() {
+      const peakEff = ablPeak(state.peakCap, state.windowPct);
+      const model = calculate(peakEff);
+      const headroom = peakEff / model.rwFinal;
+      const stops = Math.log2(headroom);
+      const modeName = state.mode === "film" ? "Filmmaker" : "Bright Room HDR";
+
+      controls.filmBtn.setAttribute("aria-pressed", state.mode === "film" ? "true" : "false");
+      controls.brightBtn.setAttribute("aria-pressed", state.mode === "bright" ? "true" : "false");
+      $("#peak-out").textContent = `${state.peakCap} nits`;
+      $("#window-out").textContent = `${state.windowPct}% → Peak_eff ${peakEff}`;
+      $("#brightness-out").textContent = `${state.userBrightness}%`;
+      $("#ambient-out").textContent = `${state.ambient} lux`;
+      $("#peak-eff").textContent = `${peakEff}`;
+      $("#rw-final").textContent = `${Math.round(model.rwFinal)}`;
+      $("#headroom").textContent = `${headroom.toFixed(1)}x`;
+      $("#stops").textContent = stops.toFixed(2);
+      $("#hero-mode").textContent = modeName;
+      $("#hero-rw").textContent = `${Math.round(model.rwFinal)} nits`;
+      $("#hero-headroom").textContent = `${headroom.toFixed(1)}x`;
+      $("#hero-peak").textContent = `${peakEff} nits`;
+      $("#hero-subtitle").textContent = state.mode === "film" ? "字幕不过亮，UI 不吃高光空间" : "字幕更清楚，但仍限制在 RW 附近";
+
+      renderGrid();
+      const params = renderToneCurve(model, peakEff);
+      liveCurve = { model, params, peakEff };
+
+      // ── 计算链路实时复算 ──
+      const ablRatio = peakEff / state.peakCap;
+      const rwMax = peakEff / model.hMin;
+      const gainOverRef = model.rwFinal / SOURCE_RW;
+      $("#cs-abl").innerHTML = `Peak_eff = ${state.peakCap} × ABL(${state.windowPct}%)=${ablRatio.toFixed(2)} → <em>${peakEff}</em> nits`;
+      if (state.mode === "film") {
+        $("#cs-target").innerHTML = `RW_target = 100 + 亮度 ${state.userBrightness}% × 200 → <em>${Math.round(model.target)}</em> nits`;
+      } else {
+        const aBoost = clamp(state.ambient / 1200, 0, 1) * 150;
+        const uBoost = state.userBrightness / 100 * 120;
+        $("#cs-target").innerHTML = `RW_target = 180 + 环境 ${Math.round(aBoost)} + 用户 ${Math.round(uBoost)} → <em>${Math.round(model.target)}</em> nits`;
+      }
+      $("#cs-rwmax").innerHTML = `RW_max = Peak_eff ${peakEff} / H_min ${model.hMin} → <em>${Math.round(rwMax)}</em> nits`;
+      $("#cs-rwfinal").innerHTML = `RW_final = min(${Math.round(model.target)}, ${Math.round(rwMax)}) → <em>${Math.round(model.rwFinal)}</em> nits`;
+      $("#cs-headroom").innerHTML = `H = ${peakEff} / ${Math.round(model.rwFinal)} → <em>${headroom.toFixed(2)}×</em> = ${stops.toFixed(2)} stops（保底 ≥ H_min ${model.hMin}）`;
+      $("#cs-knee").innerHTML = `knee = avail ${params.availableStops.toFixed(2)} × frac ${model.kneeFraction} = ${params.kneeStops.toFixed(2)} stops → 入 <em>${Math.round(params.kneeInput)}</em> · 出 <em>${Math.round(params.kneeOutput)}</em> nits`;
+      const blackOut = toneMapOutput(0.1, model, params, peakEff);
+      const toeOut = toneMapOutput(DARK_PROTECT_NIT, model, params, peakEff);
+      const shadowOut = toneMapOutput(10, model, params, peakEff);
+      const hiOut = toneMapOutput(SOURCE_PEAK, model, params, peakEff);
+      $("#cs-tail").innerHTML = `shoulder τ=${model.shoulder}：${SOURCE_PEAK}nit 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜暗部保护：0.1→<em>${blackOut.toFixed(2)}</em>，${DARK_PROTECT_NIT}→<em>${toeOut.toFixed(2)}</em>，10→<em>${shadowOut.toFixed(1)}</em>（toe 从 1× 平滑过渡到 RW/203=${gainOverRef.toFixed(2)}× · 阴影提亮峰值 +${Math.round(model.shadowLift * 100)}%）`;
+
+      const note = $("#lab-note");
+      const headroomLimited = model.rwFinal < model.target - 0.5;
+      if (headroomLimited) {
+        note.innerHTML = `RW_target <b>${Math.round(model.target)}</b> 触及上限，被钳到 RW_final <b>${Math.round(model.rwFinal)} nits</b>（= Peak_eff ${peakEff} / H_min ${model.hMin}）。可能因为高光窗口偏大、面板峰值偏低、或目标本身偏高——都是真实功率约束，不是 bug。`;
+      } else if (state.mode === "film") {
+        note.innerHTML = `亮度把 Reference White 调到 <b>${Math.round(model.rwFinal)} nits</b>，但 <b>${DARK_PROTECT_NIT} nit 以下暗部保持原 PQ 结构</b>，从 ${DARK_PROTECT_NIT} nit 到 203 nit 才平滑过渡到 RW_final/203=<b>${gainOverRef.toFixed(2)}×</b> 的白点增益。再拖「高光窗口」让 Peak_eff 起伏时，<b>锚点不动，波动只被 knee 之后的 roll-off 吸收</b>。`;
+      } else {
+        note.innerHTML = `普通白抬到 <b>${Math.round(model.rwFinal)} nits</b> 以适配环境光，但 <b>${DARK_PROTECT_NIT} nit 以下不被亮度滑杆直接拉高</b>；暗部到中灰用平滑 toe 过渡，仍保留 <b>${headroom.toFixed(1)}x</b>（${stops.toFixed(2)} stops）高光 headroom。UI 与字幕钳在 RW 以下，不会被推进高光区抢功率。`;
+      }
+    }
+
+    controls.filmBtn.addEventListener("click", () => {
+      state.mode = "film";
+      render();
+    });
+    controls.brightBtn.addEventListener("click", () => {
+      state.mode = "bright";
+      render();
+    });
+    controls.peak.addEventListener("input", event => {
+      state.peakCap = Number(event.target.value);
+      render();
+    });
+    controls.window.addEventListener("input", event => {
+      state.windowPct = Number(event.target.value);
+      render();
+    });
+    controls.userBrightness.addEventListener("input", event => {
+      state.userBrightness = Number(event.target.value);
+      render();
+    });
+    controls.ambient.addEventListener("input", event => {
+      state.ambient = Number(event.target.value);
+      render();
+    });
+
+    // ── 曲线悬浮读数：十字准线 + 输入/输出 nit + 所在曲线段 ──
+    const chartSvg = document.querySelector(".chart svg");
+    const hoverTip = $("#hover-tip");
+    const hoverLayer = $("#hover-layer");
+    function fmtNits(value) {
+      return value >= 100 ? String(Math.round(value)) : value >= 10 ? value.toFixed(1) : value.toFixed(2);
+    }
+    function hideHover() {
+      hoverLayer.style.display = "none";
+      hoverTip.style.display = "none";
+    }
+    chartSvg.addEventListener("pointermove", event => {
+      if (!liveCurve) return;
+      const rect = chartSvg.getBoundingClientRect();
+      const vx = (event.clientX - rect.left) / rect.width * 720;
+      if (vx < chart.left || vx > chart.right) {
+        hideHover();
+        return;
+      }
+      const t = (vx - chart.left) / (chart.right - chart.left);
+      const input = Math.pow(10, log10(chart.inputMin) + t * (log10(chart.inputMax) - log10(chart.inputMin)));
+      const { model, params, peakEff } = liveCurve;
+      const output = toneMapOutput(input, model, params, peakEff);
+      const vy = yForOutput(output);
+
+      $("#hover-line-v").setAttribute("x1", vx.toFixed(1));
+      $("#hover-line-v").setAttribute("x2", vx.toFixed(1));
+      $("#hover-line-h").setAttribute("y1", vy.toFixed(1));
+      $("#hover-line-h").setAttribute("y2", vy.toFixed(1));
+      $("#hover-dot").setAttribute("cx", vx.toFixed(1));
+      $("#hover-dot").setAttribute("cy", vy.toFixed(1));
+      hoverLayer.style.display = "";
+
+      const segment = input <= SOURCE_RW
+        ? (input <= DARK_PROTECT_NIT ? "极暗部：黑位保护段" : "锚点以下：toe 过渡 / 中间调")
+        : Math.log2(input / SOURCE_RW) <= params.kneeStops
+          ? "RW ~ knee：线性跟随段"
+          : "knee 之上：shoulder roll-off";
+      hoverTip.innerHTML = `输入 <b>${fmtNits(input)}</b> → 输出 <b>${fmtNits(output)}</b> nits（增益 ${(output / input).toFixed(2)}×）<br><span class="seg">${segment}</span>`;
+      hoverTip.style.display = "block";
+      const px = vx / 720 * rect.width;
+      const py = vy / 360 * rect.height;
+      const flip = px > rect.width * 0.62;
+      hoverTip.style.left = flip ? "auto" : `${px + 14}px`;
+      hoverTip.style.right = flip ? `${rect.width - px + 14}px` : "auto";
+      hoverTip.style.top = `${Math.max(8, py - 48)}px`;
+    });
+    chartSvg.addEventListener("pointerleave", hideHover);
+
+    render();
+  </script>
+</body>
+</html>
