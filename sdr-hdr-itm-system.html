@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDR → HDR 逆色调映射系统 · 思路与优化历程</title>
+<meta name="description" content="一套把 SDR 图片/视频自动重建为 HDR 的逆色调映射系统：核心思路、处理管线，以及评测驱动的优化全过程。">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#07080d; --panel:#111620; --panel-2:#172131;
+    --ink:#f4f7fb; --muted:#a7b0bf; --soft:#758195;
+    --line:rgba(255,255,255,.12);
+    --cyan:#34dff2; --lime:#b7f05b; --gold:#ffd166; --rose:#ff4d6d; --violet:#a78bfa; --blue:#60a5fa;
+    --good:#5ad19a; --bad:#ff6b6b;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);
+    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:rgba(52,223,242,.3)}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-3;
+    background:
+      radial-gradient(circle at 12% 10%,rgba(52,223,242,.13),transparent 28%),
+      radial-gradient(circle at 85% 6%,rgba(255,77,109,.11),transparent 30%),
+      radial-gradient(circle at 60% 92%,rgba(183,240,91,.09),transparent 34%),
+      linear-gradient(180deg,#07080d,#0b1019 48%,#07080d)}
+
+  /* topbar */
+  .topbar{position:fixed;inset:0 0 auto 0;z-index:30;border-bottom:1px solid rgba(255,255,255,.09);
+    background:rgba(7,8,13,.72);backdrop-filter:blur(18px)}
+  .nav{max-width:1100px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+  .logo{font-size:18px;font-weight:800;background:linear-gradient(100deg,var(--cyan),var(--lime));
+    -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+  .nav-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .nav-links a{padding:7px 12px;border-radius:999px;color:var(--muted);font-size:13px;transition:.2s}
+  .nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+
+  /* hero */
+  .hero{position:relative;padding:130px 22px 60px;overflow:hidden;isolation:isolate}
+  .hero-bg{position:absolute;inset:0;z-index:-2;overflow:hidden}
+  .spectrum-band{position:absolute;left:50%;top:48%;width:min(1400px,138vw);height:360px;
+    transform:translate(-50%,-50%) rotate(-7deg);border-radius:999px;
+    background:linear-gradient(90deg,rgba(67,56,202,0) 0%,rgba(37,99,235,.6) 14%,rgba(6,182,212,.78) 30%,
+      rgba(34,197,94,.72) 46%,rgba(234,179,8,.78) 62%,rgba(249,115,22,.74) 78%,rgba(244,63,94,.0) 100%);
+    filter:blur(40px) saturate(1.2);opacity:.6}
+  .grid-field{position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+    background-size:58px 58px;mask-image:radial-gradient(circle at 50% 40%,black,transparent 70%)}
+  .hero-inner{max-width:1100px;margin:0 auto}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold);font-size:13px;font-weight:820;
+    letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+  h1{font-size:clamp(34px,6vw,62px);line-height:1.08;letter-spacing:-.03em;margin-bottom:20px;max-width:920px;text-wrap:balance}
+  .h-accent{background:linear-gradient(100deg,var(--cyan),var(--lime),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-desc{max-width:720px;color:#d3dce8;font-size:clamp(16px,1.7vw,19px);line-height:1.8;margin-bottom:26px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+
+  /* section */
+  .section{max-width:1100px;margin:0 auto;padding:58px 22px;border-top:1px solid rgba(255,255,255,.07)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase;margin-bottom:10px}
+  h2{font-size:clamp(26px,3.6vw,38px);line-height:1.1;margin-bottom:10px;letter-spacing:-.02em}
+  h3{font-size:19px;margin:30px 0 8px;font-weight:760}
+  p{color:#cfd4e0}
+  .lead{color:var(--muted);max-width:760px}
+  b,strong{color:#fff}
+
+  /* pipeline */
+  .pipe{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0}
+  .pstep{flex:1 1 120px;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:13px 15px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .pstep .n{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+  .pstep .t{font-weight:720;font-size:14px;margin-top:4px}
+  .pstep .d{font-size:12px;color:var(--soft);margin-top:4px;line-height:1.5}
+
+  /* cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:24px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));transition:.22s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(52,223,242,.35)}
+  .card h4{font-size:15px;margin-bottom:6px}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.65}
+  .card .ico{font-size:20px;display:block;margin-bottom:8px}
+
+  /* timeline */
+  .tl{position:relative;margin:30px 0 0;padding-left:28px}
+  .tl::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--line)}
+  .item{position:relative;margin-bottom:34px}
+  .item::before{content:"";position:absolute;left:-28px;top:6px;width:14px;height:14px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--cyan)}
+  .item.perf::before{border-color:var(--gold)}
+  .item.eval::before{border-color:var(--lime)}
+  .ph{font-family:var(--mono);font-size:11px;color:var(--soft);letter-spacing:.08em}
+  .prob{color:var(--bad);font-weight:680}
+  .fix{color:var(--good);font-weight:680}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:700;font-family:var(--mono);font-size:12px}
+  td.num{font-family:var(--mono);text-align:right}
+  .up{color:var(--good)} .down{color:var(--bad)}
+
+  code{font-family:var(--mono);font-size:.86em;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 18px;margin:20px 0;
+    background:linear-gradient(180deg,rgba(52,223,242,.06),transparent)}
+  .callout.gold{border-left-color:var(--gold);background:linear-gradient(180deg,rgba(255,209,102,.06),transparent)}
+  .callout.lime{border-left-color:var(--lime);background:linear-gradient(180deg,rgba(183,240,91,.06),transparent)}
+
+  figure{margin:24px 0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:10px;display:block}
+  figcaption{font-size:12.5px;color:var(--soft);margin-top:8px;text-align:center;line-height:1.6}
+
+  /* 处理前后 真HDR并排 */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ba .half{position:relative;margin:0}
+  .ba .half img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+  .ba .tag{position:absolute;top:9px;left:9px;font-family:var(--mono);font-size:11px;
+    background:rgba(0,0,0,.62);backdrop-filter:blur(4px);padding:4px 9px;border-radius:6px;color:#eaeaea}
+  .ba .tag.hdr{color:#7fe0ff;border:1px solid rgba(127,224,255,.3)}
+  @media(max-width:680px){.ba{grid-template-columns:1fr}}
+
+  .metric-row{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
+  .metric{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .metric .v{font-size:24px;font-weight:780;font-family:var(--mono)}
+  .metric .v .arrow{color:var(--lime)}
+  .metric .l{font-size:12px;color:var(--muted);margin-top:3px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  ul.clean{color:var(--muted);padding-left:20px}
+  ul.clean li{margin:5px 0}
+
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);padding:36px 22px;font-size:13.5px}
+  footer a{color:var(--cyan)}
+
+  @media(max-width:680px){
+    .nav-links{display:none}.two{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <header class="topbar"><nav class="nav">
+    <a href="index.html" class="logo">色彩与显示指南</a>
+    <div class="nav-links">
+      <a href="index.html#chapters">技术章节</a>
+      <a href="hdr-color-science.html">SDR→HDR 色彩科学</a>
+      <a href="HDR-Relay.html">HDR Relay</a>
+      <a href="making-of.html">制作复盘</a>
+    </div>
+  </nav></header>
+
+  <main>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+    <div class="hero-inner">
+      <div class="eyebrow">Inverse Tone Mapping · 实战项目</div>
+      <h1>把普通画面<span class="h-accent">还原成 HDR</span><br>——一套逆色调映射系统的思路与打磨</h1>
+      <p class="hero-desc">从一张 SDR 图片或一段 SDR 视频出发，自动判断"哪里该亮、该多亮"，
+      在物理正确的色彩空间里重建高动态范围画面，输出符合行业标准的 HDR 文件。
+      本页记录系统的核心思路，以及一路上踩过的坑与<b>评测驱动</b>的优化全过程。</p>
+      <div class="chips">
+        <span class="chip">Rec.2020 + PQ (ST 2084)</span>
+        <span class="chip">BT.2408 参考白 203nit</span>
+        <span class="chip">YOLOE 开放词汇检测</span>
+        <span class="chip">GPU(MPS) 加速</span>
+        <span class="chip">JPEG XL / HDR10</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT -->
+  <section class="section" id="what">
+    <div class="kicker">01 · 问题</div>
+    <h2>我们到底在解决什么</h2>
+    <p class="lead">绝大多数现存影像都是 <b>SDR（标准动态范围）</b>：白墙、台灯、天空在 SDR 里被压到同一个"白"——
+    亮度信息在编码时就丢了，而 HDR 显示器能呈现的亮度是它的几十倍。</p>
+    <p class="lead" style="margin-top:12px"><b>逆色调映射（ITM）</b>的任务，是从被压扁的 SDR 反推回合理的高动态范围：
+    让光源真正发光、高光刺眼、暗部留层次，而不是把整张图无脑调亮。</p>
+    <div class="grid">
+      <div class="card"><span class="ico">🎯</span><h4>难点一 · 哪里该亮</h4>
+        <p>SDR 里一盏 1000nit 的灯和一面 200nit 的白墙像素值可能完全一样（都削顶到 255）。光靠亮度无法区分，必须理解画面内容。</p></div>
+      <div class="card"><span class="ico">📐</span><h4>难点二 · 该多亮</h4>
+        <p>提多了肤色/白墙过曝刺眼，提少了又没有 HDR 该有的通透。需要在物理正确的亮度刻度上精确标定。</p></div>
+      <div class="card"><span class="ico">🚫</span><h4>难点三 · 别露馅</h4>
+        <p>提亮区与未提亮区之间若有硬边界、色彩断层、块状伪影，观感比 SDR 还差。平滑过渡是底线。</p></div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="section" id="pipeline">
+    <div class="kicker">02 · 架构</div>
+    <h2>一帧画面要经过的处理管线</h2>
+    <p class="lead">核心原则：<b>所有增强都在"线性光"域完成</b>。SDR 是 gamma 编码的，直接在编码值上运算会污染颜色——
+    必须先解码到线性光，处理完再编码回 HDR 的 PQ 曲线。</p>
+    <div class="pipe">
+      <div class="pstep"><div class="n">IN</div><div class="t">SDR 输入</div><div class="d">sRGB / Rec.709 gamma</div></div>
+      <div class="pstep"><div class="n">01</div><div class="t">线性化</div><div class="d">sRGB EOTF → 线性光</div></div>
+      <div class="pstep"><div class="n">02</div><div class="t">区域检测</div><div class="d">自发光/反射/普通</div></div>
+      <div class="pstep"><div class="n">03</div><div class="t">差分 ITM</div><div class="d">三类各自扩展</div></div>
+      <div class="pstep"><div class="n">04</div><div class="t">融合+护栏</div><div class="d">软过渡+保真限制</div></div>
+      <div class="pstep"><div class="n">05</div><div class="t">色域+PQ</div><div class="d">Rec.2020 / ST 2084</div></div>
+      <div class="pstep"><div class="n">OUT</div><div class="t">HDR 输出</div><div class="d">JPEG XL / HDR10</div></div>
+    </div>
+
+    <h3>三类区域，三种策略</h3>
+    <p class="lead">把每个像素分成三类，因为它们需要完全不同的处理——这是"哪里该亮"的核心答案。</p>
+    <div class="grid">
+      <div class="card"><h4 style="color:#ff8d8d">Type I · 自发光</h4>
+        <p>灯、火焰、屏幕、太阳。<b>该最亮</b>，凸性曲线把削顶白扩展到接近显示峰值（~800nit）。靠 YOLOE 检测 + 近削顶白核兜底。</p></div>
+      <div class="card"><h4 style="color:#9be08a">Type II · 材质反射</h4>
+        <p>玻璃、金属、水面的镜面高光。<b>中等亮</b>（~500nit），保留材质感与色彩体积，边缘需平滑防硬块。</p></div>
+      <div class="card"><h4 style="color:#8fb0ff">Type III · 普通区域</h4>
+        <p>占画面 90%+。<b>温和</b>：漫反射白轻抬到 ~250nit，近削顶高光给"肩部"抬到 ~450nit，其余基本保持原片。</p></div>
+    </div>
+  </section>
+
+  <!-- BEFORE / AFTER SHOWCASE -->
+  <section class="section" id="showcase">
+    <div class="kicker">02b · 处理前后</div>
+    <h2>同一张图，处理前 → 处理后</h2>
+    <p class="lead">左为输入的 <b>SDR 原图</b>，右为系统重建的 <b>真 HDR 输出</b>（Rec.2020 PQ 的 HDR AVIF）。
+    在<b>支持 HDR 的浏览器 + HDR 屏幕</b>（如 macOS 上的 Safari / Chrome，配 XDR / HDR 显示器）上，
+    右图的窗户、灯、高光会<b>真正刺眼地亮起来</b>，超出左图 SDR 的白。</p>
+    <div class="callout">若左右看着差不多，说明当前屏幕或浏览器未启用 HDR——
+    换 HDR 屏 + Safari/Chrome 再看，或参考<a href="#eval" style="color:var(--cyan)">评测章节</a>的 nit 热力图。</div>
+
+    <figure>
+      <div class="ba">
+        <div class="half"><img src="assets/IMG_7365_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
+        <div class="half"><img src="assets/IMG_7365_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+      </div>
+      <figcaption><b>办公室（白天）</b>：窗外天光、天花板灯被识别为高光，扩展到 ~700nit；地面反光、屏幕中等提亮，桌面/墙壁等漫反射保持自然——这正是"哪里该亮"的判断结果。</figcaption>
+    </figure>
+
+    <figure>
+      <div class="ba">
+        <div class="half"><img src="assets/IMG20250823234317_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
+        <div class="half"><img src="assets/IMG20250823234317_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+      </div>
+      <figcaption><b>含光源场景</b>：真正的光源与高光被精准点亮到 700nit+，其余区域不被无脑调亮。</figcaption>
+    </figure>
+
+    <figure>
+      <div class="ba">
+        <div class="half"><img src="assets/IMG_7901_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
+        <div class="half"><img src="assets/IMG_7901_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+      </div>
+      <figcaption><b>夜景街道</b>：天桥灯、车灯、路面反光被点亮，但按"折中"理念<b>克制中间调</b>——不像手机那样把整片夜空无脑提亮，峰值约 335nit，保留夜的氛围。</figcaption>
+    </figure>
+  </section>
+
+  <!-- CONCEPTS -->
+  <section class="section" id="concepts">
+    <div class="kicker">03 · 基础</div>
+    <h2>几个绕不开的色彩科学概念</h2>
+    <div class="two">
+      <div>
+        <h3>BT.2408 参考白 = 203nit</h3>
+        <p>整套系统的"亮度锚点"。行业标准规定：SDR 的<b>漫反射白</b>（纸张、白衬衫）在 HDR 里应对应 <b>203 nit</b>，
+        而非显示器峰值。高光（光源、镜面）才向上延伸到 1000nit。</p>
+        <div class="callout gold">早期有个严重 bug：把 SDR 白直接编码到峰值 1000nit，整张图过曝约 <b>5 倍</b>。修正后才有了正确的亮度基准。</div>
+      </div>
+      <div>
+        <h3>PQ 曲线 + Rec.2020</h3>
+        <p><b>PQ（SMPTE ST 2084）</b>是 HDR 传输函数，把 0–10000nit 绝对亮度编码进有限码值，暗部分配更多精度（符合人眼）。
+        <b>Rec.2020</b>是更宽色域。两者组合即 HDR10 / HDR 静图标准。</p>
+        <p style="color:var(--soft);margin-top:10px">线性光 1.0（=203nit）→ ×(203/10000) 进入 PQ 绝对亮度域 → 编码。</p>
+      </div>
+    </div>
+    <h3>Gainmap：手机 HDR 的秘密，也是我们的"真值"</h3>
+    <p class="lead">iPhone / Android 的 HDR 照片其实是 <b>SDR 基础层 + 增益图（gainmap）</b>：增益图是逐像素的"该亮多少"灰度图。
+    这给了一个绝佳评测思路——把手机 HDR 拆成 SDR，用我们的系统重建，再和手机原生 HDR 对比看差距。<a href="#eval" style="color:var(--cyan)">详见评测章节 ↓</a></p>
+  </section>
+
+  <!-- JOURNEY -->
+  <section class="section" id="journey">
+    <div class="kicker">04 · 打磨</div>
+    <h2>优化历程：每一步都是一个踩坑</h2>
+    <p class="lead">按主题串起系统的演进。<span style="color:var(--cyan)">●</span> 画质/算法
+    <span style="color:var(--gold)">●</span> 性能　<span style="color:var(--lime)">●</span> 评测驱动</p>
+
+    <div class="tl">
+      <div class="item">
+        <div class="ph">画质正确性</div>
+        <h3>色彩断层与参考白</h3>
+        <p><span class="prob">问题：</span>HDR 输出大片色彩断层（posterization）；整体过曝。</p>
+        <p><span class="fix">修复：</span>把全管线 LAB/HSV/双边/CLAHE 从 uint8（256 级）升级到 float32 / uint16，消除量化断层；引入 BT.2408 参考白，SDR 白从错误的 1000nit 锚回 203nit。</p>
+      </div>
+
+      <div class="item">
+        <div class="ph">检测能力</div>
+        <h3>从 COCO 封闭集到 YOLOE 开放词汇</h3>
+        <p><span class="prob">问题：</span>原模型（YOLOv8n / COCO-80）根本没有"台灯/吊灯/烛火/霓虹/荧光灯"这些类别——核心自发光物体永远检不出。</p>
+        <p><span class="fix">修复：</span>换成 <b>YOLOE 开放词汇 + 分割模型</b>，用文本提示（58 条，8 大类）直接描述光源，还输出像素级掩码替代矩形框。</p>
+      </div>
+
+      <div class="item">
+        <div class="ph">检测能力 · 案例</div>
+        <h3>"手电筒/条形灯不亮"——五层故障叠加</h3>
+        <p>两个真实片源里光源死活提不亮，逐层排查发现 <span class="prob">五个独立问题叠在一起</span>：</p>
+        <table>
+          <tr><th>层</th><th>故障</th><th>修复</th></tr>
+          <tr><td>提示词</td><td>没有 flashlight / fluorescent tube</td><td>补齐提示词</td></tr>
+          <tr><td>置信度</td><td>暗场景光源置信度仅 0.05–0.23 被滤掉</td><td>三层证据融合：弱语义 × 框内光度确认</td></tr>
+          <tr><td>白核兜底</td><td>强光白衣物被误判成光源</td><td>收紧到硬削顶 V≥0.99 & S≤0.15</td></tr>
+          <tr><td>亮度门控</td><td>调色"平"的暖灯差一线被拒</td><td>门控按场景白相对化</td></tr>
+          <tr><td>高光曲线</td><td>渐近 Reinhard 永远到不了设定峰值</td><td>凸性曲线 + 场景自适应白锚点(EMA)</td></tr>
+        </table>
+        <div class="callout">教训：一个"效果不对"的现象，背后可能是检测、分类、色调映射、时序四个环节同时出问题。逐级 profile、单帧诊断，比拍脑袋调参数可靠得多。</div>
+      </div>
+
+      <div class="item perf">
+        <div class="ph">性能 · 头号瓶颈</div>
+        <h3>scipy 众数滤波：一帧 20 秒</h3>
+        <p><span class="prob">问题：</span>视频渲染奇慢（6.5 小时）。逐阶段 profile 发现真凶是时序平滑里的 <code>scipy.stats.mode</code>，在 5×1080p 上<b>单次 19.87 秒</b>，占每帧 95%+。</p>
+        <p><span class="fix">修复：</span>区域图只有 3 个标签值，改用 numpy 按标签计数取 argmax——<b>516× 提速</b>，与 scipy 输出 100% 一致。</p>
+        <div class="metric-row">
+          <div class="metric"><div class="v">19.9s <span class="arrow">→</span> 0.04s</div><div class="l">众数滤波单次</div></div>
+          <div class="metric"><div class="v">516×</div><div class="l">加速比</div></div>
+        </div>
+      </div>
+
+      <div class="item perf">
+        <div class="ph">性能 · GPU 化</div>
+        <h3>把 ITM 整条搬到 MPS GPU</h3>
+        <p><span class="prob">问题：</span>profile 显示逆色调映射占每帧 <b>82%</b> 耗时（1080p ~700ms），且全跑在 CPU 上。</p>
+        <p><span class="fix">修复：</span>用 torch 在 Apple Silicon 的 MPS 上重写整条 ITM，逐点数学数值精确复刻；唯一难点是双边滤波在 GPU 上仍要 140ms——换成<b>引导滤波</b>（纯 box-filter，O(1)，~2ms）后整体 <b>10.7× 提速</b>，峰值亮度与 CPU 版逐 nit 一致。</p>
+        <div class="metric-row">
+          <div class="metric"><div class="v">712ms <span class="arrow">→</span> 67ms</div><div class="l">1080p ITM 单帧</div></div>
+          <div class="metric"><div class="v">10.7×</div><div class="l">加速比</div></div>
+          <div class="metric"><div class="v">±1nit</div><div class="l">与 CPU 差异</div></div>
+        </div>
+      </div>
+
+      <div class="item perf">
+        <div class="ph">性能 · 编码与分辨率</div>
+        <h3>硬件编码 + 可选分辨率</h3>
+        <p>用 Apple <b>VideoToolbox 硬件 HEVC</b> 替代 libx265 软编（快一个量级），并用 <code>hevc_metadata</code> 比特流过滤器强制写入正确的 HDR10 标签；新增处理分辨率选项（4K→1080p 约快 4 倍）。</p>
+      </div>
+
+      <div class="item">
+        <div class="ph">时序稳定性</div>
+        <h3>视频不能逐帧抖：检测记忆 · 光流 · 镜头切换</h3>
+        <div class="grid">
+          <div class="card"><h4>检测记忆</h4><p>开放词汇模型对弱光源逐帧抖动，用衰减记忆桥接间歇漏检，避免光源逐帧断闪。</p></div>
+          <div class="card"><h4>光流跟踪 mask</h4><p>开"检测间隔"时用 DIS 光流把上一帧区域图跟踪到当前帧，mask 不滞后于运动；ITM 仍逐帧跑，画面不冻结。</p></div>
+          <div class="card"><h4>镜头切换检测</h4><p>HSV 直方图相关性突变即判定硬切，清空所有时序状态——否则上一镜头的 mask/曝光锚点会残留到下一镜头。</p></div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="ph">交付</div>
+        <h3>正确的 HDR 文件格式</h3>
+        <p>图像输出对齐工业实现：<b>JPEG XL</b>，Rec.2020 + D65 + PQ + <b>绝对渲染意图</b> + <code>intensity_target</code>。实测硬件编码器会丢 VUI 色彩信息，必须显式注入，否则播放器不切 HDR 模式。可在 macOS 预览 / Safari 直接以正确亮度查看。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVAL -->
+  <section class="section" id="eval">
+    <div class="kicker">05 · 评测驱动</div>
+    <h2>用手机原生 HDR 当"标准答案"</h2>
+    <p class="lead">调参数最怕"自我感觉良好"。于是搭了一套<b>有真值的评测闭环</b>：手机 gainmap 照片本身同时含 SDR 和 HDR，正好当 ground truth。</p>
+    <div class="pipe">
+      <div class="pstep"><div class="n">①</div><div class="t">手机原图</div><div class="d">HEIC / UltraHDR gainmap</div></div>
+      <div class="pstep"><div class="n">②</div><div class="t">拆分</div><div class="d">SDR base + 原生 HDR(真值)</div></div>
+      <div class="pstep"><div class="n">③</div><div class="t">我们重建</div><div class="d">SDR base → 我们的 ITM</div></div>
+      <div class="pstep"><div class="n">④</div><div class="t">解码对比</div><div class="d">双方 → 绝对 nit 域</div></div>
+      <div class="pstep"><div class="n">⑤</div><div class="t">指标+热力图</div><div class="d">峰值/覆盖/IoU</div></div>
+    </div>
+
+    <figure>
+      <img src="assets/eval_office.png" alt="办公室场景对比">
+      <figcaption>办公室场景 ｜ 左：SDR 基础层　中：手机原生 HDR（真值）热力图　右：我们重建的 HDR。
+      蓝=暗(&lt;100nit)，青绿=中(~200nit)，红=亮(~700nit+)。窗户、天花板灯被正确点亮。</figcaption>
+    </figure>
+
+    <div class="callout lime">
+      <b>第一次跑出来的诊断很扎心：</b>12 张图平均 <b>高光 recall 仅 0.05</b>——漏掉手机 95% 的高光；峰值只有它的 1/5（350 vs 1600nit）。
+      但 <b>precision 1.00</b>：我们标亮的永远对，只是太胆小。
+    </div>
+
+    <h3>诊断 → 标定 → 复测</h3>
+    <p class="lead">问题不在"亮度幅度"而在"覆盖"和"封顶"。确认走<b>折中</b>路线（漫反射白 ~250nit、高光 ~800nit、峰值维持 1000nit）后，三处联动调整：</p>
+    <ul class="clean">
+      <li>Type III 给近削顶高光加"肩部"——没被检测为光源的亮天空/窗户也抬到 HDR 高光；</li>
+      <li>Type I/II 提高扩展幅度，让真光源够到 700–800nit；</li>
+      <li>放开融合护栏（2.2→4.2×），不再把扩展截断。</li>
+    </ul>
+    <table>
+      <tr><th>指标</th><th class="num">优化前</th><th class="num">折中标定后</th></tr>
+      <tr><td>高光 recall（命中手机高光比例）</td><td class="num">0.05</td><td class="num up">0.15　(3×)</td></tr>
+      <tr><td>重建峰值</td><td class="num">~350 nit</td><td class="num up">700+ nit　(2×)</td></tr>
+      <tr><td>白天场景高光 IoU</td><td class="num">0.01</td><td class="num up">0.36–0.39</td></tr>
+      <tr><td>precision（不误增高光）</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+    </table>
+    <p style="color:var(--soft)">注：夜景下手机会把整片夜空/路面都激进提亮，我们按折中只提真光源——recall 仍偏低，但这是<b>主动选择的理念</b>，不是缺陷。</p>
+  </section>
+
+  <!-- BOUNDARY -->
+  <section class="section" id="results">
+    <div class="kicker">06 · 仍在打磨</div>
+    <h2>越激进，越要防"露馅"</h2>
+    <p class="lead">把高光提得更猛后，新问题浮现：<span class="prob">提亮区与未提亮区之间出现硬边界 / 块状伪影</span>。
+    根因有二——反射检测在亮纹理区碎成椒盐麻点（每块都被提亮，边界全是硬边）；陡峭的高光曲线还放大了 SDR 里的 JPEG 块伪影。</p>
+
+    <figure>
+      <img src="assets/region_map.png" alt="碎块区域图">
+      <figcaption>诊断图：红=Type I，绿=Type II。反射检测在屏幕/窗户上碎成大量绿色小块，正是硬边界的来源。</figcaption>
+    </figure>
+
+    <h3>两道修复</h3>
+    <div class="two">
+      <div class="card"><h4>① 区域去碎块</h4><p>分类后做"开运算去碎点 → 闭运算合并 → 剔除小连通域"，让 Type I/II 成为连贯的块而非麻点。</p></div>
+      <div class="card"><h4>② 增益场边缘感知平滑</h4><p>借鉴 gainmap 思想：在 ITM 最后把"提亮倍率场"用<b>引导滤波</b>平滑，以 SDR 感知亮度为导向——真实边缘（窗框、灯沿）处倍率保持锐利，平坦区内的碎块/JPEG 块倍率被抹平，从源头消除提亮硬边界。</p></div>
+    </div>
+
+    <figure>
+      <img src="assets/boundary_window.png" alt="窗户边界">
+      <figcaption>窗户亮区放大：上为 SDR，下为重建后 nit 热力图。亮窗被提到 ~700nit，过渡随平滑迭代逐步变软——当前正在精修的环节。</figcaption>
+    </figure>
+
+    <div class="callout">
+      <b>这套系统的方法论：</b>不靠主观感觉，而是<b>有真值的量化评测 + 逐级 profile 定位 + 单帧诊断可视化</b>。
+      每个"看起来不对"的现象，都拆到具体环节、给出可测指标，再针对性优化。
+    </div>
+  </section>
+  </main>
+
+  <footer>
+    <p>SDR → HDR 逆色调映射系统 · 思路与优化历程 ｜ <a href="index.html">返回色彩与显示指南</a></p>
+    <p style="margin-top:8px;color:var(--soft)">技术栈：Python · PyTorch(MPS) · OpenCV · YOLOE · libjxl · FFmpeg/VideoToolbox · Gradio<br>
+    色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ) · IEC 61966-2-1 (sRGB)</p>
+  </footer>
+</body>
+</html>
