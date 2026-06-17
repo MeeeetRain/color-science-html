@@ -156,7 +156,7 @@
     <div class="hero-inner">
       <a class="backlink" href="sdr-hdr-itm-system.html">← 上一篇 · 区域识别版 SDR→HDR 系统</a>
       <div class="eyebrow">Inverse Tone Mapping · 新一代思路</div>
-      <h1>让 AI 决定<span class="h-accent">哪里该亮</span>，<br>让原片决定<span class="h-accent">长什么样</span></h1>
+      <h1><span class="h-accent">SDR → HDR</span>：<br>让 AI 只当测光表</h1>
       <p class="hero-desc">上一套系统靠<b>规则式场景识别</b>判断"哪里是光源"，准但总有漏检。这一套换了思路：
       用 <b>LTX HDR 模型</b>的 EXR 输出当"哪里该亮、该多亮"的<b>增益图（gainmap）</b>，
       再把这个增益<b>只作用在原始 SDR 的像素上</b>——既拿到 AI 的判断力，又<b>一点不虚构画面细节</b>。</p>
@@ -183,6 +183,24 @@
         <p>检测、分类、色调映射、时序四个环节互相牵连。一个"效果不对"背后可能是四个问题叠加，调参像走钢丝。</p></div>
       <div class="card"><span class="ico">🤖</span><h4>而 AI 恰好擅长"理解画面"</h4>
         <p>LTX 这类模型对"哪里该亮"的语义判断又准又全——正好补上规则的短板。问题只剩：怎么用它，又不被它的副作用反噬。</p></div>
+    </div>
+  </section>
+
+  <!-- 关于 LTX HDR -->
+  <section class="section" id="ltx">
+    <div class="kicker">补充 · 关于 LTX HDR</div>
+    <h2>LTX HDR 是什么</h2>
+    <p class="lead">本方案里的那个"AI 测光表"，就是 <b>LTX HDR</b>——它建立在开源视频生成模型
+    <b>LTX-Video</b>（Lightricks）之上，是社区放出的一个 <b>HDR IC-LoRA</b>（In-Context LoRA）扩展（beta）。
+    给它一帧 SDR，它会"想象"出这帧在 HDR 下应有的样子，并以 <b>线性光 EXR</b>（scene-referred、亮度可超过 1.0）输出——
+    相当于一张携带了真实高光亮度的"参考答案"。</p>
+    <div class="grid">
+      <div class="card"><span class="ico">🧠</span><h4>它强在哪</h4>
+        <p>靠生成模型的语义理解判断"哪里该亮、该多亮"，能覆盖规则写不全的复杂光源与材质——<b>基本不漏检</b>。</p></div>
+      <div class="card"><span class="ico">🎞️</span><h4>它的副作用</h4>
+        <p>毕竟是生成模型：会<b>改写/虚构</b>纹理与物体，分辨率受限（实测约 ~800p），且<b>逐帧判断会抖动</b>。</p></div>
+      <div class="card"><span class="ico">💡</span><h4>我们怎么用它</h4>
+        <p>只取它 EXR 输出当"亮度参考"、提取增益图，<b>丢掉它生成的像素</b>——把判断力留下，副作用扔掉。</p></div>
     </div>
   </section>
 
