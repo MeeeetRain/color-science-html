@@ -595,7 +595,7 @@
           <div class="readouts">
             <div class="readout"><span>参考白输入 / 203 Input</span><strong id="rw-anchor">203 → 203 nits</strong></div>
             <div class="readout"><span>中亮度输入 / 1000 Input</span><strong id="mid-anchor">1000 → 1000 nits</strong></div>
-            <div class="readout"><span>高光输入 / 4000 Highlight</span><strong id="highlight-anchor">4000 → 1000 nits</strong></div>
+            <div class="readout"><span>高光输入 / 10000 Highlight</span><strong id="highlight-anchor">10000 → 1000 nits</strong></div>
             <div class="readout"><span>白点增益 / White Gain</span><strong id="white-gain">1.00x</strong></div>
           </div>
           <p class="lab-note" id="lab-note"></p>
@@ -764,7 +764,8 @@
 
   <script>
     const SOURCE_RW = 203;
-    const SOURCE_PEAK = 4000;
+    const SOURCE_PEAK = 10000;
+    const CHART_INPUT_MAX = SOURCE_PEAK;
     const NEUTRAL_RESTORE_LIMIT = 1000;
     const FIXED_ABL_WINDOW = 10;
     const PEAK_MIN = 600;
@@ -780,7 +781,7 @@
       top: 38,
       bottom: 294,
       inputMin: 0,
-      inputMax: SOURCE_PEAK,
+      inputMax: CHART_INPUT_MAX,
       outputMin: 0,
       outputMax: 4000
     };
@@ -901,7 +902,7 @@
       return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
     }
     function renderGrid() {
-      const xTicks = [0, SOURCE_RW, 1000, 2000, 3000, SOURCE_PEAK];
+      const xTicks = [0, SOURCE_RW, 1000, 2000, 4000, CHART_INPUT_MAX];
       const yTicks = [0, 500, 1000, 2000, 3000, chart.outputMax];
       $("#x-grid").innerHTML = xTicks.map(value => {
         const x = xForInput(value);
@@ -954,7 +955,7 @@
 
       $("#rw-anchor").textContent = `${SOURCE_RW} → ${Math.round(toneMapOutput(SOURCE_RW, model, params, peakEff))} nits`;
       $("#mid-anchor").textContent = `1000 → ${Math.round(toneMapOutput(1000, model, params, peakEff))} nits`;
-      $("#highlight-anchor").textContent = `${SOURCE_PEAK} → ${Math.round(toneMapOutput(SOURCE_PEAK, model, params, peakEff))} nits`;
+      $("#highlight-anchor").textContent = `${CHART_INPUT_MAX} → ${Math.round(toneMapOutput(CHART_INPUT_MAX, model, params, peakEff))} nits`;
       $("#white-gain").textContent = `${model.toneGain.toFixed(2)}x`;
       return params;
     }
@@ -993,8 +994,8 @@
       const blackOut = toneMapOutput(0.1, model, params, peakEff);
       const rwOut = toneMapOutput(SOURCE_RW, model, params, peakEff);
       const midOut = toneMapOutput(1000, model, params, peakEff);
-      const hiOut = toneMapOutput(SOURCE_PEAK, model, params, peakEff);
-      $("#cs-tail").innerHTML = `BT.2390 风格 Hermite shoulder：${SOURCE_PEAK} nits 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜检查点：0.1→<em>${blackOut.toFixed(2)}</em>，203→<em>${Math.round(rwOut)}</em>，1000→<em>${Math.round(midOut)}</em>。${isNeutral ? "中性点下 1000 nits 仍保持 1:1。" : "50% 以上时，只有 shoulder 起点之后才进入 roll-off；1000 nits 的输出取决于当前起点与白点增益。"}`;
+      const hiOut = toneMapOutput(CHART_INPUT_MAX, model, params, peakEff);
+      $("#cs-tail").innerHTML = `曲线终点检查：${CHART_INPUT_MAX} nits 高光 → 出 <em>${Math.round(hiOut)}</em> nits（参考硬切=${peakEff}）｜检查点：0.1→<em>${blackOut.toFixed(2)}</em>，203→<em>${Math.round(rwOut)}</em>，1000→<em>${Math.round(midOut)}</em>。${isNeutral ? "中性点下 1000 nits 仍保持 1:1。" : "50% 以上时，只有 shoulder 起点之后才进入 roll-off；1000 nits 的输出取决于当前起点与白点增益。"}`;
 
       const note = $("#lab-note");
       if (headroomLimited) {

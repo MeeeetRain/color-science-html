@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LTX Gainmap · 用 AI 当"哪里该亮"的预言家</title>
+<meta name="description" content="SDR 上变换 HDR 的新一代思路：用 LTX HDR 模型的 EXR 输出当'哪里该亮'的增益图（gainmap），只把增益作用在原始 SDR 像素上——既有 AI 的判断力，又不虚构画面细节。与区域识别、LTX 直接输出三方对比。">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#07080d; --panel:#111620; --panel-2:#172131;
+    --ink:#f4f7fb; --muted:#a7b0bf; --soft:#758195;
+    --line:rgba(255,255,255,.12);
+    --cyan:#34dff2; --lime:#b7f05b; --gold:#ffd166; --rose:#ff4d6d; --violet:#a78bfa; --blue:#60a5fa;
+    --good:#5ad19a; --bad:#ff6b6b;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);
+    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:rgba(52,223,242,.3)}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-3;
+    background:
+      radial-gradient(circle at 12% 10%,rgba(167,139,250,.13),transparent 28%),
+      radial-gradient(circle at 85% 6%,rgba(52,223,242,.11),transparent 30%),
+      radial-gradient(circle at 60% 92%,rgba(255,209,102,.09),transparent 34%),
+      linear-gradient(180deg,#07080d,#0b1019 48%,#07080d)}
+
+  .topbar{position:fixed;inset:0 0 auto 0;z-index:30;border-bottom:1px solid rgba(255,255,255,.09);
+    background:rgba(7,8,13,.72);backdrop-filter:blur(18px)}
+  .nav{max-width:1100px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+  .logo{font-size:18px;font-weight:800;background:linear-gradient(100deg,var(--violet),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+  .nav-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .nav-links a{padding:7px 12px;border-radius:999px;color:var(--muted);font-size:13px;transition:.2s}
+  .nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+  .nav-links a.cur{color:var(--ink);background:rgba(167,139,250,.16)}
+
+  .hero{position:relative;padding:130px 22px 60px;overflow:hidden;isolation:isolate}
+  .hero-bg{position:absolute;inset:0;z-index:-2;overflow:hidden}
+  .spectrum-band{position:absolute;left:50%;top:48%;width:min(1400px,138vw);height:360px;
+    transform:translate(-50%,-50%) rotate(-7deg);border-radius:999px;
+    background:linear-gradient(90deg,rgba(67,56,202,0) 0%,rgba(124,58,237,.6) 16%,rgba(6,182,212,.78) 36%,
+      rgba(34,197,94,.66) 54%,rgba(234,179,8,.74) 72%,rgba(249,115,22,.0) 100%);
+    filter:blur(40px) saturate(1.2);opacity:.55}
+  .grid-field{position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+    background-size:58px 58px;mask-image:radial-gradient(circle at 50% 40%,black,transparent 70%)}
+  .hero-inner{max-width:1100px;margin:0 auto}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--violet);font-size:13px;font-weight:820;
+    letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--violet)}
+  h1{font-size:clamp(34px,6vw,62px);line-height:1.08;letter-spacing:-.03em;margin-bottom:20px;max-width:940px;text-wrap:balance}
+  .h-accent{background:linear-gradient(100deg,var(--violet),var(--cyan),var(--lime));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-desc{max-width:760px;color:#d3dce8;font-size:clamp(16px,1.7vw,19px);line-height:1.8;margin-bottom:26px}
+  .hero-desc b{color:#fff}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+  .backlink{display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;font-size:13.5px;color:var(--cyan);
+    border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:rgba(52,223,242,.05)}
+
+  .section{max-width:1100px;margin:0 auto;padding:58px 22px;border-top:1px solid rgba(255,255,255,.07)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--violet);text-transform:uppercase;margin-bottom:10px}
+  h2{font-size:clamp(26px,3.6vw,38px);line-height:1.1;margin-bottom:10px;letter-spacing:-.02em}
+  h3{font-size:19px;margin:30px 0 8px;font-weight:760}
+  p{color:#cfd4e0}
+  .lead{color:var(--muted);max-width:780px}
+  b,strong{color:#fff}
+
+  .pipe{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0}
+  .pstep{flex:1 1 120px;min-width:120px;border:1px solid var(--line);border-radius:10px;padding:13px 15px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .pstep .n{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+  .pstep .t{font-weight:720;font-size:14px;margin-top:4px}
+  .pstep .d{font-size:12px;color:var(--soft);margin-top:4px;line-height:1.5}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:24px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));transition:.22s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(167,139,250,.35)}
+  .card h4{font-size:15px;margin-bottom:6px}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.65}
+  .card .ico{font-size:20px;display:block;margin-bottom:8px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-family:var(--mono);font-size:12px}
+  .good{color:var(--good)} .bad{color:var(--bad)} .mid{color:var(--gold)}
+  .col-pick{background:linear-gradient(180deg,rgba(167,139,250,.10),transparent)}
+
+  code{font-family:var(--mono);font-size:.86em;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 18px;margin:20px 0;
+    background:linear-gradient(180deg,rgba(52,223,242,.06),transparent)}
+  .callout.gold{border-left-color:var(--gold);background:linear-gradient(180deg,rgba(255,209,102,.06),transparent)}
+  .callout.violet{border-left-color:var(--violet);background:linear-gradient(180deg,rgba(167,139,250,.07),transparent)}
+  .callout.bad{border-left-color:var(--bad);background:linear-gradient(180deg,rgba(255,107,107,.06),transparent)}
+
+  /* formula */
+  .formula{border:1px solid var(--line);border-radius:12px;padding:22px;margin:24px 0;
+    background:linear-gradient(180deg,rgba(167,139,250,.07),rgba(255,255,255,.02));text-align:center}
+  .formula .eq{font-family:var(--mono);font-size:clamp(15px,2.4vw,20px);line-height:2;color:#eaf0fb}
+  .formula .eq .ltx{color:var(--cyan)} .formula .eq .sdr{color:var(--lime)} .formula .eq .op{color:var(--soft)}
+  .formula .note{font-size:13px;color:var(--soft);margin-top:10px}
+
+  /* compare slider */
+  .cmp{margin:18px 0 6px}
+  .cmp-tabs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .cmp-tabs .lbl{font-size:13px;color:var(--soft);margin-right:2px}
+  .cmp-tab{font-family:var(--mono);font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;background:rgba(255,255,255,.04);cursor:pointer;transition:.18s}
+  .cmp-tab:hover{color:var(--ink);border-color:rgba(167,139,250,.45)}
+  .cmp-tab.active{color:#0a0a12;background:linear-gradient(100deg,var(--violet),var(--cyan));border-color:transparent;font-weight:700}
+  .cmp-stage{position:relative;aspect-ratio:4096/2160;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    background:#000;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize}
+  .cmp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .cmp-hdr{clip-path:inset(0 0 0 var(--pos,50%))}
+  .cmp-label{position:absolute;top:10px;font-family:var(--mono);font-size:12px;padding:5px 11px;border-radius:7px;
+    background:rgba(0,0,0,.6);backdrop-filter:blur(4px);pointer-events:none;letter-spacing:.02em}
+  .cmp-label.l{left:10px;color:#eaeaea}
+  .cmp-label.r{right:10px;color:#7fe0ff;border:1px solid rgba(127,224,255,.32)}
+  .cmp-divider{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:2px;background:rgba(255,255,255,.92);
+    transform:translateX(-1px);box-shadow:0 0 14px rgba(0,0,0,.65);pointer-events:none}
+  .cmp-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;
+    background:rgba(10,12,18,.82);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:13px;letter-spacing:2px;box-shadow:0 4px 18px rgba(0,0,0,.55)}
+  .cmp-desc{font-size:13.5px;color:var(--muted);line-height:1.7;margin-top:14px;min-height:44px}
+  .cmp-desc b{color:#dfe5ee}
+
+  ul.clean{color:var(--muted);padding-left:20px}
+  ul.clean li{margin:6px 0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:680px){.two{grid-template-columns:1fr}.nav-links{display:none}}
+
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);padding:36px 22px;font-size:13.5px}
+  footer a{color:var(--cyan)}
+</style>
+</head>
+<body>
+  <header class="topbar"><nav class="nav">
+    <a href="index.html" class="logo">色彩与显示指南</a>
+    <div class="nav-links">
+      <a href="index.html#chapters">技术章节</a>
+      <a href="sdr-hdr-itm-system.html">区域识别系统</a>
+      <a href="ltx-gainmap-itm.html" class="cur">LTX Gainmap</a>
+      <a href="hdr-color-science.html">SDR→HDR 色彩科学</a>
+    </div>
+  </nav></header>
+
+  <main>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+    <div class="hero-inner">
+      <a class="backlink" href="sdr-hdr-itm-system.html">← 上一篇 · 区域识别版 SDR→HDR 系统</a>
+      <div class="eyebrow">Inverse Tone Mapping · 新一代思路</div>
+      <h1>让 AI 决定<span class="h-accent">哪里该亮</span>，<br>让原片决定<span class="h-accent">长什么样</span></h1>
+      <p class="hero-desc">上一套系统靠<b>规则式场景识别</b>判断"哪里是光源"，准但总有漏检。这一套换了思路：
+      用 <b>LTX HDR 模型</b>的 EXR 输出当"哪里该亮、该多亮"的<b>增益图（gainmap）</b>，
+      再把这个增益<b>只作用在原始 SDR 的像素上</b>——既拿到 AI 的判断力，又<b>一点不虚构画面细节</b>。</p>
+      <div class="chips">
+        <span class="chip">LTX HDR · EXR 线性输出</span>
+        <span class="chip">Gainmap = LTX亮度 ÷ SDR亮度</span>
+        <span class="chip">原片细节零改写</span>
+        <span class="chip">4K 原生 · Rec.2020 PQ</span>
+        <span class="chip">免规则 · 免漏检</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 背景 -->
+  <section class="section" id="why">
+    <div class="kicker">01 · 承接</div>
+    <h2>为什么要换思路</h2>
+    <p class="lead"><a href="sdr-hdr-itm-system.html" style="color:var(--cyan)">上一套区域识别系统</a>用 YOLOE 开放词汇检测把每个像素分成
+    自发光 / 反射 / 普通三类，再差异化提亮。它在"懂内容"这件事上已经做得很细，但<b>命门是规则本身</b>：</p>
+    <div class="grid">
+      <div class="card"><span class="ico">🕳️</span><h4>规则覆盖不全 → 漏检</h4>
+        <p>提示词、阈值、形态学全是人定的。遇到非常规光源、复杂反射、奇异材质，规则没覆盖到就<b>漏提亮</b>——这正是实际使用里最常见的抱怨。</p></div>
+      <div class="card"><span class="ico">🧩</span><h4>多环节耦合，调一处动全身</h4>
+        <p>检测、分类、色调映射、时序四个环节互相牵连。一个"效果不对"背后可能是四个问题叠加，调参像走钢丝。</p></div>
+      <div class="card"><span class="ico">🤖</span><h4>而 AI 恰好擅长"理解画面"</h4>
+        <p>LTX 这类模型对"哪里该亮"的语义判断又准又全——正好补上规则的短板。问题只剩：怎么用它，又不被它的副作用反噬。</p></div>
+    </div>
+  </section>
+
+  <!-- 02 三条路线 -->
+  <section class="section" id="routes">
+    <div class="kicker">02 · 三条路线</div>
+    <h2>三种做法，各有死穴</h2>
+    <p class="lead">把同一段室内 SDR 升 HDR，有三条路可走。关键矛盾就一句话：
+    <b>"判断哪里该亮"和"保住画面真实细节"，能不能兼得。</b></p>
+
+    <table>
+      <tr>
+        <th>维度</th>
+        <th>路线 A · 区域识别（规则）</th>
+        <th>路线 B · LTX 直接输出</th>
+        <th class="col-pick">路线 C · LTX gainmap ✦</th>
+      </tr>
+      <tr>
+        <td>"哪里该亮"判断</td>
+        <td class="mid">规则检测，易漏检</td>
+        <td class="good">AI 语义，准且全</td>
+        <td class="col-pick good">AI 语义，准且全（借 LTX）</td>
+      </tr>
+      <tr>
+        <td>画面细节</td>
+        <td class="good">原片，真实</td>
+        <td class="bad">被生成模型改写 / 虚构</td>
+        <td class="col-pick good">原片，真实（增益只改亮度）</td>
+      </tr>
+      <tr>
+        <td>分辨率</td>
+        <td class="good">原生（4K）</td>
+        <td class="bad">受模型限制（~800p）</td>
+        <td class="col-pick good">原生 4K</td>
+      </tr>
+      <tr>
+        <td>时序稳定</td>
+        <td class="mid">中（检测抖动）</td>
+        <td class="bad">差（逐帧生成抖动）</td>
+        <td class="col-pick mid">中→好（增益是低频场，可时域滤波）</td>
+      </tr>
+      <tr>
+        <td>可控 / 可解释</td>
+        <td class="good">高</td>
+        <td class="bad">低（黑盒生成）</td>
+        <td class="col-pick good">高（增益场可视化、可限幅）</td>
+      </tr>
+    </table>
+
+    <div class="callout violet">
+      <b>核心洞察：</b>LTX 直接输出的两个死穴——<b>改写细节</b>、<b>分辨率低</b>——都出在"它生成了像素"。
+      但我们其实<b>不需要它的像素</b>，只需要它的<b>亮度判断</b>。把"该多亮"抽出来、丢掉它生成的纹理，问题就解了。
+    </div>
+  </section>
+
+  <!-- 03 原理 -->
+  <section class="section" id="how">
+    <div class="kicker">03 · 原理</div>
+    <h2>Gainmap：只借 LTX 的"亮度判断"</h2>
+    <p class="lead">手机 HDR 照片的本质就是 <b>SDR 基础层 + 增益图</b>。我们把同一思路反过来用：
+    让 LTX 当那张增益图的"预言家"。</p>
+
+    <div class="formula">
+      <div class="eq">
+        增益图 gainmap = <span class="ltx">LTX&nbsp;亮度</span> <span class="op">÷</span> <span class="sdr">SDR&nbsp;亮度</span>
+        &nbsp;<span class="op">（曝光归一 · 置信门控 · 引导平滑 · 亮度封顶）</span>
+      </div>
+      <div class="eq" style="margin-top:6px">
+        HDR 结果 = <span class="sdr">原始&nbsp;SDR&nbsp;的&nbsp;RGB</span> <span class="op">×</span> gainmap
+      </div>
+      <div class="note">LTX 只决定"哪里、提多少"；所有真实像素 / 颜色 / 纹理都来自原片 SDR → 数学上不可能混入虚构细节。</div>
+    </div>
+
+    <div class="pipe">
+      <div class="pstep"><div class="n">IN·a</div><div class="t">SDR 源</div><div class="d">16-bit 读取，保住母版细节</div></div>
+      <div class="pstep"><div class="n">IN·b</div><div class="t">LTX EXR</div><div class="d">线性 HDR，直接读不做 gamma</div></div>
+      <div class="pstep"><div class="n">01</div><div class="t">几何对齐</div><div class="d">宽匹配 + 居中裁切复原</div></div>
+      <div class="pstep"><div class="n">02</div><div class="t">算增益图</div><div class="d">LTX÷SDR 亮度比</div></div>
+      <div class="pstep"><div class="n">03</div><div class="t">归一·门控·平滑</div><div class="d">去全局曝光 / 护栏 / 引导滤波</div></div>
+      <div class="pstep"><div class="n">04</div><div class="t">贴回原片</div><div class="d">增益升采样 × 4K SDR</div></div>
+      <div class="pstep"><div class="n">OUT</div><div class="t">HDR10 / JXL</div><div class="d">Rec.2020 PQ</div></div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h3>为什么这能成立</h3>
+        <ul class="clean">
+          <li>EXR 是<b>线性、scene-referred</b> 的，真实携带了高光超白亮度，正是"该多亮"的答案；</li>
+          <li>实测 LTX 与 SDR 在中间调的亮度比≈1.17、结构相关 0.86——<b>结构一致</b>，增益图有意义；</li>
+          <li>增益图是<b>低频平滑场</b>，升采样贴回 4K 不损原片任何细节。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>几个关键护栏</h3>
+        <ul class="clean">
+          <li><b>曝光归一化</b>：用中间调比值中位数去掉 LTX 的全局曝光漂移，只留语义提亮；</li>
+          <li><b>亮度空间封顶</b>：按输出 nits（而非增益倍数）封顶——既不压暗处真实光源，又让高光不撞钳位、<b>消除高光偏色</b>；</li>
+          <li><b>暗部噪点保护</b>：暗区默认压住、真实亮源可越权，避免放大 SDR 噪点。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 演示 -->
+  <section class="section" id="demo">
+    <div class="kicker">04 · 交互对比</div>
+    <h2>拖动中线：左 SDR ↔ 右 HDR</h2>
+    <p class="lead">同一帧（室内 · 第 11 秒）。<b>左边永远是 SDR 原片</b>，右边是<b>可切换的 HDR 方案</b>。
+    拖动中间的竖线，直接看同一处在 SDR 与 HDR 下的差别；点上方按钮切换右侧的 HDR 技术方案。</p>
+    <div class="callout">HDR 图在<b>支持 HDR 的浏览器</b>（Chrome / Safari）+ HDR 屏上才会真正"亮起来"。非 HDR 环境下，仍可对比<b>右侧画面细节是否被改写</b>——切到「LTX 直接」尤其明显。</div>
+
+    <div class="cmp">
+      <div class="cmp-tabs">
+        <span class="lbl">右侧 HDR 方案：</span>
+        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_region_f11.avif" data-name="区域识别"
+          data-desc="<b>区域识别（规则）</b>：检测自发光/反射/普通三类区域分别提亮。细节真实、可控，但「哪里该亮」全靠规则，复杂光源容易漏检。">区域识别</button>
+        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_ltx_direct_f11.avif" data-name="LTX 直接"
+          data-desc="<b>LTX 直接</b>：直接用 LTX 生成的画面。亮度判断很准，但纹理/物体被「重画」，分辨率仅 ~800p——拖动对比会看到右侧细节与左侧 SDR 对不上。">LTX 直接</button>
+        <button class="cmp-tab active" data-src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" data-name="LTX gainmap"
+          data-desc="<b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。">LTX gainmap ✦</button>
+      </div>
+      <div class="cmp-stage" id="cmpStage" style="--pos:50%">
+        <img class="cmp-img cmp-sdr" src="assets/ltx-demo/indoor_sdr_f11.avif" alt="SDR 原片" loading="lazy">
+        <img class="cmp-img cmp-hdr" id="cmpHdr" src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" alt="HDR 结果" loading="lazy">
+        <div class="cmp-label l">SDR</div>
+        <div class="cmp-label r" id="cmpLabelR">HDR · LTX gainmap</div>
+        <div class="cmp-divider"><div class="cmp-handle">❮❯</div></div>
+      </div>
+      <p class="cmp-desc" id="cmpDesc"><b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。</p>
+    </div>
+  </section>
+
+  <!-- 05 为什么选它 -->
+  <section class="section" id="pick">
+    <div class="kicker">05 · 结论</div>
+    <h2>为什么选 LTX gainmap</h2>
+    <p class="lead">把三条路线放回最初那句矛盾——<b>"判断哪里该亮" × "保住真实细节"</b>——只有路线 C 同时占住两头：</p>
+    <div class="grid">
+      <div class="card"><h4 style="color:#c9b6ff">拿了 AI 的长处</h4>
+        <p>"哪里该亮、该多亮"交给 LTX 的语义理解，<b>不再靠规则、不再漏检</b>——直接解决上一套系统的命门。</p></div>
+      <div class="card"><h4 style="color:#9be08a">丢了 AI 的副作用</h4>
+        <p>只取它的<b>亮度判断</b>，丢掉它生成的像素。细节、颜色、分辨率全来自原片 → 数学上<b>不可能虚构细节</b>。</p></div>
+      <div class="card"><h4 style="color:#7fe0ff">保留了工程可控性</h4>
+        <p>增益图可视化、可限幅、可时域滤波。延续上一套"<b>有真值评测 + 单帧诊断</b>"的方法论，黑盒变白盒。</p></div>
+    </div>
+    <div class="callout violet">
+      <b>一句话：</b>LTX 直接输出是"<b>AI 重画一遍</b>"，区域识别是"<b>人写规则提亮</b>"，
+      而 LTX gainmap 是"<b>让 AI 只当测光表，原片自己变亮</b>"——这才是既准又真、还能上 4K 的解。
+    </div>
+  </section>
+
+  <!-- 06 局限 -->
+  <section class="section" id="limits">
+    <div class="kicker">06 · 仍在打磨</div>
+    <h2>已知局限与下一步</h2>
+    <p class="lead">室内场景已经很稳；当前主要待解的是<b>室外的帧间一致性</b>。</p>
+    <div class="two">
+      <div>
+        <h3 class="bad">问题 · 室外局部闪烁</h3>
+        <p>实测全片高光闪烁均值仅 2.4%，但<b>室外大动态区</b>（天空 / 树叶 / 水面高光）存在局部闪烁。根因是
+        <b>LTX 逐帧对这些高频亮区的判断在抖</b>，而室外常伴随平移/推拉，固定像素位置的时域平滑会错位。</p>
+      </div>
+      <div>
+        <h3 class="good">方向 · 运动补偿时域滤波</h3>
+        <p>增益图是低频场，特别适合时域处理：先估相邻帧运动把上一帧增益 <b>warp 对齐</b>再做<b>时域中值/EMA</b>，
+        即可强力压闪而不糊运动；更进一步可让 <b>LTX 跑关键帧 + 中间帧光流插值</b>，从源头消抖动还省算力。</p>
+      </div>
+    </div>
+    <div class="callout">
+      方法论不变：<b>先实测定位（是闪烁还是真变化、在哪一段）</b>，再针对性上时域方案，用 nit/JXL 对比验证压制效果——而不是盲调参数。
+    </div>
+  </section>
+  </main>
+
+  <footer>
+    <p>LTX Gainmap · SDR→HDR 新一代思路 ｜ <a href="sdr-hdr-itm-system.html">← 区域识别版系统</a> ｜ <a href="index.html">返回色彩与显示指南</a></p>
+    <p style="margin-top:8px;color:var(--soft)">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · FFmpeg / libx265 · libjxl<br>
+    色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</p>
+  </footer>
+
+  <script>
+    (function(){
+      var stage = document.getElementById('cmpStage');
+      if(!stage) return;
+      var hdr = document.getElementById('cmpHdr');
+      var labelR = document.getElementById('cmpLabelR');
+      var desc = document.getElementById('cmpDesc');
+      var tabs = document.querySelectorAll('.cmp-tab');
+      function setPos(clientX){
+        var r = stage.getBoundingClientRect();
+        var p = (clientX - r.left) / r.width * 100;
+        p = Math.max(0, Math.min(100, p));
+        stage.style.setProperty('--pos', p.toFixed(2) + '%');
+      }
+      var dragging = false;
+      stage.addEventListener('pointerdown', function(e){ dragging = true; try{ stage.setPointerCapture(e.pointerId); }catch(_){} setPos(e.clientX); });
+      stage.addEventListener('pointermove', function(e){ if(dragging) setPos(e.clientX); });
+      stage.addEventListener('pointerup', function(){ dragging = false; });
+      stage.addEventListener('pointercancel', function(){ dragging = false; });
+      tabs.forEach(function(t){
+        t.addEventListener('click', function(){
+          tabs.forEach(function(x){ x.classList.remove('active'); });
+          t.classList.add('active');
+          hdr.src = t.dataset.src;
+          labelR.textContent = 'HDR · ' + t.dataset.name;
+          desc.innerHTML = t.dataset.desc;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,6 +1,63 @@
 {
-  "updated": "2026-06-12",
+  "updated": "2026-06-17",
   "days": [
+    {
+      "date": "2026-06-17",
+      "picks": [
+        {
+          "tag": "教程",
+          "source": "Greg Benz Photography",
+          "title": "How to share HDR photos on Instagram or Threads",
+          "description": "这篇值得读，因为它把站内最近更新的 HDR Relay 章节继续往“发布链路”推进了一步：不是只讲增益图怎么合成，而是讲清楚为什么 SDR base 仍然决定大量观众的实际体验。文中最有价值的是它把有限 HDR headroom、平台会不会重生成 SDR、亮度图与全彩 gain map 的差别，以及社交平台上传时哪些步骤会直接破坏 HDR 一次串起来，特别适合建立“做出 HDR 文件”和“让别人稳定看到好 HDR”之间其实隔着一整段工作流的直觉。",
+          "url": "https://gregbenzphotography.com/hdr-photos/how-to-share-hdr-photos-on-instagram-or-threads/"
+        },
+        {
+          "tag": "教程",
+          "source": "Portrait Displays",
+          "title": "White-OLED/RGB-OLED Perceptual Matching",
+          "description": "这篇值得读，因为它没有停留在“同色异谱会导致白点看起来不一样”这类概念说明，而是直接给出一套监看现场会真的用到的匹配流程：先让 RGB OLED 参考监视器到目标，再把 WOLED 通过视觉比对白窗和自定义白点去贴近它。它和站内最近更新的同色异谱章节衔接很强，尤其能帮助读者理解为什么现代 HDR 广色域显示里，仪器测得相同的 D65 仍不等于人眼会觉得一致，以及为什么最后常常需要 perceptual match 而不只是数值 match。",
+          "url": "https://www.portrait.com/resource-center/white-oled-rgb-oled-perceptual-matching/"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-16",
+      "picks": [
+        {
+          "tag": "案例",
+          "source": "Greg Benz Photography",
+          "title": "Great HDR requires a great SDR in the gain map",
+          "description": "这篇值得读，因为它把“增益图不是单独一张 HDR 图，而是 SDR base 加上逐像素恢复信息”讲得非常具体，正好能接上站内最近更新的 HDR Relay 章节。文中最有价值的地方，是它把 fallback SDR、有限 headroom 设备上的混合显示，以及单通道/三通道 gain map 对高光细节和颜色恢复的影响放到同一条发布链路里解释，能帮助读者把“base 决定兜底体验，gain map 决定 HDR 还原质量”真正建立成工作流直觉。",
+          "url": "https://gregbenzphotography.com/hdr-photos/great-hdr-requires-a-great-sdr-in-the-gain-map/"
+        },
+        {
+          "tag": "文章",
+          "source": "Portrait Displays",
+          "title": "Using Apple CMF 2026 with Calman",
+          "description": "这篇值得读，因为它没有把“白点校准到 D65”当成终点，而是直接解释为什么 OLED、QD-OLED、激光等不同光谱形状的显示器，即使仪器测到同样的 D65，近中性灰和高光仍可能肉眼不匹配。这和站内最近更新的同色异谱章节高度相关，尤其适合把观察者差异、窄峰广色域显示和现代 HDR 监看里的白点争议，从概念进一步落到实际校准与跨设备匹配方法上。",
+          "url": "https://www.portrait.com/resource-center/using-apple-color-matching-function-cmf-2026-with-calman/"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-15",
+      "picks": [
+        {
+          "tag": "教程",
+          "source": "Light Illusion",
+          "title": "PQ HDR & HLG",
+          "description": "这篇值得读，因为它没有把 PQ、HLG 只讲成两条曲线，而是直接把 HDR 参考白、平均画面亮度和高光余量放到同一套观看逻辑里解释。它能很好补上站内最近更新的 HDR 色彩科学章节里“203 nit 不是最亮白，而是普通白锚点；真正的 HDR 价值主要在参考白以上的 headroom”这层直觉，也顺手解释了为什么 PQ 在家庭环境里常会显得偏暗、为什么 HLG 的相对体系会有不同手感。",
+          "url": "https://lightillusion.com/what_is_hdr.html"
+        },
+        {
+          "tag": "案例",
+          "source": "Netflix Partner Help Center",
+          "title": "Common Virtual Production Challenges & Potential Solutions",
+          "description": "这篇值得读，因为它把站内最近更新的同色异谱章节进一步落到了 LED 墙实战：当墙面内容肉眼看着正常、相机却拍偏时，问题往往不是“参数没填对”那么简单，而是相机、LED 光谱、白点和现场灯光之间出现了典型的 metameric failure。文中对墙体白点、相机白平衡、相机到 LED 的校准 LUT 以及“要让镜头看对，肉眼可能反而看错”的取舍讲得很具体，特别适合建立现代虚拟制作里的颜色直觉。",
+          "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/1500002086641-Common-Virtual-Production-Challenges-Potential-Solutions"
+        }
+      ]
+    },
     {
       "date": "2026-06-12",
       "picks": [

@@ -243,6 +243,53 @@
     .vid-solo video { display: block; width: 100%; height: auto; background: #000; }
     .vid-note { font-size: 12.5px; color: var(--soft); margin: 8px 0 0; }
 
+    /* RGB gain map */
+    .rgb-showcase {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      margin: 18px 0 16px;
+      align-items: stretch;
+    }
+    .rgb-main, .rgb-channel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #07090d;
+    }
+    .rgb-main img, .rgb-channel img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+    .rgb-main img { max-height: 560px; }
+    .rgb-channel img { aspect-ratio: 3 / 4; }
+    .rgb-main .vid-cap, .rgb-channel .vid-cap { background: rgba(255,255,255,.045); }
+    .channel-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      height: 100%;
+    }
+    .rgb-channel.r { border-color: rgba(255,107,122,.48); }
+    .rgb-channel.g { border-color: rgba(169,229,95,.48); }
+    .rgb-channel.b { border-color: rgba(70,217,232,.48); }
+    .rgb-channel.r b { color: var(--rose); }
+    .rgb-channel.g b { color: var(--lime); }
+    .rgb-channel.b b { color: var(--cyan); }
+    .rgb-logic {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .rgb-logic .card {
+      background: linear-gradient(180deg, rgba(70,217,232,.06), rgba(255,255,255,.022));
+    }
+    .rgb-logic .card strong { color: var(--ink); }
+
     /* Step list */
     .steps { display: grid; gap: 10px; margin-top: 14px; }
     .step {
@@ -488,7 +535,7 @@
     footer a { color: var(--cyan); }
 
     @media (max-width: 920px) {
-      .section-head, .grid-2, .grid-3, .gb-grid, .takeaways, .checklist { grid-template-columns: 1fr; }
+      .section-head, .grid-2, .grid-3, .gb-grid, .takeaways, .checklist, .rgb-showcase, .rgb-logic { grid-template-columns: 1fr; }
       .step { grid-template-columns: 32px 1fr; gap: 12px; }
       .pipeline { grid-template-columns: 1fr; gap: 14px; }
       .pipe:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -11px; transform: translateX(50%); }
@@ -497,6 +544,7 @@
       section { padding: 54px 16px; }
       .hero { min-height: 52vh; }
       h1 { font-size: 32px; }
+      .channel-strip { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -510,9 +558,9 @@
         <a href="#design">架构</a>
         <a href="#core">核心算法</a>
         <a href="#parse">解析输入</a>
-        <a href="#video">转成视频</a>
+        <a href="#rgbgain">三通道</a>
         <a href="#optimize">看结果调算法</a>
-        <a href="#refwhite">203 nits</a>
+        <a href="#video">转成视频</a>
         <a href="#evolve">形态进化</a>
         <a href="#method">方法论</a>
         <a href="#sources">参考</a>
@@ -653,41 +701,66 @@ hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只�
       </div>
     </section>
 
-    <section id="video">
+    <section id="rgbgain">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">转成视频</span>
-            <h2>静态图怎么变成 HDR10 视频</h2>
-            <p>没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</p>
+            <span class="phase-tag">三通道 HDR</span>
+            <h2>彩色高光不只是更亮，还要把颜色救回来</h2>
+            <p>普通单通道 Gain Map 只回答一个问题：这个像素该提亮多少。RGB 三通道 Gain Map 多回答了两个问题：红、绿、蓝分别该提多少，以及哪个通道曾经在 SDR base 里被截断得更严重。对霓虹、屏幕、夕阳、车灯、强光下肤色这类彩色高光来说，这个差别非常大。</p>
           </div>
-        </div>
-        <div class="steps">
-          <div class="step"><span class="n">1</span><div><h4>先出一张临时 HDR 图</h4><p>用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</p></div></div>
-          <div class="step"><span class="n">2</span><div><h4>ffmpeg 循环成视频</h4><p><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</p></div></div>
-          <div class="step"><span class="n">3</span><div><h4>打满 HDR10 颜色三件套</h4><p><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</p></div></div>
-          <div class="step"><span class="n">4</span><div><h4>硬件优先，软件兜底</h4><p>先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</p></div></div>
+          <div class="note">一句话价值：单通道能把发灰的高光重新点亮；三通道才有机会把「被 SDR 截断压平的颜色」也一起找回来。</div>
         </div>
 
-        <h3 style="margin:30px 0 0">拆开看：HDR 其实是两层叠出来的</h3>
-        <p style="margin-top:10px">还是这张 OPPO UltraHDR 原图，导出它内部的两个中间层就能看清 HDR 是怎么合成出来的——<b>SDR base 层</b>是普通屏幕能显示的部分（参考白封顶、招牌已经有点发灰），<b>增益图</b>是一张灰度图，记录每个像素还要往上提多少 stop：灰度越亮提得越多。两层按指数公式 <code>base × 2<sup>g</sup></code> 相乘，灯箱、招牌就被抬到 SDR 顶不住的亮度，得到下面那段 HDR 视频。</p>
-        <div class="vid-compare">
-          <div class="vid-figure layer">
-            <img src="assets/hdr-demo/hdr_base.jpg" alt="SDR base 层" loading="lazy">
-            <div class="vid-cap"><b>① SDR base 层</b><small>普通屏幕看到的样子，亮度被参考白封顶，招牌高光已经顶格、开始发灰</small></div>
-          </div>
-          <div class="vid-figure layer">
-            <img src="assets/hdr-demo/hdr_gainmap.jpg" alt="增益图 gain map" loading="lazy">
-            <div class="vid-cap"><b>② 增益图 gain map</b><small>灰度=提亮量：灯箱、招牌处最亮（提得最多），夜空和路面接近黑（基本不提）</small></div>
+        <div class="rgb-showcase">
+          <figure class="rgb-main">
+            <img src="assets/hdr-demo-rgb/idg_rgb_base.jpg" alt="IDG_2026061_RGBGainmap.jpg 的 SDR base 层" loading="lazy">
+            <figcaption class="vid-cap"><b>IDG_2026061_RGBGainmap.jpg · Apple iPhone 17 Pro · SDR base</b><small>这层负责兼容普通显示。高光已经被 SDR 上限压住，局部颜色会发白、发灰，尤其是彩色亮部。</small></figcaption>
+          </figure>
+          <div class="channel-strip" aria-label="RGB 三通道增益层">
+            <figure class="rgb-channel r">
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_r.jpg" alt="R 通道增益层" loading="lazy">
+              <figcaption class="vid-cap"><b>R gain</b><small>红色通道的补偿量</small></figcaption>
+            </figure>
+            <figure class="rgb-channel g">
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_g.jpg" alt="G 通道增益层" loading="lazy">
+              <figcaption class="vid-cap"><b>G gain</b><small>绿色通道的补偿量</small></figcaption>
+            </figure>
+            <figure class="rgb-channel b">
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_b.jpg" alt="B 通道增益层" loading="lazy">
+              <figcaption class="vid-cap"><b>B gain</b><small>蓝色通道的补偿量</small></figcaption>
+            </figure>
           </div>
         </div>
-        <p class="vid-note">注意增益图里发亮的区域，正好对应成品里冲破 SDR 上限的高光——这就是「base 决定底色、增益图决定哪里该更亮」。</p>
 
-        <p style="margin:24px 0 0">把这两层按 203 nits 锚定 + PQ 编码合并，再循环成视频，就是整条流水线跑通后的成品：</p>
-        <div class="vid-solo">
-          <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
+        <p>这张 <code>IDG_2026061_RGBGainmap.jpg</code> 的元数据显示，拍摄设备为 <b>Apple iPhone 17 Pro</b>；文件封装是 JPEG + MPF 内嵌第二张 JPEG 的 Gain Map 结构，并同时带有 Adobe <code>hdrgm:</code> XMP 与 ISO 21496 标记。它的增益图不是一张灰度图复制三遍，而是 RGB 三通道 Gain Map：R、G、B 各自有不同的增益范围，在每个颜色通道上分别记录「还应该往 HDR 里抬多少」。这对彩色高光很关键，因为 SDR 截断通常不是三个通道一起、均匀地撞顶。</p>
+
+        <div class="rgb-logic">
+          <div class="card">
+            <div class="kicker">问题 1</div>
+            <h4>SDR 截断会让颜色失真</h4>
+            <p>彩色高光进入 SDR base 时，可能是红通道先撞顶，也可能是绿、蓝被压得更多。三通道被不同程度截断后，原来的色相和饱和度就被压平了，画面看起来会发白、褪色。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">问题 2</div>
+            <h4>单通道只能提亮，不能解截断</h4>
+            <p>单通道 Gain Map 给 RGB 同一个倍数，只能把已经褪色的高光整体抬亮。亮度回来了，但被压坏的通道比例没有回来，所以彩色灯牌、屏幕和夕阳容易变成「亮，但没颜色」。</p>
+          </div>
+          <div class="card">
+            <div class="kicker">价值</div>
+            <h4>三通道能重建颜色比例</h4>
+            <p>RGB Gain Map 可以让每个通道按自己的轨迹恢复：该补红就补红，该补蓝就补蓝。它做的不是简单调饱和度，而是在 HDR 合成阶段把被 SDR base 截断的颜色关系重新拉开。</p>
+          </div>
         </div>
-        <p class="vid-note">真正的 HDR10（HEVC / PQ / BT.2020）视频。在支持 HDR 的屏幕上，灯箱和高光会冲破 SDR 上限真正「亮」起来；这里是浏览器压回 SDR 后的预览。下一节就从这段视频回看——同一条算法稍微写错一步，画面会变成什么样。</p>
+
+        <div class="formula">
+          HDR<sub>r,g,b</sub> = base<sub>r,g,b</sub> × 2<sup>gain<sub>r,g,b</sub></sup>
+          <small>单通道：三个颜色共用一个 gain；三通道：R/G/B 分别有自己的 gain、min/max 和 offset</small>
+        </div>
+
+        <p>还有一个感知层面的理由：<b>Hunt 效应</b>。人眼在更高亮度下，会期待颜色看起来更鲜艳；真实世界里的霓虹、LED 屏、夕阳和强反射也确实常常又亮又有色。如果 HDR 只把高光亮度提上去，却保留 SDR 截断后的低饱和颜色，视觉上就会显得「亮但脏」「亮但假」。三通道 Gain Map 同时补亮度和通道比例，才更接近这些彩色高光本来该有的样子。</p>
+
+        <div class="note" style="margin-top:18px">所以三通道 HDR 的价值不是「更艳一点」这么简单，而是把 HDR 从亮度恢复推进到颜色恢复：先避免 SDR 把彩色高光压白，再利用 HDR 亮度空间把应该鲜艳的高光放回去。</div>
       </div>
     </section>
 
@@ -716,6 +789,13 @@ hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只�
 <span class="cmt">// 改后：先把 SDR 参考白锚到 203 nits 的绝对亮度位置</span>
 <span class="good">const float k = sdrWhiteNits / 10000.0f;   // 203 / 10000
 float baseR = baseImage[idx] * k;</span></pre>
+
+          <div class="formula">
+            k = L<sub>white</sub> ÷ 10000 = 203 ÷ 10000 ≈ <span class="v">0.0203</span>
+            <small>203 nits 是 HDR 系统里的漫反射白 / 图文白，不是峰值亮度；203 以上的空间留给灯光、反射、太阳等真正高光</small>
+          </div>
+
+          <p style="margin:12px 0 0">这个数不是靠肉眼试出来的调色参数，而是把 SDR base 的相对参考白接到 PQ 绝对亮度坐标里的锚点。BT.2408 和 libultrahdr 都把 HDR 参考白放在 203 nits；没有这个锚点，SDR 的 1.0 会被 PQ 当成 10000 nits，整张图自然过曝。</p>
 
           <p style="margin:16px 0 0">同一张 OPPO UltraHDR 原图，分别用「漏掉锚定」的旧算法和修好的算法转成 HDR 视频，差别一眼可见——左边整屏发光、招牌和路面全糊成一片白，右边夜景层次正常、只有灯箱该亮的地方亮：</p>
           <div class="vid-compare">
@@ -790,85 +870,41 @@ ffmpeg -loop 1 -i tmp.jxl \
       </div>
     </section>
 
-    <section id="refwhite">
+    <section id="video">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">深挖</span>
-            <h2>203 nits：从过曝现象追到标准锚点</h2>
-            <p>代码里有一行毫不起眼的常量：<code>k = sdrWhiteNits / 10000</code>。它解决的不是「画面再压暗一点」这种主观调色问题，而是一个坐标转换问题：SDR base 层是相对参考白编码，PQ 输出却要求绝对亮度。203 nits 就是把这两套坐标接起来的参考白锚点。</p>
-          </div>
-          <div class="note">一句话总结：不是先决定「203 好不好看」，而是先确认「SDR 的 1.0 在 HDR 时间轴上应该落到哪里」。BT.2408 和 libultrahdr 给出的工程答案都是 203 nits。</div>
-        </div>
-
-        <h3 style="margin:6px 0 0">问题不是亮度不够，而是坐标系错了</h3>
-        <p style="margin-top:10px">SDR base 层里的 1.0 表示「到达 SDR 参考白」，它本身不是一个固定物理亮度；PQ（SMPTE ST 2084）则完全相反，编码值直接对应显示亮度，满刻度对应 <code>10000 nits</code>。如果把 SDR 的 1.0 原样送进 PQ，就等于把普通白纸声明成 10000 nits 的极端高光，结果当然会整屏过曝。正确做法是：合并出的线性 HDR 在进入 PQ 前，先乘一个系数，把 SDR 参考白落到 HDR 系统里的漫反射白位置。</p>
-
-        <div class="formula">
-          k = L<sub>white</sub> ÷ 10000 = 203 ÷ 10000 ≈ <span class="v">0.0203</span>
-          <small>L<sub>white</sub> = HDR 中的漫反射白 / 图文白亮度；10000 = PQ 满刻度亮度。这个 k 把 SDR 的 1.0 锚到 203 nits，203 以上的空间留给灯光、反射和太阳等高光</small>
-        </div>
-
-<pre><span class="cmt">// gainmap.cpp — 进 PQ 前的曝光锚定</span>
-<span class="kw">const float</span> baseExposureCompensation = sdrWhiteNits / 10000.0f;  <span class="cmt">// 203/10000 ≈ 0.0203</span>
-<span class="cmt">// 所有强度路径都必须乘它：gainStrength=0 是 SDR 参考白，</span>
-<span class="cmt">// gainStrength=1 是完整 HDR；两者都要落在同一套绝对亮度坐标里</span></pre>
-
-        <h3 style="margin:30px 0 0">从症状反推出缺失变量</h3>
-        <p style="margin-top:10px">最早暴露出来的症状是「算法公式看起来没错，但导出视频整体白得不正常」。继续打印亮度统计后可以看到，原本应该只是参考白的区域被推到了很高的 PQ 亮度。于是问题从「增益图是不是太强」变成了「base 层进 PQ 前有没有先定参考白」。用不同系数临时测试时，0.02 附近会回到合理范围，0.05 又开始偏亮；这不是为了靠肉眼定最终值，而是在确认：这里确实缺了一个 <code>Lwhite / 10000</code> 的绝对亮度换算。</p>
-
-        <h3 style="margin:30px 0 0">用标准把变量定下来</h3>
-        <p style="margin-top:10px">确认缺的是 <code>Lwhite</code> 之后，再去查「SDR 参考白进入 HDR/PQ 时应该是多少 nits」，资料就不再是泛泛而读，而是直接回答工程问题。几份文档和实现交叉指向同一个答案：</p>
-        <div class="grid-2">
-          <div class="card">
-            <div class="kicker">ITU-R BT.2408</div>
-            <h4>HDR 参考白 = 203 cd/m²</h4>
-            <p>ITU 给 HDR 制作定义的「漫反射白 / 图文白」标准亮度是 203 cd/m²。它不是峰值，而是普通白纸、字幕、图文内容在 HDR 画面里的基准位置。</p>
-          </div>
-          <div class="card">
-            <div class="kicker">SMPTE ST 2084</div>
-            <h4>PQ 是绝对亮度曲线</h4>
-            <p>定义 PQ 编码与亮度的对应关系，满刻度为 10000 nits。这条曲线解释了「为什么必须有 k」：不锚定，SDR 的 1.0 就会被当成一万尼特。</p>
-          </div>
-          <div class="card">
-            <div class="kicker">ITU-R BT.2100</div>
-            <h4>PQ / HLG / BT.2020 体系</h4>
-            <p>把 PQ、HLG 传递函数和 BT.2020 色域绑成一套 HDR 体系，JXL / HEVC 输出打的颜色标签都来自这里。</p>
-          </div>
-          <div class="card">
-            <div class="kicker">Google libultrahdr</div>
-            <h4>增益图实现也用 203</h4>
-            <p>UltraHDR 的官方增益图合并实现也把 SDR 参考白放在 203 nits。和上游实现对齐，能减少不同设备、不同软件之间的亮度漂移。</p>
+            <span class="phase-tag">转成视频</span>
+            <h2>静态图怎么变成 HDR10 视频</h2>
+            <p>没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</p>
           </div>
         </div>
-
-        <h3 style="margin:30px 0 0">203 是「白纸」，不是「最亮」</h3>
-        <p style="margin-top:10px">这一步最容易误解：203 nits <b>不是画面的峰值亮度</b>，而是 <b>漫反射白（diffuse / paper white）</b>。它描述的是白纸、白墙、字幕这类普通白在 HDR 系统里的位置。HDR 真正要保留的是 203 之上的余量：灯箱、镜面反射、太阳和其他高光可以继续冲到上千 nits，甚至接近 PQ 的 10000 nits 上限。增益图的作用，正是把这些超过漫反射白的区域撑起来。所以把 SDR 白锚到 203，等于给高光留出 headroom；如果把 203 当成峰值，整张图会被整体压到亮度上限，高光反而没有余量。换算到信号上，203 nits 对应 <b>75% 的 HLG 信号</b>、<b>约 58% 的 PQ 信号</b>，这也是它在 HDR 工作流里反复出现的原因。</p>
-
-        <div class="gb-grid">
-          <div class="gb bad">
-            <h4>问题暴露阶段</h4>
-            <ul>
-              <li>画面过曝，但增益图公式本身没有明显错误</li>
-              <li>亮度统计显示 SDR 白被推到过高 PQ 亮度</li>
-              <li>临时系数只能说明缺了映射，不能当最终答案</li>
-              <li>如果不区分参考白和峰值，解释会越来越乱</li>
-              <li>不同图片、不同屏幕下很难保持一致</li>
-            </ul>
-          </div>
-          <div class="gb good">
-            <h4>标准化之后</h4>
-            <ul>
-              <li>203 = BT.2408 定义的 HDR 漫反射参考白</li>
-              <li><code>k = 203/10000</code>，一个有出处的常量</li>
-              <li>base 层、增益层和 PQ 编码落在同一亮度坐标</li>
-              <li>明确 203 之上的空间专门留给高光</li>
-              <li>与 libultrahdr 上游一致，行为可预期</li>
-            </ul>
-          </div>
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><h4>先出一张临时 HDR 图</h4><p>用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</p></div></div>
+          <div class="step"><span class="n">2</span><div><h4>ffmpeg 循环成视频</h4><p><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</p></div></div>
+          <div class="step"><span class="n">3</span><div><h4>打满 HDR10 颜色三件套</h4><p><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</p></div></div>
+          <div class="step"><span class="n">4</span><div><h4>硬件优先，软件兜底</h4><p>先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</p></div></div>
         </div>
 
-        <div class="note" style="margin-top:18px">为什么界面里还留着 <b>100 nits</b> 这个选项？100 nits 是传统 SDR 参考白的常用锚点，更适合老素材或亮度空间有限的输出；203 nits 是现代 HDR 制作里更合适的漫反射白位置。两者的差别不是「哪个更好看」，而是面向不同素材和显示目标选择不同参考白。</div>
+        <h3 style="margin:30px 0 0">拆开看：HDR 其实是两层叠出来的</h3>
+        <p style="margin-top:10px">还是这张 OPPO UltraHDR 原图，导出它内部的两个中间层就能看清 HDR 是怎么合成出来的——<b>SDR base 层</b>是普通屏幕能显示的部分（参考白封顶、招牌已经有点发灰），<b>增益图</b>是一张灰度图，记录每个像素还要往上提多少 stop：灰度越亮提得越多。两层按指数公式 <code>base × 2<sup>g</sup></code> 相乘，灯箱、招牌就被抬到 SDR 顶不住的亮度，得到下面那段 HDR 视频。</p>
+        <div class="vid-compare">
+          <div class="vid-figure layer">
+            <img src="assets/hdr-demo/hdr_base.jpg" alt="SDR base 层" loading="lazy">
+            <div class="vid-cap"><b>① SDR base 层</b><small>普通屏幕看到的样子，亮度被参考白封顶，招牌高光已经顶格、开始发灰</small></div>
+          </div>
+          <div class="vid-figure layer">
+            <img src="assets/hdr-demo/hdr_gainmap.jpg" alt="增益图 gain map" loading="lazy">
+            <div class="vid-cap"><b>② 增益图 gain map</b><small>灰度=提亮量：灯箱、招牌处最亮（提得最多），夜空和路面接近黑（基本不提）</small></div>
+          </div>
+        </div>
+        <p class="vid-note">注意增益图里发亮的区域，正好对应成品里冲破 SDR 上限的高光——这就是「base 决定底色、增益图决定哪里该更亮」。</p>
+
+        <p style="margin:24px 0 0">把这两层按 203 nits 锚定 + PQ 编码合并，再循环成视频，就是整条流水线跑通后的成品：</p>
+        <div class="vid-solo">
+          <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
+        </div>
+        <p class="vid-note">真正的 HDR10（HEVC / PQ / BT.2020）视频。在支持 HDR 的屏幕上，灯箱和高光会冲破 SDR 上限真正「亮」起来；这里是浏览器压回 SDR 后的预览。下一节就从这段视频回看——同一条算法稍微写错一步，画面会变成什么样。</p>
       </div>
     </section>
 
