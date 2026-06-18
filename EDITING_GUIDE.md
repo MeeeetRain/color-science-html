@@ -133,9 +133,13 @@ node --check /tmp/page.js
       "picks": [
         {
           "tag": "文章",
+          "tagEn": "Article",
           "source": "来源名称 · 主题",
+          "sourceEn": "Source name · Topic",
           "title": "文章标题",
+          "titleEn": "Article title",
           "description": "中文推荐理由",
+          "descriptionEn": "English recommendation reason",
           "url": "https://example.com/article"
         }
       ]
@@ -149,8 +153,9 @@ node --check /tmp/page.js
 - 每个工作日推荐 2 条，`picks` 数组必须正好有两项。
 - 优先选择科普文章、深度技术文章、教程、案例复盘、有价值的社区讨论。
 - 不优先推荐纯规范、参数表、标准 PDF 或只适合查参数的页面。
-- `description` 用中文说明为什么值得读，不复制原文长段落。
-- `tag` 优先使用“科普”“文章”“讨论”“教程”“案例”等短标签。
+- 中英双语版本下，推荐为 `tag` / `tagEn`、`source` / `sourceEn`、`title` / `titleEn`、`description` / `descriptionEn` 成对维护；页面也兼容 `zh` / `en` 对象写法，但不要在同一条数据里混用太多风格。
+- `description` 用中文说明为什么值得读，不复制原文长段落；`descriptionEn` 需表达同一推荐理由，而不是只做字面直译。
+- `tag` / `tagEn` 优先使用“科普 / Explainer”“文章 / Article”“讨论 / Discussion”“教程 / Tutorial”“案例 / Case”等短标签。
 - 尽量不要连续多天重复同一个链接。
 
 更新检查：

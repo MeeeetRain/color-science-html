@@ -6,16 +6,22 @@
       "picks": [
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
           "title": "Linear -> PQ luminance mapping in Resolve",
           "description": "这条讨论值得读，因为它正好把站内最近更新的 HDR Relay 章节里那个最容易被当成“经验参数”的问题讲透了：为什么 scene-referred 线性值进到 PQ / HDR 输出后，不会天然等于你脑中的 203 nit 参考白。Scott Dyer 和 Daniele Siragusano 的回复很有价值，一边给出 ACES 2 在不同峰值亮度下 0.18 灰和 1.0 白分别会落到多少 nit，一边明确指出 BT.2408 的 203 nit 更多是广播兼容语境下的实践锚点，而不是所有电影式输出都必须硬套的绝对答案。对理解“参考白、headroom、输出变换和创作选择不是一回事”非常有帮助。",
+          "descriptionEn": "This thread nails the issue most easily mistaken for a \"rule-of-thumb parameter\" in the recently updated HDR Relay chapter: why scene-referred linear values, once pushed into a PQ / HDR output, don't naturally equal the 203-nit reference white you have in mind. Scott Dyer and Daniele Siragusano's replies are valuable — they show what nits 0.18 gray and 1.0 white land on at different peak luminances in ACES 2, while making clear that BT.2408's 203 nits is more a practical anchor for broadcast compatibility than an absolute answer every cinematic output must obey. Great for seeing that reference white, headroom, the output transform, and creative choice are not the same thing.",
           "url": "https://community.acescentral.com/t/linear-pq-luminance-mapping-in-resolve/5789"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
           "title": "ODTs and the Judd-Vos correction",
           "description": "这条讨论值得读，因为它正面回答了站内最近更新的同色异谱章节继续往监看工作流追时一定会遇到的问题：OLED 为了更接近人眼感知而做的白点偏移，到底该不该写进 ODT，还是只该留在显示校准层。讨论里最有价值的是几位参与 ACES 输出链路的人把边界讲得很清楚：Judd-Vos 这类修正主要是为了减轻窄峰显示带来的 observer metamerism，它服务的是特定设备的 perceptual match，不应该被烘焙进通用信号本身。对理解“信号正确”和“显示看起来一致”为什么是两件事非常有帮助。",
+          "descriptionEn": "This thread directly answers a question you're bound to hit as you follow the recently updated metamerism chapter into the monitoring workflow: should an OLED's white-point shift toward perceptual appearance be written into the ODT, or kept only in the display-calibration layer? The most valuable part is how several people involved in the ACES output chain draw the boundary clearly: corrections like Judd-Vos mainly mitigate the observer metamerism caused by narrow-band displays — they serve a device-specific perceptual match and shouldn't be baked into the universal signal itself. Great for understanding why \"the signal is correct\" and \"the display looks consistent\" are two different things.",
           "url": "https://community.acescentral.com/t/odts-and-the-judd-vos-correction/1259"
         }
       ]
@@ -25,16 +31,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
           "title": "How to share HDR photos on Instagram or Threads",
           "description": "这篇值得读，因为它把站内最近更新的 HDR Relay 章节继续往“发布链路”推进了一步：不是只讲增益图怎么合成，而是讲清楚为什么 SDR base 仍然决定大量观众的实际体验。文中最有价值的是它把有限 HDR headroom、平台会不会重生成 SDR、亮度图与全彩 gain map 的差别，以及社交平台上传时哪些步骤会直接破坏 HDR 一次串起来，特别适合建立“做出 HDR 文件”和“让别人稳定看到好 HDR”之间其实隔着一整段工作流的直觉。",
+          "descriptionEn": "This piece pushes the recently updated HDR Relay chapter one step further into the \"delivery pipeline\": not just how a gain map is composed, but why the SDR base still decides the actual experience for a large share of viewers. The most valuable part is how it ties together limited HDR headroom, whether a platform re-generates the SDR, the difference between a luminance map and a full-color gain map, and which upload steps outright break HDR — perfect for the intuition that \"making an HDR file\" and \"letting others reliably see good HDR\" are separated by a whole workflow.",
           "url": "https://gregbenzphotography.com/hdr-photos/how-to-share-hdr-photos-on-instagram-or-threads/"
         },
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Portrait Displays",
+          "sourceEn": "Portrait Displays",
           "title": "White-OLED/RGB-OLED Perceptual Matching",
           "description": "这篇值得读，因为它没有停留在“同色异谱会导致白点看起来不一样”这类概念说明，而是直接给出一套监看现场会真的用到的匹配流程：先让 RGB OLED 参考监视器到目标，再把 WOLED 通过视觉比对白窗和自定义白点去贴近它。它和站内最近更新的同色异谱章节衔接很强，尤其能帮助读者理解为什么现代 HDR 广色域显示里，仪器测得相同的 D65 仍不等于人眼会觉得一致，以及为什么最后常常需要 perceptual match 而不只是数值 match。",
+          "descriptionEn": "This piece goes past the conceptual \"metamerism makes white points look different\" and gives a matching procedure you'd actually use on a monitoring floor: calibrate the RGB OLED reference monitor to target first, then bring the WOLED close via visual comparison of white windows and a custom white point. It connects strongly with the recently updated metamerism chapter, helping you see why, on modern wide-gamut HDR displays, the same measured D65 still doesn't mean the eye agrees — and why a perceptual match, not just a numeric one, is so often needed at the end.",
           "url": "https://www.portrait.com/resource-center/white-oled-rgb-oled-perceptual-matching/"
         }
       ]
@@ -44,16 +56,22 @@
       "picks": [
         {
           "tag": "案例",
+          "tagEn": "Case study",
           "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
           "title": "Great HDR requires a great SDR in the gain map",
           "description": "这篇值得读，因为它把“增益图不是单独一张 HDR 图，而是 SDR base 加上逐像素恢复信息”讲得非常具体，正好能接上站内最近更新的 HDR Relay 章节。文中最有价值的地方，是它把 fallback SDR、有限 headroom 设备上的混合显示，以及单通道/三通道 gain map 对高光细节和颜色恢复的影响放到同一条发布链路里解释，能帮助读者把“base 决定兜底体验，gain map 决定 HDR 还原质量”真正建立成工作流直觉。",
+          "descriptionEn": "This piece makes \"a gain map isn't a standalone HDR image but an SDR base plus per-pixel recovery information\" very concrete, connecting neatly to the recently updated HDR Relay chapter. Its most valuable move is explaining the fallback SDR, mixed display on limited-headroom devices, and how single- vs. three-channel gain maps affect highlight detail and color recovery — all within one delivery pipeline — so you build the workflow intuition that \"the base sets the fallback experience, the gain map sets HDR reproduction quality.\"",
           "url": "https://gregbenzphotography.com/hdr-photos/great-hdr-requires-a-great-sdr-in-the-gain-map/"
         },
         {
           "tag": "文章",
+          "tagEn": "Article",
           "source": "Portrait Displays",
+          "sourceEn": "Portrait Displays",
           "title": "Using Apple CMF 2026 with Calman",
           "description": "这篇值得读，因为它没有把“白点校准到 D65”当成终点，而是直接解释为什么 OLED、QD-OLED、激光等不同光谱形状的显示器，即使仪器测到同样的 D65，近中性灰和高光仍可能肉眼不匹配。这和站内最近更新的同色异谱章节高度相关，尤其适合把观察者差异、窄峰广色域显示和现代 HDR 监看里的白点争议，从概念进一步落到实际校准与跨设备匹配方法上。",
+          "descriptionEn": "This piece treats \"calibrate the white point to D65\" as a starting point rather than the end, explaining why displays with different spectral shapes — OLED, QD-OLED, laser — can still look mismatched in near-neutral grays and highlights even when the instrument reads the same D65. It's highly relevant to the recently updated metamerism chapter, and is especially good for taking observer differences, narrow-band wide-gamut displays, and the white-point debates in modern HDR monitoring from concept down to actual calibration and cross-device matching methods.",
           "url": "https://www.portrait.com/resource-center/using-apple-color-matching-function-cmf-2026-with-calman/"
         }
       ]
@@ -63,16 +81,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Light Illusion",
+          "sourceEn": "Light Illusion",
           "title": "PQ HDR & HLG",
           "description": "这篇值得读，因为它没有把 PQ、HLG 只讲成两条曲线，而是直接把 HDR 参考白、平均画面亮度和高光余量放到同一套观看逻辑里解释。它能很好补上站内最近更新的 HDR 色彩科学章节里“203 nit 不是最亮白，而是普通白锚点；真正的 HDR 价值主要在参考白以上的 headroom”这层直觉，也顺手解释了为什么 PQ 在家庭环境里常会显得偏暗、为什么 HLG 的相对体系会有不同手感。",
+          "descriptionEn": "This piece doesn't reduce PQ and HLG to just two curves; it puts HDR reference white, average picture level, and highlight headroom into one viewing logic. It complements the recently updated HDR color science chapter's intuition that \"203 nits isn't the brightest white but an ordinary-white anchor, and HDR's real value lies mostly in the headroom above reference white,\" and along the way explains why PQ often looks dim in a home environment and why HLG's relative system feels different.",
           "url": "https://lightillusion.com/what_is_hdr.html"
         },
         {
           "tag": "案例",
+          "tagEn": "Case study",
           "source": "Netflix Partner Help Center",
+          "sourceEn": "Netflix Partner Help Center",
           "title": "Common Virtual Production Challenges & Potential Solutions",
           "description": "这篇值得读，因为它把站内最近更新的同色异谱章节进一步落到了 LED 墙实战：当墙面内容肉眼看着正常、相机却拍偏时，问题往往不是“参数没填对”那么简单，而是相机、LED 光谱、白点和现场灯光之间出现了典型的 metameric failure。文中对墙体白点、相机白平衡、相机到 LED 的校准 LUT 以及“要让镜头看对，肉眼可能反而看错”的取舍讲得很具体，特别适合建立现代虚拟制作里的颜色直觉。",
+          "descriptionEn": "This piece takes the recently updated metamerism chapter further into LED-wall practice: when the wall content looks fine to the eye but the camera records it off, the problem is often not simply \"a parameter wasn't set right\" but a textbook metameric failure between camera, LED spectrum, white point, and on-set lighting. It's concrete about wall white point, camera white balance, the camera-to-LED calibration LUT, and the trade-off that \"to make the lens look right, the eye may have to look wrong\" — great for color intuition in modern virtual production.",
           "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/1500002086641-Common-Virtual-Production-Challenges-Potential-Solutions"
         }
       ]
@@ -82,16 +106,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Blackmagic Design",
+          "sourceEn": "Blackmagic Design",
           "title": "DaVinci Resolve Wide Gamut Intermediate",
           "description": "这篇值得读，因为它不是把 DaVinci Wide Gamut / Intermediate 当成一个“开关”，而是把工作空间、intermediate gamma、中灰位置和可承载的场景范围放在一起解释，能帮助读者把站内最近更新的 Log 章节里“码值分配、中灰锚点、Log 只是场景信息容器”真正连成一条线。对想理解为什么现代调色流程先在更宽的 scene-referred 空间里工作、最后再分别输出 HDR 或 SDR 的读者尤其有用。",
+          "descriptionEn": "This piece treats DaVinci Wide Gamut / Intermediate as more than a \"switch,\" explaining the working space, intermediate gamma, mid-gray placement, and the scene range it can carry all together — helping you connect the recently updated Log chapter's \"code-value allocation, mid-gray anchor, Log as a container for scene information\" into one line. Especially useful for understanding why modern grading first works in a wider scene-referred space and only then outputs HDR or SDR separately.",
           "url": "https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf"
         },
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "ACES Documentation",
+          "sourceEn": "ACES Documentation",
           "title": "Output Transforms",
           "description": "这篇值得读，因为它把 Output Transform 明确拆成 tone scale、chroma compression、gamut compression 和显示编码几个环节，正好对应站内最近更新的 scene/display-referred 与 HDR 色彩科学章节。它的价值不在背术语，而在帮你建立一个更稳的工作流直觉：scene-referred 调色并不是“直接做给屏幕看”，而是先保留场景信息，再由输出变换按目标显示器把参考白、高光余量和颜色边界合理落地。",
+          "descriptionEn": "This piece clearly breaks the Output Transform into tone scale, chroma compression, gamut compression, and display encoding — matching the recently updated scene/display-referred and HDR color science chapters. Its value isn't memorizing terms but building a steadier workflow intuition: scene-referred grading isn't \"working directly for the screen\" but preserving scene information first, then letting the output transform reasonably land reference white, highlight headroom, and color boundaries for the target display.",
           "url": "https://docs.acescentral.com/system-components/output-transforms/"
         }
       ]
@@ -101,16 +131,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "RED Digital Cinema",
+          "sourceEn": "RED Digital Cinema",
           "title": "WHITE PAPER ON REDWideGamutRGB and Log3G10",
           "description": "这篇值得读，因为它把 Log 不只讲成“平灰画面”，而是直接给出一个很实用的尺度感：18% 中灰为什么落在 1/3，为什么 Log3G10 里的“10”指向中灰以上 10 档，以及这类曲线本来就是为了后续再转成 HDR、SDR 或其他显示编码。它和站内今天更新的 Log 章节衔接很强，尤其适合把“码值分配、中灰锚点、Log 只是承载场景信息而不是最终显示”这三件事一次看顺。",
+          "descriptionEn": "This piece treats Log as more than a \"flat gray image,\" giving a very practical sense of scale: why 18% mid-gray lands at 1/3, why the \"10\" in Log3G10 points to 10 stops above gray, and how such curves exist precisely to be converted later into HDR, SDR, or other display encodings. It connects strongly with the recently updated Log chapter, and is ideal for seeing \"code-value allocation, the mid-gray anchor, and Log as a carrier of scene information rather than a final display\" all at once.",
           "url": "https://docs.red.com/955-0187/PDF/915-0187%20Rev-C%20%20%20RED%20OPS%2C%20White%20Paper%20on%20REDWideGamutRGB%20and%20Log3G10.pdf"
         },
         {
           "tag": "文章",
+          "tagEn": "Article",
           "source": "Chromium Blog",
+          "sourceEn": "Chromium Blog",
           "title": "Bringing a clearer, more consistent HDR video experience to Chrome",
           "description": "这篇值得读，因为它把 HDR 参考白和 headroom 从标准术语翻成了网页与系统层面真正会遇到的问题：HDR 视频和 SDR 界面混排时，为什么会一起被拉亮、洗白，设备亮度余量不同时又该怎样保住高光。它和站内最近更新的 HDR 色彩科学、HDR Relay 以及 scene/display-referred 章节都能接上，特别适合理解“先固定普通白锚点，再把额外亮度留给 HDR 高光”这条现代显示适配逻辑。",
+          "descriptionEn": "This piece translates HDR reference white and headroom from standards jargon into the problems you actually hit at the web and system level: when HDR video and SDR UI are mixed, why they get brightened and washed out together, and how to preserve highlights when devices have different headroom. It connects to the recently updated HDR color science, HDR Relay, and scene/display-referred chapters, and is especially good for the modern display-adaptation logic of \"anchor ordinary white first, then reserve the extra brightness for HDR highlights.\"",
           "url": "https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/"
         }
       ]
@@ -120,16 +156,22 @@
       "picks": [
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "GTI Graphic Technology",
+          "sourceEn": "GTI Graphic Technology",
           "title": "What Is Metamerism?",
           "description": "这篇值得读，因为它把同色异谱拆成 observer、illuminant、geometric、device 几类典型失效，并直接落到多光源检查、统一观察环境和设备一致性这些实务动作上。它和站内最近更新的同色异谱章节衔接很强，尤其适合作为“为什么仪器接近、肉眼仍可能分歧”的工作流延伸阅读。",
+          "descriptionEn": "This piece breaks metamerism into typical failure types — observer, illuminant, geometric, device — and lands directly on practical actions like multi-illuminant checks, a unified viewing environment, and device consistency. It connects strongly with the recently updated metamerism chapter, and works well as workflow follow-up reading on \"why the instrument can be close while the eye still disagrees.\"",
           "url": "https://www.gtilite.com/2019/05/understanding-metamerism/"
         },
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "OpenColorIO Docs",
+          "sourceEn": "OpenColorIO Docs",
           "title": "Displays & Views",
           "description": "这篇值得读，因为它没有把 scene-referred / display-referred 停留在术语层面，而是直接用 display、view、view transform、display colorspace 解释监看视图背后到底在切什么。更有价值的是，它把 view transform 明确写成 scene 参考空间到 display 参考空间的映射，这对理解站内最近更新章节里 Output Transform、HDR/SDR 视图与最终交付之间的关系非常有帮助。",
+          "descriptionEn": "This piece doesn't leave scene-referred / display-referred at the term level; it uses display, view, view transform, and display colorspace to explain what a monitoring view is actually switching behind the scenes. More valuably, it states the view transform explicitly as a mapping from the scene reference space to the display reference space — very helpful for understanding the relationship between the Output Transform, HDR/SDR views, and final delivery in the recently updated chapters.",
           "url": "https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html"
         }
       ]
@@ -139,16 +181,22 @@
       "picks": [
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "IMAGO · 影像技术委员会",
+          "sourceEn": "IMAGO · Technical Committee",
           "title": "Metamerism Experts’ Day Debrief",
           "description": "这篇值得读，因为它不是只给出同色异谱定义，而是把摄影机、LED 光源、激光放映和 QD/OLED 显示里真正会出问题的环节串成了一次行业复盘。它和站内最近更新的同色异谱章节衔接很强，尤其适合读者建立“为什么新显示技术更容易暴露观察者差异与白点失配”这层工作流直觉。",
+          "descriptionEn": "This piece does more than define metamerism — it strings together where things actually go wrong across cameras, LED sources, laser projection, and QD/OLED displays into an industry debrief. It connects strongly with the recently updated metamerism chapter, and is especially good for the workflow intuition of \"why newer display technologies more readily expose observer differences and white-point mismatch.\"",
           "url": "https://imago.org/committees/technical/metamerism-experts-day-debrief/"
         },
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Portrait Displays · HDR 显示与色彩体积",
+          "sourceEn": "Portrait Displays · HDR display & color volume",
           "title": "Why Gamut Rings Is a Better Way to Visualize Display Color",
           "description": "这篇值得读，因为它不是停留在二维色域三角形，而是用更接近实际显示能力的方式解释亮度变化如何改变颜色边界，能直接补上“色域大不等于 HDR 颜色都更丰富”这层直觉。它与站内刚更新的 HDR 色彩科学章节高度相关，尤其适合把色彩体积、峰值亮度和广色域显示之间的关系看得更立体。",
+          "descriptionEn": "This piece goes beyond the 2D gamut triangle, explaining how luminance changes shift color boundaries in a way closer to real display capability — directly filling in the intuition that \"a bigger gamut doesn't mean all HDR colors are richer.\" It's highly relevant to the recently updated HDR color science chapter, and is especially good for seeing the relationship between color volume, peak luminance, and wide-gamut displays in three dimensions.",
           "url": "https://www.portrait.com/blog/why-gamut-rings-is-a-better-way-to-visualize-display-color/"
         }
       ]
@@ -158,16 +206,22 @@
       "picks": [
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Frame.io Insider · Gamma / 调色直觉",
+          "sourceEn": "Frame.io Insider · Gamma / grading intuition",
           "title": "What is Gamma? And How Does a Pro Colorist Use It?",
           "description": "这篇值得读，因为它没有把 gamma 只讲成一个抽象名词，而是直接用波形和调色轮解释：为什么 gamma 主要推动中间调、却能相对钉住黑位和白位，以及它和 offset 在 display-referred 工作里手感为什么完全不同。更重要的是，作者也明确提醒在 color managed 的 scene-referred 流程里不要把 gamma 当万能曝光工具，而应把它当作更细腻的局部明度与色彩平衡手段。",
+          "descriptionEn": "This piece doesn't leave gamma as an abstract term; it uses the waveform and color wheels to explain why gamma mainly drives the midtones while relatively pinning the black and white points, and why it and offset feel completely different in display-referred work. More importantly, the author clearly warns against treating gamma as an all-purpose exposure tool in a color-managed scene-referred flow, and to use it instead as a finer means of local brightness and color balance.",
           "url": "https://blog.frame.io/2024/09/02/what-is-gamma-a-pro-colorist-explains/"
         },
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Adobe Blog · HDR 摄影工作流",
+          "sourceEn": "Adobe Blog · HDR photo workflow",
           "title": "High Dynamic Range - Explained",
           "description": "这篇值得读，因为它把“HDR 比 SDR 多出来的到底是什么”讲得非常落地，不只谈更亮的高光，还强调额外高光余量如何带来更好的色彩分离与层次。更有用的是，作者把实际编辑时最常见的失控点也点出来了，比如 HDR 很容易越调越亮、在单张图上看似没问题但放到相册里会彼此失衡，并给出用白底参考、直方图和 clipping 提示来约束判断的方法。",
+          "descriptionEn": "This piece grounds \"what HDR actually adds over SDR\" — not only brighter highlights but how the extra highlight headroom yields better color separation and gradation. More usefully, the author points out the most common ways editing gets out of control, such as HDR creeping ever brighter, or a single image looking fine but unbalanced against others in an album, and offers ways to constrain judgment using a white-background reference, the histogram, and clipping warnings.",
           "url": "https://blog.adobe.com/en/publish/2023/10/10/hdr-explained"
         }
       ]
@@ -177,16 +231,22 @@
       "picks": [
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · ACES / SDR 素材处理",
+          "sourceEn": "ACESCentral · ACES / SDR footage",
           "title": "How do I apply ACES to SDR images?",
           "description": "这条讨论值得读，因为它把很多人实际会做、但理论上并不干净的操作摊开说清楚了：当你只有 Rec.709/SDR 成片或板底，却又想放进 ACEScg 里合成时，所谓 inverse ODT 到底是在“补救”什么、又会在哪些高饱和色和高光处变脆。更有价值的是，帖内并没有假装存在完美答案，而是把“临时可用的折中”和“真正正确的 scene-referred 交付”明确区分开，特别适合教学时拿来解释工作流边界。",
+          "descriptionEn": "This thread lays out an operation many people actually do but which isn't theoretically clean: when you only have a Rec.709/SDR cut or plate yet want to composite it in ACEScg, what an inverse ODT is really \"patching,\" and where it gets brittle in highly saturated colors and highlights. More valuably, it doesn't pretend a perfect answer exists, but clearly separates a \"temporary usable compromise\" from a \"truly correct scene-referred delivery\" — great for explaining workflow boundaries when teaching.",
           "url": "https://community.acescentral.com/t/how-do-i-apply-aces-to-sdr-images/5408"
         },
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Greg Benz Photography · Web HDR",
+          "sourceEn": "Greg Benz Photography · Web HDR",
           "title": "HDR: gain maps vs tone mapping",
           "description": "这篇最值得读的地方在于它没有把 Web HDR 讲成格式清单，而是直接回答一个实际问题：为什么单纯丢一张 HDR 图给浏览器做自动 tone mapping，往往不等于创作者想让 SDR 用户看到的版本。文章把 gain map 解释成“同时照顾 HDR 与 SDR 观看体验的交付策略”，并进一步说明它为什么比仅靠更高位深更关键。对理解网页广色域/HDR 发布链路非常有帮助。",
+          "descriptionEn": "The best part of this piece is that it doesn't present Web HDR as a format checklist, but answers a practical question: why simply handing the browser an HDR image for automatic tone mapping often isn't the version the creator wants SDR users to see. It explains the gain map as \"a delivery strategy that serves both the HDR and SDR viewing experience\" and why that matters more than just higher bit depth. Very helpful for understanding the web wide-gamut / HDR publishing pipeline.",
           "url": "https://gregbenzphotography.com/hdr-photos/hdr-gain-maps-vs-tone-mapping/"
         }
       ]
@@ -196,16 +256,22 @@
       "picks": [
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Prolost · Log/Linear 工作流",
+          "sourceEn": "Prolost · Log/Linear workflow",
           "title": "Know When to Log ’em, Know When to Lin ’em",
           "description": "这篇最值得读的地方在于它没有把“线性更物理、log 更平”停留在口号层面，而是直接把常见操作拆开来看：模糊、叠加、光效、缩放为什么更适合在线性里做，压黑、反相、某些感知型锐化和胶片式处理为什么反而更像是在 log 或 video 空间里工作。对正在搭建 HDR/VFX/调色整体直觉的读者，它能帮助你把“数学正确”和“观感正确”区分开。",
+          "descriptionEn": "The best part of this piece is that it doesn't leave \"linear is more physical, log is flatter\" as a slogan, but breaks down common operations: why blur, compositing, light effects, and scaling are better done in linear, while crushing blacks, inverting, certain perceptual sharpening, and film-like processing feel more at home in log or video space. For anyone building overall HDR/VFX/grading intuition, it helps separate \"mathematically correct\" from \"perceptually correct.\"",
           "url": "https://prolost.com/blog/2006/6/4/know-when-to-log-em-know-when-to-lin-em.html"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · ACES 合成工作流",
+          "sourceEn": "ACESCentral · ACES compositing",
           "title": "What's the correct way to composit with ACES, considering the difference in white values?",
           "description": "这条讨论非常适合建立 scene-referred 的真实尺度感。回复没有停在“ACES 里 1.0 不是显示白”这种抽象说法，而是进一步把 1.0 解释成接近场景里的漫反射白，并说明为什么你在 Rec.709 里觉得应该炸掉的元素，放进 ACES/HDR 后往往只会显得发灰或半透明。它能把很多人第一次做字幕、图形、光效或发光元素时的困惑讲透。",
+          "descriptionEn": "This thread is excellent for building a real sense of scene-referred scale. The replies don't stop at the abstract \"1.0 in ACES isn't display white\" — they go further to explain 1.0 as close to diffuse white in the scene, and why elements you'd expect to blow out in Rec.709 often just look grey or semi-transparent once placed in ACES/HDR. It clears up the confusion many hit the first time they add titles, graphics, light effects, or glowing elements.",
           "url": "https://community.acescentral.com/t/whats-the-correct-way-to-composit-with-aces-considering-the-difference-in-white-values/3459"
         }
       ]
@@ -215,16 +281,22 @@
       "picks": [
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "ARRI · Image Science",
+          "sourceEn": "ARRI · Image Science",
           "title": "Log C",
           "description": "这篇值得读，因为它把很多人日常在用、却常常只停留在“平灰画面”印象里的 Log 重新讲回到底层：为什么它按曝光档位编码、为什么更适合承载场景信息、以及为什么最终一定还要经过显示变换。文中还顺手把 LogC3 与 LogC4 的差异、混用限制和 SDR/HDR/P3 输出关系串起来，非常适合建立摄影机编码与后期显示之间的整体直觉。",
+          "descriptionEn": "This piece takes Log — something many use daily but often picture only as a \"flat gray image\" — back to fundamentals: why it encodes by exposure stop, why it better carries scene information, and why it must always pass through a display transform in the end. It also ties together the differences between LogC3 and LogC4, the limits of mixing them, and their relationship to SDR/HDR/P3 output — great for the overall intuition linking camera encoding to display in post.",
           "url": "https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · HDR/SDR 工作流",
+          "sourceEn": "ACESCentral · HDR/SDR workflow",
           "title": "Use same LUT for HDR/SDR",
           "description": "这条讨论的价值在于它直接击中真实项目里最常见的误区之一：在 HDR 里做好的创意 LUT，为什么一套到 SDR 就会炸高光。回复不仅指出 ACEScc 不是理想交换格式，还把“灰卡应留在什么场景值附近”“HDR 监看为什么会诱导你把整体推得过亮”这些判断讲得很具体，能帮助读者理解创意调整、工作空间和输出变换不能混成一件事。",
+          "descriptionEn": "This thread hits one of the most common misconceptions in real projects: why a creative LUT built in HDR blows out the highlights the moment it's applied to SDR. The replies note that ACEScc isn't an ideal interchange format, and get concrete about \"what scene value the gray card should sit near\" and \"why HDR monitoring tempts you to push the overall level too bright\" — helping you see that creative adjustments, the working space, and the output transform can't be lumped into one thing.",
           "url": "https://community.acescentral.com/t/use-same-lut-for-hdr-sdr/4282"
         }
       ]
@@ -234,16 +306,22 @@
       "picks": [
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · ACES 基础认知",
+          "sourceEn": "ACESCentral · ACES fundamentals",
           "title": "Understanding the sRGB RRT/ODT",
           "description": "这条讨论特别值得读，因为它把很多人刚接触 ACES 时最困惑的问题讲透了：为什么场景里 1.0 的白不会直接显示成屏幕上的 1.0 白，以及“高于白”的高光到底被放到哪里。Scott Dyer 用非常具体的数值把 scene-referred 到 display-referred 的映射解释清楚，能帮助读者真正建立对 RRT/ODT、highlight headroom 和 HDR 余量的直觉。",
+          "descriptionEn": "This thread is especially worth reading because it clears up the question that most confuses ACES newcomers: why a scene 1.0 white doesn't display directly as 1.0 white on screen, and where \"above-white\" highlights actually go. Scott Dyer uses very concrete numbers to explain the scene-referred to display-referred mapping, helping you build real intuition for the RRT/ODT, highlight headroom, and HDR headroom.",
           "url": "https://community.acescentral.com/t/understanding-the-srgb-rrt-odt/1779"
         },
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Chrome for Developers · Web 广色域",
+          "sourceEn": "Chrome for Developers · web wide gamut",
           "title": "High definition CSS color guide",
           "description": "这篇文章的价值不只是告诉你 CSS Color 4 有哪些新语法，而是把“为什么网页长期停留在 sRGB 逻辑里、而现代显示设备早已进入广色域”这件事讲得很清楚。它用具体示例解释 Display-P3、Rec.2020、渐变混色和感知亮度差异，特别适合把影视里的广色域认知延伸到 Web 图像与界面呈现工作流。",
+          "descriptionEn": "The value of this article isn't only telling you what new syntax CSS Color 4 has, but clearly explaining why the web stayed on sRGB logic for so long while modern display devices moved to wide gamut years ago. With concrete examples it covers Display-P3, Rec.2020, gradient interpolation, and perceptual-brightness differences — great for extending wide-gamut understanding from film/TV into the web image and UI presentation workflow.",
           "url": "https://developer.chrome.com/docs/css-ui/high-definition-css-color-guide"
         }
       ]
@@ -253,16 +331,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Frame.io · 调色工作流",
+          "sourceEn": "Frame.io · grading workflow",
           "title": "When Should You Color Grade in Log vs. Linear?",
           "description": "这篇最值得读的地方在于它没有把“log 和 linear 的区别”停留在定义层面，而是直接拿曝光、对比和白平衡调整做对照，说明为什么有些操作在 linear 里更接近物理曝光、在 log 里却容易引入补偿动作。对正在建立 HDR/scene-referred 工作流直觉的人，它能把工具手感和底层响应方式真正连起来。",
+          "descriptionEn": "The best part of this piece is that it doesn't leave \"the difference between log and linear\" at the definition level, but directly contrasts exposure, contrast, and white-balance adjustments to show why some operations are closer to physical exposure in linear yet easily introduce compensating moves in log. For anyone building HDR/scene-referred workflow intuition, it genuinely connects how a tool feels to how the underlying response behaves.",
           "url": "https://blog.frame.io/2024/08/05/when-should-you-color-grade-in-log-linear/"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · VFX/ACES 工作流",
+          "sourceEn": "ACESCentral · VFX / ACES workflow",
           "title": "ACES and the ColorChecker - Part One",
           "description": "这条内容的价值在于它把片场里常被想得过于简单的事情摊开了讲：ColorChecker、HDRI、实拍板和 ACES 里的 IDT/线性化并不会天然完美对齐。讨论区里不仅有作者的实际做法，还有 Thomas Mansencal 等人对拍摄角度、反射误差、HDRI 编码和素材限制的补充，特别适合读者看到“标准流程”背后的现实偏差与判断方法。",
+          "descriptionEn": "The value here is that it lays out something often oversimplified on set: ColorChecker, HDRI, live-action plates, and the IDT/linearization in ACES don't naturally line up perfectly. The thread has not only the author's actual practice but additions from Thomas Mansencal and others on shooting angle, reflection error, HDRI encoding, and footage limitations — great for seeing the real-world deviations behind a \"standard procedure\" and how to judge them.",
           "url": "https://community.acescentral.com/t/aces-and-the-colorchecker-part-one/2161"
         }
       ]
@@ -272,16 +356,22 @@
       "picks": [
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "Stanford ISETCam · 色彩科学",
+          "sourceEn": "Stanford ISETCam · color science",
           "title": "Illustrate a metameric matching and chromatic aberration",
           "description": "这篇内容很适合用来建立“同色异谱”的核心直觉：两条光谱可以完全不同，但只要对人眼三类视锥产生相同刺激，就会看起来一样。它不仅解释概念，还展开了 D65 光谱如何被 LCD 三基色配成视觉等效结果，能帮助理解显示、摄影机和色彩管理为什么都受光谱压缩限制。",
+          "descriptionEn": "This is great for building the core intuition of metamerism: two spectra can be completely different yet look the same as long as they produce the same stimulus in the eye's three cone types. It not only explains the concept but works through how the D65 spectrum is matched to a visually equivalent result by an LCD's three primaries — helping you understand why displays, cameras, and color management are all limited by spectral compression.",
           "url": "https://web.stanford.edu/~wandell/data/isetcam/color/t_colorMetamerism.html"
         },
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Light Illusion · 显示校准",
+          "sourceEn": "Light Illusion · display calibration",
           "title": "Perceptual Colour Match | Metameric Failure Correction | ColourSpace",
           "description": "如果你已经知道同色异谱的定义，这篇更进一步解释它为什么会在 RGB OLED、激光和窄带广色域显示器上变成实际问题。文章把“仪器读数一致但肉眼不一致”的校准困境讲得很具体，并给出基于视觉比对的工作流，能帮助读者理解观察者同色异谱误差为什么会影响监看一致性。",
+          "descriptionEn": "If you already know the definition of metamerism, this goes further to explain why it becomes a real problem on RGB OLED, laser, and narrow-band wide-gamut displays. It gets concrete about the calibration dilemma of \"the instrument reads the same but the eye doesn't agree,\" and offers a visual-comparison workflow that helps you understand why observer-metamerism error affects monitoring consistency.",
           "url": "https://lightillusion.com/perceptual_match_guide.html"
         }
       ]
@@ -291,16 +381,22 @@
       "picks": [
         {
           "tag": "教程",
+          "tagEn": "Tutorial",
           "source": "Frame.io · DaVinci Resolve 工作流",
+          "sourceEn": "Frame.io · DaVinci Resolve workflow",
           "title": "How to Color Manage using Nodes in DaVinci Resolve",
           "description": "这篇教程的价值在于它没有把色彩管理讲成抽象术语，而是直接用 Resolve 的 Group Pre-Clip、Timeline 和 CST 节点把“相机空间、工作空间、显示空间”三层关系拆开。对刚接触 Log、RAW、跨机型混剪的人来说，很适合建立从素材进入到监看输出的实际工作流直觉。",
+          "descriptionEn": "The value of this tutorial is that it doesn't present color management as abstract terminology, but uses Resolve's Group Pre-Clip, Timeline, and CST nodes to break apart the three-layer relationship of camera space, working space, and display space. For anyone new to Log, RAW, or mixing across camera models, it's great for building practical workflow intuition from footage ingest to monitoring output.",
           "url": "https://blog.frame.io/2024/01/08/color-management-nodes-davinci-resolve/"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · HDR/VFX 工作流",
+          "sourceEn": "ACESCentral · HDR / VFX workflow",
           "title": "DI Delivering HDR, VFX monitoring SDR",
           "description": "这串讨论特别适合教学，因为它不只是给一个标准答案，而是把真实协作中的冲突摆到台面上：当 DI 在 1000 nit HDR 监看、VFX 却只有 SDR 显示器时，到底该统一 ODT 还是各看各的显示条件。你能从中看到 ACES 社区成员对“统一观看模型”与“按显示设备匹配输出”的不同立场。",
+          "descriptionEn": "This thread is especially good for teaching because it doesn't just give one standard answer — it puts a real collaboration conflict on the table: when DI monitors in 1000-nit HDR but VFX only has an SDR display, should the ODT be unified or should each side use its own display conditions? You can see ACES community members' differing stances on a \"unified viewing model\" versus \"matching output per display device.\"",
           "url": "https://community.acescentral.com/t/di-delivering-hdr-vfx-monitoring-sdr/5140"
         }
       ]
@@ -310,16 +406,22 @@
       "picks": [
         {
           "tag": "文章",
+          "tagEn": "Article",
           "source": "Frame.io · 摄影机色彩科学",
+          "sourceEn": "Frame.io · camera color science",
           "title": "ARRI REVEAL Color Science Explained",
           "description": "把 REVEAL、AWG4、LogC4 和 LUT 兼容性问题放进同一条叙事线里，能帮助你把“新色彩科学为什么会改工作流”这件事真正串起来，尤其适合建立从拍摄到调色的整体直觉。",
+          "descriptionEn": "Putting REVEAL, AWG4, LogC4, and LUT-compatibility issues into one narrative helps you connect why \"new color science changes the workflow\" — especially good for building overall intuition from shooting to grading.",
           "url": "https://blog.frame.io/2024/06/10/arri-reveal-color-science-explained/"
         },
         {
           "tag": "讨论",
+          "tagEn": "Discussion",
           "source": "ACESCentral · 图形与字幕工作流",
+          "sourceEn": "ACESCentral · graphics & titles workflow",
           "title": "Preserving Logos and Graphics in ACES",
           "description": "这串讨论集中分析了 ACES 中常见的一类问题：为什么 logo、字幕和 UI 资产进入 scene-referred 流程后外观会改变。它的价值不在结论统一，而在于能让你看到 display-referred 元素该放在工作流哪一层。",
+          "descriptionEn": "This thread focuses on a common ACES problem: why logos, titles, and UI assets change appearance once they enter a scene-referred flow. Its value isn't a unified conclusion but seeing which layer of the workflow display-referred elements belong in.",
           "url": "https://community.acescentral.com/t/preserving-logos-and-graphics-in-aces/2861"
         }
       ]
@@ -329,16 +431,22 @@
       "picks": [
         {
           "tag": "文章",
+          "tagEn": "Article",
           "source": "ACESCentral · HDR 入门",
+          "sourceEn": "ACESCentral · HDR intro",
           "title": "Introduction to HDR - by Kevin Shaw, C.S.I",
           "description": "从调色师视角解释 HDR 制作为什么需要新的工作流，并把 ACES、HDR 监看和创作判断放在同一个语境里，适合作为 HDR 章节的延伸阅读。",
+          "descriptionEn": "From a colorist's viewpoint, this explains why HDR production needs a new workflow and places ACES, HDR monitoring, and creative judgment in one context — good as follow-up reading for the HDR chapter.",
           "url": "https://community.acescentral.com/t/introduction-to-hdr-by-kevin-shaw-c-s-i/780"
         },
         {
           "tag": "科普",
+          "tagEn": "Explainer",
           "source": "WebKit · Display-P3",
+          "sourceEn": "WebKit · Display-P3",
           "title": "Wide Gamut Color in CSS with Display-P3",
           "description": "以网页开发者能理解的方式讲清楚为什么 sRGB 不再覆盖所有屏幕颜色，以及如何在 CSS 中使用 Display-P3，很适合补充图片色彩管理章节。",
+          "descriptionEn": "In terms a web developer can follow, this explains why sRGB no longer covers all screen colors and how to use Display-P3 in CSS — a good supplement to the image color-management chapter.",
           "url": "https://webkit.org/blog/10042/wide-gamut-color-in-css-with-display-p3/"
         }
       ]
