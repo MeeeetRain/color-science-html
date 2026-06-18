@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SDR 到 HDR：色彩科学的演变</title>
+  <title>SDR 到 HDR：色彩科学的演变 | 影像色彩与显示技术指南</title>
   <style>
     :root {
       color-scheme: dark;
@@ -37,6 +37,12 @@
     }
 
     a { color: inherit; }
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+    .nav-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .lang-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.04); flex: none; }
+    .lang-toggle .seg-lang { font: inherit; font-size: 13px; font-weight: 720; line-height: 1; padding: 7px 13px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+    html[lang^="zh"] .lang-toggle .seg-lang[data-set="zh"], html[lang="en"] .lang-toggle .seg-lang[data-set="en"] { background: var(--cyan); color: #071014; }
     .progress {
       position: fixed;
       inset: 0 0 auto 0;
@@ -53,6 +59,7 @@
       z-index: 40;
       border-bottom: 1px solid var(--line);
       background: rgba(17,19,24,.82);
+      -webkit-backdrop-filter: blur(16px);
       backdrop-filter: blur(16px);
     }
     .nav {
@@ -68,14 +75,43 @@
       font-weight: 780;
       letter-spacing: .02em;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all .2s;
+    }
+    .back-home:hover {
+      color: var(--ink);
+      background: rgba(255,255,255,.09);
+    }
+    .back-home svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
     .links {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      justify-content: end;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
+    .links a:first-child { margin-left: auto; }
     .links a {
       padding: 7px 10px;
       border-radius: 999px;
@@ -126,8 +162,8 @@
     @keyframes hue { from { filter: saturate(.82) brightness(.72); } to { filter: saturate(1.18) brightness(1.02); } }
     .hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .75fr);
-      gap: 30px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
       align-items: center;
     }
     .eyebrow {
@@ -153,14 +189,14 @@
     h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
     p { margin: 0 0 14px; color: var(--muted); }
     .lead {
-      max-width: 760px;
+      max-width: 620px;
       color: #e5ebf6;
       font-size: clamp(17px, 2vw, 22px);
     }
     .hero-tools {
       display: grid;
       gap: 14px;
-      align-self: stretch;
+      align-self: center;
     }
     .meter {
       border: 1px solid rgba(255,255,255,.18);
@@ -168,6 +204,10 @@
       box-shadow: var(--shadow);
       border-radius: var(--radius);
       padding: 18px;
+    }
+    .hero .meter {
+      padding: 16px;
+      background: rgba(16,18,23,.58);
     }
     .meter strong { display: block; font-size: 13px; color: var(--muted); margin-bottom: 9px; }
     .range-row {
@@ -403,7 +443,7 @@
       background: #0d1015;
       overflow: hidden;
     }
-    canvas { width: 100%; height: 100%; display: block; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; }
     .readout {
       position: absolute;
       right: 12px;
@@ -425,6 +465,56 @@
       overflow-x: auto;
       white-space: nowrap;
     }
+    .gamma-summary {
+      color: #eaf2ff;
+      background: rgba(255,255,255,.055);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-self: stretch;
+    }
+    .gamma-summary .summary-kicker {
+      color: var(--cyan);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .gamma-summary .summary-chain {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .gamma-summary .summary-box {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 6px;
+      padding: 9px 8px;
+      background: rgba(13,16,21,.5);
+      text-align: center;
+      min-width: 0;
+    }
+    .gamma-summary .summary-box b {
+      display: block;
+      color: #f4f6fb;
+      font-size: 13px;
+    }
+    .gamma-summary .summary-box span,
+    .gamma-summary .summary-line {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .gamma-summary .summary-arrow { color: var(--gold); font-weight: 800; }
+    .gamma-summary .summary-equation {
+      border-top: 1px solid var(--line);
+      padding-top: 9px;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .gamma-summary .summary-equation b { color: var(--gold); }
     .flow {
       display: grid;
       grid-template-columns: 1fr auto 1fr auto 1fr;
@@ -536,7 +626,8 @@
       white-space: nowrap;
     }
     tr:hover td { background: rgba(255,255,255,.04); }
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #formatTable { min-width: 760px; }
 
     .glossary {
       display: grid;
@@ -569,10 +660,12 @@
 
     @media (max-width: 920px) {
       .nav { grid-template-columns: 1fr; gap: 8px; }
-      .links { justify-content: start; }
+      .links a:first-child { margin-left: 0; }
       .hero-grid, .section-head, .grid-2, .grid-3, .grid-4, .cie-wrap, .volume-grid {
         grid-template-columns: 1fr;
       }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .sdr-hdr-grid { grid-template-columns: 1fr; }
       .specs, .glossary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .flow { grid-template-columns: 1fr; }
       .arrow { transform: rotate(90deg); }
@@ -580,27 +673,43 @@
     @media (max-width: 560px) {
       section { padding: 56px 16px; }
       .hero { min-height: auto; }
-      .metric-grid, .specs, .glossary { grid-template-columns: 1fr; }
+      .metric-grid, .kpi-row, .specs, .glossary { grid-template-columns: 1fr; }
       .canvas-box { min-height: 320px; }
+      .gamma-layout .canvas-box, .transfer-layout .canvas-box { height: 380px; min-height: 0; }
+      .readout { max-width: min(200px, calc(100% - 88px)); font-size: 12px; padding: 7px 9px; }
+      .gamma-summary .summary-chain { grid-template-columns: 1fr; }
       h1 { font-size: 42px; }
       th, td { font-size: 14px; }
+      #formatSearch { width: 100%; }
+      .section-head .controls { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .hero::before { animation: none; }
+      .back-home { transition: none; }
     }
   </style>
 </head>
 <body>
   <div class="progress" id="progress"></div>
   <header>
-    <nav class="nav" aria-label="主导航">
-      <div class="brand">SDR → HDR Color Science</div>
-      <div class="links" id="navLinks">
-        <a href="#range">动态范围</a>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="brand">
+        <a href="index.html" class="back-home">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span>
+        </a>
+        <span>SDR → HDR</span>
+      </div>
+      <div class="nav-actions"><div class="links" id="navLinks">
+        <a href="#range"><span data-lang="zh">动态范围</span><span data-lang="en">Dynamic Range</span></a>
         <a href="#gamma">Gamma</a>
         <a href="#transfer">PQ / HLG</a>
-        <a href="#gamut">色彩空间</a>
-        <a href="#volume">色彩体积</a>
-        <a href="#formats">格式与对比</a>
-        <a href="#glossary">词汇表</a>
-      </div>
+        <a href="#gamut"><span data-lang="zh">色彩空间</span><span data-lang="en">Color Spaces</span></a>
+        <a href="#volume"><span data-lang="zh">色彩体积</span><span data-lang="en">Color Volume</span></a>
+        <a href="#formats"><span data-lang="zh">格式与对比</span><span data-lang="en">Formats</span></a>
+        <a href="#glossary"><span data-lang="zh">词汇表</span><span data-lang="en">Glossary</span></a>
+      </div><div class="lang-toggle" role="group" aria-label="Language"><button class="seg-lang" type="button" data-set="zh">中</button><button class="seg-lang" type="button" data-set="en">EN</button></div></div>
     </nav>
   </header>
 
@@ -608,24 +717,8 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div>
-          <div class="eyebrow">从 100 nit 到万 nit，从伽玛到感知量化</div>
-          <h1>SDR 到 HDR 的色彩科学演变</h1>
-          <p class="lead">HDR 不是简单提高画面亮度。它重新定义拍摄、编码、显示、观看环境和人眼感知之间的关系：OETF 负责把场景光压进信号，EOTF 负责把信号展开成显示光，OOTF 则决定最终“看起来”的反差。</p>
-        </div>
-        <div class="hero-tools" aria-label="关键范围预览">
-          <div class="meter">
-            <strong>SDR 参考白与 HDR 高光</strong>
-            <div class="range-row" style="--w: 18%"></div>
-            <div class="metric-grid">
-              <div class="metric"><b>100</b><span>nit SDR 参考白</span></div>
-              <div class="metric"><b>1,000</b><span>nit 常见 HDR 母版</span></div>
-              <div class="metric"><b>10,000</b><span>PQ 标准上限</span></div>
-            </div>
-          </div>
-          <div class="meter">
-            <strong>内容依据</strong>
-            <p>本页结合本文件夹 PDF《HDR制作、转换与播出》与 2025-2026 可查的 HDR 标准资料整理。重点不是背参数，而是看清每个函数和色域为何出现。</p>
-          </div>
+          <div class="eyebrow">SDR → HDR</div>
+          <h1><span data-lang="zh">SDR 到 HDR 的色彩科学演变</span><span data-lang="en">The Color Science Evolution from SDR to HDR</span></h1>
         </div>
       </div>
     </section>
@@ -634,51 +727,51 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. 亮度动态范围：HDR 把"能显示多亮"提高了 10–100 倍</h2>
-            <p>SDR 电视的峰值亮度上限是 <b>100 nit</b>；超过这个值，颜色就被压成白色。HDR 把上限推到 1,000–10,000 nit，让高亮区域在更亮的同时还能保持颜色饱和度。两者的核心差距不在于"整体更亮"，而在于 <b>高光区域能否同时"亮"与"有色"</b>。</p>
+            <h2><span data-lang="zh">1. 亮度动态范围：HDR 把"能显示多亮"提高了 10–100 倍</span><span data-lang="en">1. Luminance dynamic range: HDR raises the display ceiling by 10–100×</span></h2>
+            <p><span data-lang="zh">SDR 电视的峰值亮度上限是 <b>100 nit</b>；超过这个值，颜色就被压成白色。HDR 把上限推到 1,000–10,000 nit，让高亮区域在更亮的同时还能保持颜色饱和度。两者的核心差距不在于"整体更亮"，而在于 <b>高光区域能否同时"亮"与"有色"</b>。</span><span data-lang="en">An SDR reference display peaks at <b>100 nits</b>; values beyond that range must be compressed and may lose color as they approach white. HDR extends the ceiling toward 1,000–10,000 nits so highlights can become brighter while retaining saturation. The essential difference is not that the entire image is brighter, but whether highlights can remain <b>both bright and colorful</b>.</span></p>
           </div>
-          <div class="note">拖动下方滑块改变 HDR 峰值，上方四个数字会同步更新。图表横轴为<b>对数刻度</b>——这反映了人眼对亮度的感知方式：暗部差异比亮部差异更敏感。</div>
+          <div class="note"><span data-lang="zh">拖动下方滑块改变 HDR 峰值，上方四个数字会同步更新。图表横轴为<b>对数刻度</b>——这反映了人眼对亮度的感知方式：暗部差异比亮部差异更敏感。</span><span data-lang="en">Move the slider below to change the HDR peak; the four values above update with it. The chart uses a <b>logarithmic axis</b>, reflecting the eye's greater sensitivity to luminance differences in dark regions than in bright ones.</span></div>
         </div>
 
         <!-- KPI 数字行 -->
         <div class="kpi-row">
           <div class="kpi-item">
-            <span class="kpi-label">SDR 峰值白</span>
+            <span class="kpi-label"><span data-lang="zh">SDR 峰值白</span><span data-lang="en">SDR peak white</span></span>
             <span class="kpi-val" style="color:#a5abb4">100 nit</span>
-            <span class="kpi-sub">BT.709 / BT.1886 标准上限</span>
+            <span class="kpi-sub"><span data-lang="zh">BT.709 / BT.1886 标准上限</span><span data-lang="en">BT.709 / BT.1886 reference ceiling</span></span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">HDR 参考白（图形安全白）</span>
+            <span class="kpi-label"><span data-lang="zh">HDR 参考白（图形安全白）</span><span data-lang="en">HDR reference white (graphics white)</span></span>
             <span class="kpi-val" style="color:var(--gold)">203 nit</span>
-            <span class="kpi-sub">BT.2408 规定，比 SDR 亮 2 倍</span>
+            <span class="kpi-sub"><span data-lang="zh">BT.2408 规定，约为 SDR 参考白的 2 倍</span><span data-lang="en">BT.2408 value, about 2× SDR reference white</span></span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">当前 HDR 峰值</span>
+            <span class="kpi-label"><span data-lang="zh">当前 HDR 峰值</span><span data-lang="en">Current HDR peak</span></span>
             <span class="kpi-val" id="statPeak" style="color:var(--cyan)">1,000 nit</span>
-            <span class="kpi-sub">由滑块控制</span>
+            <span class="kpi-sub"><span data-lang="zh">由滑块控制</span><span data-lang="en">Controlled by the slider</span></span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">相对 SDR 峰值倍数</span>
+            <span class="kpi-label"><span data-lang="zh">相对 SDR 峰值倍数</span><span data-lang="en">Multiple of SDR peak</span></span>
             <span class="kpi-val" id="statRatio" style="color:var(--violet)">10×</span>
-            <span class="kpi-sub">高光余量扩展幅度</span>
+            <span class="kpi-sub"><span data-lang="zh">高光余量扩展幅度</span><span data-lang="en">Highlight-range expansion</span></span>
           </div>
         </div>
 
         <!-- 主交互区：滑块 + 图表 -->
         <div class="card">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
-            <span style="font-size:14px;color:var(--muted);white-space:nowrap">HDR 峰值亮度</span>
+            <span style="font-size:14px;color:var(--muted);white-space:nowrap"><span data-lang="zh">HDR 峰值亮度</span><span data-lang="en">HDR peak luminance</span></span>
             <input id="peakSlider" type="range" min="100" max="10000" step="100" value="1000" style="flex:1;min-width:120px">
             <span id="peakValue" style="min-width:90px;text-align:right;color:var(--cyan);font-weight:700;font-size:16px">1,000 nit</span>
           </div>
-          <div class="canvas-box" style="min-height:240px">
+          <div class="canvas-box" style="height:240px">
             <canvas id="rangeCanvas" aria-label="SDR 与 HDR 动态范围对比图"></canvas>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
             <div class="range-legend">
-              <span><span class="legend-dot" style="background:#8a9099"></span>SDR 可用范围（到 100 nit）</span>
-              <span><span class="legend-dot" style="background:var(--cyan)"></span>HDR 高光余量（100 nit → 峰值）</span>
-              <span><span class="legend-dot" style="background:var(--gold);border-radius:50%"></span>203 nit HDR 参考白</span>
+              <span><span class="legend-dot" style="background:#8a9099"></span><span data-lang="zh">SDR 可用范围（到 100 nit）</span><span data-lang="en">SDR range (to 100 nits)</span></span>
+              <span><span class="legend-dot" style="background:var(--cyan)"></span><span data-lang="zh">HDR 高光余量（100 nit → 峰值）</span><span data-lang="en">HDR highlight range (100 nits → peak)</span></span>
+              <span><span class="legend-dot" style="background:var(--gold);border-radius:50%"></span><span data-lang="zh">203 nit HDR 参考白</span><span data-lang="en">203-nit HDR reference white</span></span>
             </div>
             <div id="rangeReadout" style="font-size:13px;color:var(--muted)">当前 HDR 峰值：1,000 nit；比 SDR 高出 10×</div>
           </div>
@@ -688,32 +781,32 @@
         <div class="sdr-hdr-grid">
           <div class="sdr-hdr-card sdr">
             <span class="tag" style="background:#a5abb4;color:#0d1015">SDR</span>
-            <h3>标准动态范围 · BT.709</h3>
+            <h3><span data-lang="zh">标准动态范围 · BT.709</span><span data-lang="en">Standard Dynamic Range · BT.709</span></h3>
             <ul>
-              <li><b>峰值白：</b>100 nit（硬上限）</li>
-              <li><b>编码标准：</b>BT.709 OETF + BT.1886 EOTF</li>
-              <li><b>高光处理：</b>超过 100 nit → 颜色压白，饱和度丢失</li>
-              <li><b>编码位深：</b>8 bit，256 个亮度级别</li>
-              <li><b>颜色空间：</b>BT.709（约覆盖 36% CIE 色域）</li>
+              <li><span data-lang="zh"><b>峰值白：</b>100 nit（硬上限）</span><span data-lang="en"><b>Peak white:</b> 100 nits (hard limit)</span></li>
+              <li><span data-lang="zh"><b>编码标准：</b>BT.709 OETF + BT.1886 EOTF</span><span data-lang="en"><b>Encoding:</b> BT.709 OETF + BT.1886 EOTF</span></li>
+              <li><span data-lang="zh"><b>高光处理：</b>超过 100 nit → 颜色压白，饱和度丢失</span><span data-lang="en"><b>Highlights:</b> above 100 nits → compressed toward white, losing saturation</span></li>
+              <li><span data-lang="zh"><b>编码位深：</b>8 bit，256 个亮度级别</span><span data-lang="en"><b>Bit depth:</b> 8-bit, 256 code levels</span></li>
+              <li><span data-lang="zh"><b>颜色空间：</b>BT.709（约覆盖 36% CIE 色域）</span><span data-lang="en"><b>Color space:</b> BT.709 (about 36% of the CIE diagram)</span></li>
             </ul>
           </div>
           <div class="sdr-hdr-card hdr">
             <span class="tag" style="background:var(--cyan);color:#0d1015">HDR</span>
-            <h3>高动态范围 · BT.2100</h3>
+            <h3><span data-lang="zh">高动态范围 · BT.2100</span><span data-lang="en">High Dynamic Range · BT.2100</span></h3>
             <ul>
-              <li><b>峰值白：</b>1,000–10,000 nit（可变）</li>
-              <li><b>编码标准：</b>PQ (ST 2084) 或 HLG (BT.2100)</li>
-              <li><b>高光处理：</b>203 nit 以上仍保持颜色饱和度</li>
-              <li><b>编码位深：</b>10/12 bit，1,024–4,096 个亮度级别</li>
-              <li><b>颜色空间：</b>BT.2020（约覆盖 76% CIE 色域）</li>
+              <li><span data-lang="zh"><b>峰值白：</b>1,000–10,000 nit（可变）</span><span data-lang="en"><b>Peak white:</b> 1,000–10,000 nits (variable)</span></li>
+              <li><span data-lang="zh"><b>编码标准：</b>PQ (ST 2084) 或 HLG (BT.2100)</span><span data-lang="en"><b>Encoding:</b> PQ (ST 2084) or HLG (BT.2100)</span></li>
+              <li><span data-lang="zh"><b>高光处理：</b>203 nit 以上仍保持颜色饱和度</span><span data-lang="en"><b>Highlights:</b> retain color saturation above 203 nits</span></li>
+              <li><span data-lang="zh"><b>编码位深：</b>10/12 bit，1,024–4,096 个亮度级别</span><span data-lang="en"><b>Bit depth:</b> 10/12-bit, 1,024–4,096 levels</span></li>
+              <li><span data-lang="zh"><b>颜色空间：</b>BT.2020（约覆盖 76% CIE 色域）</span><span data-lang="en"><b>Color space:</b> BT.2020 (about 76% of the CIE diagram)</span></li>
             </ul>
           </div>
         </div>
 
         <!-- 颜色模拟对比 -->
         <div class="card" style="margin-top:18px">
-          <h3 style="margin-bottom:4px">高亮颜色对比：SDR 通道剪切 vs HDR 保持饱和（真实 HDR 图片）</h3>
-          <p style="margin-bottom:12px;font-size:14px;color:var(--muted)">每一行是同一颜色的"亮度阶梯"，从左到右 <b>1 nit → 1,000 nit</b>。左半屏模拟 SDR（每个 RGB 通道在 100 nit 处硬剪切，导致橙色→黄色等色相偏移）；右半屏是真实 HDR 渲染。</p>
+          <h3 style="margin-bottom:4px"><span data-lang="zh">高亮颜色对比：SDR 通道剪切 vs HDR 保持饱和（真实 HDR 图片）</span><span data-lang="en">Bright-color comparison: SDR channel clipping vs HDR saturation retention (true HDR image)</span></h3>
+          <p style="margin-bottom:12px;font-size:14px;color:var(--muted)"><span data-lang="zh">每一行是同一颜色的"亮度阶梯"，从左到右 <b>1 nit → 1,000 nit</b>。左半屏模拟 SDR（每个 RGB 通道在 100 nit 处硬剪切，导致橙色→黄色等色相偏移）；右半屏是真实 HDR 渲染。</span><span data-lang="en">Each row is a luminance ramp of one color from <b>1 nit to 1,000 nits</b>. The left half simulates SDR by hard-clipping each RGB channel at 100 nits, causing hue shifts such as orange toward yellow; the right half is rendered as true HDR.</span></p>
           <div style="position:relative;border-radius:var(--radius);overflow:hidden;background:#000">
             <picture>
               <source srcset="assets/hdr_compare.avif" type="image/avif">
@@ -733,50 +826,61 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. Gamma：从 CRT 缺陷到主动利用视觉</h2>
-            <p>PDF 中强调了一个关键转变：早期伽玛像是在“校正 CRT 非线性”，但到了现代显示与数字编码，伽玛更像是在主动压缩动态范围、提高量化资源利用率。下面把 OETF、EOTF、OOTF 分开看，避免把拍摄编码、显示解码和系统观感混在一起。</p>
+            <h2><span data-lang="zh">2. Gamma：从 CRT 缺陷到主动利用视觉</span><span data-lang="en">2. Gamma: from a CRT limitation to perceptual coding</span></h2>
+            <p><span data-lang="zh">PDF 中强调了一个关键转变：早期伽玛像是在“校正 CRT 非线性”，但到了现代显示与数字编码，伽玛更像是在主动压缩动态范围、提高量化资源利用率。下面把 OETF、EOTF、OOTF 分开看，避免把拍摄编码、显示解码和系统观感混在一起。</span><span data-lang="en">The PDF emphasizes an important shift: gamma began as a way to compensate for CRT nonlinearity, but in modern displays and digital coding it actively compresses dynamic range and allocates quantization more efficiently. Separating OETF, EOTF, and OOTF prevents camera encoding, display decoding, and overall system rendering from being conflated.</span></p>
           </div>
-          <div class="formula">函数关系：OOTF = EOTF ∘ OETF<br>伽玛近似：γ<sub>OOTF</sub> ≈ γ<sub>OETF</sub> × γ<sub>EOTF</sub> ≈ 0.5 × 2.4 = 1.2</div>
+          <div class="gamma-summary" aria-label="OETF EOTF OOTF 关系摘要">
+            <div class="summary-kicker"><span data-lang="zh">信号链关系</span><span data-lang="en">Signal-chain relationship</span></div>
+            <div class="summary-chain">
+              <div class="summary-box"><b>OETF</b><span><span data-lang="zh">场景光 → 信号</span><span data-lang="en">Scene light → signal</span></span></div>
+              <div class="summary-arrow">→</div>
+              <div class="summary-box"><b>EOTF</b><span><span data-lang="zh">信号 → 显示光</span><span data-lang="en">Signal → display light</span></span></div>
+              <div class="summary-arrow">=</div>
+              <div class="summary-box"><b>OOTF</b><span><span data-lang="zh">场景 → 屏幕</span><span data-lang="en">Scene → screen</span></span></div>
+            </div>
+            <div class="summary-equation">
+              <div>组合关系：<b>OOTF = EOTF ∘ OETF</b></div>
+              <div>SDR 近似：γ<sub>OOTF</sub> ≈ γ<sub>OETF</sub> × γ<sub>EOTF</sub> = <b>0.5 × 2.4 ≈ 1.2</b></div>
+            </div>
+            <div class="summary-line"><span data-lang="zh">这里的乘法指幂函数指数相乘，不是把亮度值直接相乘。</span><span data-lang="en">This multiplication combines power-function exponents; it does not multiply luminance values directly.</span></div>
+          </div>
         </div>
 
         <div class="timeline">
-          <div class="time-step" data-year="CRT时代"><h3>显示端天生非线性</h3><p>显像管 EOTF 近似 V<sup>2.2</sup>，摄像机端用约 L<sup>0.45</sup> 预失真抵消。</p></div>
-          <div class="time-step" data-year="胶片"><h3>低反差记录，高反差放映</h3><p>底片低伽玛压缩动态范围，发行拷贝高伽玛扩展反差，本质也是感知编码。</p></div>
-          <div class="time-step" data-year="1993"><h3>BT.709 OETF</h3><p>暗部线性段 + 0.45 幂函数段，实际近似 0.5，成为 SDR 拍摄制作基础。</p></div>
-          <div class="time-step" data-year="2011"><h3>BT.1886 EOTF</h3><p>把平板、OLED、投影等“非 CRT”显示规范到接近 2.4 的显示伽玛。</p></div>
-          <div class="time-step" data-year="2016-2025"><h3>BT.2100 HDR</h3><p>PQ 与 HLG 进入同一 HDR-TV 标准框架，2025 版 BT.2100-3 继续更新图像参数建议。</p></div>
+          <div class="time-step" data-year="CRT"><h3><span data-lang="zh">显示端天生非线性</span><span data-lang="en">The display is inherently nonlinear</span></h3><p><span data-lang="zh">显像管 EOTF 近似 V<sup>2.2</sup>，摄像机端用约 L<sup>0.45</sup> 预失真抵消。</span><span data-lang="en">A CRT's EOTF is approximately V<sup>2.2</sup>; the camera applies about L<sup>0.45</sup> to compensate.</span></p></div>
+          <div class="time-step" data-year="Film"><h3><span data-lang="zh">低反差记录，高反差放映</span><span data-lang="en">Low-contrast capture, high-contrast projection</span></h3><p><span data-lang="zh">底片低伽玛压缩动态范围，发行拷贝高伽玛扩展反差，本质也是感知编码。</span><span data-lang="en">Low-gamma negative film compresses dynamic range, while high-gamma release prints expand contrast: another form of perceptual encoding.</span></p></div>
+          <div class="time-step" data-year="1993"><h3>BT.709 OETF</h3><p><span data-lang="zh">暗部线性段 + 0.45 幂函数段，实际近似 0.5，成为 SDR 拍摄制作基础。</span><span data-lang="en">A linear toe plus a 0.45 power segment, often approximated as 0.5, became a foundation of SDR capture and production.</span></p></div>
+          <div class="time-step" data-year="2011"><h3>BT.1886 EOTF</h3><p><span data-lang="zh">把平板、OLED、投影等“非 CRT”显示规范到接近 2.4 的显示伽玛。</span><span data-lang="en">Standardized flat panels, OLEDs, and projectors around a display gamma near 2.4.</span></p></div>
+          <div class="time-step" data-year="2016-2025"><h3>BT.2100 HDR</h3><p><span data-lang="zh">PQ 与 HLG 进入同一 HDR-TV 标准框架，2025 版 BT.2100-3 继续更新图像参数建议。</span><span data-lang="en">PQ and HLG entered one HDR-TV framework, with BT.2100-3 updating image-parameter guidance in 2025.</span></p></div>
         </div>
 
         <div class="gamma-layout">
           <div class="card">
             <div class="ctrl-rows">
               <div class="ctrl-row">
-                <span class="ctrl-row-label">① 角色视角</span>
+                <span class="ctrl-row-label">① 转换函数</span>
                 <div class="seg" role="tablist" aria-label="按传递函数角色看">
                   <button class="gammaMode" data-mode="oetf" aria-pressed="true">OETF（光→信号）</button>
                   <button class="gammaMode" data-mode="eotf" aria-pressed="false">EOTF（信号→光）</button>
                   <button class="gammaMode" data-mode="ootf" aria-pressed="false">OOTF（场景→屏幕）</button>
                 </div>
-                <span style="font-size:12px;color:var(--muted)">看信号链中某一段的曲线形状</span>
+                <span style="font-size:12px;color:var(--muted)">先选信号链中的哪一段</span>
               </div>
               <div class="ctrl-row">
-                <span class="ctrl-row-label">② 编码曲线对比</span>
-                <div class="seg" role="tablist" aria-label="HDR 编码曲线对比">
-                  <button class="gammaMode" data-mode="pqEncode" aria-pressed="false">PQ 编码</button>
-                  <button class="gammaMode" data-mode="hlgEncode" aria-pressed="false">HLG 编码</button>
-                  <button class="gammaMode" data-mode="encodeCompare" aria-pressed="false">PQ + HLG + SDR 同显</button>
+                <span class="ctrl-row-label">② 曲线选择</span>
+                <div class="seg" id="gammaCurveTabs" role="group" aria-label="当前转换函数下的曲线选择">
                 </div>
-                <span style="font-size:12px;color:var(--muted)">把具体的编码曲线放在同一坐标比对</span>
+                <span id="gammaCurveHint" style="font-size:12px;color:var(--muted)">把要比较的曲线拉进同一张图</span>
               </div>
               <div class="ctrl-row">
-                <span class="ctrl-row-label">显示参数</span>
+                <span class="ctrl-row-label">③ 显示参数</span>
                 <div class="seg" id="gammaScaleTabs" aria-label="Gamma 图亮度刻度">
                   <button type="button" class="gammaScaleOption" data-scale="log" aria-pressed="true">对数</button>
                   <button type="button" class="gammaScaleOption" data-scale="linear" aria-pressed="false">线性</button>
                 </div>
                 <label for="gammaHlgPeak" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
                   <span id="gammaPeakLabel">HLG 峰值</span>
-                  <input id="gammaHlgPeak" type="range" min="500" max="4000" step="100" value="1000" style="width:160px">
+                  <input id="gammaHlgPeak" type="range" min="500" max="10000" step="100" value="1000" style="width:160px">
                   <span id="gammaHlgPeakValue" style="color:var(--cyan);font-weight:700;min-width:70px">1000 nit</span>
                 </label>
               </div>
@@ -787,8 +891,8 @@
             </div>
           </div>
           <div class="card gamma-explain">
-            <h3 id="gammaModeTitle">OETF：拍摄/编码端</h3>
-            <p id="gammaModeText"><span class="tooltip" title="Opto-Electrical Transfer Function">OETF</span> 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可在上方切到“PQ 编码”单独查看。</p>
+            <h3 id="gammaModeTitle"><span data-lang="zh">OETF：拍摄/编码端</span><span data-lang="en">OETF: capture / encoding</span></h3>
+            <p id="gammaModeText"><span data-lang="zh"><span class="tooltip" title="Opto-Electrical Transfer Function">OETF</span> 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可在上方切到“PQ 编码”单独查看。</span><span data-lang="en"><span class="tooltip" title="Opto-Electrical Transfer Function">OETF</span> converts relative scene light into a video signal. BT.709 is an SDR camera curve; the HLG OETF is the HDR broadcast encoding curve defined by BT.2100. PQ encodes absolute display luminance into code values and can be viewed separately using the PQ encoding option above.</span></p>
             <div class="flow">
               <div class="node"><b>场景光</b><br><span class="mini">Scene light</span></div>
               <div class="arrow">→</div>
@@ -796,7 +900,7 @@
               <div class="arrow">→</div>
               <div class="node"><b>显示光</b><br><span class="mini">EOTF 解码</span></div>
             </div>
-            <div class="warn" id="gammaModeNote">当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。</div>
+            <div class="warn" id="gammaModeNote">当前只看编码端：Y 轴是归一化视频信号，不是 nit。BT.709 与 HLG 是真正的场景 OETF；PQ 曲线是按 L×参考峰值换算后的编码参考，可在 ② 中取消其他曲线单独查看。</div>
           </div>
         </div>
       </div>
@@ -806,20 +910,20 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. PQ 与 HLG：HDR 的两条路线</h2>
-            <p>PQ（ST 2084）把码值映射到绝对显示亮度，面向精准母版、元数据与显示适配；HLG 把传统广播链路放在首位，信号相对、兼容 SDR 观看，但依赖终端根据峰值亮度设置系统伽玛。</p>
+            <h2><span data-lang="zh">3. PQ 与 HLG：HDR 的两条路线</span><span data-lang="en">3. PQ and HLG: two routes to HDR</span></h2>
+            <p><span data-lang="zh">PQ（ST 2084）把码值映射到绝对显示亮度，面向精准母版、元数据与显示适配；HLG 把传统广播链路放在首位，信号相对、兼容 SDR 观看，但依赖终端根据峰值亮度设置系统伽玛。</span><span data-lang="en">PQ (ST 2084) maps code values to absolute display luminance for precise mastering, metadata, and display adaptation. HLG prioritizes the traditional broadcast chain: its signal is relative and more compatible with SDR viewing, but the receiver sets system gamma according to display peak luminance.</span></p>
           </div>
-          <div class="note">在曲线上移动鼠标或触控，查看同一归一化信号在 PQ、HLG、SDR gamma 下对应的近似亮度。切换对数坐标会更容易看清暗部码值分配。</div>
+          <div class="note"><span data-lang="zh">在曲线上移动鼠标或触控，查看同一归一化信号在 PQ、HLG、SDR gamma 下对应的近似亮度。切换对数坐标会更容易看清暗部码值分配。</span><span data-lang="en">Move a pointer across the curves to compare the approximate luminance represented by the same normalized signal in PQ, HLG, and SDR gamma. Log scale makes shadow-code allocation easier to see.</span></div>
         </div>
 
         <div class="transfer-layout">
           <div class="card">
             <div class="controls">
               <div class="tabs" id="hdrScaleTabs" aria-label="PQ HLG 曲线亮度刻度">
-                <button type="button" class="hdrScaleOption active" data-scale="log" aria-pressed="true">对数亮度</button>
-                <button type="button" class="hdrScaleOption" data-scale="segmented" aria-pressed="false">分段线性亮度</button>
+                <button type="button" class="hdrScaleOption active" data-scale="log" aria-pressed="true"><span data-lang="zh">对数亮度</span><span data-lang="en">Log luminance</span></button>
+                <button type="button" class="hdrScaleOption" data-scale="segmented" aria-pressed="false"><span data-lang="zh">分段线性亮度</span><span data-lang="en">Segmented linear</span></button>
               </div>
-              <label for="hlgPeak" style="min-width:230px">HLG 显示峰值 <span id="hlgPeakValue">1000 nit</span></label>
+              <label for="hlgPeak" style="min-width:230px"><span data-lang="zh">HLG 显示峰值</span><span data-lang="en">HLG display peak</span> <span id="hlgPeakValue">1000 nit</span></label>
               <input id="hlgPeak" type="range" min="500" max="4000" step="100" value="1000">
             </div>
             <div class="canvas-box">
@@ -829,9 +933,9 @@
           </div>
           <div class="grid-2">
             <div class="card">
-              <span class="tag">PQ — 绝对亮度体系</span>
+              <span class="tag"><span data-lang="zh">PQ — 绝对亮度体系</span><span data-lang="en">PQ — absolute luminance</span></span>
               <h3>Display Referred EOTF</h3>
-              <p>ST 2084 / PQ 的设计上限为 <b>10,000 cd/m²</b>。码值直接对应绝对显示亮度（与终端无关），因此同一信号在不同显示器上试图呈现相同的 nit 值。适合精确调色母版、电影与流媒体。<br><span style="color:var(--rose);font-size:13px">⚠ 低亮度显示器无法还原母版中超出自身峰值的部分，需要 Tone Mapping 或元数据辅助。</span></p>
+              <p><span data-lang="zh">ST 2084 / PQ 的设计上限为 <b>10,000 cd/m²</b>。码值直接对应绝对显示亮度（与终端无关），因此同一信号在不同显示器上试图呈现相同的 nit 值。适合精确调色母版、电影与流媒体。<br><span style="color:var(--rose);font-size:13px">⚠ 低亮度显示器无法还原母版中超出自身峰值的部分，需要 Tone Mapping 或元数据辅助。</span></span><span data-lang="en">ST 2084 / PQ has a design ceiling of <b>10,000 cd/m²</b>. Code values correspond to absolute display luminance, so the same signal aims at the same nit value on different displays. This suits precise grading, cinema, and streaming masters.<br><span style="color:var(--rose);font-size:13px">⚠ A lower-peak display cannot reproduce portions of a master above its capability and therefore requires tone mapping or metadata assistance.</span></span></p>
               <div class="formula" style="white-space:normal;line-height:1.75">
                 <div><b>1. 先把码值 V 做感知反压缩</b></div>
                 <div>N = V<sup>1/m₂</sup></div>
@@ -843,9 +947,9 @@
               </div>
             </div>
             <div class="card">
-              <span class="tag" style="background:var(--lime)">HLG — 相对亮度体系</span>
+              <span class="tag" style="background:var(--lime)"><span data-lang="zh">HLG — 相对亮度体系</span><span data-lang="en">HLG — relative luminance</span></span>
               <h3>Scene Referred OETF</h3>
-              <p>HLG 定义的是<b>拍摄端 OETF</b>，码值表示相对场景亮度，与终端显示峰值无直接绑定。EOTF 随终端峰值自动调整系统伽玛（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），可在不同峰值显示器上自适应。不强制动态元数据，对广播链路友好。</p>
+              <p><span data-lang="zh">HLG 定义的是<b>拍摄端 OETF</b>，码值表示相对场景亮度，与终端显示峰值无直接绑定。EOTF 随终端峰值自动调整系统伽玛（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），可在不同峰值显示器上自适应。不强制动态元数据，对广播链路友好。</span><span data-lang="en">HLG defines a <b>camera-side OETF</b>. Its code values represent relative scene light and are not directly tied to display peak. The display system adjusts gamma according to peak luminance (BT.2100: γ = 1.2 + 0.42·log₁₀(Lw/1000)), adapting across displays without requiring dynamic metadata and fitting broadcast workflows.</span></p>
               <div class="formula" style="white-space:normal;line-height:1.75">
                 <div><b>1. 低亮段：保留暗部细节</b></div>
                 <div>E′ = √(3E), &nbsp;0 ≤ E ≤ 1/12</div>
@@ -857,21 +961,21 @@
               </div>
             </div>
             <div class="card">
-              <span class="tag" style="background:var(--rose)">PQ流程</span>
-              <h3>通知模式（Notify）</h3>
-              <p>PQ 制作需要传递母版显示信息（ST 2086）、MaxCLL、MaxFALL 等静态元数据；动态格式（HDR10+/Dolby Vision）还会逐场景或逐镜头给出映射建议，指导显示端自适应 Tone Mapping。</p>
+              <span class="tag" style="background:var(--rose)"><span data-lang="zh">PQ流程</span><span data-lang="en">PQ workflow</span></span>
+              <h3><span data-lang="zh">通知模式（Notify）</span><span data-lang="en">Notify model</span></h3>
+              <p><span data-lang="zh">ST 2084 只定义 PQ EOTF 及其反函数，本身不要求携带静态元数据。在 HDR10 等具体交付配置中，通常还会传递 ST 2086 母版显示信息，以及 CTA-861.3 定义的 MaxCLL、MaxFALL；HDR10+、Dolby Vision 等动态格式还可逐场景或逐镜头给出映射信息，辅助显示端自适应 Tone Mapping。</span><span data-lang="en">ST 2084 defines only the PQ EOTF and its inverse; it does not itself require static metadata. Specific delivery profiles such as HDR10 commonly add ST 2086 mastering-display information and MaxCLL/MaxFALL as defined by CTA-861.3. Dynamic formats such as HDR10+ and Dolby Vision may also supply mapping information per scene or shot to assist adaptive tone mapping.</span></p>
             </div>
             <div class="card">
-              <span class="tag" style="background:var(--blue)">HLG流程</span>
-              <h3>约定模式</h3>
-              <p>HLG 制播更像 SDR：前端与终端按约定解释信号。终端峰值越高，系统伽玛随之增大（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），自动压低平均亮度，保持中间调观感稳定。</p>
+              <span class="tag" style="background:var(--blue)"><span data-lang="zh">HLG流程</span><span data-lang="en">HLG workflow</span></span>
+              <h3><span data-lang="zh">约定模式</span><span data-lang="en">Convention-based mode</span></h3>
+              <p><span data-lang="zh">HLG 制播更像 SDR：前端与终端按约定解释信号。终端峰值越高，系统伽玛随之增大（BT.2100：γ = 1.2 + 0.42·log₁₀(Lw/1000)），自动压低平均亮度，保持中间调观感稳定。</span><span data-lang="en">HLG production resembles SDR: source and receiver interpret the signal by convention. System gamma increases with display peak (BT.2100: γ = 1.2 + 0.42·log₁₀(Lw/1000)), lowering average luminance to keep midtone appearance stable.</span></p>
             </div>
           </div>
         </div>
 
         <div class="note" style="margin-top:18px;border-left-color:var(--gold)">
-          <strong style="color:var(--gold)">🔑 HDR 参考白：203 nit（BT.2408 规定）</strong>
-          <p style="margin:8px 0 4px">PQ 和 HLG 共用同一参考白亮度 <b>203 cd/m²</b>，但对应的信号电平不同：</p>
+          <strong style="color:var(--gold)"><span data-lang="zh">HDR 参考白：203 nit（BT.2408 规定）</span><span data-lang="en">HDR reference white: 203 nits (BT.2408)</span></strong>
+          <p style="margin:8px 0 4px"><span data-lang="zh">参考白不是 HDR 的“最亮白”，而是普通漫反射白、字幕/图形白、SDR 内容嵌入 HDR 工作流时的<b>亮度锚点</b>。PQ 和 HLG 共用同一参考白亮度 <b>203 cd/m²</b>，但对应的信号电平不同：</span><span data-lang="en">Reference white is not HDR's brightest white. It is the <b>luminance anchor</b> for ordinary diffuse white, subtitles and graphics, and SDR content embedded in an HDR workflow. PQ and HLG use the same <b>203 cd/m²</b> reference-white luminance but represent it at different signal levels.</span></p>
           <div class="grid-2" style="gap:10px;margin-top:10px">
             <div class="card" style="padding:12px">
               <b style="color:var(--cyan)">PQ：58% 电平 = 203 nit</b>
@@ -884,9 +988,32 @@
           </div>
         </div>
 
+        <div class="note" style="margin-top:14px;border-left-color:var(--cyan)">
+          <strong style="color:var(--cyan)"><span data-lang="zh">Headroom：参考白以上才是 HDR 的“高光余量”</span><span data-lang="en">Headroom: HDR highlight capacity begins above reference white</span></strong>
+          <p style="margin:8px 0 4px"><span data-lang="zh">如果把 203 nit 当作普通白，那么显示器峰值亮度中超过 203 nit 的部分就是 headroom。它不是拿来把整张画面都变亮，而是留给太阳反光、金属高光、火焰、霓虹、雪地闪光等短暂或局部的亮度。</span><span data-lang="en">With 203 nits as ordinary white, the display capacity above 203 nits is headroom. It is not intended to brighten the whole picture, but to carry brief or local highlights such as sunlight reflections, metallic glints, flames, neon, and sparkling snow.</span></p>
+          <div class="grid-4" style="gap:10px;margin-top:10px">
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">600 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 3× headroom<br>高光余量有限</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">1000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 4.9× headroom<br>常见 HDR 母版目标</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">2000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 9.9× headroom<br>高光层次更宽</p>
+            </div>
+            <div class="card" style="padding:10px">
+              <b style="color:var(--gold)">4000 nit</b>
+              <p style="font-size:13px;margin:4px 0 0;color:var(--muted)">约 19.7× headroom<br>接近高峰值创作空间</p>
+            </div>
+          </div>
+        </div>
+
         <div class="note" style="margin-top:14px;border-left-color:var(--violet)">
-          <strong style="color:var(--violet)">PQ 母版分级（BT.2408 操作实践）</strong>
-          <p style="margin:6px 0 8px">PQ 是绝对亮度体系，100% 电平固定对应 10,000 nit，参考白 203 nit 固定对应 58% 电平。<br>不同峰值监视器上制作的母版，其信号电平上限不同：</p>
+          <strong style="color:var(--violet)"><span data-lang="zh">PQ 母版分级（BT.2408 操作实践）</span><span data-lang="en">PQ mastering levels (BT.2408 operational practice)</span></strong>
+          <p style="margin:6px 0 8px"><span data-lang="zh">PQ 是绝对亮度体系，100% 电平固定对应 10,000 nit，参考白 203 nit 固定对应 58% 电平。<br>不同峰值监视器上制作的母版，其信号电平上限不同：</span><span data-lang="en">PQ is an absolute-luminance system: 100% corresponds to 10,000 nits and 203-nit reference white corresponds to about 58%. Masters made on displays with different peaks therefore use different maximum signal levels.</span></p>
           <div class="grid-4" style="gap:10px">
             <div class="card" style="padding:10px;border-color:rgba(154,140,255,.45)">
               <b style="color:var(--violet)">PQ600</b>
@@ -913,10 +1040,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. 色彩空间：从 BT.709 到 BT.2020</h2>
-            <p>HDR 通常伴随更宽色域。BT.709 是 HDTV/SDR 的常用工作空间；DCI-P3 来自数字电影；BT.2020 是 UHD/HDR 传输容器，覆盖更大范围，但现实显示器常只能覆盖其中一部分。</p>
+            <h2><span data-lang="zh">4. 色彩空间：从 BT.709 到 BT.2020</span><span data-lang="en">4. Color spaces: from BT.709 to BT.2020</span></h2>
+            <p><span data-lang="zh">HDR 通常伴随更宽色域。BT.709 是 HDTV/SDR 的常用工作空间；DCI-P3 来自数字电影；BT.2020 是 UHD/HDR 传输容器，覆盖更大范围，但现实显示器常只能覆盖其中一部分。</span><span data-lang="en">HDR is commonly paired with a wider gamut. BT.709 is the standard working space for HDTV and SDR; DCI-P3 comes from digital cinema; and BT.2020 is the broader UHD/HDR delivery container, although real displays usually reproduce only part of it.</span></p>
           </div>
-          <div class="note">点击右侧色域卡片，SVG 色度图会突出对应三角形。覆盖率为 CIE 1931 xy 色度图近似面积占比：BT.709 约 35.9%，P3 约 53.6%，BT.2020 约 75.8%。</div>
+          <div class="note"><span data-lang="zh">点击右侧色域卡片，SVG 色度图会突出对应三角形。覆盖率为 CIE 1931 xy 色度图近似面积占比：BT.709 约 35.9%，P3 约 53.6%，BT.2020 约 75.8%。</span><span data-lang="en">Select a gamut card to highlight its triangle on the SVG chromaticity diagram. Coverage is the approximate share of the CIE 1931 xy diagram: about 35.9% for BT.709, 53.6% for P3, and 75.8% for BT.2020.</span></div>
         </div>
 
         <div class="cie-wrap">
@@ -941,30 +1068,30 @@
             </g>
           </svg>
           <div class="swatches" id="gamutCards">
-            <div class="swatch active" data-gamut="bt709"><h3>BT.709 / sRGB</h3><p>R 0.640,0.330 · G 0.300,0.600 · B 0.150,0.060</p><div class="mini">典型覆盖：35.9%</div></div>
-            <div class="swatch" data-gamut="p3"><h3>DCI-P3 / Display P3</h3><p>R 0.680,0.320 · G 0.265,0.690 · B 0.150,0.060</p><div class="mini">典型覆盖：53.6%</div></div>
-            <div class="swatch" data-gamut="bt2020"><h3>BT.2020</h3><p>R 0.708,0.292 · G 0.170,0.797 · B 0.131,0.046</p><div class="mini">典型覆盖：75.8%</div></div>
+            <div class="swatch active" data-gamut="bt709"><h3>BT.709 / sRGB</h3><p>R 0.640,0.330 · G 0.300,0.600 · B 0.150,0.060</p><div class="mini"><span data-lang="zh">典型覆盖：35.9%</span><span data-lang="en">Typical coverage: 35.9%</span></div></div>
+            <div class="swatch" data-gamut="p3"><h3>DCI-P3 / Display P3</h3><p>R 0.680,0.320 · G 0.265,0.690 · B 0.150,0.060</p><div class="mini"><span data-lang="zh">典型覆盖：53.6%</span><span data-lang="en">Typical coverage: 53.6%</span></div></div>
+            <div class="swatch" data-gamut="bt2020"><h3>BT.2020</h3><p>R 0.708,0.292 · G 0.170,0.797 · B 0.131,0.046</p><div class="mini"><span data-lang="zh">典型覆盖：75.8%</span><span data-lang="en">Typical coverage: 75.8%</span></div></div>
           </div>
         </div>
-        <div id="cieHoverInfo" style="margin-top:8px;font-size:13px;color:var(--muted);min-height:18px;padding:4px 0">在色度图上移动鼠标可读取 xy 坐标</div>
+        <div id="cieHoverInfo" style="margin-top:8px;font-size:13px;color:var(--muted);min-height:18px;padding:4px 0"><span data-lang="zh">在色度图上移动鼠标可读取 xy 坐标</span><span data-lang="en">Move across the diagram to read xy coordinates</span></div>
 
         <div class="card" style="margin-top:18px">
           <span class="tag" style="background:var(--violet)">ICtCp</span>
-          <h3>BT.2100 推荐的 HDR / WCG 色差编码</h3>
+          <h3><span data-lang="zh">BT.2100 推荐的 HDR / WCG 色差编码</span><span data-lang="en">BT.2100's recommended color-difference encoding for HDR/WCG</span></h3>
           <div class="grid-2" style="gap:14px">
             <div>
-              <p>传统 Y'CbCr 在 HDR 和宽色域下会产生明显的色调旋转误差（hue rotation error）——高饱和色在量化后色相偏移。ICtCp 基于 PQ 或 HLG 的感知均匀色差空间，使色差分量对高亮高饱和颜色更线性。</p>
-              <p>I（Intensity）承载亮度；Ct 为蓝-黄方向色差（tritan 轴）；Cp 为红-绿方向色差（protan 轴），对应人眼最敏感的两条色差轴。</p>
+              <p><span data-lang="zh">传统 Y'CbCr 在 HDR 和宽色域下会产生明显的色调旋转误差（hue rotation error）——高饱和色在量化后色相偏移。ICtCp 基于 PQ 或 HLG 的感知均匀色差空间，使色差分量对高亮高饱和颜色更线性。</span><span data-lang="en">Traditional Y'CbCr can produce visible hue-rotation errors with HDR and wide-gamut signals, shifting highly saturated colors after quantization. ICtCp is a more perceptually uniform color-difference space based on PQ or HLG, making its chroma components more linear for bright, saturated colors.</span></p>
+              <p><span data-lang="zh">I（Intensity）承载亮度；Ct 为蓝-黄方向色差（tritan 轴）；Cp 为红-绿方向色差（protan 轴），对应人眼最敏感的两条色差轴。</span><span data-lang="en">I (Intensity) carries luminance; Ct is the blue-yellow color-difference direction (tritan axis); and Cp is the red-green direction (protan axis), corresponding to two important axes of human color discrimination.</span></p>
             </div>
             <div>
               <table style="font-size:13px">
-                <thead><tr><th>特性</th><th>Y'CbCr</th><th>ICtCp</th></tr></thead>
+                <thead><tr><th><span data-lang="zh">特性</span><span data-lang="en">Property</span></th><th>Y'CbCr</th><th>ICtCp</th></tr></thead>
                 <tbody>
-                  <tr><td>色调旋转误差</td><td>明显</td><td>极小</td></tr>
-                  <tr><td>感知均匀性</td><td>低</td><td>高</td></tr>
-                  <tr><td>适用范围</td><td>SDR / BT.709</td><td>HDR / WCG</td></tr>
-                  <tr><td>传递函数基础</td><td>Gamma</td><td>PQ 或 HLG</td></tr>
-                  <tr><td>典型用途</td><td>广播、编码存储</td><td>后期、质量评估</td></tr>
+                  <tr><td><span data-lang="zh">色调旋转误差</span><span data-lang="en">Hue-rotation error</span></td><td><span data-lang="zh">明显</span><span data-lang="en">Visible</span></td><td><span data-lang="zh">极小</span><span data-lang="en">Minimal</span></td></tr>
+                  <tr><td><span data-lang="zh">感知均匀性</span><span data-lang="en">Perceptual uniformity</span></td><td><span data-lang="zh">低</span><span data-lang="en">Low</span></td><td><span data-lang="zh">高</span><span data-lang="en">High</span></td></tr>
+                  <tr><td><span data-lang="zh">适用范围</span><span data-lang="en">Scope</span></td><td>SDR / BT.709</td><td>HDR / WCG</td></tr>
+                  <tr><td><span data-lang="zh">传递函数基础</span><span data-lang="en">Transfer-function basis</span></td><td>Gamma</td><td><span data-lang="zh">PQ 或 HLG</span><span data-lang="en">PQ or HLG</span></td></tr>
+                  <tr><td><span data-lang="zh">典型用途</span><span data-lang="en">Typical use</span></td><td><span data-lang="zh">广播、编码存储</span><span data-lang="en">Broadcast and coding</span></td><td><span data-lang="zh">后期、质量评估</span><span data-lang="en">Post-production and quality assessment</span></td></tr>
                 </tbody>
               </table>
             </div>
@@ -977,10 +1104,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. 色彩体积：色域 × 亮度，不只是三角形变大</h2>
-            <p>色彩空间只描述 xy 平面上的色度范围；色彩体积把亮度轴也加进来。HDR 的价值在于：高亮区域仍能保留颜色，而不是像 SDR 那样接近白色剪切。</p>
+            <h2><span data-lang="zh">5. 色彩体积：色域 × 亮度，不只是三角形变大</span><span data-lang="en">5. Color volume: gamut × luminance, not just a larger triangle</span></h2>
+            <p><span data-lang="zh">色彩空间只描述 xy 平面上的色度范围；色彩体积把亮度轴也加进来。HDR 的价值在于：高亮区域仍能保留颜色，而不是像 SDR 那样接近白色剪切。</span><span data-lang="en">A color space describes chromaticity on the xy plane; color volume adds the luminance axis. HDR's value is that bright regions can retain color instead of approaching white clipping as they do in SDR.</span></p>
           </div>
-          <div class="note">调节峰值亮度和色域，观察“可表达颜色的三维空间”如何增大。实际显示还受面板峰值、ABL、色彩管理和色调映射影响。</div>
+          <div class="note"><span data-lang="zh">调节峰值亮度和色域，观察“可表达颜色的三维空间”如何增大。实际显示还受面板峰值、ABL、色彩管理和色调映射影响。</span><span data-lang="en">Adjust peak luminance and gamut to see how the three-dimensional space of reproducible colors grows. Real displays are also constrained by panel peak, ABL, color management, and tone mapping.</span></div>
         </div>
 
         <div class="volume-grid">
@@ -989,17 +1116,17 @@
             <div class="readout" id="volumeReadout">xyY 几何体积：18.9× SDR基准</div>
           </div>
           <div class="card sliders">
-            <label for="volumePeak">峰值亮度 <span id="volumePeakValue">1000 nit</span></label>
+            <label for="volumePeak"><span data-lang="zh">峰值亮度</span><span data-lang="en">Peak luminance</span> <span id="volumePeakValue">1000 nit</span></label>
             <input id="volumePeak" type="range" min="100" max="10000" step="100" value="1000">
-            <label>色域底面 <span id="volumeGamutValue">BT.2020 xy面积 0.2119</span></label>
+            <label><span data-lang="zh">色域底面</span><span data-lang="en">Gamut base</span> <span id="volumeGamutValue">BT.2020 xy area 0.2119</span></label>
             <div class="tabs" id="volumeGamutTabs" role="tablist" aria-label="色彩体积色域选择">
               <button type="button" class="volumeGamutBtn" data-gamut="bt709" aria-pressed="false">BT.709</button>
               <button type="button" class="volumeGamutBtn" data-gamut="p3" aria-pressed="false">P3</button>
               <button type="button" class="volumeGamutBtn active" data-gamut="bt2020" aria-pressed="true">BT.2020</button>
             </div>
             <div class="grid-2">
-              <div class="card"><b>SDR</b><p>BT.709 色域 × 100 nit。高亮颜色容易向白色压缩，色彩体积有限。</p></div>
-              <div class="card"><b>HDR</b><p>BT.2020 容器 × 更高亮度。霓虹、火焰、金属反光等可以同时“亮且有色”。</p></div>
+              <div class="card"><b>SDR</b><p><span data-lang="zh">BT.709 色域 × 100 nit。高亮颜色容易向白色压缩，色彩体积有限。</span><span data-lang="en">BT.709 gamut × 100 nits. Bright colors are readily compressed toward white, limiting color volume.</span></p></div>
+              <div class="card"><b>HDR</b><p><span data-lang="zh">BT.2020 容器 × 更高亮度。霓虹、火焰、金属反光等可以同时“亮且有色”。</span><span data-lang="en">BT.2020 container × higher luminance. Neon, flames, and metallic reflections can remain both bright and colorful.</span></p></div>
             </div>
             <div class="warn" id="volumeFormula">计算口径：V<sub>xyY</sub> = A<sub>xy</sub> × L<sub>peak</sub>；A<sub>xy</sub> = 1/2 |Σ(x<sub>i</sub>y<sub>i+1</sub> − x<sub>i+1</sub>y<sub>i</sub>)|。</div>
           </div>
@@ -1011,10 +1138,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>6. HDR 格式与对比：元数据决定“如何适配显示器”</h2>
-            <p>HDR10、HDR10+、Dolby Vision、HLG、HDR Vivid 都可承载 HDR，但它们对 EOTF、元数据、授权、兼容性和场景适配的选择不同。</p>
+            <h2><span data-lang="zh">6. HDR 格式与对比：元数据决定“如何适配显示器”</span><span data-lang="en">6. HDR formats: metadata determines how content adapts to a display</span></h2>
+            <p><span data-lang="zh">HDR10、HDR10+、Dolby Vision、HLG、HDR Vivid、Eclipsa Video 都可承载 HDR，但它们对 EOTF、元数据、授权、兼容性和场景适配的选择不同。</span><span data-lang="en">HDR10, HDR10+, Dolby Vision, HLG, HDR Vivid, and Eclipsa Video can all carry HDR, but make different choices about transfer functions, metadata, licensing, compatibility, and display adaptation.</span></p>
           </div>
-          <div class="note">先切换标签理解每种格式，再用下方表格横向比较。核心判断不是“谁更亮”，而是谁能把创作者意图更稳定地映射到不同峰值、黑位和色域的终端上。</div>
+          <div class="note"><span data-lang="zh">先切换标签理解每种格式，再用下方表格横向比较。核心判断不是“谁更亮”，而是谁能把创作者意图更稳定地映射到不同峰值、黑位和色域的终端上。</span><span data-lang="en">Use the tabs to understand each format, then compare them in the table below. The central question is not which is brighter, but which can map creative intent more consistently across displays with different peaks, black levels, and gamuts.</span></div>
         </div>
 
         <div class="tabs" role="tablist" aria-label="HDR格式">
@@ -1023,45 +1150,46 @@
           <button type="button" class="tabBtn" data-tab="dv" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-dv">Dolby Vision</button>
           <button type="button" class="tabBtn" data-tab="hlg" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-hlg">HLG</button>
           <button type="button" class="tabBtn" data-tab="vivid" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-vivid">HDR Vivid</button>
+          <button type="button" class="tabBtn" data-tab="eclipsa" role="tab" aria-pressed="false" aria-selected="false" aria-controls="tab-eclipsa">Eclipsa Video</button>
         </div>
 
         <div class="tab-panel active" id="tab-hdr10" role="tabpanel">
-          <h3>HDR10：PQ + BT.2020 + 静态元数据</h3>
-          <p>HDR10 是最基础、最广泛的 HDR 媒体配置。它使用 ST 2084 / PQ EOTF、10 bit、BT.2020 容器，以及 ST 2086 母版显示信息、MaxCLL、MaxFALL。弱点是静态元数据只给整部内容一个全局描述，显示适配较粗。</p>
+          <h3><span data-lang="zh">HDR10：PQ + BT.2020 + 静态元数据</span><span data-lang="en">HDR10: PQ + BT.2020 + static metadata</span></h3>
+          <p><span data-lang="zh">HDR10 是最基础、最广泛的 HDR 媒体配置。它使用 ST 2084 / PQ EOTF、10 bit、BT.2020 容器，以及 ST 2086 母版显示信息和 CTA-861.3 定义的 MaxCLL、MaxFALL。弱点是静态元数据只给整部内容一个全局描述，显示适配较粗。</span><span data-lang="en">HDR10 is the most basic and widely supported HDR media profile. It uses the ST 2084 PQ EOTF, 10-bit encoding, a BT.2020 container, ST 2086 mastering-display information, and MaxCLL/MaxFALL as defined by CTA-861.3. Its limitation is that static metadata describes the entire program globally, allowing only coarse display adaptation.</span></p>
           <div class="specs"><div class="spec"><small>EOTF</small>PQ / ST 2084</div><div class="spec"><small>元数据</small>静态</div><div class="spec"><small>位深</small>10 bit</div><div class="spec"><small>适合</small>UHD Blu-ray、流媒体基础层</div></div>
         </div>
         <div class="tab-panel" id="tab-hdr10p" role="tabpanel">
-          <h3>HDR10+：在 HDR10 上加入动态元数据</h3>
-          <p>HDR10+ 使用 ST 2094-40 动态元数据，可逐场景或逐帧给出显示映射信息。2025 年 HDR10+ Technologies 推出 HDR10+ Advanced，强调更精细的亮度映射、环境适配和游戏等扩展体验。</p>
+          <h3><span data-lang="zh">HDR10+：在 HDR10 上加入动态元数据</span><span data-lang="en">HDR10+: dynamic metadata added to HDR10</span></h3>
+          <p><span data-lang="zh">HDR10+ 使用 ST 2094-40 动态元数据，可逐场景或逐帧给出显示映射信息。2025 年 HDR10+ Technologies 推出 HDR10+ Advanced，强调更精细的亮度映射、环境适配和游戏等扩展体验。</span><span data-lang="en">HDR10+ uses ST 2094-40 dynamic metadata to provide display-mapping information per scene or frame. HDR10+ Advanced, introduced by HDR10+ Technologies in 2025, emphasizes finer luminance mapping, ambient adaptation, gaming, and other extended experiences.</span></p>
           <div class="specs"><div class="spec"><small>EOTF</small>PQ / ST 2084</div><div class="spec"><small>元数据</small>动态 ST 2094-40</div><div class="spec"><small>授权</small>相对开放的认证生态</div><div class="spec"><small>适合</small>流媒体、电视、移动端</div></div>
         </div>
         <div class="tab-panel" id="tab-dv" role="tabpanel">
-          <h3>Dolby Vision：动态元数据与端到端显示映射</h3>
-          <p>Dolby Vision 以逐场景/逐帧动态元数据和 Dolby 专有的显示映射链路为核心。元数据分层（L1 自动动态亮度、L2/L8 手动 Trim、L6 可选 MaxCLL/MaxFALL），允许调色师精确控制不同终端能力下的再现效果。常见发行链路多为 PQ / ST 2084，但 Dolby Vision 也有 HLG 兼容配置：Profile 8.4 使用 HLG base layer、BT.2020、HEVC Main10，并叠加 Dolby Vision RPU 元数据，非 Dolby Vision 设备可按 HLG 基础层显示。</p>
+          <h3><span data-lang="zh">Dolby Vision：动态元数据与端到端显示映射</span><span data-lang="en">Dolby Vision: dynamic metadata and end-to-end display mapping</span></h3>
+          <p><span data-lang="zh">Dolby Vision 以逐场景/逐帧动态元数据和 Dolby 专有的显示映射链路为核心。元数据分层（L1 自动动态亮度、L2/L8 手动 Trim、L6 可选 MaxCLL/MaxFALL），允许调色师精确控制不同终端能力下的再现效果。常见发行链路多为 PQ / ST 2084，但 Dolby Vision 也有 HLG 兼容配置：Profile 8.4 使用 HLG base layer、BT.2020、HEVC Main10，并叠加 Dolby Vision RPU 元数据，非 Dolby Vision 设备可按 HLG 基础层显示。</span><span data-lang="en">Dolby Vision centers on per-scene or per-frame dynamic metadata and Dolby's proprietary display-mapping chain. Its metadata levels include automated dynamic luminance in L1, manual trims in L2/L8, and optional MaxCLL/MaxFALL in L6, allowing colorists to control reproduction across different display capabilities. Most delivery paths use PQ/ST 2084, but Profile 8.4 uses an HLG base layer with BT.2020 and HEVC Main10 plus Dolby Vision RPU metadata, allowing non-Dolby devices to display the HLG base layer.</span></p>
           <div class="specs">
             <div class="spec"><small>传递函数</small>PQ / ST 2084；Profile 8.4 可为 HLG base layer</div>
-            <div class="spec"><small>元数据</small>动态：Dolby / ST 2094-10</div>
+            <div class="spec"><small><span data-lang="zh">元数据</span><span data-lang="en">Metadata</span></small><span data-lang="zh">Dolby Vision 私有 RPU；不同于 ST 2094-10 Application #1</span><span data-lang="en">Proprietary Dolby Vision RPU; distinct from ST 2094-10 Application #1</span></div>
             <div class="spec"><small>位深</small>最高 12 bit 工作流</div>
             <div class="spec"><small>授权</small>专有认证生态（厂商付费）</div>
           </div>
           <div class="warn" style="margin-top:14px">
-            <b>Dolby Vision 2（2025 年 9 月发布）新特性：</b>
+            <b><span data-lang="zh">Dolby Vision 2（2025 年 9 月发布）新特性：</span><span data-lang="en">Dolby Vision 2 features (announced September 2025):</span></b>
             <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted);line-height:1.8">
-              <li><b style="color:var(--ink)">Precision Black</b>：精细黑位控制，极暗场景不再因 ABL 崩色；</li>
-              <li><b style="color:var(--ink)">Light Sense</b>：结合环境光传感器动态调整内容映射，适应不同观影环境；</li>
-              <li><b style="color:var(--ink)">Authentic Motion</b>：运动场景与游戏内容的高帧率优化；</li>
-              <li><b style="color:var(--ink)">Content Intelligence</b>：内容智能分析，自动优化场景分类与映射策略。</li>
+              <li><b style="color:var(--ink)">Precision Black</b><span data-lang="zh">：精细黑位控制，改善极暗场景表现；</span><span data-lang="en">: refined black-level control for very dark scenes.</span></li>
+              <li><b style="color:var(--ink)">Light Sense</b><span data-lang="zh">：结合环境光传感器动态调整内容映射，适应不同观影环境；</span><span data-lang="en">: adapts content mapping with ambient-light sensing.</span></li>
+              <li><b style="color:var(--ink)">Authentic Motion</b><span data-lang="zh">：运动场景与游戏内容的高帧率优化；</span><span data-lang="en">: motion handling and high-frame-rate optimization.</span></li>
+              <li><b style="color:var(--ink)">Content Intelligence</b><span data-lang="zh">：内容智能分析，自动优化场景分类与映射策略。</span><span data-lang="en">: content analysis for scene classification and mapping.</span></li>
             </ul>
           </div>
         </div>
         <div class="tab-panel" id="tab-hlg" role="tabpanel">
-          <h3>HLG：广播优先的相对 HDR</h3>
-          <p>HLG 由 BBC 与 NHK 推动，进入 BT.2100。它不依赖 HDR10 式元数据；非 HDR 终端可把 HLG 当作类似 SDR 的信号显示，通常不会完全崩坏，适合直播和电视播出。</p>
+          <h3><span data-lang="zh">HLG：广播优先的相对 HDR</span><span data-lang="en">HLG: broadcast-oriented relative HDR</span></h3>
+          <p><span data-lang="zh">HLG 由 BBC 与 NHK 推动，进入 BT.2100。它不依赖 HDR10 式元数据；非 HDR 终端可把 HLG 当作类似 SDR 的信号显示，通常不会完全崩坏，适合直播和电视播出。</span><span data-lang="en">Developed by the BBC and NHK and standardized in BT.2100, HLG does not depend on HDR10-style metadata. A non-HDR display can treat the signal in an SDR-like way without catastrophic failure, making it well suited to live and broadcast television.</span></p>
           <div class="specs"><div class="spec"><small>传递函数</small>HLG OETF/OOTF</div><div class="spec"><small>元数据</small>可无</div><div class="spec"><small>兼容性</small>较适合广播 SDR 共存</div><div class="spec"><small>适合</small>直播、体育、新闻、电视台</div></div>
         </div>
         <div class="tab-panel" id="tab-vivid" role="tabpanel">
-          <h3>HDR Vivid：中国超高清产业的动态元数据 HDR 方案</h3>
-          <p>HDR Vivid 由中国超高清视频产业联盟（CUVA）制定，标准编号 CUVA 005-2021，并于 2021 年 3 月正式发布。它同时支持 PQ 和 HLG 两种传递函数，通过动态元数据实现场景级亮度映射、SDR 下转兼容及多终端自适应显示。</p>
+          <h3><span data-lang="zh">HDR Vivid：中国超高清产业的动态元数据 HDR 方案</span><span data-lang="en">HDR Vivid: China's dynamic-metadata HDR system</span></h3>
+          <p><span data-lang="zh">HDR Vivid 由中国超高清视频产业联盟（CUVA）制定，标准编号 CUVA 005-2021，并于 2021 年 3 月正式发布。它同时支持 PQ 和 HLG 两种传递函数，通过动态元数据实现场景级亮度映射、SDR 下转兼容及多终端自适应显示。</span><span data-lang="en">HDR Vivid was developed by the China Ultra HD Video Industry Alliance (CUVA) as CUVA 005-2021 and released in March 2021. It supports both PQ and HLG, using dynamic metadata for scene-level luminance mapping, SDR down-conversion compatibility, and adaptation across display types.</span></p>
           <div class="grid-2" style="gap:12px;margin-top:12px">
             <div>
               <div class="specs" style="margin-bottom:12px">
@@ -1070,39 +1198,61 @@
                 <div class="spec"><small>位深</small>常见 10 bit</div>
                 <div class="spec"><small>标准机构</small>CUVA（中国超高清视频产业联盟）</div>
               </div>
-              <p style="font-size:13px;margin:0"><b>动态元数据功能：</b>逐场景提供亮度范围、色域范围与映射参数；支持 SDR 回退——非 HDR 终端可通过内嵌 SDR 层正常播放；支持显示设备能力自适应，不同峰值与色域终端均可获得优化映射。</p>
+              <p style="font-size:13px;margin:0"><span data-lang="zh"><b>动态元数据功能：</b>逐场景提供亮度范围、色域范围与映射参数；支持 SDR 回退——非 HDR 终端可通过内嵌 SDR 层正常播放；支持显示设备能力自适应，不同峰值与色域终端均可获得优化映射。</span><span data-lang="en"><b>Dynamic-metadata functions:</b> per-scene luminance range, gamut range, and mapping parameters; SDR fallback through an embedded SDR layer; and adaptation to displays with different peaks and gamuts.</span></p>
             </div>
             <div>
-              <p style="font-size:13px;margin:0 0 8px"><b>产业链覆盖：</b></p>
+              <p style="font-size:13px;margin:0 0 8px"><b><span data-lang="zh">产业链覆盖：</span><span data-lang="en">Industry coverage:</span></b></p>
               <ul style="font-size:13px;padding-left:18px;margin:0;color:var(--muted);line-height:1.9">
-                <li>内容制作：央视、爱奇艺、优酷、腾讯视频等</li>
-                <li>传输分发：IPTV、互联网 OTT 平台、有线/卫星</li>
-                <li>终端设备：国产主流电视品牌（海信、TCL、创维等）</li>
-                <li>4K/8K 超高清频道：4K 超高清频道（CCTV 4K）</li>
+                <li><span data-lang="zh">内容制作：央视、爱奇艺、优酷、腾讯视频等</span><span data-lang="en">Content: CCTV, iQIYI, Youku, Tencent Video, and others</span></li>
+                <li><span data-lang="zh">传输分发：IPTV、互联网 OTT 平台、有线/卫星</span><span data-lang="en">Distribution: IPTV, OTT, cable, and satellite</span></li>
+                <li><span data-lang="zh">终端设备：国产主流电视品牌（海信、TCL、创维等）</span><span data-lang="en">Devices: major Chinese TV brands including Hisense, TCL, and Skyworth</span></li>
+                <li><span data-lang="zh">4K/8K 超高清频道：4K 超高清频道（CCTV 4K）</span><span data-lang="en">UHD channels: including CCTV 4K</span></li>
               </ul>
             </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-eclipsa" role="tabpanel">
+          <h3><span data-lang="zh">Eclipsa Video：围绕参考白和 Headroom 的开放动态元数据</span><span data-lang="en">Eclipsa Video: open dynamic metadata built around reference white and headroom</span></h3>
+          <p><span data-lang="zh">Eclipsa Video 采用 <b>SMPTE ST 2094-50 公开委员会草案（Application #5）</b>所描述的动态元数据方案，由 Google、Apple、NBCUniversal 等推动，并由 HDR10+ Technologies 启动相关项目。该文档目前不应称为已发布的现行 SMPTE 标准。它不是简单追求更高峰值亮度，而是把“标准内容的参考白”和“参考白以上的 HDR headroom”显式写进适配逻辑，让同一屏幕上的 SDR、网页 UI 与 HDR 视频更稳定地共存。</span><span data-lang="en">Eclipsa Video uses the dynamic-metadata approach described by the <b>SMPTE ST 2094-50 public committee draft (Application #5)</b>. It is promoted by Google, Apple, NBCUniversal, and others, with the related program launched by HDR10+ Technologies. The document should not currently be described as a published, active SMPTE standard. Rather than simply pursuing a higher peak, it explicitly incorporates standard-content reference white and HDR headroom above that anchor, helping SDR, web UI, and HDR video coexist more consistently on one display.</span></p>
+          <div class="grid-2" style="gap:12px;margin-top:12px">
+            <div class="card" style="padding:14px">
+              <span class="tag" style="background:var(--gold)">Reference White Anchor</span>
+              <h3 style="font-size:17px;margin-top:8px"><span data-lang="zh">先固定“普通白”的锚点</span><span data-lang="en">First anchor ordinary white</span></h3>
+              <p style="font-size:13px;margin:0"><span data-lang="zh">显示器先知道标准内容、网页背景或普通白应该落在哪个亮度基准上；参考白以上的亮度能力，才留给 HDR 高光。这样 HDR 视频插在网页或系统界面里时，不会把周围 SDR 内容一起拉亮或压暗。</span><span data-lang="en">The display first knows where standard content, a web background, or ordinary white should sit. Luminance capacity above reference white is then reserved for HDR highlights, preventing embedded HDR video from lifting or dimming surrounding SDR content.</span></p>
+            </div>
+            <div class="card" style="padding:14px">
+              <span class="tag" style="background:var(--cyan)">Headroom-Adaptive Gain Curves</span>
+              <h3 style="font-size:17px;margin-top:8px"><span data-lang="zh">再按设备余量改映射曲线</span><span data-lang="en">Then adapt the curve to device headroom</span></h3>
+              <p style="font-size:13px;margin:0"><span data-lang="zh">创作者可以给视频附带适配曲线。显示端如果 headroom 不足，就按曲线压缩阴影和中间调、保留高光层次；如果屏幕余量更大，就能更接近创作者指定的 HDR 外观。</span><span data-lang="en">Creators can attach adaptation curves to the video. A display with limited headroom can use them to compress shadows and midtones while preserving highlight structure; a display with more headroom can approach the intended HDR appearance more closely.</span></p>
+            </div>
+          </div>
+          <div class="specs" style="margin-top:12px">
+            <div class="spec"><small><span data-lang="zh">文档基础</span><span data-lang="en">Document basis</span></small><span data-lang="zh">SMPTE ST 2094-50 公开委员会草案 · Application #5</span><span data-lang="en">SMPTE ST 2094-50 public committee draft · Application #5</span></div>
+            <div class="spec"><small>核心元数据</small>Reference White Anchor + Headroom-Adaptive Gain Curves</div>
+            <div class="spec"><small>目标场景</small>浏览器、手机、笔记本、混合 SDR/HDR 界面</div>
+            <div class="spec"><small>生态</small>开放 HDR 视频项目，HDR10+ Technologies 负责项目推进</div>
           </div>
         </div>
 
         <div class="section-head" id="compare" style="margin-top:42px">
           <div>
-            <h3>综合对比表</h3>
-            <p>搜索或点击表头排序，快速比较格式差异。</p>
+            <h3><span data-lang="zh">综合对比表</span><span data-lang="en">Format comparison</span></h3>
+            <p><span data-lang="zh">搜索或点击表头排序，快速比较格式差异。</span><span data-lang="en">Search or sort by a table heading to compare formats quickly.</span></p>
           </div>
           <div class="controls"><input id="formatSearch" type="search" placeholder="搜索格式、元数据、场景..."></div>
         </div>
 
         <div class="card" style="margin-bottom:18px">
-          <h3 style="margin-bottom:14px">MaxCLL 与 MaxFALL：静态元数据的核心参数</h3>
+          <h3 style="margin-bottom:14px"><span data-lang="zh">MaxCLL 与 MaxFALL：静态元数据的核心参数</span><span data-lang="en">MaxCLL and MaxFALL: core static-metadata parameters</span></h3>
           <div class="grid-2" style="gap:16px;align-items:start">
             <div>
-              <p><b style="color:var(--gold)">MaxCLL</b>（Maximum Content Light Level）：整段内容中<b>单个像素出现的最高亮度</b>，单位 cd/m²。显示端用它判断高光峰值，决定映射曲线的上限锚点。</p>
-              <p><b style="color:var(--cyan)">MaxFALL</b>（Maximum Frame-Average Light Level）：整段内容中<b>帧平均亮度的最高值</b>。反映"最亮的一帧总体发光量"，用于控制 OLED 等依赖 ABL 的显示器，防止过热或亮度骤降。</p>
-              <p style="font-size:13px;color:var(--muted)">典型值：影院母版 MaxCLL ≈ 1000–4000 nit，MaxFALL ≈ 100–400 nit。HDR10 用这两个值作为全片唯一的静态描述；HDR10+ / Dolby Vision 则在此基础上叠加逐场景动态元数据。</p>
+              <p><span data-lang="zh"><b style="color:var(--gold)">MaxCLL</b>（Maximum Content Light Level）：整段内容中<b>单个像素出现的最高亮度</b>，单位 cd/m²。显示端用它判断高光峰值，决定映射曲线的上限锚点。</span><span data-lang="en"><b style="color:var(--gold)">MaxCLL</b> (Maximum Content Light Level) is the <b>highest luminance reached by an individual pixel</b> anywhere in the program, in cd/m². A display can use it as an upper anchor when mapping highlights.</span></p>
+              <p><span data-lang="zh"><b style="color:var(--cyan)">MaxFALL</b>（Maximum Frame-Average Light Level）：整段内容中<b>帧平均亮度的最高值</b>，是显示端可参考的内容亮度描述，可辅助判断全屏亮度负载与映射策略。面板保护、热管理和 ABL 如何动作属于终端自身策略，并非由 MaxFALL 直接控制。</span><span data-lang="en"><b style="color:var(--cyan)">MaxFALL</b> (Maximum Frame-Average Light Level) is the <b>highest frame-average luminance</b> in the program. It describes content luminance that a display may consult when assessing full-screen load and mapping strategy. Panel protection, thermal management, and ABL behavior remain display policies and are not directly controlled by MaxFALL.</span></p>
+              <p style="font-size:13px;color:var(--muted)"><span data-lang="zh">典型值：影院母版 MaxCLL ≈ 1000–4000 nit，MaxFALL ≈ 100–400 nit。HDR10 用这两个值作为全片唯一的静态描述；HDR10+ / Dolby Vision 则在此基础上叠加逐场景动态元数据。</span><span data-lang="en">Typical values: MaxCLL ≈ 1,000–4,000 nits and MaxFALL ≈ 100–400 nits for cinema masters. HDR10 uses them as program-wide static descriptions, while HDR10+ and Dolby Vision add scene-level dynamic metadata.</span></p>
             </div>
             <div>
               <div style="border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:#0d1015">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:10px">亮度时间轴示意（横轴=时间，纵轴=亮度）</div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><span data-lang="zh">亮度时间轴示意（横轴=时间，纵轴=亮度）</span><span data-lang="en">Luminance timeline (x = time, y = luminance)</span></div>
                 <canvas id="metaCanvas" style="width:100%;height:120px;display:block"></canvas>
                 <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
                   <span style="color:var(--gold)">▬ MaxCLL（单帧峰值像素）</span>
@@ -1125,30 +1275,32 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>7. 技术词汇表</h2>
-            <p>把 HDR 学清楚，通常不是参数不够，而是这些词的边界混在一起。这里给出最短可用定义。</p>
+            <h2><span data-lang="zh">7. 技术词汇表</span><span data-lang="en">7. Technical glossary</span></h2>
+            <p><span data-lang="zh">理解 HDR 时，常见问题不是缺少参数，而是这些术语的边界混在一起。这里给出最短可用定义。</span><span data-lang="en">The common difficulty in understanding HDR is not a lack of parameters but blurred boundaries between terms. These are the shortest useful definitions.</span></p>
           </div>
-          <div class="note">页面中的虚线词也可以悬浮查看解释。</div>
+          <div class="note"><span data-lang="zh">页面中的虚线词也可以悬浮查看解释。</span><span data-lang="en">Hover over dotted terms elsewhere on the page for definitions.</span></div>
         </div>
         <div class="glossary">
-          <div class="term"><strong>OETF</strong><p>场景光到电信号。摄像机或制作编码端使用。</p></div>
-          <div class="term"><strong>EOTF</strong><p>电信号到显示光。监视器/电视的解码显示函数。</p></div>
-          <div class="term"><strong>OOTF</strong><p>场景光到显示光的整体系统观感，包含创作意图与观看环境补偿。</p></div>
-          <div class="term"><strong>PQ</strong><p>基于人眼感知的绝对亮度 EOTF，标准上限 10,000 nit。</p></div>
-          <div class="term"><strong>HLG</strong><p>相对 HDR 传递函数，暗部 gamma、亮部 log，适合广播兼容。</p></div>
-          <div class="term"><strong>MaxCLL</strong><p>整段内容中最高像素亮度，用于显示端判断高光映射。</p></div>
-          <div class="term"><strong>MaxFALL</strong><p>最大帧平均亮度，反映一帧总体发光负载。</p></div>
-          <div class="term"><strong>色彩体积</strong><p>色域面积与亮度范围共同构成，决定“亮而有色”的可表达范围。</p></div>
+          <div class="term"><strong>OETF</strong><p><span data-lang="zh">场景光到电信号。摄像机或制作编码端使用。</span><span data-lang="en">Maps scene light to an electrical signal; used by cameras or production encoders.</span></p></div>
+          <div class="term"><strong>EOTF</strong><p><span data-lang="zh">电信号到显示光。监视器/电视的解码显示函数。</span><span data-lang="en">Maps an electrical signal to display light; the decoding function used by a monitor or TV.</span></p></div>
+          <div class="term"><strong>OOTF</strong><p><span data-lang="zh">场景光到显示光的整体系统观感，包含创作意图与观看环境补偿。</span><span data-lang="en">The overall scene-to-display-light relationship, including creative rendering and viewing-environment compensation.</span></p></div>
+          <div class="term"><strong>PQ</strong><p><span data-lang="zh">基于人眼感知的绝对亮度 EOTF，标准上限 10,000 nit。</span><span data-lang="en">A perceptually designed absolute-luminance EOTF with a 10,000-nit standard ceiling.</span></p></div>
+          <div class="term"><strong>HLG</strong><p><span data-lang="zh">相对 HDR 传递函数，暗部 gamma、亮部 log，适合广播兼容。</span><span data-lang="en">A relative HDR transfer system with a gamma-like lower region and logarithmic highlights, suited to broadcast compatibility.</span></p></div>
+          <div class="term"><strong>MaxCLL</strong><p><span data-lang="zh">整段内容中最高像素亮度，用于显示端判断高光映射。</span><span data-lang="en">The highest pixel luminance in a program, available to displays when determining highlight mapping.</span></p></div>
+          <div class="term"><strong>MaxFALL</strong><p><span data-lang="zh">最大帧平均亮度，反映一帧总体发光负载。</span><span data-lang="en">The maximum frame-average luminance, describing the overall light level of the brightest average frame.</span></p></div>
+          <div class="term"><strong><span data-lang="zh">参考白</span><span data-lang="en">Reference white</span></strong><p><span data-lang="zh">HDR 工作流中普通漫反射白或图形白的亮度锚点，BT.2408 推荐 203 nit。</span><span data-lang="en">The luminance anchor for ordinary diffuse or graphics white in an HDR workflow; BT.2408 recommends 203 nits.</span></p></div>
+          <div class="term"><strong>Headroom</strong><p><span data-lang="zh">显示峰值亮度高于参考白的余量，用于承载镜面反射、火焰、霓虹等局部高光。</span><span data-lang="en">Display capacity above reference white, used for local highlights such as specular reflections, flames, and neon.</span></p></div>
+          <div class="term"><strong><span data-lang="zh">色彩体积</span><span data-lang="en">Color volume</span></strong><p><span data-lang="zh">色域面积与亮度范围共同构成，决定“亮而有色”的可表达范围。</span><span data-lang="en">The combination of gamut and luminance range that determines which colors can remain saturated at different brightness levels.</span></p></div>
         </div>
       </div>
     </section>
 
     <section id="sources">
       <div class="wrap">
-        <h2>资料来源</h2>
+        <h2><span data-lang="zh">资料来源</span><span data-lang="en">Sources</span></h2>
         <div class="grid-2" style="gap:0">
           <ul class="sources">
-            <li>本地 PDF：<b>HDR Production_210705.pdf</b>，王亚明，《HDR制作、转换与播出》，2021。</li>
+            <li>本地 PDF：<a href="HDR%20Production_210705.pdf" target="_blank" rel="noreferrer">HDR Production_210705.pdf</a>，王亚明，《HDR制作、转换与播出》，2021。</li>
             <li><a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noreferrer">ITU-R BT.2100-3（2025-02）</a>：HDR-TV PQ 与 HLG 图像参数值，最新版本。</li>
             <li><a href="https://www.itu.int/rec/R-REC-BT.2390" target="_blank" rel="noreferrer">ITU-R BT.2390-9</a>：用于制作和国际节目交换的 HDR 电视技术报告。</li>
             <li><a href="https://www.itu.int/rec/R-REC-BT.2408" target="_blank" rel="noreferrer">ITU-R BT.2408-4</a>：HDR 电视制作操作实践指南（含 203 nit 参考白规定）。</li>
@@ -1157,11 +1309,12 @@
           </ul>
           <ul class="sources">
             <li><a href="https://www.itu.int/rec/R-REC-BT.709" target="_blank" rel="noreferrer">ITU-R BT.709</a> 与 <a href="https://www.itu.int/rec/R-REC-BT.2020" target="_blank" rel="noreferrer">BT.2020</a>：HDTV / UHDTV 色域原色与图像参数。</li>
-            <li>SMPTE ST 2084：PQ EOTF 规范；SMPTE ST 2086：母版显示色域元数据（MaxCLL/MaxFALL 容器）。</li>
-            <li>SMPTE ST 2094-10（Dolby）/ ST 2094-40（HDR10+）：动态元数据框架规范。</li>
-            <li>ARIB STD-B67：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
-            <li>CUVA 005-2021：HDR Vivid 动态元数据标准（中国超高清视频产业联盟）。</li>
-          <li><a href="https://hdr10plus.org/" target="_blank" rel="noreferrer">HDR10+ Technologies</a>、<a href="https://professional.dolby.com/tv/dolby-vision/" target="_blank" rel="noreferrer">Dolby Vision</a>、<a href="https://professionalsupport.dolby.com/s/article/Dolby-Vision-Recommended-Source-Formats" target="_blank" rel="noreferrer">Dolby Vision Recommended Source Formats</a>（Profile 8.4 HLG base layer）、<a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA / HDR Vivid</a> 官方技术资料。</li>
+            <li><a href="https://pub.smpte.org/latest/st2084/st2084-2014.pdf" target="_blank" rel="noreferrer">SMPTE ST 2084</a>：PQ EOTF 规范；<a href="https://pub.smpte.org/latest/st2086/st2086-2018.pdf" target="_blank" rel="noreferrer">SMPTE ST 2086</a>：母版显示色彩体积元数据（原色、白点、最大/最小亮度）；MaxCLL/MaxFALL 由 CTA-861.3 定义。</li>
+            <li><a href="https://pub.smpte.org/latest/st2094-10/st2094-10-2021.pdf" target="_blank" rel="noreferrer">SMPTE ST 2094-10</a>：Application #1 的参数化色彩体积变换元数据；它不等同于 Dolby Vision 私有 RPU 语法。<a href="https://pub.smpte.org/latest/st2094-40/st2094-40-2020.pdf" target="_blank" rel="noreferrer">ST 2094-40</a>：HDR10+ 使用的 Application #4 场景自适应动态元数据。</li>
+            <li><a href="https://www.arib.or.jp/english/html/overview/doc/2-STD-B67v2_0.pdf" target="_blank" rel="noreferrer">ARIB STD-B67</a>：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
+            <li><a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA 005-2021 / HDR Vivid</a>：中国超高清视频产业联盟动态元数据 HDR 标准。</li>
+            <li><a href="https://hdr10plus.org/" target="_blank" rel="noreferrer">HDR10+ Technologies</a>、<a href="https://professional.dolby.com/tv/dolby-vision/" target="_blank" rel="noreferrer">Dolby Vision</a>、<a href="https://professionalsupport.dolby.com/s/article/Dolby-Vision-Recommended-Source-Formats" target="_blank" rel="noreferrer">Dolby Vision Recommended Source Formats</a>（Profile 8.4 HLG base layer）官方技术资料。</li>
+            <li><a href="https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/" target="_blank" rel="noreferrer">Google Chromium Blog: Bringing a clearer, more consistent HDR video experience to Chrome</a>、<a href="https://github.com/SMPTE/st2094-50" target="_blank" rel="noreferrer">SMPTE ST 2094-50 public committee draft repository</a> 与 <a href="https://hdr10plus.org/wp-content/uploads/2026/05/EclipsaVideo-release-final.html" target="_blank" rel="noreferrer">HDR10+ Technologies: Eclipsa Video Program</a>：Eclipsa Video、Application #5、Reference White Anchor 与 Headroom-Adaptive Gain Curves 资料。</li>
           </ul>
         </div>
       </div>
@@ -1170,6 +1323,7 @@
 
   <script>
     const $ = (sel, root = document) => root.querySelector(sel);
+    const L = (zh, en) => document.documentElement.lang === "en" ? en : zh;
     const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
@@ -1276,7 +1430,7 @@
       $("#peakValue").textContent = `${peak.toLocaleString()} nit`;
       if ($("#statPeak")) $("#statPeak").textContent = `${peak.toLocaleString()} nit`;
       if ($("#statRatio")) $("#statRatio").textContent = `${ratio % 1 === 0 ? ratio : ratio.toFixed(1)}×`;
-      $("#rangeReadout").textContent = `当前 HDR 峰值：${peak.toLocaleString()} nit，比 SDR 参考白（100 nit）亮 ${ratio % 1 === 0 ? ratio : ratio.toFixed(1)} 倍`;
+      $("#rangeReadout").textContent = `当前 HDR 峰值：${peak.toLocaleString()} nit，是 SDR 峰值白（100 nit）的 ${ratio % 1 === 0 ? ratio : ratio.toFixed(1)} 倍`;
 
       const pad = { l: 64, r: 28, t: 28, b: 54 };
       ctx.clearRect(0, 0, w, h);
@@ -1449,7 +1603,7 @@
       oetf: {
         title: "OETF：拍摄/编码端",
         text: "OETF 把场景相对亮度变成视频信号。BT.709 是 SDR 摄像机伽玛；HLG 的 OETF 是 BT.2100 定义的 HDR 广播编码曲线。PQ 是显示亮度到码值的绝对亮度编码，可切到“PQ 编码”单独查看。",
-        note: "当前只看 OETF：Y 轴是归一化视频信号，不是 nit。这里保留 BT.709 与 HLG 两条真正的 OETF 曲线。",
+        note: "当前只看编码端：Y 轴是归一化视频信号，不是 nit。BT.709 与 HLG 是真正的场景 OETF；PQ 曲线是按 L×参考峰值换算后的编码参考，可在 ② 中取消其他曲线单独查看。",
         xLabel: "场景相对亮度 L",
         yLabel: "归一化视频信号 V",
         xKind: "signal",
@@ -1556,6 +1710,100 @@
     let gammaLogScale = true;
     let gammaPointer = null;
     let activeGammaMode = "oetf";
+    const gammaActiveCurves = {
+      oetf: ["bt709", "hlg", "pq"],
+      eotf: ["bt1886", "hlg", "pq"],
+      ootf: ["linear", "sdr", "hlg"]
+    };
+    const gammaCurveCatalog = {
+      oetf: {
+        hint: "OETF/编码端：BT.709 与 HLG 是场景相对 OETF；PQ 这里按 L×参考峰值换成 nit 后编码。",
+        curves: [
+          { id: "bt709", label: "BT.709 OETF", color: "#9a8cff", name: "BT.709 OETF", fn: x => bt709Oetf(x), unit: "" },
+          { id: "hlg", label: "HLG OETF", color: "#a9e55f", name: "HLG OETF", fn: x => hlgOetf(x), unit: "", anchors: [
+            { x: 1 / 12, label: "1/12" },
+            { x: .18, label: "18% 灰" },
+            { x: 1, label: "1.0" }
+          ] },
+          { id: "pq", label: "PQ 编码", color: "#46d9e8", name: "PQ inverse EOTF / L×参考峰值", fn: x => pqInverseEotf(x * Number($("#gammaHlgPeak").value)), unit: "", usesPeak: true, anchors: [
+            { x: () => 100 / Number($("#gammaHlgPeak").value), label: "100 nit" },
+            { x: () => 203 / Number($("#gammaHlgPeak").value), label: "203 nit" },
+            { x: () => 1000 / Number($("#gammaHlgPeak").value), label: "1000 nit" }
+          ] }
+        ]
+      },
+      eotf: {
+        hint: "EOTF/显示端：选择哪些显示解码曲线进入图表，HLG 峰值由右侧滑块控制。",
+        curves: [
+          { id: "bt1886", label: "BT.1886", color: "#ffd166", name: "BT.1886 EOTF / 100 nit", fn: x => 100 * bt1886Eotf(x), unit: "nit" },
+          { id: "hlg", label: "HLG EOTF", color: "#a9e55f", name: "HLG EOTF / 可调峰值", fn: x => hlgEotf(x, Number($("#gammaHlgPeak").value)), unit: "nit", usesPeak: true },
+          { id: "pq", label: "PQ EOTF", color: "#46d9e8", name: "PQ / ST 2084 EOTF", fn: x => pqEotf(x), unit: "nit" }
+        ]
+      },
+      ootf: {
+        hint: "OOTF/系统观感：选择线性参考、SDR 系统伽马或 HLG 可变系统伽马来比较整体反差。",
+        curves: [
+          { id: "linear", label: "线性参考", color: "rgba(255,255,255,.45)", name: "线性参考 / γ=1", fn: x => x, unit: "" },
+          { id: "sdr", label: "SDR γ≈1.2", color: "#ff6b7a", name: "SDR OOTF / γ≈1.2", fn: x => Math.pow(x, 1.2), unit: "" },
+          { id: "hlg", label: "HLG 可变γ", color: "#a9e55f", name: "HLG OOTF / 可变γ", fn: x => Math.pow(x, hlgGamma(Number($("#gammaHlgPeak").value))), unit: "", usesPeak: true }
+        ]
+      }
+    };
+
+    function selectedGammaLines() {
+      const catalog = gammaCurveCatalog[activeGammaMode];
+      const active = new Set(gammaActiveCurves[activeGammaMode]);
+      return catalog.curves.filter(curve => active.has(curve.id));
+    }
+
+    function getGammaModeConfig() {
+      const base = gammaModes[activeGammaMode];
+      let lines = selectedGammaLines();
+      const onlyPqEncode = activeGammaMode === "oetf" && lines.length === 1 && lines[0].id === "pq";
+      const onlyHlgEncode = activeGammaMode === "oetf" && lines.length === 1 && lines[0].id === "hlg";
+      if (onlyPqEncode) {
+        lines = [{
+          ...lines[0],
+          name: "ST 2084 inverse EOTF",
+          fn: nit => pqInverseEotf(nit),
+          usesPeak: false,
+          anchors: [
+            { x: 100, label: "100 nit" },
+            { x: 203, label: "203 nit" },
+            { x: 1000, label: "1000 nit" },
+            { x: 4000, label: "4000 nit" },
+            { x: 10000, label: "10000 nit" }
+          ]
+        }];
+      }
+      const usesPeak = lines.some(line => line.usesPeak);
+      return {
+        ...base,
+        title: onlyPqEncode ? "PQ 编码：显示亮度 → 码值" : (onlyHlgEncode ? "HLG 编码：场景亮度 → 码值" : base.title),
+        text: onlyPqEncode
+          ? "PQ / ST 2084 是 Display Referred 的绝对亮度体系。这里画的是 ST 2084 EOTF 的反函数：输入显示亮度 cd/m²，输出 PQ 归一化码值；它不是摄像机 OETF。"
+          : (onlyHlgEncode ? "HLG 的 OETF 是 Scene Referred：输入是场景相对亮度 E，输出是 HLG 信号 E′。低亮段用平方根保留暗部，高亮段用对数压缩高光；两段在 E=1/12、E′=0.5 处连续。" : base.text),
+        note: onlyPqEncode
+          ? "单独看 PQ 编码：横轴是显示亮度 cd/m²，纵轴是 PQ 码值。关键锚点：100 nit ≈ 0.508，203 nit ≈ 0.581，1000 nit ≈ 0.752，4000 nit ≈ 0.903。"
+          : (onlyHlgEncode ? "单独看 HLG 编码：横轴是场景相对亮度，纵轴是 HLG 码值。关键点：E=1/12 → E′=0.500；18% 灰约 E′=0.672；E=1 → E′=1。" : base.note),
+        xLabel: onlyPqEncode ? "输入显示亮度 / cd/m²" : base.xLabel,
+        yLabel: onlyPqEncode ? "PQ 归一化码值" : (onlyHlgEncode ? "HLG 归一化码值 E′" : base.yLabel),
+        xKind: onlyPqEncode ? "nit" : base.xKind,
+        lines,
+        showPeak: usesPeak || base.showPeak,
+        showScale: onlyPqEncode || base.yKind === "nit",
+        scaleLabel: "亮度刻度"
+      };
+    }
+
+    function renderGammaCurveControls() {
+      const catalog = gammaCurveCatalog[activeGammaMode];
+      const active = new Set(gammaActiveCurves[activeGammaMode]);
+      $("#gammaCurveTabs").innerHTML = catalog.curves.map(curve =>
+        `<button type="button" class="gammaCurve" data-curve="${curve.id}" aria-pressed="${active.has(curve.id) ? "true" : "false"}">${curve.label}</button>`
+      ).join("");
+      $("#gammaCurveHint").textContent = catalog.hint;
+    }
 
     function setPressedGroup(selector, activeValue, attr = "scale") {
       $$(selector).forEach(btn => {
@@ -1635,10 +1883,10 @@
     function drawGamma() {
       const canvas = $("#gammaCanvas");
       const { ctx, w, h } = resizeCanvas(canvas);
-      const mode = gammaModes[activeGammaMode];
+      const mode = getGammaModeConfig();
       const peak = Number($("#gammaHlgPeak").value);
       $("#gammaHlgPeakValue").textContent = `${peak} nit`;
-      $("#gammaPeakLabel").textContent = activeGammaMode === "encodeCompare" ? "PQ参考峰值" : "HLG峰值";
+      $("#gammaPeakLabel").textContent = activeGammaMode === "oetf" ? "PQ参考峰值" : "HLG峰值";
       $("#gammaModeTitle").textContent = mode.title;
       $("#gammaModeText").innerHTML = mode.text;
       $("#gammaModeNote").textContent = mode.note;
@@ -1668,19 +1916,20 @@
         ctx.fillStyle = line.color;
         ctx.fillText(line.name, xOf(labelX) + 7, clamp(labelY, pad.t + 12, h - pad.b - 8));
       });
-      if (mode.anchors) {
-        const line = mode.lines[0];
-        mode.anchors.forEach(anchor => {
-          const value = line.fn(anchor.x);
-          const x = xOf(anchor.x);
+      mode.lines.forEach(line => {
+        if (!line.anchors) return;
+        line.anchors.forEach(anchor => {
+          const anchorX = typeof anchor.x === "function" ? anchor.x() : anchor.x;
+          if (anchorX < 0 || anchorX > (mode.xKind === "nit" ? 10000 : 1)) return;
+          const value = line.fn(anchorX);
+          const x = xOf(anchorX);
           const y = yOf(value);
-          ctx.fillStyle = "#ffd166";
+          ctx.fillStyle = line.color;
           ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = "#dbe7f7";
-          const xLabel = mode.xKind === "nit" ? `${anchor.label} → ${value.toFixed(3)}` : `${anchor.label} → ${value.toFixed(3)}`;
-          ctx.fillText(xLabel, clamp(x + 6, pad.l, w - pad.r - 140), y - 8);
+          ctx.fillText(`${anchor.label} → ${value.toFixed(3)}`, clamp(x + 6, pad.l, w - pad.r - 150), y - 8);
         });
-      }
+      });
       if (gammaPointer !== null) {
         const x = xFromT(gammaPointer);
         const px = xOf(x);
@@ -2050,11 +2299,12 @@
 
     const tableRows = [
       { name: "SDR / BT.709", eotf: "BT.709 OETF + BT.1886 EOTF (γ≈2.4)", bit: "8", metadata: "无（固定显示环境假定）", gamut: "BT.709（35.9% CIE）", license: "ITU 开放广播标准", use: "标清/高清电视、电脑显示、传统广播（基准参考）" },
-      { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086, MaxCLL, MaxFALL", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
+      { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086 + MaxCLL/MaxFALL（CTA-861.3）", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
       { name: "HDR10+", eotf: "PQ / ST 2084", bit: "10", metadata: "动态：ST 2094-40，逐场景映射", gamut: "BT.2020 容器", license: "HDR10+ 认证生态（相对开放）", use: "流媒体、电视、移动端" },
-      { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：ST 2094-10 / Dolby RPU，逐帧映射", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
+      { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：Dolby Vision 私有 RPU，逐帧/逐场景映射；不等同于 ST 2094-10", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
       { name: "HLG", eotf: "HLG OETF + 可变系统γ", bit: "10/12", metadata: "可无，依靠识别符 / 约定", gamut: "BT.2020", license: "广播开放标准（BBC/NHK/ITU）", use: "直播、体育、新闻、电视播出" },
       { name: "HDR Vivid", eotf: "PQ 或 HLG（双模式）", bit: "常见 10", metadata: "动态：CUVA 005-2021", gamut: "BT.2020 容器", license: "中国超高清产业生态（CUVA）", use: "IPTV、OTT、国产终端、超高清平台" },
+      { name: "Eclipsa Video", eotf: "PQ / ST 2084，围绕显示 headroom 适配", bit: "常见 10 bit HEVC/AVC 工作流", metadata: "动态：SMPTE ST 2094-50 公开委员会草案 Application #5，Reference White Anchor 与 Headroom-Adaptive Gain Curves", gamut: "BT.2020 容器，常见 P3 内容", license: "开放 HDR 视频项目，HDR10+ Technologies 认证生态", use: "Chrome / Android / 移动端与混合 SDR-HDR 界面中的 HDR 视频" },
       { name: "SL-HDR1/2/3", eotf: "PQ/HLG 与 SDR 兼容重建", bit: "10", metadata: "动态或静态重建信息（ETSI TS 103 433）", gamut: "BT.709/BT.2020", license: "ETSI/Technicolor/Philips 相关", use: "SDR-HDR 兼容分发" }
     ];
     let sortKey = "name", sortAsc = true;
@@ -2103,12 +2353,31 @@
         b.classList.toggle("active", active);
         b.setAttribute("aria-pressed", active ? "true" : "false");
       });
+      renderGammaCurveControls();
       drawGamma();
     }));
+    $("#gammaCurveTabs").addEventListener("click", e => {
+      const btn = e.target.closest(".gammaCurve");
+      if (!btn) return;
+      const curveId = btn.dataset.curve;
+      const active = gammaActiveCurves[activeGammaMode];
+      const index = active.indexOf(curveId);
+      if (index >= 0 && active.length > 1) {
+        active.splice(index, 1);
+      } else if (index < 0) {
+        active.push(curveId);
+      }
+      renderGammaCurveControls();
+      const mode = getGammaModeConfig();
+      gammaLogScale = mode.showScale;
+      gammaPointer = null;
+      setPressedGroup(".gammaScaleOption", gammaLogScale ? "log" : "linear");
+      drawGamma();
+    });
     $("#gammaHlgPeak").addEventListener("input", drawGamma);
     $("#gammaCanvas").addEventListener("pointermove", e => {
       const rect = e.currentTarget.getBoundingClientRect();
-      gammaPointer = (e.clientX - rect.left - 70) / (rect.width - 98);
+      gammaPointer = (e.clientX - rect.left - 72) / (rect.width - 100);
       drawGamma();
     });
     $("#gammaCanvas").addEventListener("pointerleave", () => {
@@ -2177,10 +2446,10 @@
       const rect = e.currentTarget.getBoundingClientRect();
       const svgX = (e.clientX - rect.left) * (720 / rect.width);
       const svgY = (e.clientY - rect.top)  * (640 / rect.height);
-      const cx = (svgX - 70) / 760;
-      const cy = (595 - svgY) / 660;
+      const cx = (svgX - cieChart.left) / cieChart.scale;
+      const cy = (cieChart.bottom - svgY) / cieChart.scale;
       const el = $("#cieHoverInfo");
-      if (cx >= 0 && cx <= 0.85 && cy >= 0 && cy <= 0.9) {
+      if (cx >= 0 && cx <= cieChart.xMax && cy >= 0 && cy <= cieChart.yMax) {
         el.innerHTML = `<b style="color:var(--ink)">x = ${cx.toFixed(4)}, y = ${cy.toFixed(4)}</b>&ensp;·&ensp;CIE 1931 xy 色度坐标`;
       } else {
         el.textContent = "在色度图上移动鼠标可读取 xy 坐标";
@@ -2190,19 +2459,22 @@
       $("#cieHoverInfo").textContent = "在色度图上移动鼠标可读取 xy 坐标";
     });
 
-    /* Hero range-row: set SDR marker to correct log-scale position */
-    (function() {
-      const minLog = Math.log10(0.01), maxLog = Math.log10(10000);
-      const sdrPct = ((Math.log10(100) - minLog) / (maxLog - minLog) * 100).toFixed(1);
-      const row = document.querySelector(".range-row");
-      if (row) row.style.setProperty("--w", `${sdrPct}%`);
-    })();
-
     addEventListener("scroll", updateProgress, { passive: true });
     addEventListener("resize", redrawAll);
-    renderTable();
-    redrawAll();
-    updateProgress();
+    function applyLanguage(lang) {
+      const selected = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = selected === "en" ? "en" : "zh-CN";
+      document.title = selected === "en" ? "From SDR to HDR: The Evolution of Color Science | Color & Display Guide" : "SDR 到 HDR：色彩科学的演变 | 影像色彩与显示技术指南";
+      try { localStorage.setItem("guideLang", selected); } catch (error) {}
+      renderTable();
+      renderGammaCurveControls();
+      redrawAll();
+      updateProgress();
+    }
+    document.querySelectorAll(".lang-toggle .seg-lang").forEach(button => button.addEventListener("click", () => applyLanguage(button.dataset.set)));
+    let savedLanguage = "zh";
+    try { savedLanguage = localStorage.getItem("guideLang") || "zh"; } catch (error) {}
+    applyLanguage(savedLanguage);
   </script>
 </body>
 </html>

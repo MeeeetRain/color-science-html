@@ -564,10 +564,10 @@
         </div>
         <div class="output-panel">
           <div class="stats">
-            <div class="stat"><span>参考白 / Reference White</span><strong id="rw-final">203 nits</strong></div>
-            <div class="stat"><span>有效峰值 / Effective Peak</span><strong id="peak-eff">1000 nits</strong></div>
-            <div class="stat"><span>高光余量 / Headroom</span><strong id="headroom">3.0x</strong></div>
-            <div class="stat"><span>压缩起点 / Roll-off Start</span><strong id="rolloff-start">1000 nits</strong></div>
+            <div class="stat"><span><span data-lang="zh">参考白</span><span data-lang="en">Reference White</span></span><strong id="rw-final">203 nits</strong></div>
+            <div class="stat"><span><span data-lang="zh">有效峰值</span><span data-lang="en">Effective Peak</span></span><strong id="peak-eff">1000 nits</strong></div>
+            <div class="stat"><span><span data-lang="zh">高光余量</span><span data-lang="en">Headroom</span></span><strong id="headroom">3.0x</strong></div>
+            <div class="stat"><span><span data-lang="zh">压缩起点</span><span data-lang="en">Roll-off Start</span></span><strong id="rolloff-start">1000 nits</strong></div>
           </div>
           <div class="chart">
             <svg viewBox="0 0 720 360" role="img" aria-label="Tone mapping 曲线">
@@ -602,10 +602,10 @@
             <div class="hover-tip" id="hover-tip"></div>
           </div>
           <div class="readouts">
-            <div class="readout"><span>参考白输入 / 203 Input</span><strong id="rw-anchor">203 → 203 nits</strong></div>
-            <div class="readout"><span>中亮度输入 / 1000 Input</span><strong id="mid-anchor">1000 → 1000 nits</strong></div>
-            <div class="readout"><span>高光输入 / 10000 Highlight</span><strong id="highlight-anchor">10000 → 1000 nits</strong></div>
-            <div class="readout"><span>白点增益 / White Gain</span><strong id="white-gain">1.00x</strong></div>
+            <div class="readout"><span><span data-lang="zh">参考白输入</span><span data-lang="en">203 Input</span></span><strong id="rw-anchor">203 → 203 nits</strong></div>
+            <div class="readout"><span><span data-lang="zh">中亮度输入</span><span data-lang="en">1000 Input</span></span><strong id="mid-anchor">1000 → 1000 nits</strong></div>
+            <div class="readout"><span><span data-lang="zh">高光输入</span><span data-lang="en">10000 Highlight</span></span><strong id="highlight-anchor">10000 → 1000 nits</strong></div>
+            <div class="readout"><span><span data-lang="zh">白点增益</span><span data-lang="en">White Gain</span></span><strong id="white-gain">1.00x</strong></div>
           </div>
           <p class="lab-note" id="lab-note"></p>
         </div>
@@ -688,88 +688,88 @@
 
     <section class="section" id="pipeline">
       <div class="section-head">
-        <h2>电视内的色彩处理流程（HDR 输入）</h2>
-        <p>上面的亮度控制逻辑不是孤立的一条曲线，它嵌在电视 SoC 的完整色彩管线里。下面按信号流动顺序走一遍：哪一步该做什么、绝对不能做什么，以及本页的 RW / Peak_eff / tone curve 分别接在哪里。</p>
+        <h2><span data-lang="zh">电视内的色彩处理流程（HDR 输入）</span><span data-lang="en">The TV color pipeline (HDR input)</span></h2>
+        <p><span data-lang="zh">上面的亮度控制逻辑不是孤立的一条曲线，它嵌在电视 SoC 的完整色彩管线里。下面按信号流动顺序走一遍：哪一步该做什么、绝对不能做什么，以及本页的 RW / Peak_eff / tone curve 分别接在哪里。</span><span data-lang="en">The brightness logic above is not an isolated curve; it lives inside the TV SoC's full color pipeline. The following stages trace the signal in order, showing what each stage should and must not do, and where RW, Peak_eff, and the tone curve connect.</span></p>
       </div>
       <div class="pipe">
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>① 解码与色度上采样</b>
-            <span class="pipe-tag">YCbCr 4:2:0 · 限范围</span>
+            <b><span data-lang="zh">① 解码与色度上采样</span><span data-lang="en">① Decode and chroma upsample</span></b>
+            <span class="pipe-tag"><span data-lang="zh">YCbCr 4:2:0 · 限范围</span><span data-lang="en">YCbCr 4:2:0 · limited range</span></span>
           </div>
           <div class="pipe-body">
-            <p>HDMI / 流媒体解码后通常是 10-bit YCbCr 4:2:0、BT.2020-nc、PQ 编码、限范围（64–940）。先做色度 4:2:0 → 4:4:4 上采样，再展开到全范围。</p>
-            <p class="pipe-key"><b>要点：</b>这一步不做任何"亮度"操作。YCbCr 的 Y' 不是真实亮度（non-constant luminance），在这里调亮会顺带改变色度、引起色相偏移。</p>
+            <p><span data-lang="zh">HDMI / 流媒体解码后通常是 10-bit YCbCr 4:2:0、BT.2020-nc、PQ 编码、限范围（64–940）。先做色度 4:2:0 → 4:4:4 上采样，再展开到全范围。</span><span data-lang="en">Decoded HDMI or streaming video is commonly 10-bit YCbCr 4:2:0, BT.2020-ncl, PQ encoded, and limited range (64–940). First upsample chroma from 4:2:0 to 4:4:4, then expand to full range.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>这一步不做任何"亮度"操作。YCbCr 的 Y' 不是真实亮度（non-constant luminance），在这里调亮会顺带改变色度、引起色相偏移。</span><span data-lang="en"><b>Key point:</b> do not perform brightness operations here. Y' in non-constant-luminance YCbCr is not physical luminance; lifting it at this stage also changes chroma and can shift hue.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>② 矩阵变换 + EOTF 线性化</b>
-            <span class="pipe-tag">进入线性光 RGB</span>
+            <b><span data-lang="zh">② 矩阵变换 + EOTF 线性化</span><span data-lang="en">② Matrix conversion + EOTF linearization</span></b>
+            <span class="pipe-tag"><span data-lang="zh">进入线性光 RGB</span><span data-lang="en">Enter linear-light RGB</span></span>
           </div>
           <div class="pipe-body">
-            <p>YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到相对于 10,000 cd/m² 标尺的线性光 RGB 分量，定义范围为 0–10,000 cd/m²。三个分量不能各自直接当作 nit 值；绝对亮度 Y 还需结合信号白点及 RGB→Y 关系计算。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</p>
-            <p class="pipe-key"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的低亮度细节会量化成 banding，也会让白点增益和 shoulder 过渡显得粗糙。</p>
+            <p><span data-lang="zh">YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到相对于 10,000 cd/m² 标尺的线性光 RGB 分量，定义范围为 0–10,000 cd/m²。三个分量不能各自直接当作 nit 值；绝对亮度 Y 还需结合信号白点及 RGB→Y 关系计算。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</span><span data-lang="en">Convert YCbCr to R'G'B' with the BT.2020 matrix, then apply the ST 2084 PQ EOTF (1D LUT) to obtain linear-light RGB components referenced to the 10,000 cd/m² scale, whose defined range is 0–10,000 cd/m². The three components are not independent nit values; absolute luminance Y must be calculated using the signal white point and the RGB-to-Y relationship. HLG input is converted into the same linear domain using the BT.2100 OOTF.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的低亮度细节会量化成 banding，也会让白点增益和 shoulder 过渡显得粗糙。</span><span data-lang="en"><b>Key point:</b> all subsequent luminance and color decisions must operate in linear light. The internal pipeline should use at least 16-bit floating point or equivalent fixed-point precision, otherwise 0.1–1 nit detail can quantize into banding and make white-gain and shoulder transitions coarse.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>③ 元数据解析 + 帧统计</b>
-            <span class="pipe-tag">控制面</span>
+            <b><span data-lang="zh">③ 元数据解析 + 帧统计</span><span data-lang="en">③ Metadata parsing + frame statistics</span></b>
+            <span class="pipe-tag"><span data-lang="zh">控制面</span><span data-lang="en">Control plane</span></span>
           </div>
           <div class="pipe-body">
-            <p>解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision，以及 SMPTE ST 2094-50 公开委员会草案 Application #5 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</p>
-            <p class="pipe-key"><b>要点：</b>真机中的高光窗口来自实时统计，而不是用户手动控制。本文 demo 将窗口固定在 10%，让唯一的用户亮度意图同时进入 RW_final 与 Peak_cap 两条控制链路。</p>
+            <p><span data-lang="zh">解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision，以及 SMPTE ST 2094-50 公开委员会草案 Application #5 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</span><span data-lang="en">Parse static metadata (MaxCLL / MaxFALL and mastering-display data) and dynamic metadata (HDR10+, Dolby Vision, and the Reference White Anchor in the SMPTE ST 2094-50 public committee draft, Application #5). In parallel, collect a frame histogram, APL, highlight-pixel share, and scene-cut detection. Feed the statistics into the ABL power model to obtain Peak_eff for the frame.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>真机中的高光窗口来自实时统计，而不是用户手动控制。本文 demo 将窗口固定在 10%，让唯一的用户亮度意图同时进入 RW_final 与 Peak_cap 两条控制链路。</span><span data-lang="en"><b>Key point:</b> on a real TV, highlight-window size comes from live statistics rather than a user control. This demo fixes it at 10%, allowing one brightness-intent control to feed both RW_final and Peak_cap.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
             <b>④ Tone Mapping</b>
-            <span class="pipe-tag">线性光 RGB · 本页核心</span>
+            <span class="pipe-tag"><span data-lang="zh">线性光 RGB · 本页核心</span><span data-lang="en">Linear-light RGB · core stage</span></span>
           </div>
           <div class="pipe-body">
-            <p>在线性光域执行白点增益 + 动态 shoulder——就是「计算链路」生成的那条曲线。工程关键：<b>不要逐通道（per-channel R/G/B）套曲线</b>，高光会偏色（白炽灯变黄、天空转青）。正确做法是取亮度代理 m = max(R,G,B)（或 ICtCp 的 I 通道），算增益 g = T(m) / m，再三通道同乘 g，保住色相与饱和度比例。</p>
-            <p class="pipe-key"><b>要点：</b>曲线每帧由控制面更新成 1D LUT。50% 亮度时 0-1000 nits LUT 等于 1:1；超过 50% 时参考白提高，shoulder 起点从 1000 nits 平滑提前，避免 203-1000 nits 区域在刚调亮时反而变暗。</p>
+            <p><span data-lang="zh">在线性光域执行白点增益 + 动态 shoulder——就是「计算链路」生成的那条曲线。工程关键：<b>不要逐通道（per-channel R/G/B）套曲线</b>，高光会偏色（白炽灯变黄、天空转青）。正确做法是取亮度代理 m = max(R,G,B)（或 ICtCp 的 I 通道），算增益 g = T(m) / m，再三通道同乘 g，保住色相与饱和度比例。</span><span data-lang="en">Apply white gain and the dynamic shoulder in linear light using the curve generated by the calculation path. Crucially, <b>do not apply the curve independently per R/G/B channel</b>, which shifts highlight hues. Instead, derive a luminance proxy m = max(R,G,B), or use ICtCp I, calculate g = T(m) / m, and multiply all three channels by the same gain to preserve hue and saturation ratios.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>曲线每帧由控制面更新成 1D LUT。50% 亮度时 0-1000 nits LUT 等于 1:1；超过 50% 时参考白提高，shoulder 起点从 1000 nits 平滑提前，避免 203-1000 nits 区域在刚调亮时反而变暗。</span><span data-lang="en"><b>Key point:</b> the control plane updates the curve as a 1D LUT each frame. At 50% brightness, the 0–1,000 nit LUT is 1:1. Above 50%, reference white rises and the shoulder begins progressively earlier, preventing the 203–1,000 nit region from becoming darker when brightness first increases.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>⑤ 色域映射</b>
-            <span class="pipe-tag">线性光 RGB</span>
+            <b><span data-lang="zh">⑤ 色域映射</span><span data-lang="en">⑤ Gamut mapping</span></b>
+            <span class="pipe-tag"><span data-lang="zh">线性光 RGB</span><span data-lang="en">Linear-light RGB</span></span>
           </div>
           <div class="pipe-body">
-            <p>BT.2020 只是容器，内容实际多为 P3 体积；面板原生约 90–98% P3。用 3×3 矩阵 + 边界软压缩（或 3D LUT）把超出面板色域的颜色压回来，避免硬裁剪让饱和色丢掉层次。</p>
-            <p class="pipe-key"><b>要点：</b>顺序在 tone mapping 之后——亮度改变后可显示的色域体积也变了（越亮可用饱和度越小），先 tone map 才知道每个像素真正落在哪个亮度层。</p>
+            <p><span data-lang="zh">BT.2020 只是容器，内容实际多为 P3 体积；面板原生约 90–98% P3。用 3×3 矩阵 + 边界软压缩（或 3D LUT）把超出面板色域的颜色压回来，避免硬裁剪让饱和色丢掉层次。</span><span data-lang="en">BT.2020 is a container; actual content is commonly mastered within a P3 volume, while panels natively cover roughly 90–98% of P3. Use a 3×3 matrix plus soft boundary compression, or a 3D LUT, to bring out-of-gamut colors back without hard clipping saturated detail.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>顺序在 tone mapping 之后——亮度改变后可显示的色域体积也变了（越亮可用饱和度越小），先 tone map 才知道每个像素真正落在哪个亮度层。</span><span data-lang="en"><b>Key point:</b> this follows tone mapping because the available color volume changes with luminance. Tone mapping must first establish the luminance layer in which each pixel will actually appear.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>⑥ 图形 / UI 合成</b>
-            <span class="pipe-tag">视频平面 + 图形平面</span>
+            <b><span data-lang="zh">⑥ 图形 / UI 合成</span><span data-lang="en">⑥ Graphics / UI composition</span></b>
+            <span class="pipe-tag"><span data-lang="zh">视频平面 + 图形平面</span><span data-lang="en">Video plane + graphics plane</span></span>
           </div>
           <div class="pipe-body">
-            <p>视频平面（已 tone map）与图形平面（UI、字幕，通常 SDR/sRGB）分开处理：图形先线性化，把 SDR 白对齐到 RW_final 并 clamp ≤ RW，再与视频在线性域做 alpha 混合。</p>
-            <p class="pipe-key"><b>要点：</b>这就是读数区「UI &amp; 字幕 clamp」的落点。若在非线性域混合，半透明边缘会出现深色/亮色镶边；若不 clamp，白色 UI 会被推进高光区抢功率、刺眼。</p>
+            <p><span data-lang="zh">视频平面（已 tone map）与图形平面（UI、字幕，通常 SDR/sRGB）分开处理：图形先线性化，把 SDR 白对齐到 RW_final 并 clamp ≤ RW，再与视频在线性域做 alpha 混合。</span><span data-lang="en">Process the tone-mapped video plane separately from the usually SDR/sRGB graphics plane. Linearize graphics, align SDR white to RW_final, clamp it to RW or below, then alpha-composite with video in linear light.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>这就是读数区「UI &amp; 字幕 clamp」的落点。若在非线性域混合，半透明边缘会出现深色/亮色镶边；若不 clamp，白色 UI 会被推进高光区抢功率、刺眼。</span><span data-lang="en"><b>Key point:</b> this is where the UI and subtitle clamp is applied. Nonlinear compositing creates dark or bright fringes around translucent edges; without the clamp, white UI can enter the highlight range, consume power, and become glaring.</span></p>
           </div>
         </div>
         <div class="pipe-stage">
           <div class="pipe-name">
-            <b>⑦ 校准与面板驱动</b>
-            <span class="pipe-tag">面板域</span>
+            <b><span data-lang="zh">⑦ 校准与面板驱动</span><span data-lang="en">⑦ Calibration and panel drive</span></b>
+            <span class="pipe-tag"><span data-lang="zh">面板域</span><span data-lang="en">Panel domain</span></span>
           </div>
           <div class="pipe-body">
-            <p>过校准 3D LUT（白点、灰阶、色域微调），再转面板驱动信号。OLED：直接电流驱动 + ABL/TPC 钳制；Mini-LED：把目标图像分解为背光矩阵 × LCD 透过率两层，给高光区域保留功率预算。最后以 ≥10-bit + 时空抖动输出到面板位深。</p>
-            <p class="pipe-key"><b>要点：</b>第③步的 Peak_eff 估计和这里的功率分配是同一个闭环——本帧的分配结果决定下一帧统计到的 Peak_eff。</p>
+            <p><span data-lang="zh">过校准 3D LUT（白点、灰阶、色域微调），再转面板驱动信号。OLED：直接电流驱动 + ABL/TPC 钳制；Mini-LED：把目标图像分解为背光矩阵 × LCD 透过率两层，给高光区域保留功率预算。最后以 ≥10-bit + 时空抖动输出到面板位深。</span><span data-lang="en">Apply the calibration 3D LUT for white point, grayscale, and gamut refinement, then convert to panel-drive signals. OLED uses direct current drive with ABL/TPC constraints. Mini-LED decomposes the target into a backlight matrix and LCD transmittance, reserving power for highlights. Finally output at ≥10-bit with spatial and temporal dithering as needed.</span></p>
+            <p class="pipe-key"><span data-lang="zh"><b>要点：</b>第③步的 Peak_eff 估计和这里的功率分配是同一个闭环——本帧的分配结果决定下一帧统计到的 Peak_eff。</span><span data-lang="en"><b>Key point:</b> the Peak_eff estimate in stage ③ and power allocation here form one feedback loop. Allocation for this frame influences the Peak_eff measured for the next.</span></p>
           </div>
         </div>
       </div>
       <p class="note-block">
-        <b>控制面 / 数据面分离 + 时间平滑：</b>RW_final、Peak_eff、tone curve、色域压缩参数都属于控制面，按帧或场景更新；逐像素工作全部走 LUT。控制量更新必须做时间平滑（如 IIR 滤波）：场景内缓变、场景切换处允许快变——否则曲线跳变会被观众看成闪烁或"呼吸"。这也是把 ABL 波动吸收进高光 roll-off 之外，第二道防呼吸感的闸门。
+        <span data-lang="zh"><b>控制面 / 数据面分离 + 时间平滑：</b>RW_final、Peak_eff、tone curve、色域压缩参数都属于控制面，按帧或场景更新；逐像素工作全部走 LUT。控制量更新必须做时间平滑（如 IIR 滤波）：场景内缓变、场景切换处允许快变——否则曲线跳变会被观众看成闪烁或"呼吸"。这也是把 ABL 波动吸收进高光 roll-off 之外，第二道防呼吸感的闸门。</span><span data-lang="en"><b>Separate control and data planes, with temporal smoothing:</b> RW_final, Peak_eff, the tone curve, and gamut-compression parameters belong to the control plane and update per frame or scene; per-pixel work runs through LUTs. Control updates require temporal smoothing such as an IIR filter: gradual within a scene and allowed to change quickly at cuts. Otherwise, curve jumps appear as flicker or breathing. This is the second safeguard against breathing, in addition to absorbing ABL variation into highlight roll-off.</span>
       </p>
     </section>
   </main>
 
-  <footer>影像色彩与显示技术分析</footer>
+  <footer><span data-lang="zh">影像色彩与显示技术分析</span><span data-lang="en">Imaging Color and Display Technology</span></footer>
 
   <script>
     const SOURCE_RW = 203;
@@ -798,6 +798,7 @@
       userBrightness: 50
     };
     const $ = selector => document.querySelector(selector);
+    const L = (zh, en) => document.documentElement.lang === "en" ? en : zh;
     let liveCurve = null; // 最新一次 render 的 {model, params, peakEff}，供曲线悬浮读数使用
     const controls = {
       userBrightness: $("#user-brightness")
@@ -1055,7 +1056,7 @@
       const isNeutral = Math.abs(model.toneGain - 1) < 0.01 && Math.abs(model.rwFinal - SOURCE_RW) < 0.5;
       const segment = input <= params.shoulderStartInput
         ? (isNeutral ? "0-1000 nits：1:1 还原段" : `shoulder 起点以下：白点增益 ${model.toneGain.toFixed(2)}×`)
-        : "shoulder 起点之后：BT.2390-style 平滑压缩";
+        : L("shoulder 起点之后：BT.2390-style 平滑压缩", "After shoulder start: BT.2390-style smooth compression");
       const gainText = input > 0 ? `${(output / input).toFixed(2)}×` : "0";
       hoverTip.innerHTML = `输入 <b>${fmtNits(input)}</b> → 输出 <b>${fmtNits(output)}</b> nits（增益 ${gainText}）<br><span class="seg">${segment}</span>`;
       hoverTip.style.display = "block";
@@ -1068,7 +1069,19 @@
     });
     chartSvg.addEventListener("pointerleave", hideHover);
 
-    render();
+    function applyLanguage(lang) {
+      const selected = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = selected === "en" ? "en" : "zh-CN";
+      document.title = selected === "en" ? "TV HDR Brightness Control | Reference White and Headroom" : "电视 HDR 亮度控制逻辑 | Reference White 与 Headroom";
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.content = selected === "en" ? "A practical TV HDR brightness model built around Reference White, headroom, tone mapping, and panel drive." : "用 Reference White、Headroom、Tone Mapping 与 Panel Drive 重新定义电视 HDR 亮度控制。";
+      try { localStorage.setItem("guideLang", selected); } catch (error) {}
+      render();
+    }
+    document.querySelectorAll(".lang-toggle .seg").forEach(button => button.addEventListener("click", () => applyLanguage(button.dataset.set)));
+    let savedLanguage = "zh";
+    try { savedLanguage = localStorage.getItem("guideLang") || "zh"; } catch (error) {}
+    applyLanguage(savedLanguage);
   </script>
 </body>
 </html>

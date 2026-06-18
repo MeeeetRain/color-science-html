@@ -61,10 +61,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brand { font-weight: 780; flex: none; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; justify-content: flex-end; }
+    .links { display: flex; gap: 6px; flex: 0 1 auto; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 12px;
       border-radius: 999px;
@@ -76,6 +78,40 @@
       color: var(--ink);
       background: rgba(255,255,255,.08);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      min-height: 0;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #101318;
+      font-weight: 780;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
     main { overflow: hidden; }
     section {
       padding: 72px 20px;
@@ -450,17 +486,23 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#why">问题</a>
-        <a href="#math">数学</a>
-        <a href="#bits">位深</a>
-        <a href="#curve">曲线</a>
-        <a href="#brands">厂商</a>
-        <a href="#vs">Log·RAW·709</a>
-        <a href="#workflow">工作流</a>
-        <a href="#myths">误区</a>
-        <a href="#sources">来源</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#why"><span data-lang="zh">问题</span><span data-lang="en">Problem</span></a>
+          <a href="#math"><span data-lang="zh">数学</span><span data-lang="en">Math</span></a>
+          <a href="#bits"><span data-lang="zh">位深</span><span data-lang="en">Bit depth</span></a>
+          <a href="#curve"><span data-lang="zh">曲线</span><span data-lang="en">Curves</span></a>
+          <a href="#brands"><span data-lang="zh">厂商</span><span data-lang="en">Vendors</span></a>
+          <a href="#vs">Log·RAW·709</a>
+          <a href="#workflow"><span data-lang="zh">工作流</span><span data-lang="en">Workflow</span></a>
+          <a href="#myths"><span data-lang="zh">误区</span><span data-lang="en">Myths</span></a>
+          <a href="#sources"><span data-lang="zh">来源</span><span data-lang="en">Sources</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -469,8 +511,8 @@
     <section class="hero" id="top">
       <div class="wrap">
         <div class="eyebrow">Camera Log Encoding</div>
-        <h1>为什么相机使用 Log 拍摄</h1>
-        <p class="lead">Log 不是把画面调灰，也不是万能动态范围按钮。它是一个码值分配问题的答案：传感器以线性方式捕获 14–17 档亮度信息，而视频文件只有 10 或 12 bit 可用——Log 曲线决定每一档曝光分到多少个数字，决定哪些层次活下来、哪些被量化抹掉。这一页从数学推导、位深量化、厂商实现到后期色彩管理，把这条曲线讲透。</p>
+        <h1><span data-lang="zh">为什么相机使用 Log 拍摄</span><span data-lang="en">Why cameras shoot Log</span></h1>
+        <p class="lead"><span data-lang="zh">Log 不是把画面调灰，也不是万能动态范围按钮。它是一个码值分配问题的答案：传感器以线性方式捕获 14–17 档亮度信息，而视频文件只有 10 或 12 bit 可用——Log 曲线决定每一档曝光分到多少个数字，决定哪些层次活下来、哪些被量化抹掉。这一页从数学推导、位深量化、厂商实现到后期色彩管理，把这条曲线讲透。</span><span data-lang="en">Log isn't about making the picture grey, nor is it a magic dynamic-range button. It's the answer to a code-value allocation problem: the sensor captures 14–17 stops of luminance linearly, but a video file only has 10 or 12 bits to spend — the Log curve decides how many numbers each stop of exposure gets, which gradations survive and which get quantized away. This page works through the curve from the math, to bit-depth quantization, to vendor implementations and post-production color management.</span></p>
       </div>
     </section>
 
@@ -478,17 +520,17 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. 问题：线性记录把一半码值给了最亮一档</h2>
-            <p>传感器对光是近似线性的：进光量翻一倍（+1 档），信号数值翻一倍。这个特性在物理上很诚实，但在编码上是灾难——<b>从剪切点往下数，第一档曝光独占全部码值的一半，第二档占四分之一</b>，而摄影师真正在意的中灰和暗部，只能挤在剩下的零头里。</p>
-            <p>下面的演示按"每一档曝光分到多少个码值"统计了四种编码。点击切换，注意线性编码的柱状分布有多么倾斜，而 Log 编码几乎是平的。</p>
+            <h2><span data-lang="zh">1. 问题：线性记录把一半码值给了最亮一档</h2><span data-lang="en">1. The problem: linear recording gives half the code values to the brightest stop</span></h2>
+            <p><span data-lang="zh">传感器对光是近似线性的：进光量翻一倍（+1 档），信号数值翻一倍。这个特性在物理上很诚实，但在编码上是灾难——<b>从剪切点往下数，第一档曝光独占全部码值的一半，第二档占四分之一</b>，而摄影师真正在意的中灰和暗部，只能挤在剩下的零头里。</span><span data-lang="en">A sensor responds to light roughly linearly: double the light (+1 stop) and the signal value doubles. That's physically honest but an encoding disaster — <b>counting down from the clip point, the first stop alone takes half of all code values, the second a quarter</b>, while the mid-grays and shadows the photographer actually cares about are crammed into the leftovers.</span></p>
+            <p><span data-lang="zh">下面的演示按"每一档曝光分到多少个码值"统计了四种编码。点击切换，注意线性编码的柱状分布有多么倾斜，而 Log 编码几乎是平的。</span><span data-lang="en">The demo below tallies four encodings by "how many code values each stop of exposure gets". Click to switch and notice how skewed the linear bars are, while Log is nearly flat.</span></p>
           </div>
-          <div class="note">直觉：Log 不创造动态范围。传感器捕获多少档由硬件决定；Log 决定的是这些档<b>写进文件时的存活质量</b>——尤其是中灰以下的暗部层次。</div>
+          <div class="note"><span data-lang="zh">直觉：Log 不创造动态范围。传感器捕获多少档由硬件决定；Log 决定的是这些档<b>写进文件时的存活质量</b>——尤其是中灰以下的暗部层次。</span><span data-lang="en">Intuition: Log doesn't create dynamic range. How many stops the sensor captures is fixed by hardware; Log decides the <b>survival quality of those stops when written to the file</b> — especially shadow gradation below mid-gray.</span></div>
         </div>
 
         <div class="card">
           <div class="controls">
-            <span class="lbl">编码方式</span>
-            <button class="codesMode active" data-enc="linear" aria-pressed="true">12-bit 线性</button>
+            <span class="lbl"><span data-lang="zh">编码方式</span><span data-lang="en">Encoding</span></span>
+            <button class="codesMode active" data-enc="linear" aria-pressed="true"><span data-lang="zh">12-bit 线性</span><span data-lang="en">12-bit linear</span></button>
             <button class="codesMode" data-enc="rec709" aria-pressed="false">10-bit Rec.709</button>
             <button class="codesMode" data-enc="slog3" aria-pressed="false">10-bit S-Log3</button>
             <button class="codesMode" data-enc="logc4" aria-pressed="false">12-bit LogC4</button>
@@ -500,10 +542,10 @@
         </div>
 
         <div class="grid-4" style="margin-top:16px">
-          <div class="card"><span class="tag">传感器</span><div class="metric">线性</div><p>光量翻倍，信号翻倍。高光天然占用更多数值空间，暗部档位被压缩到个位数码值。</p></div>
-          <div class="card"><span class="tag">显示 Gamma</span><div class="metric">~2.5 档</div><p>Rec.709 OETF 分配较均匀，但中灰以上约 2.5 档就到 1.0——为直出显示设计，装不下电影机的高光。</p></div>
-          <div class="card"><span class="tag">Log</span><div class="metric">≈ 每档等宽</div><p>纯对数区内每档分到几乎相同的码值。S-Log3 每档约 79 个 10-bit 码值，恒定不变。</p></div>
-          <div class="card"><span class="tag">代价</span><div class="metric">位深</div><p>覆盖的档数越多，每档分到的码值越少。这就是 LogC4 要求 12 bit 的原因（见第 3 节）。</p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">传感器</span><span data-lang="en">Sensor</span></span><div class="metric"><span data-lang="zh">线性</span><span data-lang="en">Linear</span></div><p><span data-lang="zh">光量翻倍，信号翻倍。高光天然占用更多数值空间，暗部档位被压缩到个位数码值。</span><span data-lang="en">Double the light, double the signal. Highlights naturally hog the numeric space, while shadow stops are squeezed down to single-digit code values.</span></p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">显示 Gamma</span><span data-lang="en">Display gamma</span></span><div class="metric"><span data-lang="zh">~2.5 档</span><span data-lang="en">~2.5 stops</span></div><p><span data-lang="zh">Rec.709 OETF 分配较均匀，但中灰以上约 2.5 档就到 1.0——为直出显示设计，装不下电影机的高光。</span><span data-lang="en">The Rec.709 OETF allocates fairly evenly, but reaches 1.0 about 2.5 stops above mid-gray — designed for direct display, it can't hold a cinema camera's highlights.</span></p></div>
+          <div class="card"><span class="tag">Log</span><div class="metric"><span data-lang="zh">≈ 每档等宽</span><span data-lang="en">≈ equal per stop</span></div><p><span data-lang="zh">纯对数区内每档分到几乎相同的码值。S-Log3 每档约 79 个 10-bit 码值，恒定不变。</span><span data-lang="en">In the pure-log region every stop gets almost the same number of code values. S-Log3 gives about 79 ten-bit code values per stop, constant.</span></p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">代价</span><span data-lang="en">The cost</span></span><div class="metric"><span data-lang="zh">位深</span><span data-lang="en">Bit depth</span></div><p><span data-lang="zh">覆盖的档数越多，每档分到的码值越少。这就是 LogC4 要求 12 bit 的原因（见第 3 节）。</span><span data-lang="en">The more stops you cover, the fewer code values each stop gets. That's why LogC4 requires 12 bit (see Section 3).</span></p></div>
         </div>
       </div>
     </section>
@@ -512,92 +554,92 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. 数学：从线性、Gamma 到 Log</h2>
-            <p>三种映射对应三种"看待亮度"的方式。理解它们的数学差异，比背任何一条厂商曲线都更有用——因为所有 Log 曲线都是同一套思路加上不同的工程参数。</p>
+            <h2><span data-lang="zh">2. 数学：从线性、Gamma 到 Log</span><span data-lang="en">2. The math: from linear to gamma to Log</span></h2>
+            <p><span data-lang="zh">三种映射对应三种"看待亮度"的方式。理解它们的数学差异，比背任何一条厂商曲线都更有用——因为所有 Log 曲线都是同一套思路加上不同的工程参数。</span><span data-lang="en">Three mappings correspond to three ways of "looking at brightness". Understanding their mathematical differences is more useful than memorizing any vendor curve — because every Log curve is the same idea plus different engineering parameters.</span></p>
           </div>
-          <div class="note">核心一句话：摄影以"档"（倍率）思考，对数把<b>等比关系变成等差关系</b>——每一档曝光在编码轴上占据同样的宽度。这正是"按档分配码值"的数学实现。</div>
+          <div class="note"><span data-lang="zh">核心一句话：摄影以"档"（倍率）思考，对数把<b>等比关系变成等差关系</b>——每一档曝光在编码轴上占据同样的宽度。这正是"按档分配码值"的数学实现。</span><span data-lang="en">In one line: photography thinks in "stops" (ratios), and the logarithm <b>turns ratios into equal increments</b> — each stop of exposure occupies the same width on the encoding axis. That's the math behind "allocating code values by stop".</span></div>
         </div>
 
         <div class="grid-3">
           <div class="card">
-            <span class="tag">线性</span>
+            <span class="tag"><span data-lang="zh">线性</span><span data-lang="en">Linear</span></span>
             <h3>y = k·x</h3>
-            <p>等比进，等比出。+1 档输出翻倍，所以最亮一档永远占据剩余空间的一半。传感器 ADC、RAW 文件、CG 渲染都工作在这个域——<b>适合计算，不适合存储</b>。</p>
-            <div class="formula">y(2x) = 2·y(x)<br><span class="cm">每档宽度：逐档减半</span></div>
+            <p><span data-lang="zh">等比进，等比出。+1 档输出翻倍，所以最亮一档永远占据剩余空间的一半。传感器 ADC、RAW 文件、CG 渲染都工作在这个域——<b>适合计算，不适合存储</b>。</span><span data-lang="en">Ratio in, ratio out. +1 stop doubles the output, so the brightest stop always takes half the remaining space. Sensor ADCs, RAW files, and CG rendering all work in this domain — <b>good for computation, bad for storage</b>.</span></p>
+            <div class="formula">y(2x) = 2·y(x)<br><span class="cm"><span data-lang="zh">每档宽度：逐档减半</span><span data-lang="en">Per-stop width: halves each stop</span></span></div>
           </div>
           <div class="card">
-            <span class="tag">Gamma（幂函数）</span>
+            <span class="tag"><span data-lang="zh">Gamma（幂函数）</span><span data-lang="en">Gamma (power function)</span></span>
             <h3>y = x<sup>γ</sup></h3>
-            <p>对数域中的直线：log y = γ·log x。它把暗部"撑开"了（γ&lt;1 时），但每档宽度仍然不相等，且曲线必须在 x=1 处到顶——<b>本质是为显示设备设计的，编码范围有限</b>。</p>
-            <div class="formula">y(2x) = 2<sup>γ</sup>·y(x)<br><span class="cm">每档宽度：仍逐档收缩，但比线性缓和</span></div>
+            <p><span data-lang="zh">对数域中的直线：log y = γ·log x。它把暗部"撑开"了（γ&lt;1 时），但每档宽度仍然不相等，且曲线必须在 x=1 处到顶——<b>本质是为显示设备设计的，编码范围有限</b>。</span><span data-lang="en">A straight line in the log domain: log y = γ·log x. It "stretches" the shadows (when γ&lt;1), but per-stop widths are still unequal, and the curve must top out at x=1 — <b>fundamentally designed for display devices, with a limited encoding range</b>.</span></p>
+            <div class="formula">y(2x) = 2<sup>γ</sup>·y(x)<br><span class="cm"><span data-lang="zh">每档宽度：仍逐档收缩，但比线性缓和</span><span data-lang="en">Per-stop width: still shrinks each stop, but gentler than linear</span></span></div>
           </div>
           <div class="card accent">
-            <span class="tag">Log（对数）</span>
+            <span class="tag"><span data-lang="zh">Log（对数）</span><span data-lang="en">Log (logarithmic)</span></span>
             <h3>y = m·log₂(x) + k</h3>
-            <p>等比进，<b>等差出</b>。无论这一档在高光还是阴影，输出都增加相同的 m。这让"档"成为编码轴上的天然单位——曝光表、波形、假色、调色都能直接对话。</p>
-            <div class="formula">y(2x) = y(x) + m<br><span class="cm">每档宽度：恒定 m（纯对数区内）</span></div>
+            <p><span data-lang="zh">等比进，<b>等差出</b>。无论这一档在高光还是阴影，输出都增加相同的 m。这让"档"成为编码轴上的天然单位——曝光表、波形、假色、调色都能直接对话。</span><span data-lang="en">Ratio in, <b>equal increment out</b>. Whether the stop is in highlights or shadows, the output rises by the same m. This makes the "stop" a natural unit on the encoding axis — light meters, waveforms, false color, and grading all speak it directly.</span></p>
+            <div class="formula">y(2x) = y(x) + m<br><span class="cm"><span data-lang="zh">每档宽度：恒定 m（纯对数区内）</span><span data-lang="en">Per-stop width: constant m (in the pure-log region)</span></span></div>
           </div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>为什么对数恰好"贴合"摄影与人眼</h3>
-            <p><b>人眼：</b>韦伯-费希纳定律指出，人对亮度的感知近似与刺激的对数成正比——我们感觉"亮了一点"对应的是亮度的固定<b>百分比</b>变化，不是固定增量。对数编码让每个码值步进对应大致相等的感知步长，量化误差被均匀摊开。</p>
-            <p><b>摄影：</b>光圈、快门、ISO、ND 全部以倍率（档）工作。负片的特性曲线（密度 vs log 曝光）本身就是对数坐标——Log 编码是这个百年传统的数字延续。</p>
-            <p><b>信号：</b>传感器光子散粒噪声的标准差约与信号的平方根成正比，亮部"天生"有更多噪声掩盖量化误差；对数分配把码值从噪声充裕的高光挪给干净的中暗部，恰好和噪声分布互补。</p>
+            <h3><span data-lang="zh">为什么对数恰好"贴合"摄影与人眼</span><span data-lang="en">Why the log so neatly "fits" photography and the eye</span></h3>
+            <p><span data-lang="zh"><b>人眼：</b>韦伯-费希纳定律指出，人对亮度的感知近似与刺激的对数成正比——我们感觉"亮了一点"对应的是亮度的固定<b>百分比</b>变化，不是固定增量。对数编码让每个码值步进对应大致相等的感知步长，量化误差被均匀摊开。</span><span data-lang="en"><b>The eye:</b> the Weber–Fechner law says perceived brightness is roughly proportional to the log of the stimulus — "a bit brighter" corresponds to a fixed <b>percentage</b> change in luminance, not a fixed increment. Log encoding makes each code-value step correspond to a roughly equal perceptual step, spreading quantization error evenly.</span></p>
+            <p><span data-lang="zh"><b>摄影：</b>光圈、快门、ISO、ND 全部以倍率（档）工作。负片的特性曲线（密度 vs log 曝光）本身就是对数坐标——Log 编码是这个百年传统的数字延续。</span><span data-lang="en"><b>Photography:</b> aperture, shutter, ISO, and ND all work in ratios (stops). A negative's characteristic curve (density vs. log exposure) is already in log coordinates — Log encoding is the digital continuation of that century-old tradition.</span></p>
+            <p><span data-lang="zh"><b>信号：</b>传感器光子散粒噪声的标准差约与信号的平方根成正比，亮部"天生"有更多噪声掩盖量化误差；对数分配把码值从噪声充裕的高光挪给干净的中暗部，恰好和噪声分布互补。</span><span data-lang="en"><b>The signal:</b> the standard deviation of photon shot noise scales roughly with the square root of the signal, so highlights "naturally" have more noise to mask quantization error; log allocation moves code values away from the noisy highlights toward the cleaner mid-to-shadow region — complementing the noise distribution.</span></p>
           </div>
           <div class="card">
-            <h3>Cineon：所有现代 Log 的祖先</h3>
-            <p>1990 年代初，Kodak 的 Cineon 系统要把胶片负片扫描成数字文件。胶片密度本身就是对数量，于是 Cineon 直接采用 <b>10 bit 对数编码打印密度</b>：黑位放在 CV 95（保留负值余量），90% 白放在 CV 685（上方留高光肩部），每 0.002 密度一个码值，约 <b>90 个码值/档</b>。</p>
-            <p>这套"95 / 685 / 10-bit log"的骨架影响深远：Sony 官方文档明确说 S-Log3 沿用 Cineon 式工作流习惯；DPX 文件格式、Resolve 里的 Cineon Film Log 解码，都源自这里。可以说现代相机 Log = Cineon 思路 + 各家传感器参数。</p>
-            <div class="formula">CV = 685 + 300·log₁₀(x / 0.9)<br><span class="cm">x = 场景反射率（0.9 = 90% 白）；300 CV/十倍 ≈ 90 CV/档</span></div>
+            <h3><span data-lang="zh">Cineon：所有现代 Log 的祖先</span><span data-lang="en">Cineon: the ancestor of every modern Log</span></h3>
+            <p><span data-lang="zh">1990 年代初，Kodak 的 Cineon 系统要把胶片负片扫描成数字文件。胶片密度本身就是对数量，于是 Cineon 直接采用 <b>10 bit 对数编码打印密度</b>：黑位放在 CV 95（保留负值余量），90% 白放在 CV 685（上方留高光肩部），每 0.002 密度一个码值，约 <b>90 个码值/档</b>。</span><span data-lang="en">In the early 1990s, Kodak's Cineon system had to scan film negatives into digital files. Film density is itself a logarithmic quantity, so Cineon directly used a <b>10-bit log encoding of printing density</b>: black at CV 95 (leaving headroom for negatives), 90% white at CV 685 (with a highlight shoulder above), one code value per 0.002 density, about <b>90 code values per stop</b>.</span></p>
+            <p><span data-lang="zh">这套"95 / 685 / 10-bit log"的骨架影响深远：Sony 官方文档明确说 S-Log3 沿用 Cineon 式工作流习惯；DPX 文件格式、Resolve 里的 Cineon Film Log 解码，都源自这里。可以说现代相机 Log = Cineon 思路 + 各家传感器参数。</span><span data-lang="en">This "95 / 685 / 10-bit log" skeleton runs deep: Sony's docs explicitly say S-Log3 follows Cineon-style workflow conventions; the DPX file format and Resolve's Cineon Film Log decode both trace back here. You could say modern camera Log = the Cineon idea + each vendor's sensor parameters.</span></p>
+            <div class="formula">CV = 685 + 300·log₁₀(x / 0.9)<br><span class="cm"><span data-lang="zh">x = 场景反射率（0.9 = 90% 白）；300 CV/十倍 ≈ 90 CV/档</span><span data-lang="en">x = scene reflectance (0.9 = 90% white); 300 CV/decade ≈ 90 CV/stop</span></span></div>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px">
-          <h3>公式解剖 ①：Sony S-Log3（10 bit）</h3>
-          <p>S-Log3 是公开公式中最容易读懂的一条，每个常数都有明确职责：</p>
+          <h3><span data-lang="zh">公式解剖 ①：Sony S-Log3（10 bit）</span><span data-lang="en">Formula dissection ①: Sony S-Log3 (10 bit)</span></h3>
+          <p><span data-lang="zh">S-Log3 是公开公式中最容易读懂的一条，每个常数都有明确职责：</span><span data-lang="en">S-Log3 is the most readable of the published formulas — every constant has a clear job:</span></p>
           <div class="formula">
             y = ( <b>420</b> + log₁₀( (x + <em>0.01</em>) / (0.18 + <em>0.01</em>) ) × <b>261.5</b> ) / 1023&nbsp;&nbsp;<span class="cm">x ≥ 0.01125</span><br>
-            y = ( x × (171.21 − 95) / 0.01125 + <b>95</b> ) / 1023&nbsp;&nbsp;<span class="cm">x &lt; 0.01125（线性脚趾段）</span>
+            y = ( x × (171.21 − 95) / 0.01125 + <b>95</b> ) / 1023&nbsp;&nbsp;<span class="cm">x &lt; 0.01125<span data-lang="zh">（线性脚趾段）</span><span data-lang="en"> (linear toe segment)</span></span>
           </div>
           <div class="anno">
-            <div><code>420</code><span><b>中灰锚点。</b>场景 18% 灰精确落在 10-bit 码值 420（约 41% 信号电平）。波形监视器上的 S-Log3 曝光参考线就是它。</span></div>
-            <div><code>261.5</code><span><b>斜率 = 码值分配密度。</b>每十倍曝光 261.5 个码值，换算成档：261.5 × log₁₀2 ≈ <b>79 CV/档</b>，全范围恒定。这一个数就决定了"每档质量"。</span></div>
-            <div><code>+0.01</code><span><b>偏置（toe 控制）。</b>给输入加一个小常数，避免 log(0) = −∞，同时压缓极暗部的斜率，防止把传感器底噪放大记录。</span></div>
-            <div><code>95</code><span><b>黑位码值。</b>直接继承 Cineon 的 CV 95：黑不放在 0，给负向噪声和后期留缓冲。</span></div>
-            <div><code>x &lt; 0.01125</code><span><b>线性脚趾段。</b>极暗部改用直线连接到黑位，与对数段在拼接点斜率连续——纯对数在 0 附近会无限陡，必须截断。</span></div>
+            <div><code>420</code><span><b><span data-lang="zh">中灰锚点。</span><span data-lang="en">Mid-gray anchor.</span></b><span data-lang="zh">场景 18% 灰精确落在 10-bit 码值 420（约 41% 信号电平）。波形监视器上的 S-Log3 曝光参考线就是它。</span><span data-lang="en"> Scene 18% gray lands exactly at 10-bit code value 420 (about 41% signal level). That's the S-Log3 exposure reference line on a waveform monitor.</span></span></div>
+            <div><code>261.5</code><span><b><span data-lang="zh">斜率 = 码值分配密度。</span><span data-lang="en">Slope = code-value density.</span></b><span data-lang="zh">每十倍曝光 261.5 个码值，换算成档：261.5 × log₁₀2 ≈ <b>79 CV/档</b>，全范围恒定。这一个数就决定了"每档质量"。</span><span data-lang="en"> 261.5 code values per decade of exposure; in stops: 261.5 × log₁₀2 ≈ <b>79 CV/stop</b>, constant across the range. This one number sets the "quality per stop".</span></span></div>
+            <div><code>+0.01</code><span><b><span data-lang="zh">偏置（toe 控制）。</span><span data-lang="en">Offset (toe control).</span></b><span data-lang="zh">给输入加一个小常数，避免 log(0) = −∞，同时压缓极暗部的斜率，防止把传感器底噪放大记录。</span><span data-lang="en"> Adding a small constant to the input avoids log(0) = −∞ and softens the slope in the deep shadows, preventing the sensor noise floor from being amplified into the recording.</span></span></div>
+            <div><code>95</code><span><b><span data-lang="zh">黑位码值。</span><span data-lang="en">Black code value.</span></b><span data-lang="zh">直接继承 Cineon 的 CV 95：黑不放在 0，给负向噪声和后期留缓冲。</span><span data-lang="en"> Inherited directly from Cineon's CV 95: black isn't at 0, leaving buffer for negative noise and post.</span></span></div>
+            <div><code>x &lt; 0.01125</code><span><b><span data-lang="zh">线性脚趾段。</span><span data-lang="en">Linear toe segment.</span></b><span data-lang="zh">极暗部改用直线连接到黑位，与对数段在拼接点斜率连续——纯对数在 0 附近会无限陡，必须截断。</span><span data-lang="en"> The deep shadows switch to a straight line down to black, slope-continuous with the log segment at the join — a pure log is infinitely steep near 0 and must be truncated.</span></span></div>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px">
-          <h3>公式解剖 ②：ARRI LogC4（12 bit）</h3>
-          <p>LogC4 是更现代的设计：以 2 为底（直接对应档位）、EI 无关（任何曝光指数下解码公式相同）、面向 17 档级传感器：</p>
+          <h3><span data-lang="zh">公式解剖 ②：ARRI LogC4（12 bit）</span><span data-lang="en">Formula dissection ②: ARRI LogC4 (12 bit)</span></h3>
+          <p><span data-lang="zh">LogC4 是更现代的设计：以 2 为底（直接对应档位）、EI 无关（任何曝光指数下解码公式相同）、面向 17 档级传感器：</span><span data-lang="en">LogC4 is a more modern design: base-2 (mapping directly to stops), EI-independent (the decode formula is the same at any exposure index), aimed at 17-stop-class sensors:</span></p>
           <div class="formula">
             y = ( ( log₂( <b>a</b>·x + <em>64</em> ) − 6 ) / <b>14</b> ) · b + c<br>
             <span class="cm">a = (2¹⁸ − 16) / 117.45 ≈ 2231.8&nbsp;&nbsp;b = (1023 − 95)/1023 ≈ 0.907&nbsp;&nbsp;c = 95/1023 ≈ 0.0928</span><br>
-            <span class="cm">x &lt; t 时使用线性段 (x − t)/s，与对数段在 t 处值与斜率均连续</span>
+            <span class="cm"><span data-lang="zh">x &lt; t 时使用线性段 (x − t)/s，与对数段在 t 处值与斜率均连续</span><span data-lang="en">for x &lt; t, a linear segment (x − t)/s is used, continuous in value and slope with the log segment at t</span></span>
           </div>
           <div class="anno">
-            <div><code>log₂</code><span><b>以 2 为底。</b>x 每翻一倍（+1 档），log₂ 项加 1——档位直接成为公式的内部坐标。</span></div>
-            <div><code>/ 14</code><span><b>14 档对数窗口。</b>把 14 档的 log₂ 跨度归一化到 0–1。每档占据 b/14 ≈ 6.5% 的信号范围，即 12-bit 下约 <b>265 CV/档</b>。</span></div>
-            <div><code>+64, −6</code><span><b>黑锚点。</b>x = 0 时 log₂(64) = 6，减 6 后恰好为 0——纯黑精确落在编码起点，无需截断负数。</span></div>
-            <div><code>a</code><span><b>传感器满量程缩放。</b>把相机线性信号的最大值对齐到编码窗口顶端，18% 灰则落在约 0.278（27.8%）。</span></div>
-            <div><code>b, c</code><span><b>Cineon 式装配。</b>把结果装进"黑位 95、满程 1023"的传统框架——又见 95。</span></div>
+            <div><code>log₂</code><span><b><span data-lang="zh">以 2 为底。</span><span data-lang="en">Base 2.</span></b><span data-lang="zh">x 每翻一倍（+1 档），log₂ 项加 1——档位直接成为公式的内部坐标。</span><span data-lang="en"> Each doubling of x (+1 stop) adds 1 to the log₂ term — the stop becomes the formula's internal coordinate directly.</span></span></div>
+            <div><code>/ 14</code><span><b><span data-lang="zh">14 档对数窗口。</span><span data-lang="en">A 14-stop log window.</span></b><span data-lang="zh">把 14 档的 log₂ 跨度归一化到 0–1。每档占据 b/14 ≈ 6.5% 的信号范围，即 12-bit 下约 <b>265 CV/档</b>。</span><span data-lang="en"> Normalizes the 14-stop log₂ span to 0–1. Each stop occupies b/14 ≈ 6.5% of the signal range, i.e. about <b>265 CV/stop</b> at 12 bit.</span></span></div>
+            <div><code>+64, −6</code><span><b><span data-lang="zh">黑锚点。</span><span data-lang="en">Black anchor.</span></b><span data-lang="zh">x = 0 时 log₂(64) = 6，减 6 后恰好为 0——纯黑精确落在编码起点，无需截断负数。</span><span data-lang="en"> At x = 0, log₂(64) = 6, and subtracting 6 gives exactly 0 — pure black lands precisely at the encoding origin, with no need to clip negatives.</span></span></div>
+            <div><code>a</code><span><b><span data-lang="zh">传感器满量程缩放。</span><span data-lang="en">Sensor full-scale scaling.</span></b><span data-lang="zh">把相机线性信号的最大值对齐到编码窗口顶端，18% 灰则落在约 0.278（27.8%）。</span><span data-lang="en"> Aligns the camera's max linear signal to the top of the encoding window; 18% gray then lands at about 0.278 (27.8%).</span></span></div>
+            <div><code>b, c</code><span><b><span data-lang="zh">Cineon 式装配。</span><span data-lang="en">Cineon-style assembly.</span></b><span data-lang="zh">把结果装进"黑位 95、满程 1023"的传统框架——又见 95。</span><span data-lang="en"> Packs the result into the traditional "black 95, full-scale 1023" frame — there's 95 again.</span></span></div>
           </div>
-          <p class="small" style="margin-top:10px">对比一下斜率就明白位深要求的来源：LogC4 覆盖 14 档对数窗口，折算 10-bit 只有约 66 CV/档，低于 S-Log3 的 79——所以 ARRI 明确要求 LogC4 至少以 12 bit 编码用于采集与交换（12-bit 下为 265 CV/档）。</p>
+          <p class="small" style="margin-top:10px"><span data-lang="zh">对比一下斜率就明白位深要求的来源：LogC4 覆盖 14 档对数窗口，折算 10-bit 只有约 66 CV/档，低于 S-Log3 的 79——所以 ARRI 明确要求 LogC4 至少以 12 bit 编码用于采集与交换（12-bit 下为 265 CV/档）。</span><span data-lang="en">Compare the slopes and the bit-depth requirement becomes clear: LogC4 covers a 14-stop log window, which at 10 bit is only about 66 CV/stop — below S-Log3's 79 — so ARRI explicitly requires LogC4 to be encoded at 12 bit minimum for capture and exchange (265 CV/stop at 12 bit).</span></p>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>为什么所有 Log 都有"脚趾"（toe）</h3>
-            <p>纯对数函数有两个工程缺陷：x→0 时输出趋向 −∞（数学奇点）；且在极暗部斜率无限大，意味着<b>把传感器读出噪声和暗电流放大后写进文件</b>。所以每条实用曲线都在暗部做处理：S-Log3 和 V-Log 用线性段拼接，LogC4 用线性段加精确的连续性约束，Log3G10 给输入加 0.01 偏置后允许负值线性延伸。</p>
-            <p>拼接点的选择是设计决策：拼得高，暗部更"安全"但牺牲阴影层次；拼得低，阴影信息多但噪声占码值。</p>
+            <h3><span data-lang="zh">为什么所有 Log 都有"脚趾"（toe）</span><span data-lang="en">Why every Log has a "toe"</span></h3>
+            <p><span data-lang="zh">纯对数函数有两个工程缺陷：x→0 时输出趋向 −∞（数学奇点）；且在极暗部斜率无限大，意味着<b>把传感器读出噪声和暗电流放大后写进文件</b>。所以每条实用曲线都在暗部做处理：S-Log3 和 V-Log 用线性段拼接，LogC4 用线性段加精确的连续性约束，Log3G10 给输入加 0.01 偏置后允许负值线性延伸。</span><span data-lang="en">A pure log has two engineering flaws: as x→0 the output goes to −∞ (a mathematical singularity), and its slope is infinite in the deep shadows, which means <b>amplifying sensor read noise and dark current into the file</b>. So every practical curve treats the shadows: S-Log3 and V-Log splice on a linear segment, LogC4 uses a linear segment with exact continuity constraints, and Log3G10 adds a 0.01 offset to the input and allows a linear extension into negatives.</span></p>
+            <p><span data-lang="zh">拼接点的选择是设计决策：拼得高，暗部更"安全"但牺牲阴影层次；拼得低，阴影信息多但噪声占码值。</span><span data-lang="en">Where to put the splice point is a design decision: splice high and the shadows are "safer" but lose gradation; splice low and there's more shadow information but noise eats code values.</span></p>
           </div>
           <div class="card">
-            <h3>为什么各家中灰落点不同</h3>
-            <p>中灰放哪里 = 高光与暗部的预算分配。S-Log3 把 18% 灰放在 41%，灰上约 7.7 档到达编码上限（受 Cineon 习惯影响，暗部预算充足）；LogC4 放在 27.8%，灰上留出更多编码空间给 ALEXA 35 的高光；Log3G10 放在 1/3，明确按"灰上 10 档到 1.0"设计。</p>
-            <p>这就是为什么<b>不能拿同一条监看 LUT 通吃不同机型</b>：中灰锚点不同，LUT 输入假设就不同，画面整体明暗立即错位。</p>
+            <h3><span data-lang="zh">为什么各家中灰落点不同</span><span data-lang="en">Why each vendor's mid-gray lands differently</span></h3>
+            <p><span data-lang="zh">中灰放哪里 = 高光与暗部的预算分配。S-Log3 把 18% 灰放在 41%，灰上约 7.7 档到达编码上限（受 Cineon 习惯影响，暗部预算充足）；LogC4 放在 27.8%，灰上留出更多编码空间给 ALEXA 35 的高光；Log3G10 放在 1/3，明确按"灰上 10 档到 1.0"设计。</span><span data-lang="en">Where mid-gray sits = the budget split between highlights and shadows. S-Log3 places 18% gray at 41%, reaching the encoding ceiling about 7.7 stops above gray (Cineon-influenced, with a generous shadow budget); LogC4 places it at 27.8%, leaving more encoding room above gray for the ALEXA 35's highlights; Log3G10 places it at 1/3, explicitly designed for "10 stops above gray reaches 1.0".</span></p>
+            <p><span data-lang="zh">这就是为什么<b>不能拿同一条监看 LUT 通吃不同机型</b>：中灰锚点不同，LUT 输入假设就不同，画面整体明暗立即错位。</span><span data-lang="en">This is why you <b>can't use one monitoring LUT across different camera models</b>: a different mid-gray anchor means a different LUT input assumption, and the whole image's brightness immediately shifts.</span></p>
           </div>
         </div>
       </div>
@@ -607,55 +649,55 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. 位深与量化：banding 从哪里来</h2>
-            <p>把连续的光编码成离散码值必然丢信息；问题是丢在哪。下面的演示用同一条"阴影渐变"（中灰下 6 档到中灰）分别走线性和 S-Log3 编码，量化到指定位深后再像后期一样提亮——<b>线性编码的暗部断层会直接可见</b>。</p>
+            <h2><span data-lang="zh">3. 位深与量化：banding 从哪里来</span><span data-lang="en">3. Bit depth and quantization: where banding comes from</span></h2>
+            <p><span data-lang="zh">把连续的光编码成离散码值必然丢信息；问题是丢在哪。下面的演示用同一条"阴影渐变"（中灰下 6 档到中灰）分别走线性和 S-Log3 编码，量化到指定位深后再像后期一样提亮——<b>线性编码的暗部断层会直接可见</b>。</span><span data-lang="en">Encoding continuous light into discrete code values always loses information; the question is where. The demo below runs the same "shadow ramp" (6 stops below mid-gray up to mid-gray) through linear and S-Log3 encoding, quantizes to a chosen bit depth, then lifts it like post would — <b>the linear encoding's shadow banding becomes directly visible</b>.</span></p>
           </div>
-          <div class="note">操作：选位深 → 拖"后期提亮"滑块。8-bit 线性在提亮 2 档后明显碎裂成色阶；同位深的 Log 依然平滑。这就是"8 bit 拍 Log 风险高、8 bit 拍线性根本不可行"的原因。</div>
+          <div class="note"><span data-lang="zh">操作：选位深 → 拖"后期提亮"滑块。8-bit 线性在提亮 2 档后明显碎裂成色阶；同位深的 Log 依然平滑。这就是"8 bit 拍 Log 风险高、8 bit 拍线性根本不可行"的原因。</span><span data-lang="en">How to use: pick a bit depth → drag the "post lift" slider. 8-bit linear visibly breaks into bands after a 2-stop lift; the same-bit Log stays smooth. This is why "8-bit Log is risky, and 8-bit linear is simply unworkable".</span></div>
         </div>
 
         <div class="card">
           <div class="controls">
-            <span class="lbl">量化位深</span>
+            <span class="lbl"><span data-lang="zh">量化位深</span><span data-lang="en">Quantization bit depth</span></span>
             <button class="bandBits" data-bits="8" aria-pressed="true">8 bit</button>
             <button class="bandBits" data-bits="10" aria-pressed="false">10 bit</button>
             <button class="bandBits" data-bits="12" aria-pressed="false">12 bit</button>
-            <span class="lbl" style="margin-left:14px">后期提亮</span>
+            <span class="lbl" style="margin-left:14px"><span data-lang="zh">后期提亮</span><span data-lang="en">Post lift</span></span>
             <input id="liftSlider" type="range" min="0" max="4" step="0.1" value="2">
-            <strong id="liftReadout">+2.0 档</strong>
+            <strong id="liftReadout"><span data-lang="zh">+2.0 档</span><span data-lang="en">+2.0 stops</span></strong>
           </div>
           <div class="canvas-box band-box">
             <canvas id="bandCanvas" aria-label="线性与Log编码量化对比渐变条"></canvas>
           </div>
           <div class="band-info">
-            <span>线性编码在此渐变内可用码值：<b id="bandLinearLevels">—</b></span>
-            <span>S-Log3 编码在此渐变内可用码值：<b id="bandLogLevels">—</b></span>
-            <span class="small">渐变范围：18% 灰下 6 档 → 18% 灰；显示经 Rec.709 OETF</span>
+            <span><span data-lang="zh">线性编码在此渐变内可用码值：</span><span data-lang="en">Linear usable code values in this ramp: </span><b id="bandLinearLevels">—</b></span>
+            <span><span data-lang="zh">S-Log3 编码在此渐变内可用码值：</span><span data-lang="en">S-Log3 usable code values in this ramp: </span><b id="bandLogLevels">—</b></span>
+            <span class="small"><span data-lang="zh">渐变范围：18% 灰下 6 档 → 18% 灰；显示经 Rec.709 OETF</span><span data-lang="en">Ramp range: 6 stops below 18% gray → 18% gray; shown via the Rec.709 OETF</span></span>
           </div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>每档码值：主要曲线横向对比</h3>
+            <h3><span data-lang="zh">每档码值：主要曲线横向对比</span><span data-lang="en">Code values per stop: the main curves side by side</span></h3>
             <div class="table-wrap">
               <table style="min-width:0">
-                <thead><tr><th>曲线</th><th>容器</th><th>纯对数区每档码值</th></tr></thead>
+                <thead><tr><th><span data-lang="zh">曲线</span><span data-lang="en">Curve</span></th><th><span data-lang="zh">容器</span><span data-lang="en">Container</span></th><th><span data-lang="zh">纯对数区每档码值</span><span data-lang="en">CV/stop in pure-log region</span></th></tr></thead>
                 <tbody>
-                  <tr><td><b>Cineon</b></td><td>10 bit</td><td>≈ 90 CV/档</td></tr>
-                  <tr><td><b>S-Log3</b></td><td>10 bit</td><td>≈ 79 CV/档</td></tr>
-                  <tr><td><b>V-Log</b></td><td>10 bit</td><td>≈ 74 CV/档</td></tr>
-                  <tr><td><b>Log3G10</b></td><td>10 bit</td><td>≈ 69 CV/档（高位区）</td></tr>
-                  <tr><td><b>LogC4</b></td><td><b>12 bit</b></td><td>≈ 265 CV/档（折算 10-bit 仅 ≈ 66）</td></tr>
+                  <tr><td><b>Cineon</b></td><td>10 bit</td><td><span data-lang="zh">≈ 90 CV/档</span><span data-lang="en">≈ 90 CV/stop</span></td></tr>
+                  <tr><td><b>S-Log3</b></td><td>10 bit</td><td><span data-lang="zh">≈ 79 CV/档</span><span data-lang="en">≈ 79 CV/stop</span></td></tr>
+                  <tr><td><b>V-Log</b></td><td>10 bit</td><td><span data-lang="zh">≈ 74 CV/档</span><span data-lang="en">≈ 74 CV/stop</span></td></tr>
+                  <tr><td><b>Log3G10</b></td><td>10 bit</td><td><span data-lang="zh">≈ 69 CV/档（高位区）</span><span data-lang="en">≈ 69 CV/stop (upper region)</span></td></tr>
+                  <tr><td><b>LogC4</b></td><td><b>12 bit</b></td><td><span data-lang="zh">≈ 265 CV/档（折算 10-bit 仅 ≈ 66）</span><span data-lang="en">≈ 265 CV/stop (only ≈ 66 if reduced to 10-bit)</span></td></tr>
                 </tbody>
               </table>
             </div>
-            <p class="small" style="margin-top:10px">规律：曲线想覆盖的档数越多，每档分到的码值越少。Cineon 只需服务负片密度域所以最阔绰；LogC4 要装下 17 档级传感器，10 bit 已经不够体面，必须上 12 bit。</p>
+            <p class="small" style="margin-top:10px"><span data-lang="zh">规律：曲线想覆盖的档数越多，每档分到的码值越少。Cineon 只需服务负片密度域所以最阔绰；LogC4 要装下 17 档级传感器，10 bit 已经不够体面，必须上 12 bit。</span><span data-lang="en">The rule: the more stops a curve covers, the fewer code values each stop gets. Cineon only had to serve the negative-density range, so it's the most generous; LogC4 must hold a 17-stop-class sensor, where 10 bit is no longer respectable, so it goes to 12 bit.</span></p>
           </div>
           <div class="card">
-            <h3>位深的实用判断</h3>
-            <p><b>8 bit（256 级）：</b>拍 Log 时每档只剩约 20 个码值，调色一动就 banding。8 bit 机型直接拍显示 Gamma（709/HLG）反而更稳。</p>
-            <p><b>10 bit（1024 级）：</b>当前专业视频的主流底线。S-Log3、V-Log、Log3G10 都按 10 bit 设计，正常曝光 + 适度调色是安全的。</p>
-            <p><b>12 bit（4096 级）：</b>LogC4 的最低要求，也是大幅度重打光式调色的舒适区。ARRI 明确说明 10 bit 的 LogC4 不应用于归档或交换。</p>
-            <p><b>注意色度抽样：</b>位深之外，4:2:0 对 Log 调色同样致命——绿幕、肤色微调需要 4:2:2 以上。位深管亮度阶梯，抽样管颜色分辨率，两个都要看。</p>
+            <h3><span data-lang="zh">位深的实用判断</span><span data-lang="en">Practical bit-depth judgment</span></h3>
+            <p><span data-lang="zh"><b>8 bit（256 级）：</b>拍 Log 时每档只剩约 20 个码值，调色一动就 banding。8 bit 机型直接拍显示 Gamma（709/HLG）反而更稳。</span><span data-lang="en"><b>8 bit (256 levels):</b> shooting Log leaves only about 20 code values per stop, so the slightest grade bands. An 8-bit camera is actually safer shooting display gamma (709/HLG) directly.</span></p>
+            <p><span data-lang="zh"><b>10 bit（1024 级）：</b>当前专业视频的主流底线。S-Log3、V-Log、Log3G10 都按 10 bit 设计，正常曝光 + 适度调色是安全的。</span><span data-lang="en"><b>10 bit (1024 levels):</b> today's mainstream floor for professional video. S-Log3, V-Log, and Log3G10 are all designed for 10 bit, and normal exposure + moderate grading is safe.</span></p>
+            <p><span data-lang="zh"><b>12 bit（4096 级）：</b>LogC4 的最低要求，也是大幅度重打光式调色的舒适区。ARRI 明确说明 10 bit 的 LogC4 不应用于归档或交换。</span><span data-lang="en"><b>12 bit (4096 levels):</b> LogC4's minimum requirement, and the comfort zone for heavy relighting-style grades. ARRI explicitly states 10-bit LogC4 should not be used for archiving or exchange.</span></p>
+            <p><span data-lang="zh"><b>注意色度抽样：</b>位深之外，4:2:0 对 Log 调色同样致命——绿幕、肤色微调需要 4:2:2 以上。位深管亮度阶梯，抽样管颜色分辨率，两个都要看。</span><span data-lang="en"><b>Mind chroma subsampling:</b> beyond bit depth, 4:2:0 is equally fatal for Log grading — green screen and skin-tone tweaks need 4:2:2 or better. Bit depth governs the luminance staircase, subsampling governs color resolution; watch both.</span></p>
           </div>
         </div>
       </div>
@@ -665,45 +707,45 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. 互动曲线：一档曝光对应多少信号</h2>
-            <p>拖动曝光档位或在图上滑动，读取每条曲线把"相对 18% 灰的场景亮度"映射到的信号电平。四条厂商曲线（ARRI LogC4、Sony S-Log3、Panasonic V-Log、RED Log3G10）均使用官方公开公式；可叠加 Rec.709 OETF 和 Cineon 作参照。</p>
+            <h2><span data-lang="zh">4. 互动曲线：一档曝光对应多少信号</span><span data-lang="en">4. Interactive curves: how much signal a stop of exposure maps to</span></h2>
+            <p><span data-lang="zh">拖动曝光档位或在图上滑动，读取每条曲线把"相对 18% 灰的场景亮度"映射到的信号电平。四条厂商曲线（ARRI LogC4、Sony S-Log3、Panasonic V-Log、RED Log3G10）均使用官方公开公式；可叠加 Rec.709 OETF 和 Cineon 作参照。</span><span data-lang="en">Drag the exposure stop or slide over the chart to read the signal level each curve maps "scene brightness relative to 18% gray" to. The four vendor curves (ARRI LogC4, Sony S-Log3, Panasonic V-Log, RED Log3G10) all use the official published formulas; you can overlay the Rec.709 OETF and Cineon as references.</span></p>
           </div>
-          <div class="note">读图要点：① 各曲线在 0 档（18% 灰）处的落点就是各家的中灰锚点；② 纯对数区里曲线是直线——斜率即每档码值；③ Rec.709 在 +2.5 档左右触顶剪切，而 Log 曲线还远未用完。</div>
+          <div class="note"><span data-lang="zh">读图要点：① 各曲线在 0 档（18% 灰）处的落点就是各家的中灰锚点；② 纯对数区里曲线是直线——斜率即每档码值；③ Rec.709 在 +2.5 档左右触顶剪切，而 Log 曲线还远未用完。</span><span data-lang="en">How to read it: ① each curve's value at 0 stops (18% gray) is that vendor's mid-gray anchor; ② in the pure-log region the curve is a straight line — its slope is the code values per stop; ③ Rec.709 hits the ceiling and clips around +2.5 stops, while the Log curves are nowhere near used up.</span></div>
         </div>
 
         <div class="card">
           <div class="controls">
-            <span class="lbl">曲线</span>
-            <button class="curveMode active" data-mode="all" aria-pressed="true">多曲线对比</button>
+            <span class="lbl"><span data-lang="zh">曲线</span><span data-lang="en">Curve</span></span>
+            <button class="curveMode active" data-mode="all" aria-pressed="true"><span data-lang="zh">多曲线对比</span><span data-lang="en">Compare all</span></button>
             <button class="curveMode" data-mode="arri" aria-pressed="false">LogC4</button>
             <button class="curveMode" data-mode="sony" aria-pressed="false">S-Log3</button>
             <button class="curveMode" data-mode="panasonic" aria-pressed="false">V-Log</button>
             <button class="curveMode" data-mode="red" aria-pressed="false">Log3G10</button>
-            <span class="lbl" style="margin-left:10px">参照</span>
+            <span class="lbl" style="margin-left:10px"><span data-lang="zh">参照</span><span data-lang="en">Reference</span></span>
             <button class="ref" id="refRec709" aria-pressed="false">+ Rec.709 OETF</button>
             <button class="ref" id="refCineon" aria-pressed="false">+ Cineon</button>
           </div>
           <div class="controls">
-            <label>曝光档位 <input id="stopSlider" type="range" min="-8" max="8" step="0.1" value="0"></label>
+            <label><span data-lang="zh">曝光档位</span><span data-lang="en">Exposure stop</span> <input id="stopSlider" type="range" min="-8" max="8" step="0.1" value="0"></label>
             <strong id="stopReadout">0.0 stop</strong>
           </div>
           <div class="canvas-box curve-box">
             <canvas id="curveCanvas" aria-label="Log 曲线对比"></canvas>
-            <div class="readout" id="curveReadout">移动指针或拖动滑块读取曲线</div>
+            <div class="readout" id="curveReadout"><span data-lang="zh">移动指针或拖动滑块读取曲线</span><span data-lang="en">Move the pointer or drag the slider to read the curves</span></div>
           </div>
-          <p class="small" style="margin-top:10px">信号 % 为满量程归一化值，CV 为 10-bit 数据电平（信号 × 1023）。LogC4 实际应在 12-bit 容器中看待（CV × 4）。广播 IRE 与数据电平的换算：IRE ≈ (CV − 64) / 876 × 100。</p>
+          <p class="small" style="margin-top:10px"><span data-lang="zh">信号 % 为满量程归一化值，CV 为 10-bit 数据电平（信号 × 1023）。LogC4 实际应在 12-bit 容器中看待（CV × 4）。广播 IRE 与数据电平的换算：IRE ≈ (CV − 64) / 876 × 100。</span><span data-lang="en">Signal % is the full-range normalized value; CV is the 10-bit data level (signal × 1023). LogC4 should really be viewed in a 12-bit container (CV × 4). Broadcast IRE vs. data level: IRE ≈ (CV − 64) / 876 × 100.</span></p>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>ARRI LogC4 的关键变化</h3>
-            <p>LogC4 是 LogC3 的后继，服务 ARRI REVEAL 色彩科学与 ALEXA 35 / ALEXA 265。两个工程决定值得注意：<b>EI 无关</b>——LogC3 的编码随 EI 改变（每个 EI 一条曲线），LogC4 任何 EI 下编码解码公式唯一，LUT 和 IDT 管理大幅简化；<b>12 bit 最低量化</b>——因为 14 档对数窗口摊薄了每档码值。LogC4 配套色域为 ARRI Wide Gamut 4（AWG4，D65 白点）。</p>
-            <p class="small">18% 灰 → 信号 27.8%；不要把 LogC3 的 LUT 套在 LogC4 素材上，两者中灰相差约 11 个百分点。</p>
+            <h3><span data-lang="zh">ARRI LogC4 的关键变化</span><span data-lang="en">What changed with ARRI LogC4</span></h3>
+            <p><span data-lang="zh">LogC4 是 LogC3 的后继，服务 ARRI REVEAL 色彩科学与 ALEXA 35 / ALEXA 265。两个工程决定值得注意：<b>EI 无关</b>——LogC3 的编码随 EI 改变（每个 EI 一条曲线），LogC4 任何 EI 下编码解码公式唯一，LUT 和 IDT 管理大幅简化；<b>12 bit 最低量化</b>——因为 14 档对数窗口摊薄了每档码值。LogC4 配套色域为 ARRI Wide Gamut 4（AWG4，D65 白点）。</span><span data-lang="en">LogC4 succeeds LogC3, serving ARRI REVEAL color science and the ALEXA 35 / ALEXA 265. Two engineering decisions stand out: <b>EI-independent</b> — LogC3's encoding changed with EI (one curve per EI), whereas LogC4 has a single encode/decode formula at any EI, greatly simplifying LUT and IDT management; and <b>12-bit minimum quantization</b> — because the 14-stop log window thins out the code values per stop. Its companion gamut is ARRI Wide Gamut 4 (AWG4, D65 white point).</span></p>
+            <p class="small"><span data-lang="zh">18% 灰 → 信号 27.8%；不要把 LogC3 的 LUT 套在 LogC4 素材上，两者中灰相差约 11 个百分点。</span><span data-lang="en">18% gray → 27.8% signal; don't apply a LogC3 LUT to LogC4 footage — their mid-grays differ by about 11 percentage points.</span></p>
           </div>
           <div class="card">
-            <h3>S-Log3 的设计特征</h3>
-            <p>Sony 官方资料把 S-Log3 描述为贴近"Cineon / 负片扫描"习惯的曲线：相比 S-Log2，中灰更亮（41% vs 32%）、暗部脚趾更短、向高光延展约 1.5 档，整体更接近纯对数。搭配色域 S-Gamut3.Cine 比 DCI-P3 略宽，便于常规影视调色；S-Gamut3 则更接近传感器原生色域，留给深度色彩管理。</p>
-            <p class="small">18% 灰 → CV 420（41%）；90% 白 → CV 598（61 IRE）；黑位 → CV 95。</p>
+            <h3><span data-lang="zh">S-Log3 的设计特征</span><span data-lang="en">S-Log3's design characteristics</span></h3>
+            <p><span data-lang="zh">Sony 官方资料把 S-Log3 描述为贴近"Cineon / 负片扫描"习惯的曲线：相比 S-Log2，中灰更亮（41% vs 32%）、暗部脚趾更短、向高光延展约 1.5 档，整体更接近纯对数。搭配色域 S-Gamut3.Cine 比 DCI-P3 略宽，便于常规影视调色；S-Gamut3 则更接近传感器原生色域，留给深度色彩管理。</span><span data-lang="en">Sony's docs describe S-Log3 as a curve close to "Cineon / negative-scan" conventions: versus S-Log2 it has a brighter mid-gray (41% vs. 32%), a shorter shadow toe, about 1.5 stops more highlight extension, and is overall closer to a pure log. Its companion gamut S-Gamut3.Cine is slightly wider than DCI-P3, convenient for regular film/TV grading; S-Gamut3 is closer to the sensor's native gamut, reserved for deep color management.</span></p>
+            <p class="small"><span data-lang="zh">18% 灰 → CV 420（41%）；90% 白 → CV 598（61 IRE）；黑位 → CV 95。</span><span data-lang="en">18% gray → CV 420 (41%); 90% white → CV 598 (61 IRE); black → CV 95.</span></p>
           </div>
         </div>
       </div>
@@ -713,65 +755,65 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. 各家 Log 不是同一种"灰"</h2>
-            <p>不同厂商的 Log 围绕自家传感器、位深、监看 LUT、输出变换和色彩科学整体设计。选错任何一半（Gamma 或 Gamut），后面全错。</p>
+            <h2><span data-lang="zh">5. 各家 Log 不是同一种"灰"</span><span data-lang="en">5. Each vendor's Log isn't the same "gray"</span></h2>
+            <p><span data-lang="zh">不同厂商的 Log 围绕自家传感器、位深、监看 LUT、输出变换和色彩科学整体设计。选错任何一半（Gamma 或 Gamut），后面全错。</span><span data-lang="en">Each vendor's Log is designed around its own sensor, bit depth, monitoring LUT, output transform, and color science as a whole. Get either half wrong (gamma or gamut) and everything downstream is wrong.</span></p>
           </div>
-          <div class="note">实操规则：输入变换必须<b>同时</b>指定 Gamma 和 Color Space。只写 "S-Log3" 不完整——是 S-Gamut3 还是 S-Gamut3.Cine，调色结果不同。</div>
+          <div class="note"><span data-lang="zh">实操规则：输入变换必须<b>同时</b>指定 Gamma 和 Color Space。只写 "S-Log3" 不完整——是 S-Gamut3 还是 S-Gamut3.Cine，调色结果不同。</span><span data-lang="en">Practical rule: an input transform must specify <b>both</b> gamma and color space. Just writing "S-Log3" is incomplete — S-Gamut3 vs. S-Gamut3.Cine gives different grading results.</span></div>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>系统</th>
-                <th>常见搭配</th>
-                <th>设计重点</th>
-                <th>中灰/锚点</th>
-                <th>使用提醒</th>
+                <th><span data-lang="zh">系统</span><span data-lang="en">System</span></th>
+                <th><span data-lang="zh">常见搭配</span><span data-lang="en">Common pairing</span></th>
+                <th><span data-lang="zh">设计重点</span><span data-lang="en">Design focus</span></th>
+                <th><span data-lang="zh">中灰/锚点</span><span data-lang="en">Mid-gray / anchor</span></th>
+                <th><span data-lang="zh">使用提醒</span><span data-lang="en">Usage note</span></th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><b>ARRI</b></td>
                 <td>LogC4 + ARRI Wide Gamut 4</td>
-                <td>ALEXA 35 / 265 的 REVEAL 色彩科学；EI 无关解码；14 档对数窗口，面向 12 bit。</td>
-                <td>18% 灰 → 27.8%；黑位 CV 95（12-bit 域为 380）。</td>
-                <td>LogC3 与 LogC4 不通用；需配对应 LUT、CST 或 ACES IDT。</td>
+                <td><span data-lang="zh">ALEXA 35 / 265 的 REVEAL 色彩科学；EI 无关解码；14 档对数窗口，面向 12 bit。</span><span data-lang="en">REVEAL color science for the ALEXA 35 / 265; EI-independent decode; a 14-stop log window, aimed at 12 bit.</span></td>
+                <td><span data-lang="zh">18% 灰 → 27.8%；黑位 CV 95（12-bit 域为 380）。</span><span data-lang="en">18% gray → 27.8%; black CV 95 (380 in the 12-bit domain).</span></td>
+                <td><span data-lang="zh">LogC3 与 LogC4 不通用；需配对应 LUT、CST 或 ACES IDT。</span><span data-lang="en">LogC3 and LogC4 aren't interchangeable; use the matching LUT, CST, or ACES IDT.</span></td>
               </tr>
               <tr>
                 <td><b>Sony</b></td>
                 <td>S-Log3 + S-Gamut3.Cine / S-Gamut3</td>
-                <td>Cineon 式纯 Log；每档约 79 CV；S-Gamut3.Cine 面向常规调色。</td>
-                <td>18% 灰 → CV 420 / 41%；90% 白 → CV 598。</td>
-                <td>8 bit 机型拍 S-Log3 量化余量小；建议 10 bit 起，曝光偏亮保护暗部。</td>
+                <td><span data-lang="zh">Cineon 式纯 Log；每档约 79 CV；S-Gamut3.Cine 面向常规调色。</span><span data-lang="en">Cineon-style pure Log; about 79 CV/stop; S-Gamut3.Cine aimed at regular grading.</span></td>
+                <td><span data-lang="zh">18% 灰 → CV 420 / 41%；90% 白 → CV 598。</span><span data-lang="en">18% gray → CV 420 / 41%; 90% white → CV 598.</span></td>
+                <td><span data-lang="zh">8 bit 机型拍 S-Log3 量化余量小；建议 10 bit 起，曝光偏亮保护暗部。</span><span data-lang="en">8-bit cameras leave little quantization headroom for S-Log3; use 10 bit and up, and expose a touch bright to protect shadows.</span></td>
               </tr>
               <tr>
                 <td><b>Canon</b></td>
                 <td>Canon Log 2 / Log 3 + Cinema Gamut</td>
-                <td>Log 2 偏最大动态范围与暗部层次；Log 3 偏易用与高光延展。</td>
-                <td>官方按 10% / 18% 灰给出锚点；Log 3 常见中灰约 34%。</td>
-                <td>Log 2 后期空间大但暗部噪声更明显；一般制作 Log 3 更稳。</td>
+                <td><span data-lang="zh">Log 2 偏最大动态范围与暗部层次；Log 3 偏易用与高光延展。</span><span data-lang="en">Log 2 leans toward maximum dynamic range and shadow detail; Log 3 toward ease of use and highlight extension.</span></td>
+                <td><span data-lang="zh">官方按 10% / 18% 灰给出锚点；Log 3 常见中灰约 34%。</span><span data-lang="en">Anchors given officially against 10% / 18% gray; Log 3's mid-gray is commonly around 34%.</span></td>
+                <td><span data-lang="zh">Log 2 后期空间大但暗部噪声更明显；一般制作 Log 3 更稳。</span><span data-lang="en">Log 2 gives more post latitude but more visible shadow noise; for general work Log 3 is steadier.</span></td>
               </tr>
               <tr>
                 <td><b>Panasonic</b></td>
                 <td>V-Log + V-Gamut</td>
-                <td>源自 VariCam，跨机型一致；纯对数区每档约 74 CV；V709 监看变换。</td>
-                <td>18% 灰 → CV 433 / 42 IRE；90% 白 → 61 IRE。</td>
-                <td>V-Log L（GH/S 系微单）与完整 V-Log 编码范围不同，先确认机型。</td>
+                <td><span data-lang="zh">源自 VariCam，跨机型一致；纯对数区每档约 74 CV；V709 监看变换。</span><span data-lang="en">Derived from VariCam, consistent across models; about 74 CV/stop in the pure-log region; V709 monitoring transform.</span></td>
+                <td><span data-lang="zh">18% 灰 → CV 433 / 42 IRE；90% 白 → 61 IRE。</span><span data-lang="en">18% gray → CV 433 / 42 IRE; 90% white → 61 IRE.</span></td>
+                <td><span data-lang="zh">V-Log L（GH/S 系微单）与完整 V-Log 编码范围不同，先确认机型。</span><span data-lang="en">V-Log L (GH/S-series mirrorless) has a different encoding range than full V-Log; confirm the model first.</span></td>
               </tr>
               <tr>
                 <td><b>RED</b></td>
                 <td>Log3G10 + REDWideGamutRGB</td>
-                <td>IPP2 三段式管线（RAW 开发 → Log 工作空间 → 输出变换）；按"灰上 10 档"设计。</td>
-                <td>18% 灰 → 1/3（33.3%）；灰上 10 档 → 1.0。</td>
-                <td>区分 Legacy 与 IPP2；输出变换是显示适配的一部分，不是装饰 LUT。</td>
+                <td><span data-lang="zh">IPP2 三段式管线（RAW 开发 → Log 工作空间 → 输出变换）；按"灰上 10 档"设计。</span><span data-lang="en">The three-stage IPP2 pipeline (RAW development → Log working space → output transform); designed for "10 stops above gray".</span></td>
+                <td><span data-lang="zh">18% 灰 → 1/3（33.3%）；灰上 10 档 → 1.0。</span><span data-lang="en">18% gray → 1/3 (33.3%); 10 stops above gray → 1.0.</span></td>
+                <td><span data-lang="zh">区分 Legacy 与 IPP2；输出变换是显示适配的一部分，不是装饰 LUT。</span><span data-lang="en">Distinguish Legacy from IPP2; the output transform is part of display adaptation, not a decorative LUT.</span></td>
               </tr>
               <tr>
                 <td><b>Blackmagic</b></td>
                 <td>BMD Film Gen 5 / DaVinci Wide Gamut</td>
-                <td>围绕 Resolve 色彩管理与 BRAW 元数据；常转入 DWG/Intermediate 再调色。</td>
-                <td>不同机型与 Gen 版本各异。</td>
-                <td>确认 Gen 4 / Gen 5、BMD Film 与 DWG Intermediate，别只看 "Film" 字样。</td>
+                <td><span data-lang="zh">围绕 Resolve 色彩管理与 BRAW 元数据；常转入 DWG/Intermediate 再调色。</span><span data-lang="en">Built around Resolve color management and BRAW metadata; usually converted into DWG/Intermediate before grading.</span></td>
+                <td><span data-lang="zh">不同机型与 Gen 版本各异。</span><span data-lang="en">Varies by model and Gen version.</span></td>
+                <td><span data-lang="zh">确认 Gen 4 / Gen 5、BMD Film 与 DWG Intermediate，别只看 "Film" 字样。</span><span data-lang="en">Confirm Gen 4 / Gen 5, BMD Film vs. DWG Intermediate — don't just go by the word "Film".</span></td>
               </tr>
             </tbody>
           </table>
@@ -783,58 +825,58 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>6. Log vs RAW vs 显示 Gamma：三种记录哲学</h2>
-            <p>这三者不是"画质从高到低"，而是<b>把哪些决定烘焙进文件、把哪些留给后期</b>的三种取舍。Log 的位置很特别：它已经是"显像后"的视频，却尽力保留"显像前"的调整空间。</p>
+            <h2><span data-lang="zh">6. Log vs RAW vs 显示 Gamma：三种记录哲学</span><span data-lang="en">6. Log vs. RAW vs. display gamma: three recording philosophies</span></h2>
+            <p><span data-lang="zh">这三者不是"画质从高到低"，而是<b>把哪些决定烘焙进文件、把哪些留给后期</b>的三种取舍。Log 的位置很特别：它已经是"显像后"的视频，却尽力保留"显像前"的调整空间。</span><span data-lang="en">These three aren't a "best-to-worst image quality" ranking, but three trade-offs over <b>which decisions get baked into the file and which are left for post</b>. Log's position is special: it's already "developed" video, yet it tries hard to preserve "pre-development" latitude.</span></p>
           </div>
-          <div class="note">一个判断框架：问自己"后期需要反悔什么"。要反悔白平衡和 ISO → RAW；要反悔影调与色彩风格 → Log；什么都不反悔 → 直接拍显示 Gamma。</div>
+          <div class="note"><span data-lang="zh">一个判断框架：问自己"后期需要反悔什么"。要反悔白平衡和 ISO → RAW；要反悔影调与色彩风格 → Log；什么都不反悔 → 直接拍显示 Gamma。</span><span data-lang="en">A decision framework: ask "what might I need to undo in post". Need to undo white balance and ISO → RAW; need to undo tonality and color style → Log; need to undo nothing → shoot display gamma directly.</span></div>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>维度</th>
+                <th><span data-lang="zh">维度</span><span data-lang="en">Dimension</span></th>
                 <th>RAW</th>
-                <th>Log（10/12 bit）</th>
-                <th>显示 Gamma（709 / HLG）</th>
+                <th><span data-lang="zh">Log（10/12 bit）</span><span data-lang="en">Log (10/12 bit)</span></th>
+                <th><span data-lang="zh">显示 Gamma（709 / HLG）</span><span data-lang="en">Display gamma (709 / HLG)</span></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><b>数据形态</b></td>
-                <td>传感器马赛克线性数据，未去拜耳</td>
-                <td>已去拜耳的三通道视频，亮度经 Log 编码进专业编解码器</td>
-                <td>已烘焙显示曲线与色域的成品视频</td>
+                <td><b><span data-lang="zh">数据形态</span><span data-lang="en">Data form</span></b></td>
+                <td><span data-lang="zh">传感器马赛克线性数据，未去拜耳</span><span data-lang="en">Linear sensor mosaic data, not debayered</span></td>
+                <td><span data-lang="zh">已去拜耳的三通道视频，亮度经 Log 编码进专业编解码器</span><span data-lang="en">Debayered three-channel video, luminance Log-encoded into a professional codec</span></td>
+                <td><span data-lang="zh">已烘焙显示曲线与色域的成品视频</span><span data-lang="en">Finished video with the display curve and gamut already baked in</span></td>
               </tr>
               <tr>
-                <td><b>白平衡 / ISO</b></td>
-                <td>多为元数据，后期近乎无损改动</td>
-                <td>已烘焙进画面，后期只能近似补偿</td>
-                <td>完全烘焙，改动即画质损失</td>
+                <td><b><span data-lang="zh">白平衡 / ISO</span><span data-lang="en">White balance / ISO</span></b></td>
+                <td><span data-lang="zh">多为元数据，后期近乎无损改动</span><span data-lang="en">Mostly metadata, changeable in post nearly losslessly</span></td>
+                <td><span data-lang="zh">已烘焙进画面，后期只能近似补偿</span><span data-lang="en">Baked into the image; post can only approximate a correction</span></td>
+                <td><span data-lang="zh">完全烘焙，改动即画质损失</span><span data-lang="en">Fully baked; any change costs image quality</span></td>
               </tr>
               <tr>
-                <td><b>位深与体积</b></td>
-                <td>12–16 bit，体积最大（压缩 RAW 可缓解）</td>
-                <td>10–12 bit，ProRes / XAVC / BRAW 级体积</td>
-                <td>8–10 bit，体积最小</td>
+                <td><b><span data-lang="zh">位深与体积</span><span data-lang="en">Bit depth & size</span></b></td>
+                <td><span data-lang="zh">12–16 bit，体积最大（压缩 RAW 可缓解）</span><span data-lang="en">12–16 bit, largest size (compressed RAW eases this)</span></td>
+                <td><span data-lang="zh">10–12 bit，ProRes / XAVC / BRAW 级体积</span><span data-lang="en">10–12 bit, ProRes / XAVC / BRAW-class size</span></td>
+                <td><span data-lang="zh">8–10 bit，体积最小</span><span data-lang="en">8–10 bit, smallest size</span></td>
               </tr>
               <tr>
-                <td><b>动态范围存留</b></td>
-                <td>传感器全部（受 RAW 压缩比影响极小）</td>
-                <td>接近传感器全部——前提是曝光正确</td>
-                <td>受显示曲线剪切，高光最先丢</td>
+                <td><b><span data-lang="zh">动态范围存留</span><span data-lang="en">Dynamic range retained</span></b></td>
+                <td><span data-lang="zh">传感器全部（受 RAW 压缩比影响极小）</span><span data-lang="en">All of the sensor's (barely affected by RAW compression ratio)</span></td>
+                <td><span data-lang="zh">接近传感器全部——前提是曝光正确</span><span data-lang="en">Close to all of the sensor's — provided exposure is correct</span></td>
+                <td><span data-lang="zh">受显示曲线剪切，高光最先丢</span><span data-lang="en">Clipped by the display curve; highlights go first</span></td>
               </tr>
               <tr>
-                <td><b>后期成本</b></td>
-                <td>最高：RAW 开发 + 色彩管理 + 调色</td>
-                <td>中：色彩管理 + 调色</td>
-                <td>最低：可直接剪辑出片</td>
+                <td><b><span data-lang="zh">后期成本</span><span data-lang="en">Post cost</span></b></td>
+                <td><span data-lang="zh">最高：RAW 开发 + 色彩管理 + 调色</span><span data-lang="en">Highest: RAW development + color management + grading</span></td>
+                <td><span data-lang="zh">中：色彩管理 + 调色</span><span data-lang="en">Medium: color management + grading</span></td>
+                <td><span data-lang="zh">最低：可直接剪辑出片</span><span data-lang="en">Lowest: edit and deliver directly</span></td>
               </tr>
               <tr>
-                <td><b>适合场景</b></td>
-                <td>电影、广告、重后期、视效素材</td>
-                <td>绝大多数专业视频制作的甜点区</td>
-                <td>新闻、直播、活动记录、快速交付</td>
+                <td><b><span data-lang="zh">适合场景</span><span data-lang="en">Best for</span></b></td>
+                <td><span data-lang="zh">电影、广告、重后期、视效素材</span><span data-lang="en">Film, commercials, heavy post, VFX plates</span></td>
+                <td><span data-lang="zh">绝大多数专业视频制作的甜点区</span><span data-lang="en">The sweet spot for the vast majority of professional video</span></td>
+                <td><span data-lang="zh">新闻、直播、活动记录、快速交付</span><span data-lang="en">News, live broadcast, event coverage, fast delivery</span></td>
               </tr>
             </tbody>
           </table>
@@ -842,19 +884,19 @@
 
         <div class="grid-3" style="margin-top:16px">
           <div class="card">
-            <span class="tag gold">边界情况</span>
-            <h3>"部分开发"的 RAW</h3>
-            <p>BRAW 和 ProRes RAW 在机内做了部分处理（降噪、部分去拜耳运算），严格说是"半开发 RAW"。白平衡 / ISO 仍以元数据方式可调，但不要按"完全未处理"理解它们。</p>
+            <span class="tag gold"><span data-lang="zh">边界情况</span><span data-lang="en">Edge case</span></span>
+            <h3><span data-lang="zh">"部分开发"的 RAW</span><span data-lang="en">"Partially developed" RAW</span></h3>
+            <p><span data-lang="zh">BRAW 和 ProRes RAW 在机内做了部分处理（降噪、部分去拜耳运算），严格说是"半开发 RAW"。白平衡 / ISO 仍以元数据方式可调，但不要按"完全未处理"理解它们。</span><span data-lang="en">BRAW and ProRes RAW do some in-camera processing (noise reduction, partial debayer math), so strictly they're "semi-developed RAW". White balance / ISO are still metadata-adjustable, but don't think of them as "completely unprocessed".</span></p>
           </div>
           <div class="card">
-            <span class="tag gold">容易混淆</span>
-            <h3>RAW 里也有 Log</h3>
-            <p>很多压缩 RAW 在<b>存储层</b>内部使用对数或类对数量化来省位深——这与"拍 Log 视频"是两回事。前者是文件内部实现，后者是交付给后期的色彩空间约定。</p>
+            <span class="tag gold"><span data-lang="zh">容易混淆</span><span data-lang="en">Easily confused</span></span>
+            <h3><span data-lang="zh">RAW 里也有 Log</span><span data-lang="en">There's Log inside RAW too</span></h3>
+            <p><span data-lang="zh">很多压缩 RAW 在<b>存储层</b>内部使用对数或类对数量化来省位深——这与"拍 Log 视频"是两回事。前者是文件内部实现，后者是交付给后期的色彩空间约定。</span><span data-lang="en">Many compressed RAW formats use log or log-like quantization internally at the <b>storage layer</b> to save bits — that's a different thing from "shooting Log video". The former is a file-internal implementation; the latter is a color-space agreement handed to post.</span></p>
           </div>
           <div class="card">
-            <span class="tag gold">实用结论</span>
-            <h3>Log 是性价比拐点</h3>
-            <p>从显示 Gamma 升级到 Log，调色空间的提升立竿见影；从 Log 升级到 RAW，提升集中在白平衡反悔权与极端调色场景。预算和存储有限时，<b>10 bit Log + 正确曝光</b>是收益最大的一档投入。</p>
+            <span class="tag gold"><span data-lang="zh">实用结论</span><span data-lang="en">Practical takeaway</span></span>
+            <h3><span data-lang="zh">Log 是性价比拐点</span><span data-lang="en">Log is the value sweet spot</span></h3>
+            <p><span data-lang="zh">从显示 Gamma 升级到 Log，调色空间的提升立竿见影；从 Log 升级到 RAW，提升集中在白平衡反悔权与极端调色场景。预算和存储有限时，<b>10 bit Log + 正确曝光</b>是收益最大的一档投入。</span><span data-lang="en">Upgrading from display gamma to Log gives an immediate jump in grading latitude; upgrading from Log to RAW mostly adds white-balance undo rights and extreme-grade cases. When budget and storage are limited, <b>10-bit Log + correct exposure</b> is the highest-return level of investment.</span></p>
           </div>
         </div>
       </div>
@@ -864,94 +906,94 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>7. 后期工作流：把 Log 正确"翻译"回去</h2>
-            <p>Log 素材的一切价值都要靠正确的色彩管理兑现。这一节讲清三个工具的本质区别（CST / LUT / ACES）、Resolve 的两种标准做法，以及一张常见故障诊断表。</p>
+            <h2><span data-lang="zh">7. 后期工作流：把 Log 正确"翻译"回去</span><span data-lang="en">7. Post workflow: "translating" Log back correctly</span></h2>
+            <p><span data-lang="zh">Log 素材的一切价值都要靠正确的色彩管理兑现。这一节讲清三个工具的本质区别（CST / LUT / ACES）、Resolve 的两种标准做法，以及一张常见故障诊断表。</span><span data-lang="en">All the value of Log footage is realized only through correct color management. This section clarifies the essential differences between three tools (CST / LUT / ACES), two standard Resolve approaches, and a common-fault diagnostic table.</span></p>
           </div>
-          <div class="note">心智模型：Log 文件是"加密"的场景信息，输入变换是解密钥匙——<b>钥匙必须与拍摄时的 Gamma + Gamut 完全对应</b>，差一点整条链路都歪。</div>
+          <div class="note"><span data-lang="zh">心智模型：Log 文件是"加密"的场景信息，输入变换是解密钥匙——<b>钥匙必须与拍摄时的 Gamma + Gamut 完全对应</b>，差一点整条链路都歪。</span><span data-lang="en">Mental model: a Log file is "encrypted" scene information, and the input transform is the decryption key — <b>the key must exactly match the gamma + gamut used at capture</b>; a slight mismatch skews the whole chain.</span></div>
         </div>
 
         <div class="grid-3">
           <div class="card">
-            <span class="tag">CST / 色彩空间变换</span>
-            <h3>解析公式，精确可逆</h3>
-            <p>Color Space Transform 用厂商公式做数学变换，<b>没有网格插值误差</b>，超出范围的值可保留（取决于设置），方向可逆。Resolve 的 CST 节点和色彩管理内部都是这种方式。</p>
-            <p class="small">适合：技术转换（Log→工作空间→交付空间）的全部环节。</p>
+            <span class="tag"><span data-lang="zh">CST / 色彩空间变换</span><span data-lang="en">CST / color space transform</span></span>
+            <h3><span data-lang="zh">解析公式，精确可逆</span><span data-lang="en">Analytic formula, precisely invertible</span></h3>
+            <p><span data-lang="zh">Color Space Transform 用厂商公式做数学变换，<b>没有网格插值误差</b>，超出范围的值可保留（取决于设置），方向可逆。Resolve 的 CST 节点和色彩管理内部都是这种方式。</span><span data-lang="en">A Color Space Transform does the math with the vendor formula, with <b>no grid-interpolation error</b>; out-of-range values can be preserved (depending on settings), and it's reversible. Resolve's CST node and its internal color management both work this way.</span></p>
+            <p class="small"><span data-lang="zh">适合：技术转换（Log→工作空间→交付空间）的全部环节。</span><span data-lang="en">Good for: every stage of technical conversion (Log → working space → delivery space).</span></p>
           </div>
           <div class="card">
-            <span class="tag">LUT / 查找表</span>
-            <h3>采样网格，近似固化</h3>
-            <p>LUT 把变换烘焙成 17³/33³/65³ 网格点，运行时插值。<b>输入域之外的值会被剪切</b>，精度受网格密度限制，且不可逆。优势是能固化任意复杂的创意外观、跨软硬件交换（监视器、交换给剪辑）。</p>
-            <p class="small">适合：现场监看、创意外观分发；不适合：当作万能技术转换。</p>
+            <span class="tag"><span data-lang="zh">LUT / 查找表</span><span data-lang="en">LUT / lookup table</span></span>
+            <h3><span data-lang="zh">采样网格，近似固化</span><span data-lang="en">A sampled grid, baked approximation</span></h3>
+            <p><span data-lang="zh">LUT 把变换烘焙成 17³/33³/65³ 网格点，运行时插值。<b>输入域之外的值会被剪切</b>，精度受网格密度限制，且不可逆。优势是能固化任意复杂的创意外观、跨软硬件交换（监视器、交换给剪辑）。</span><span data-lang="en">A LUT bakes the transform into 17³/33³/65³ grid points and interpolates at runtime. <b>Values outside the input domain get clipped</b>, precision is limited by grid density, and it's not reversible. Its strength is freezing an arbitrarily complex creative look and exchanging it across software/hardware (monitors, handing off to editorial).</span></p>
+            <p class="small"><span data-lang="zh">适合：现场监看、创意外观分发；不适合：当作万能技术转换。</span><span data-lang="en">Good for: on-set monitoring and distributing a creative look; not for: serving as a universal technical conversion.</span></p>
           </div>
           <div class="card">
             <span class="tag">ACES</span>
-            <h3>标准化框架，不是工具</h3>
-            <p>ACES 规定一条固定管线：相机素材经 <b>IDT</b> 进入场景线性的 ACES2065-1（调色常用 ACEScct），输出经 <b>RRT + ODT</b> 适配显示。价值在于多机型统一、跨机构交换和长期归档，而非"更好看"。</p>
-            <p class="small">适合：多机位混拍、视效协作、需要归档交换的项目。</p>
+            <h3><span data-lang="zh">标准化框架，不是工具</span><span data-lang="en">A standardized framework, not a tool</span></h3>
+            <p><span data-lang="zh">ACES 规定一条固定管线：相机素材经 <b>IDT</b> 进入场景线性的 ACES2065-1（调色常用 ACEScct），输出经 <b>RRT + ODT</b> 适配显示。价值在于多机型统一、跨机构交换和长期归档，而非"更好看"。</span><span data-lang="en">ACES prescribes a fixed pipeline: camera footage enters scene-linear ACES2065-1 via an <b>IDT</b> (ACEScct is common for grading), and the output adapts to the display via <b>RRT + ODT</b>. Its value is unifying many camera models, cross-facility exchange, and long-term archiving — not "looking better".</span></p>
+            <p class="small"><span data-lang="zh">适合：多机位混拍、视效协作、需要归档交换的项目。</span><span data-lang="en">Good for: multi-camera shoots, VFX collaboration, and projects that need archival exchange.</span></p>
           </div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>Resolve 做法 A：自动色彩管理（推荐起点）</h3>
+            <h3><span data-lang="zh">Resolve 做法 A：自动色彩管理（推荐起点）</span><span data-lang="en">Resolve approach A: automatic color management (recommended starting point)</span></h3>
             <ol class="steps">
-              <li>项目设置 → 色彩科学选 <code>DaVinci YRGB Color Managed</code>，模式选 <code>DaVinci Wide Gamut Intermediate</code>。</li>
-              <li>让 Resolve 按剪辑元数据<b>自动识别</b>每条素材的输入空间；无元数据的素材，右键 → <code>Input Color Space</code> 手动指定（Gamma 和 Gamut 一起选）。</li>
-              <li>时间线在宽色域中间空间调色；输出色彩空间按交付目标设 <code>Rec.709 Gamma 2.4</code> / P3 / PQ。</li>
-              <li>检查点：拉一条曝光正常的素材，中灰应落在波形约 38–45%（取决于输出曲线），肤色不偏——否则九成是输入空间错了。</li>
+              <li><span data-lang="zh">项目设置 → 色彩科学选 <code>DaVinci YRGB Color Managed</code>，模式选 <code>DaVinci Wide Gamut Intermediate</code>。</span><span data-lang="en">Project settings → set Color Science to <code>DaVinci YRGB Color Managed</code> and the mode to <code>DaVinci Wide Gamut Intermediate</code>.</span></li>
+              <li><span data-lang="zh">让 Resolve 按剪辑元数据<b>自动识别</b>每条素材的输入空间；无元数据的素材，右键 → <code>Input Color Space</code> 手动指定（Gamma 和 Gamut 一起选）。</span><span data-lang="en">Let Resolve <b>auto-detect</b> each clip's input space from clip metadata; for clips without metadata, right-click → <code>Input Color Space</code> and set it manually (choose gamma and gamut together).</span></li>
+              <li><span data-lang="zh">时间线在宽色域中间空间调色；输出色彩空间按交付目标设 <code>Rec.709 Gamma 2.4</code> / P3 / PQ。</span><span data-lang="en">Grade the timeline in the wide-gamut intermediate space; set the output color space to <code>Rec.709 Gamma 2.4</code> / P3 / PQ per the delivery target.</span></li>
+              <li><span data-lang="zh">检查点：拉一条曝光正常的素材，中灰应落在波形约 38–45%（取决于输出曲线），肤色不偏——否则九成是输入空间错了。</span><span data-lang="en">Checkpoint: pull up a correctly exposed clip — mid-gray should land around 38–45% on the waveform (depending on the output curve) and skin tones shouldn't shift; otherwise the input space is wrong nine times out of ten.</span></li>
             </ol>
           </div>
           <div class="card">
-            <h3>Resolve 做法 B：手动 CST 节点（精确可控）</h3>
+            <h3><span data-lang="zh">Resolve 做法 B：手动 CST 节点（精确可控）</span><span data-lang="en">Resolve approach B: manual CST node (precise control)</span></h3>
             <ol class="steps">
-              <li>保持项目为 <code>DaVinci YRGB</code>（非托管），时间线色彩空间设为 DWG/Intermediate。</li>
-              <li>每条素材第一个节点放 CST：<code>输入 = 素材实际 Gamma/Gamut</code> → <code>输出 = DWG / Intermediate</code>。</li>
-              <li>中间节点自由调色（此时工作在统一的宽色域空间，工具行为跨机型一致）。</li>
-              <li>节点链<b>最末端</b>放输出 CST：<code>DWG → Rec.709 / Gamma 2.4</code>（或目标交付空间），并打开 Tone/Gamut Mapping 处理超范围值。</li>
+              <li><span data-lang="zh">保持项目为 <code>DaVinci YRGB</code>（非托管），时间线色彩空间设为 DWG/Intermediate。</span><span data-lang="en">Keep the project on <code>DaVinci YRGB</code> (unmanaged), and set the timeline color space to DWG/Intermediate.</span></li>
+              <li><span data-lang="zh">每条素材第一个节点放 CST：<code>输入 = 素材实际 Gamma/Gamut</code> → <code>输出 = DWG / Intermediate</code>。</span><span data-lang="en">Put a CST on each clip's first node: <code>input = the clip's actual gamma/gamut</code> → <code>output = DWG / Intermediate</code>.</span></li>
+              <li><span data-lang="zh">中间节点自由调色（此时工作在统一的宽色域空间，工具行为跨机型一致）。</span><span data-lang="en">Grade freely on the middle nodes (now working in one unified wide-gamut space, so tool behavior is consistent across camera models).</span></li>
+              <li><span data-lang="zh">节点链<b>最末端</b>放输出 CST：<code>DWG → Rec.709 / Gamma 2.4</code>（或目标交付空间），并打开 Tone/Gamut Mapping 处理超范围值。</span><span data-lang="en">Put the output CST at the <b>very end</b> of the node chain: <code>DWG → Rec.709 / Gamma 2.4</code> (or the target delivery space), and enable Tone/Gamut Mapping to handle out-of-range values.</span></li>
             </ol>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px">
-          <h3>故障诊断表：症状 → 原因 → 修复</h3>
+          <h3><span data-lang="zh">故障诊断表：症状 → 原因 → 修复</span><span data-lang="en">Fault diagnostic table: symptom → cause → fix</span></h3>
           <div class="table-wrap diag-wrap">
             <table>
-              <thead><tr><th>症状</th><th>最可能原因</th><th>修复</th></tr></thead>
+              <thead><tr><th><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></th><th><span data-lang="zh">最可能原因</span><span data-lang="en">Most likely cause</span></th><th><span data-lang="zh">修复</span><span data-lang="en">Fix</span></th></tr></thead>
               <tbody>
                 <tr>
-                  <td>画面整体发灰、对比饱和都低</td>
-                  <td>直接在看 Log 原始信号，没有做任何输出/监看变换</td>
-                  <td>启用色彩管理或在末端加 CST/官方 LUT；Log 素材"看起来灰"是正常的中间态</td>
+                  <td><span data-lang="zh">画面整体发灰、对比饱和都低</span><span data-lang="en">Whole image looks gray, low contrast and saturation</span></td>
+                  <td><span data-lang="zh">直接在看 Log 原始信号，没有做任何输出/监看变换</span><span data-lang="en">You're viewing the raw Log signal directly, with no output/monitoring transform</span></td>
+                  <td><span data-lang="zh">启用色彩管理或在末端加 CST/官方 LUT；Log 素材"看起来灰"是正常的中间态</span><span data-lang="en">Enable color management or add a CST/official LUT at the end; Log footage "looking gray" is a normal intermediate state</span></td>
                 </tr>
                 <tr>
-                  <td>暗部死黑、高光断层、肤色过饱和</td>
-                  <td>双重变换：素材已在机内烘焙了 709（或已带 LUT），又叠了一次 Log→709</td>
-                  <td>用示波器确认素材实际状态（Log 素材波形通常集中在 20–60%），删掉多余的一次变换</td>
+                  <td><span data-lang="zh">暗部死黑、高光断层、肤色过饱和</span><span data-lang="en">Crushed shadows, broken highlights, oversaturated skin</span></td>
+                  <td><span data-lang="zh">双重变换：素材已在机内烘焙了 709（或已带 LUT），又叠了一次 Log→709</span><span data-lang="en">Double transform: the footage already baked in 709 in-camera (or carries a LUT), and you added another Log→709</span></td>
+                  <td><span data-lang="zh">用示波器确认素材实际状态（Log 素材波形通常集中在 20–60%），删掉多余的一次变换</span><span data-lang="en">Use a scope to confirm the footage's actual state (Log waveforms usually sit around 20–60%) and remove the redundant transform</span></td>
                 </tr>
                 <tr>
-                  <td>整体明暗错位，波形整体偏高或偏低</td>
-                  <td>输入 Gamma 选错：S-Log2 当 S-Log3、LogC3 当 LogC4、V-Log L 当 V-Log</td>
-                  <td>核对拍摄元数据和场记，按机型与固件确认实际记录曲线</td>
+                  <td><span data-lang="zh">整体明暗错位，波形整体偏高或偏低</span><span data-lang="en">Overall brightness off, waveform sits too high or too low</span></td>
+                  <td><span data-lang="zh">输入 Gamma 选错：S-Log2 当 S-Log3、LogC3 当 LogC4、V-Log L 当 V-Log</span><span data-lang="en">Wrong input gamma: S-Log2 read as S-Log3, LogC3 as LogC4, V-Log L as V-Log</span></td>
+                  <td><span data-lang="zh">核对拍摄元数据和场记，按机型与固件确认实际记录曲线</span><span data-lang="en">Check the shoot metadata and camera reports, confirming the actual recording curve by model and firmware</span></td>
                 </tr>
                 <tr>
-                  <td>亮度正常但颜色不对，红绿色相偏移</td>
-                  <td>Gamut 选错：只对了 Gamma，Color Space 用了默认或别家</td>
-                  <td>输入变换同时指定 Gamut（S-Gamut3.Cine、AWG4、V-Gamut、RWG 等）</td>
+                  <td><span data-lang="zh">亮度正常但颜色不对，红绿色相偏移</span><span data-lang="en">Brightness fine but colors wrong, red/green hue shift</span></td>
+                  <td><span data-lang="zh">Gamut 选错：只对了 Gamma，Color Space 用了默认或别家</span><span data-lang="en">Wrong gamut: only the gamma is right, while the color space is left at default or another vendor's</span></td>
+                  <td><span data-lang="zh">输入变换同时指定 Gamut（S-Gamut3.Cine、AWG4、V-Gamut、RWG 等）</span><span data-lang="en">Specify the gamut in the input transform too (S-Gamut3.Cine, AWG4, V-Gamut, RWG, etc.)</span></td>
                 </tr>
                 <tr>
-                  <td>暗部一提亮就出现条带 banding</td>
-                  <td>8 bit（或重压缩）记录的 Log，或严重曝光不足后强提</td>
-                  <td>至少 10 bit 记录；现场按厂商建议曝光（多数 Log 建议偏亮 0.5–1 档保护暗部）</td>
+                  <td><span data-lang="zh">暗部一提亮就出现条带 banding</span><span data-lang="en">Shadows band as soon as you lift them</span></td>
+                  <td><span data-lang="zh">8 bit（或重压缩）记录的 Log，或严重曝光不足后强提</span><span data-lang="en">Log recorded at 8 bit (or heavily compressed), or a hard lift after severe underexposure</span></td>
+                  <td><span data-lang="zh">至少 10 bit 记录；现场按厂商建议曝光（多数 Log 建议偏亮 0.5–1 档保护暗部）</span><span data-lang="en">Record at 10 bit minimum; expose per the vendor's recommendation on set (most Logs suggest 0.5–1 stop brighter to protect shadows)</span></td>
                 </tr>
                 <tr>
-                  <td>套用别人的 LUT 完全不对劲</td>
-                  <td>LUT 的输入假设不同：机型、Gamma、Gamut 或电平范围（Legal/Full）不匹配</td>
-                  <td>查明 LUT 期望的输入空间，先用 CST 把素材转换到该空间，再挂 LUT</td>
+                  <td><span data-lang="zh">套用别人的 LUT 完全不对劲</span><span data-lang="en">Someone else's LUT looks completely wrong</span></td>
+                  <td><span data-lang="zh">LUT 的输入假设不同：机型、Gamma、Gamut 或电平范围（Legal/Full）不匹配</span><span data-lang="en">The LUT's input assumptions differ: camera model, gamma, gamut, or level range (Legal/Full) don't match</span></td>
+                  <td><span data-lang="zh">查明 LUT 期望的输入空间，先用 CST 把素材转换到该空间，再挂 LUT</span><span data-lang="en">Find out the LUT's expected input space, use a CST to convert the footage into that space first, then apply the LUT</span></td>
                 </tr>
                 <tr>
-                  <td>高光一调就剪切，信息找不回来</td>
-                  <td>LUT 或输出变换放在节点链太靠前，后续调整工作在被剪切的显示域</td>
-                  <td>曝光、白平衡等"场景域"调整放在输出变换之前；LUT 永远放链路末端</td>
+                  <td><span data-lang="zh">高光一调就剪切，信息找不回来</span><span data-lang="en">Highlights clip the moment you grade them, with no recovery</span></td>
+                  <td><span data-lang="zh">LUT 或输出变换放在节点链太靠前，后续调整工作在被剪切的显示域</span><span data-lang="en">The LUT or output transform sits too early in the node chain, so later adjustments work in the already-clipped display domain</span></td>
+                  <td><span data-lang="zh">曝光、白平衡等"场景域"调整放在输出变换之前；LUT 永远放链路末端</span><span data-lang="en">Put "scene-domain" adjustments like exposure and white balance before the output transform; always put the LUT at the end of the chain</span></td>
                 </tr>
               </tbody>
             </table>
@@ -960,24 +1002,24 @@
 
         <div class="grid-4" style="margin-top:16px">
           <div class="card">
-            <span class="tag lime">拍摄</span>
-            <h3>按锚点曝光</h3>
-            <p>用波形对中灰锚点（S-Log3 看 41%、V-Log 看 42%、LogC4 看 28%），高光看斑马/假色。不要赌"后期拉得回来"。</p>
+            <span class="tag lime"><span data-lang="zh">拍摄</span><span data-lang="en">Shoot</span></span>
+            <h3><span data-lang="zh">按锚点曝光</span><span data-lang="en">Expose to the anchor</span></h3>
+            <p><span data-lang="zh">用波形对中灰锚点（S-Log3 看 41%、V-Log 看 42%、LogC4 看 28%），高光看斑马/假色。不要赌"后期拉得回来"。</span><span data-lang="en">Use the waveform against the mid-gray anchor (41% for S-Log3, 42% for V-Log, 28% for LogC4) and zebras/false color for highlights. Don't gamble on "fixing it in post".</span></p>
           </div>
           <div class="card">
-            <span class="tag lime">监看</span>
-            <h3>LUT 只管显示</h3>
-            <p>现场监看 LUT 是显示变换，不写入素材。给导演看正常画面，机器记录 Log 原文。</p>
+            <span class="tag lime"><span data-lang="zh">监看</span><span data-lang="en">Monitor</span></span>
+            <h3><span data-lang="zh">LUT 只管显示</span><span data-lang="en">The LUT is display-only</span></h3>
+            <p><span data-lang="zh">现场监看 LUT 是显示变换，不写入素材。给导演看正常画面，机器记录 Log 原文。</span><span data-lang="en">An on-set monitoring LUT is a display transform, not written into the footage. Show the director a normal picture while the camera records the Log original.</span></p>
           </div>
           <div class="card">
-            <span class="tag lime">后期</span>
-            <h3>先技术后创意</h3>
-            <p>先把输入空间认对、转进工作空间，再开始创意调色。顺序反了，所有调整都建立在错误地基上。</p>
+            <span class="tag lime"><span data-lang="zh">后期</span><span data-lang="en">Post</span></span>
+            <h3><span data-lang="zh">先技术后创意</span><span data-lang="en">Technical before creative</span></h3>
+            <p><span data-lang="zh">先把输入空间认对、转进工作空间，再开始创意调色。顺序反了，所有调整都建立在错误地基上。</span><span data-lang="en">Get the input space right and convert into the working space first, then start the creative grade. Reverse the order and every adjustment is built on a wrong foundation.</span></p>
           </div>
           <div class="card">
-            <span class="tag lime">输出</span>
-            <h3>按交付适配</h3>
-            <p>Rec.709、P3、PQ、HLG 各有输出变换。最终观感由输出端决定，Log 只是中间载体。</p>
+            <span class="tag lime"><span data-lang="zh">输出</span><span data-lang="en">Output</span></span>
+            <h3><span data-lang="zh">按交付适配</span><span data-lang="en">Adapt to the delivery</span></h3>
+            <p><span data-lang="zh">Rec.709、P3、PQ、HLG 各有输出变换。最终观感由输出端决定，Log 只是中间载体。</span><span data-lang="en">Rec.709, P3, PQ, and HLG each have their own output transform. The final look is decided at the output end; Log is only the intermediate carrier.</span></p>
           </div>
         </div>
       </div>
@@ -987,26 +1029,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>8. 常见误区</h2>
-            <p>这几句话流传很广，每一条都把 Log 的某个侧面绝对化了。</p>
+            <h2><span data-lang="zh">8. 常见误区</span><span data-lang="en">8. Common misconceptions</span></h2>
+            <p><span data-lang="zh">这几句话流传很广，每一条都把 Log 的某个侧面绝对化了。</span><span data-lang="en">These lines circulate widely, and each one takes one aspect of Log and makes it absolute.</span></p>
           </div>
         </div>
         <div class="grid-2">
           <div class="myth">
-            <p class="wrong">❌ "拍 Log = 动态范围更大"</p>
-            <p class="truth"><b>动态范围由传感器决定，Log 只决定编码质量。</b>同一台相机拍 Log 和拍 709，传感器捕获的档数相同；区别是 709 在编码时把装不下的高光剪掉了，而 Log 把它们压进了文件。Log 保全，而非创造。</p>
+            <p class="wrong">❌ <span data-lang="zh">"拍 Log = 动态范围更大"</span><span data-lang="en">"Shooting Log = more dynamic range"</span></p>
+            <p class="truth"><b><span data-lang="zh">动态范围由传感器决定，Log 只决定编码质量。</span><span data-lang="en">Dynamic range is set by the sensor; Log only decides encoding quality.</span></b><span data-lang="zh">同一台相机拍 Log 和拍 709，传感器捕获的档数相同；区别是 709 在编码时把装不下的高光剪掉了，而 Log 把它们压进了文件。Log 保全，而非创造。</span><span data-lang="en"> The same camera captures the same number of stops whether shooting Log or 709; the difference is that 709 clips the highlights it can't hold during encoding, while Log compresses them into the file. Log preserves, it doesn't create.</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "Log 素材必须看起来很灰才专业"</p>
-            <p class="truth"><b>灰是中间态，不是目标。</b>Log 画面灰是因为对数信号直接被显示器当作显示信号解读。正确流程永远配监看/输出变换。以"灰"为美开拍、不做变换直接交付，是对 Log 的双重误用。</p>
+            <p class="wrong">❌ <span data-lang="zh">"Log 素材必须看起来很灰才专业"</span><span data-lang="en">"Log footage has to look gray to be professional"</span></p>
+            <p class="truth"><b><span data-lang="zh">灰是中间态，不是目标。</span><span data-lang="en">Gray is an intermediate state, not the goal.</span></b><span data-lang="zh">Log 画面灰是因为对数信号直接被显示器当作显示信号解读。正确流程永远配监看/输出变换。以"灰"为美开拍、不做变换直接交付，是对 Log 的双重误用。</span><span data-lang="en"> Log looks gray because the log signal is read directly by the monitor as a display signal. A correct workflow always pairs it with a monitoring/output transform. Treating "gray" as the aesthetic while shooting, and delivering without a transform, is a double misuse of Log.</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "一个 LUT 可以通吃所有机型"</p>
-            <p class="truth"><b>LUT 是针对特定输入空间的函数。</b>各家中灰锚点（28%–42%）和色域都不同，同一 LUT 喂不同 Log，明暗和色彩立即错位。跨机型统一的正确做法是先 CST 到共同工作空间。</p>
+            <p class="wrong">❌ <span data-lang="zh">"一个 LUT 可以通吃所有机型"</span><span data-lang="en">"One LUT works for every camera"</span></p>
+            <p class="truth"><b><span data-lang="zh">LUT 是针对特定输入空间的函数。</span><span data-lang="en">A LUT is a function for a specific input space.</span></b><span data-lang="zh">各家中灰锚点（28%–42%）和色域都不同，同一 LUT 喂不同 Log，明暗和色彩立即错位。跨机型统一的正确做法是先 CST 到共同工作空间。</span><span data-lang="en"> Each vendor's mid-gray anchor (28%–42%) and gamut differ, so feeding the same LUT different Logs immediately throws off brightness and color. The right way to unify across cameras is to CST into a common working space first.</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "8 bit 也能拍 Log，反正后期能救"</p>
-            <p class="truth"><b>8 bit 拍 Log 每档只剩约 20 个码值。</b>轻度调色或许侥幸，提亮暗部、拉肤色立刻 banding。8 bit 机器更稳的选择是拍显示 Gamma 或 HLG，把量化预算用在最终影调上。</p>
+            <p class="wrong">❌ <span data-lang="zh">"8 bit 也能拍 Log，反正后期能救"</span><span data-lang="en">"8 bit can shoot Log too, post will save it"</span></p>
+            <p class="truth"><b><span data-lang="zh">8 bit 拍 Log 每档只剩约 20 个码值。</span><span data-lang="en">8-bit Log leaves only about 20 code values per stop.</span></b><span data-lang="zh">轻度调色或许侥幸，提亮暗部、拉肤色立刻 banding。8 bit 机器更稳的选择是拍显示 Gamma 或 HLG，把量化预算用在最终影调上。</span><span data-lang="en"> A light grade might get away with it, but lifting shadows or pulling skin tones bands immediately. An 8-bit camera's safer choice is to shoot display gamma or HLG, spending the quantization budget on the final tonality.</span></p>
           </div>
         </div>
       </div>
@@ -1016,22 +1058,22 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>资料来源</h2>
-            <p>本页曲线全部使用厂商公开公式实现；常数与锚点可在下列文档中核对。</p>
+            <h2><span data-lang="zh">资料来源</span><span data-lang="en">Sources</span></h2>
+            <p><span data-lang="zh">本页曲线全部使用厂商公开公式实现；常数与锚点可在下列文档中核对。</span><span data-lang="en">Every curve on this page is implemented from the vendors' published formulas; the constants and anchors can be verified in the documents below.</span></p>
           </div>
-          <div class="note">扩展更多机型曲线前，先补官方公式或官方 LUT/IDT 来源，再画进图表。</div>
+          <div class="note"><span data-lang="zh">扩展更多机型曲线前，先补官方公式或官方 LUT/IDT 来源，再画进图表。</span><span data-lang="en">Before adding more camera curves, secure the official formula or official LUT/IDT source first, then plot it.</span></div>
         </div>
         <div class="source-list">
-          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C / LogC4 技术页<span>LogC4 specification、AWG4、REVEAL color science</span></a>
-          <a href="https://www.arri.com/resource/blob/278790/f3318e8c9c65617d8c5ca3f8b3e32051/2023-05-arri-logc4-specification-data.pdf" target="_blank" rel="noreferrer">ARRI LogC4 Specification PDF<span>LogC4 公式与常数、AWG4 原色、12 bit 编码要求</span></a>
-          <a href="https://pro.sony/s3/cms-static-content/uploadfile/06/1237494271406.pdf" target="_blank" rel="noreferrer">Sony S-Gamut3.Cine / S-Log3 Technical Summary<span>S-Log3 公式、CV 420/598 锚点、S-Gamut3.Cine 设计说明</span></a>
-          <a href="https://www.usa.canon.com/content/dam/canon-assets/white-papers/pro/white-paper-canon-log-gamma-curves.pdf" target="_blank" rel="noreferrer">Canon Log Gamma Curves White Paper<span>Canon Log / Log 2 / Log 3 动态范围与曲线设计</span></a>
-          <a href="https://pro-av.panasonic.net/cn/cinema_camera_varicam_eva/support/pdf/VARICAM_V-Log_V-Gamut.pdf" target="_blank" rel="noreferrer">Panasonic V-Log / V-Gamut Reference Manual<span>V-Log 公式、CV 433 中灰、V-Gamut 技术资料</span></a>
-          <a href="https://www.red.com/download/white-paper-on-redwidegamutrgb-and-log3g10" target="_blank" rel="noreferrer">REDWideGamutRGB and Log3G10 White Paper<span>Log3G10 公式（a/b/c/g 常数）、IPP2 工作空间与矩阵</span></a>
-          <a href="https://docs.red.com/915-0201/REV-A/PDF/915-0201%20Rev-A%20%20%20RED%20OPS%2C%20IPP2%20Output%20Transforms.pdf" target="_blank" rel="noreferrer">RED IPP2 Output Transforms<span>RAW 开发、调色、输出变换三段式管线</span></a>
-          <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span>Resolve 宽色域中间工作空间说明</span></a>
-          <a href="https://en.wikipedia.org/wiki/Cineon" target="_blank" rel="noreferrer">Cineon System（历史资料）<span>Kodak 10-bit log 打印密度编码、CV 95/685 渊源</span></a>
-          <a href="https://docs.acescentral.com/" target="_blank" rel="noreferrer">ACES Documentation<span>IDT / RRT / ODT 架构、ACES2065-1 与 ACEScct</span></a>
+          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer"><span data-lang="zh">ARRI Log C / LogC4 技术页</span><span data-lang="en">ARRI Log C / LogC4 technical page</span><span>LogC4 specification, AWG4, REVEAL color science</span></a>
+          <a href="https://www.arri.com/resource/blob/278790/f3318e8c9c65617d8c5ca3f8b3e32051/2023-05-arri-logc4-specification-data.pdf" target="_blank" rel="noreferrer">ARRI LogC4 Specification PDF<span><span data-lang="zh">LogC4 公式与常数、AWG4 原色、12 bit 编码要求</span><span data-lang="en">The LogC4 formula and constants, AWG4 primaries, and the 12-bit encoding requirement</span></span></a>
+          <a href="https://pro.sony/s3/cms-static-content/uploadfile/06/1237494271406.pdf" target="_blank" rel="noreferrer">Sony S-Gamut3.Cine / S-Log3 Technical Summary<span><span data-lang="zh">S-Log3 公式、CV 420/598 锚点、S-Gamut3.Cine 设计说明</span><span data-lang="en">The S-Log3 formula, CV 420/598 anchors, and S-Gamut3.Cine design notes</span></span></a>
+          <a href="https://www.usa.canon.com/content/dam/canon-assets/white-papers/pro/white-paper-canon-log-gamma-curves.pdf" target="_blank" rel="noreferrer">Canon Log Gamma Curves White Paper<span><span data-lang="zh">Canon Log / Log 2 / Log 3 动态范围与曲线设计</span><span data-lang="en">Canon Log / Log 2 / Log 3 dynamic range and curve design</span></span></a>
+          <a href="https://pro-av.panasonic.net/cn/cinema_camera_varicam_eva/support/pdf/VARICAM_V-Log_V-Gamut.pdf" target="_blank" rel="noreferrer">Panasonic V-Log / V-Gamut Reference Manual<span><span data-lang="zh">V-Log 公式、CV 433 中灰、V-Gamut 技术资料</span><span data-lang="en">The V-Log formula, CV 433 mid-gray, and V-Gamut technical data</span></span></a>
+          <a href="https://www.red.com/download/white-paper-on-redwidegamutrgb-and-log3g10" target="_blank" rel="noreferrer">REDWideGamutRGB and Log3G10 White Paper<span><span data-lang="zh">Log3G10 公式（a/b/c/g 常数）、IPP2 工作空间与矩阵</span><span data-lang="en">The Log3G10 formula (a/b/c/g constants), the IPP2 working space, and matrices</span></span></a>
+          <a href="https://docs.red.com/915-0201/REV-A/PDF/915-0201%20Rev-A%20%20%20RED%20OPS%2C%20IPP2%20Output%20Transforms.pdf" target="_blank" rel="noreferrer">RED IPP2 Output Transforms<span><span data-lang="zh">RAW 开发、调色、输出变换三段式管线</span><span data-lang="en">The three-stage RAW-development / grading / output-transform pipeline</span></span></a>
+          <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span><span data-lang="zh">Resolve 宽色域中间工作空间说明</span><span data-lang="en">Notes on Resolve's wide-gamut intermediate working space</span></span></a>
+          <a href="https://en.wikipedia.org/wiki/Cineon" target="_blank" rel="noreferrer"><span data-lang="zh">Cineon System（历史资料）</span><span data-lang="en">Cineon System (historical reference)</span><span><span data-lang="zh">Kodak 10-bit log 打印密度编码、CV 95/685 渊源</span><span data-lang="en">Kodak's 10-bit log printing-density encoding and the origin of CV 95/685</span></span></a>
+          <a href="https://docs.acescentral.com/" target="_blank" rel="noreferrer">ACES Documentation<span><span data-lang="zh">IDT / RRT / ODT 架构、ACES2065-1 与 ACEScct</span><span data-lang="en">The IDT / RRT / ODT architecture, ACES2065-1 and ACEScct</span></span></a>
         </div>
       </div>
     </section>
@@ -1042,6 +1084,19 @@
     const $$ = s => document.querySelectorAll(s);
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
     const lerp = (a, b, t) => a + (b - a) * t;
+
+    // ===== Language =====
+    let LANG = (function () { try { return localStorage.getItem("guideLang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; } })();
+    const T = (zh, en) => (LANG === "en" ? en : zh);
+    document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+    const PAGE_TITLE = {
+      zh: "为什么相机使用 Log 拍摄 | 影像色彩与显示技术指南",
+      en: "Why Cameras Shoot Log | Imaging Color & Display Guide"
+    };
+    const PAGE_DESC = {
+      zh: "从线性传感器、码值分配、Cineon 渊源、公式逐项解剖、位深与量化、厂商曲线、Log/RAW/Gamma 对比和后期色彩管理，完整讲解相机 Log 编码的设计与使用。",
+      en: "A complete walk-through of camera Log encoding — from the linear sensor and code-value allocation, the Cineon lineage, formula-by-formula dissection, bit depth and quantization, vendor curves, Log/RAW/gamma comparison, to post-production color management."
+    };
 
     function resizeCanvas(canvas) {
       const rect = canvas.parentElement.getBoundingClientRect();
@@ -1113,25 +1168,25 @@
     // Each encoding: enc(x) -> normalized [0,1] over its own container.
     const CODES_ENCODINGS = {
       linear: {
-        label: "12-bit 线性（中灰在剪切点下 4 档）",
+        label: () => T("12-bit 线性（中灰在剪切点下 4 档）", "12-bit linear (mid-gray 4 stops below clip)"),
         bits: 12,
         color: "#ff6b7a",
         enc: x => clamp(x / 2.88, 0, 1) // grey 0.18 -> 1/16 of clip (4 stops)
       },
       rec709: {
-        label: "10-bit Rec.709 OETF（场景 1.0 = 剪切，中灰上约 2.5 档）",
+        label: () => T("10-bit Rec.709 OETF（场景 1.0 = 剪切，中灰上约 2.5 档）", "10-bit Rec.709 OETF (scene 1.0 = clip, ~2.5 stops above mid-gray)"),
         bits: 10,
         color: "#ffd166",
         enc: x => rec709Oetf(x)
       },
       slog3: {
-        label: "10-bit Sony S-Log3",
+        label: () => "10-bit Sony S-Log3",
         bits: 10,
         color: "#a9e55f",
         enc: x => clamp(sLog3(x), 0, 1)
       },
       logc4: {
-        label: "12-bit ARRI LogC4",
+        label: () => "12-bit ARRI LogC4",
         bits: 12,
         color: "#46d9e8",
         enc: x => clamp(logC4(x), 0, 1)
@@ -1186,33 +1241,42 @@
         ctx.fillStyle = isGrey ? "#ffffff" : "#b7c0ce";
         ctx.font = d.codes >= 1000 ? "10px system-ui" : "11px system-ui";
         ctx.textAlign = "center";
-        ctx.fillText(d.codes === 0 ? "剪切" : String(d.codes), x + barW / 2, y - 6);
+        ctx.fillText(d.codes === 0 ? T("剪切", "clip") : String(d.codes), x + barW / 2, y - 6);
         // stop label
         ctx.fillStyle = isGrey ? "#ffd166" : "#8994a6";
-        ctx.fillText(isGrey ? "中灰" : (d.s >= 0 ? "+" + d.s : String(d.s)), x + barW / 2, h - pad.b + 16);
+        ctx.fillText(isGrey ? T("中灰", "gray") : (d.s >= 0 ? "+" + d.s : String(d.s)), x + barW / 2, h - pad.b + 16);
         ctx.textAlign = "left";
       });
 
       // axis labels & title
       ctx.fillStyle = "#dbe7f7";
       ctx.font = "12.5px system-ui";
-      ctx.fillText(cfg.label, pad.l, 20);
+      ctx.fillText(cfg.label(), pad.l, 20);
       ctx.fillStyle = "#8994a6";
       ctx.font = "11px system-ui";
-      ctx.fillText("横轴：相对 18% 灰的曝光档（每柱 = 1 档区间）｜纵轴：该档分到的码值数量", pad.l, h - 10);
+      ctx.fillText(T("横轴：相对 18% 灰的曝光档（每柱 = 1 档区间）｜纵轴：该档分到的码值数量", "X: exposure stops relative to 18% gray (each bar = a 1-stop interval) | Y: code values allotted to that stop"), pad.l, h - 10);
 
       // summary
       const at = s => stops.find(d => d.s === s);
       const top = stops.slice().reverse().find(d => d.codes > 0);
       const grey = at(0), dark = at(-6);
-      $("#codesSummary").innerHTML =
+      const topHi = top.s + 1 >= 0 ? "+" + (top.s + 1) : top.s + 1;
+      const topLo = top.s >= 0 ? "+" + top.s : top.s;
+      $("#codesSummary").innerHTML = T(
         `中灰那一档（0 → +1）：<b style="color:var(--ink)">${grey.codes}</b> 个码值 ｜ ` +
-        `最亮可用档（${top.s >= 0 ? "+" + top.s : top.s} → ${top.s + 1 >= 0 ? "+" + (top.s + 1) : top.s + 1}）：<b style="color:var(--ink)">${top.codes}</b> 个 ｜ ` +
+        `最亮可用档（${topLo} → ${topHi}）：<b style="color:var(--ink)">${top.codes}</b> 个 ｜ ` +
         `最暗一档（−6 → −5）：<b style="color:var(--ink)">${dark.codes}</b> 个` +
         (codesEnc === "linear" ? " —— 注意最亮一档独占了近一半码值，而暗部只剩个位数。" :
          codesEnc === "rec709" ? " —— 分配比线性均匀，但 +2.5 档以上全部剪切：装不下电影机的高光。" :
          codesEnc === "slog3" ? " —— 纯对数区每档恒定约 79 个码值，暗部与高光同等待遇。" :
-         " —— 12-bit 下每档约 265 个码值；同曲线若装入 10-bit 仅剩约 66，故 ARRI 要求 12-bit。");
+         " —— 12-bit 下每档约 265 个码值；同曲线若装入 10-bit 仅剩约 66，故 ARRI 要求 12-bit。"),
+        `Mid-gray stop (0 → +1): <b style="color:var(--ink)">${grey.codes}</b> code values | ` +
+        `brightest usable stop (${topLo} → ${topHi}): <b style="color:var(--ink)">${top.codes}</b> | ` +
+        `darkest stop (−6 → −5): <b style="color:var(--ink)">${dark.codes}</b>` +
+        (codesEnc === "linear" ? " — note the brightest stop alone takes nearly half the code values, leaving the shadows with single digits." :
+         codesEnc === "rec709" ? " — more even than linear, but everything above +2.5 stops clips: it can't hold a cinema camera's highlights." :
+         codesEnc === "slog3" ? " — a constant ~79 code values per stop in the pure-log region; shadows and highlights get equal treatment." :
+         " — ~265 code values per stop at 12-bit; the same curve in 10-bit leaves only ~66, which is why ARRI requires 12-bit."));
     }
 
     $$(".codesMode").forEach(btn => {
@@ -1288,18 +1352,18 @@
       ctx.strokeRect(pad.l, y2, innerW, stripH);
       ctx.font = "12.5px system-ui";
       ctx.fillStyle = "#ff8e9b";
-      ctx.fillText(`线性编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, pad.l, y1 - 10);
+      ctx.fillText(T(`线性编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, `Linear · ${bandBits}-bit quantization · lift +${bandLift.toFixed(1)} stops`), pad.l, y1 - 10);
       ctx.fillStyle = "#bfe88a";
-      ctx.fillText(`S-Log3 编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, pad.l, y2 - 10);
+      ctx.fillText(T(`S-Log3 编码 · ${bandBits} bit 量化 · 提亮 +${bandLift.toFixed(1)} 档`, `S-Log3 · ${bandBits}-bit quantization · lift +${bandLift.toFixed(1)} stops`), pad.l, y2 - 10);
       ctx.fillStyle = "#8994a6";
       ctx.font = "11px system-ui";
-      ctx.fillText("← 中灰下 6 档", pad.l, y2 + stripH + 18);
+      ctx.fillText(T("← 中灰下 6 档", "← 6 stops below gray"), pad.l, y2 + stripH + 18);
       ctx.textAlign = "right";
-      ctx.fillText("18% 中灰 →", w - pad.r, y2 + stripH + 18);
+      ctx.fillText(T("18% 中灰 →", "18% gray →"), w - pad.r, y2 + stripH + 18);
       ctx.textAlign = "left";
 
-      $("#bandLinearLevels").textContent = `${linLevels.size} 级`;
-      $("#bandLogLevels").textContent = `${logLevels.size} 级`;
+      $("#bandLinearLevels").textContent = T(`${linLevels.size} 级`, `${linLevels.size} levels`);
+      $("#bandLogLevels").textContent = T(`${logLevels.size} 级`, `${logLevels.size} levels`);
     }
 
     $$(".bandBits").forEach(btn => {
@@ -1315,7 +1379,7 @@
     });
     $("#liftSlider").addEventListener("input", e => {
       bandLift = Number(e.target.value);
-      $("#liftReadout").textContent = `+${bandLift.toFixed(1)} 档`;
+      $("#liftReadout").textContent = T(`+${bandLift.toFixed(1)} 档`, `+${bandLift.toFixed(1)} stops`);
       drawBandDemo();
     });
 
@@ -1328,14 +1392,14 @@
     let showCineon = false;
 
     const curves = {
-      arri: { label: "ARRI LogC4", color: "#46d9e8", fn: logC4, note: "官方公式" },
-      sony: { label: "Sony S-Log3", color: "#a9e55f", fn: sLog3, note: "官方公式" },
-      panasonic: { label: "Panasonic V-Log", color: "#ffd166", fn: vLog, note: "官方公式" },
-      red: { label: "RED Log3G10", color: "#ff6b7a", fn: log3G10, note: "官方公式" }
+      arri: { label: "ARRI LogC4", color: "#46d9e8", fn: logC4, note: () => T("官方公式", "official formula") },
+      sony: { label: "Sony S-Log3", color: "#a9e55f", fn: sLog3, note: () => T("官方公式", "official formula") },
+      panasonic: { label: "Panasonic V-Log", color: "#ffd166", fn: vLog, note: () => T("官方公式", "official formula") },
+      red: { label: "RED Log3G10", color: "#ff6b7a", fn: log3G10, note: () => T("官方公式", "official formula") }
     };
     const refCurves = {
-      rec709: { label: "Rec.709 OETF", color: "rgba(255,255,255,.55)", fn: rec709Oetf, note: "显示导向参照" },
-      cineon: { label: "Cineon", color: "#9a8cff", fn: cineon, note: "历史参照" }
+      rec709: { label: "Rec.709 OETF", color: "rgba(255,255,255,.55)", fn: rec709Oetf, note: () => T("显示导向参照", "display-referred reference") },
+      cineon: { label: "Cineon", color: "#9a8cff", fn: cineon, note: () => T("历史参照", "historical reference") }
     };
 
     function activeCurveList() {
@@ -1362,11 +1426,11 @@
         ctx.fillText(i === 10 ? "1.0" : yv.toFixed(1), 24, y + 4);
       }
       ctx.fillStyle = "#dbe7f7";
-      ctx.fillText("相对 18% 灰曝光档位 / stop", w - 200, h - 8);
+      ctx.fillText(T("相对 18% 灰曝光档位 / stop", "exposure relative to 18% gray / stops"), w - (LANG === "en" ? 300 : 200), h - 8);
       ctx.save();
       ctx.translate(16, pad.t + (h - pad.t - pad.b) / 2 + 60);
       ctx.rotate(-Math.PI / 2);
-      ctx.fillText("归一化信号 / 10-bit CV", 0, 0);
+      ctx.fillText(T("归一化信号 / 10-bit CV", "normalized signal / 10-bit CV"), 0, 0);
       ctx.restore();
     }
 
@@ -1393,7 +1457,7 @@
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = "rgba(255,255,255,.62)";
-      ctx.fillText("18% 灰", xOf(0) + 8, pad.t + 16);
+      ctx.fillText(T("18% 灰", "18% gray"), xOf(0) + 8, pad.t + 16);
 
       const list = activeCurveList();
       list.forEach(curve => {
@@ -1446,13 +1510,15 @@
       ctx.font = "12px system-ui";
       list.forEach(curve => {
         ctx.fillStyle = curve.color;
-        ctx.fillText(`${curve.label}（${curve.note}）`, legendX, legendY);
+        ctx.fillText(T(`${curve.label}（${curve.note()}）`, `${curve.label} (${curve.note()})`), legendX, legendY);
         legendY += 17;
       });
 
       $("#stopReadout").textContent = `${stop.toFixed(1)} stop`;
-      $("#curveReadout").innerHTML =
-        `相对中灰 ${stop.toFixed(1)} 档 · 场景反射率 ${(reflectanceFromStop(stop) * 100).toFixed(2)}%<br>${rows.join("<br>")}`;
+      $("#curveReadout").innerHTML = T(
+        `相对中灰 ${stop.toFixed(1)} 档 · 场景反射率 ${(reflectanceFromStop(stop) * 100).toFixed(2)}%<br>${rows.join("<br>")}`,
+        `${stop.toFixed(1)} stops from mid-gray · scene reflectance ${(reflectanceFromStop(stop) * 100).toFixed(2)}%<br>${rows.join("<br>")}`
+      );
     }
 
     $$(".curveMode").forEach(btn => {
@@ -1513,6 +1579,20 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(redrawAll, 80);
     });
+
+    // ===== Language toggle =====
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_TITLE[LANG];
+      const m = document.querySelector('meta[name="description"]');
+      if (m) m.setAttribute("content", PAGE_DESC[LANG]);
+      $("#liftReadout").textContent = T(`+${bandLift.toFixed(1)} 档`, `+${bandLift.toFixed(1)} stops`);
+      redrawAll();
+      try { localStorage.setItem("guideLang", LANG); } catch (e) {}
+    }
+    $$(".lang-toggle .seg").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.set)));
+    document.title = PAGE_TITLE[LANG];
 
     setTimeout(() => {
       pointerStop = Number($("#stopSlider").value);

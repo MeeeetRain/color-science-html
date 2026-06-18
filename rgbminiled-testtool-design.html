@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RGB MiniLED 电视画质测试工具 · 设计说明</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#171c23; --panel2:#1d2530; --line:#2a3340;
+    --tx:#e6edf3; --mut:#9aa7b4; --acc:#4ea1ff; --r:#ff5d5d; --g:#4cd07d;
+    --b:#5aa9ff; --y:#ffce54; --warn:#ffae42;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);
+       line-height:1.65;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.3px}
+  h1 .tag{font-size:12px;font-weight:600;color:var(--acc);border:1px solid var(--acc);
+          border-radius:20px;padding:2px 10px;vertical-align:middle;margin-left:10px}
+  .sub{color:var(--mut);font-size:14px;margin-top:6px}
+  h2{font-size:18px;margin:44px 0 14px;padding-left:11px;border-left:3px solid var(--acc)}
+  h3{font-size:14.5px;margin:0 0 8px;color:var(--tx)}
+  p{margin:8px 0;color:#cdd6df}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .card.r{border-top:3px solid var(--r)} .card.g{border-top:3px solid var(--g)}
+  .muted{color:var(--mut);font-size:13.5px}
+  ul{margin:8px 0;padding-left:20px} li{margin:4px 0;color:#cdd6df}
+  code{font-family:var(--mono);background:#0b0e12;border:1px solid var(--line);
+       border-radius:5px;padding:1px 6px;font-size:12.5px;color:#cfe3ff}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}
+  td b{color:#fff}
+  .kpi{display:inline-block;background:#10261a;border:1px solid #1f5b39;color:#7ef0a8;
+       border-radius:6px;padding:1px 8px;font-family:var(--mono);font-size:12.5px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;
+        font-family:var(--mono);margin:2px 4px 2px 0}
+  .pill.cs{background:#1a2436;color:#9cc4ff;border:1px solid #2f4660}
+  .flow{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;margin:14px 0}
+  .note{background:#1c1a12;border:1px solid #4a3d1a;border-radius:10px;padding:12px 16px;
+        color:#f0e0b6;font-size:13.5px;margin:14px 0}
+  .note b{color:var(--warn)}
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:16px;
+          color:var(--mut);font-size:12.5px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>RGB MiniLED 电视画质测试工具 <span class="tag">设计说明 v0.1</span></h1>
+  <div class="sub">面向 RGB MiniLED 背光电视的 <b>串色</b> 与 <b>动态画面色域缩小</b> 两类缺陷 ·
+       测试图卡生成器 + 测量分析流水线 · 指标锚定 IDMS / CIE D50 CIELAB 色域体积 + Gamut Rings</div>
+</header>
+
+<h2>一、要解决什么问题</h2>
+<p class="muted">RGB MiniLED 把背光从"白光 + 彩膜"升级为独立驱动的 R/G/B 分区——色域与亮度大涨，
+但也把"亮度型 blooming"升级成了两类新缺陷：</p>
+<div class="grid2">
+  <div class="card r">
+    <h3>① 串色 / 彩色光晕 <span class="muted">Colour Crosstalk</span></h3>
+    <p class="muted">本质：<b>色度的空间光晕</b>。白点在彩色背景里发品红/发青，肤色上出现彩色镶边。</p>
+    <ul>
+      <li>背光空间分辨率 ≪ LCD 像素 → 分区背光是"折中混合色"</li>
+      <li>光学串扰（PSF 侧向漏光）→ 邻区互染</li>
+      <li>LED 发射光谱与彩膜通带失配 → 色偏</li>
+      <li>三通道局部调光反演误差</li>
+    </ul>
+  </div>
+  <div class="card g">
+    <h3>② 动态色域缩小 <span class="muted">Dynamic Gamut Shrink</span></h3>
+    <p class="muted">本质：色域随 <b>APL / 背景 / 运动</b> 收缩——静态色块漂亮、动态内容缩水。</p>
+    <ul>
+      <li>功率/热限制（ABL）→ 高 APL 下峰值彩色亮度回退</li>
+      <li>局部调光色度折中 → 复杂画面到不了满饱和</li>
+      <li>时序动态/压摆率 → 瞬态掉饱和、拖影</li>
+      <li>动态色调/色域映射（DTM）压缩</li>
+    </ul>
+  </div>
+</div>
+
+<h2>二、测试指标</h2>
+<div class="grid2">
+  <div>
+    <h3 style="color:var(--r)">串色指标</h3>
+    <table>
+      <tr><th>指标</th><th>定义</th></tr>
+      <tr><td><b>色串扰半径 R_cross</b></td><td>沿剖线，应为纯色区相对目标的 Δu'v' 衰减到阈值(默认0.01)前的最远距离</td></tr>
+      <tr><td><b>峰值染色</b></td><td>中性/暗区被邻色污染的 Δu'v'ₘₐₓ / ΔE_ITPₘₐₓ</td></tr>
+      <tr><td><b>二维 Δu'v' 热力图</b></td><td>全场色度偏差分布（CXC-2600 直接出）</td></tr>
+      <tr><td><b>背光 PSF FWHM</b></td><td>R/G/B 单点点扩散半高宽（分通道）</td></tr>
+      <tr><td><b>棋盘污染 / 边缘镶边</b></td><td>各格 Δu'v'、ANSI 对比；异色硬边色过冲</td></tr>
+    </table>
+  </div>
+  <div>
+    <h3 style="color:var(--g)">动态色域指标</h3>
+    <table>
+      <tr><th>指标</th><th>定义</th></tr>
+      <tr><td><b>CIELAB-D50 色域体积</b></td><td>实测壳点(RGBCMYW+黑)凸包体积，按<b>固定</b>峰值白点归一</td></tr>
+      <tr><td><b>BT.2020 / P3 覆盖率</b></td><td>逐 L* 切片的环交覆盖</td></tr>
+      <tr><td><b>Gamut Rings</b></td><td>按 L* 切片的 a*b* 截面积分布（色域示波器）</td></tr>
+      <tr><td><b>动态色域收缩率 (KPI)</b></td><td>1 − vol(大窗/高APL) / vol(小窗/低APL)</td></tr>
+      <tr><td><b>color-in-context</b></td><td>同色块随背景 APL 升高的掉饱和</td></tr>
+    </table>
+  </div>
+</div>
+<div class="note">关键设计：色域体积按<b>固定峰值白点</b>归一（而非逐窗白点），于是 ABL 亮度回退会真实地表现为<b>体积收缩</b>——这正是量化"静态漂亮、动态缩水"的抓手。</div>
+
+<h2>三、系统架构与数据流</h2>
+<div class="flow">
+<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6b7a8c"/>
+    </marker>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6b7a8c"/>
+    </marker>
+  </defs>
+  <!-- boxes -->
+  <g>
+    <rect x="20" y="110" width="170" height="80" rx="10" fill="#171c23" stroke="#4ea1ff"/>
+    <text x="105" y="140" fill="#e6edf3" font-size="14" font-weight="700" text-anchor="middle">① 图卡生成器</text>
+    <text x="105" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">patterns + encode</text>
+    <text x="105" y="176" fill="#9aa7b4" font-size="11" text-anchor="middle">10bit PQ·BT.2020 PNG</text>
+  </g>
+  <g>
+    <rect x="255" y="110" width="170" height="80" rx="10" fill="#171c23" stroke="#ffae42"/>
+    <text x="340" y="140" fill="#e6edf3" font-size="14" font-weight="700" text-anchor="middle">② 测量</text>
+    <text x="340" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">电视 ← HDR图卡发生器</text>
+    <text x="340" y="176" fill="#9aa7b4" font-size="11" text-anchor="middle">CS-2000 / CA-410 / CXC-2600</text>
+  </g>
+  <g>
+    <rect x="490" y="110" width="170" height="80" rx="10" fill="#171c23" stroke="#4cd07d"/>
+    <text x="575" y="140" fill="#e6edf3" font-size="14" font-weight="700" text-anchor="middle">③ 分析</text>
+    <text x="575" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">analysis + gamut</text>
+    <text x="575" y="176" fill="#9aa7b4" font-size="11" text-anchor="middle">指标计算</text>
+  </g>
+  <g>
+    <rect x="725" y="110" width="170" height="80" rx="10" fill="#171c23" stroke="#c08bff"/>
+    <text x="810" y="140" fill="#e6edf3" font-size="14" font-weight="700" text-anchor="middle">④ 报告</text>
+    <text x="810" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">report (matplotlib)</text>
+    <text x="810" y="176" fill="#9aa7b4" font-size="11" text-anchor="middle">图 + summary.md</text>
+  </g>
+  <!-- arrows -->
+  <line x1="190" y1="150" x2="252" y2="150" stroke="#6b7a8c" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="425" y1="150" x2="487" y2="150" stroke="#6b7a8c" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="660" y1="150" x2="722" y2="150" stroke="#6b7a8c" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- sidecar coupling -->
+  <rect x="255" y="35" width="405" height="42" rx="8" fill="#0b0e12" stroke="#2a3340" stroke-dasharray="4 3"/>
+  <text x="457" y="52" fill="#cfe3ff" font-size="11.5" text-anchor="middle" font-weight="700">sidecar JSON（目标值 + 测量 ROI / 剖线）</text>
+  <text x="457" y="68" fill="#9aa7b4" font-size="10.5" text-anchor="middle">生成与分析的契约：几何/目标只此一处定义</text>
+  <line x1="120" y1="110" x2="300" y2="79" stroke="#3a4656" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <line x1="575" y1="110" x2="560" y2="79" stroke="#3a4656" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <!-- data formats -->
+  <text x="340" y="232" fill="#9aa7b4" font-size="11" text-anchor="middle">点测 CSV: pattern,region,X,Y,Z</text>
+  <text x="340" y="250" fill="#9aa7b4" font-size="11" text-anchor="middle">二维: *_lvxy.npy / *_xyz.npy</text>
+</svg>
+</div>
+
+<h2>四、设备映射</h2>
+<table>
+  <tr><th>设备</th><th>角色</th><th>用途</th></tr>
+  <tr><td><b>CS-2000</b><br><span class="muted">光谱辐射计</span></td><td>绝对真值基准</td>
+      <td>色域壳点、SPD 光谱、对其他设备做绝对色度标定</td></tr>
+  <tr><td><b>CA-410</b><br><span class="muted">高速点测色彩分析仪</span></td><td>动态 / 时序</td>
+      <td>多窗口色域序列、color-in-context、运动掉饱和（二阶段）</td></tr>
+  <tr><td><b>CXC-2600_V300_DF50</b><br><span class="muted">成像彩色亮度计 · Hopoo 虹谱</span></td><td>空间分布</td>
+      <td>逐像素 Lv·x,y → <b>串色 Δu'v' 热力图、PSF、棋盘/边缘/角落</b>（直接二维出）</td></tr>
+</table>
+
+<h2>五、关键产出（合成样机已验证全链路）</h2>
+<div class="grid2">
+  <div class="card">
+    <h3>动态色域</h3>
+    <p><span class="kpi">动态色域收缩率 75.2%</span></p>
+    <p class="muted">BT.2020 覆盖 73.6% → 18.3%（1%→100% 窗口）；白 951 → 402 nits（ABL 回退）。
+       含 Gamut Rings 色域示波器、覆盖率曲线、color-in-context。</p>
+  </div>
+  <div class="card">
+    <h3>串色</h3>
+    <p><span class="kpi">色晕半径 平均 159px / 最大 182px</span></p>
+    <p class="muted">Δu'v' 阈值 0.01。含二维 Δu'v' 热力图、PSF FWHM、棋盘污染。</p>
+  </div>
+</div>
+
+<h2>六、图卡套组</h2>
+<table>
+  <tr><th>套组</th><th>张数</th><th>包含</th></tr>
+  <tr><td><b>crosstalk</b></td><td>26</td>
+      <td>彩色光晕(中性块/黑洞/异色)、色棋盘、彩色边缘、背光 PSF 点、彩色角落(VESA 黑位彩色版)</td></tr>
+  <tr><td><b>dynamic_gamut</b></td><td>58</td>
+      <td>RGBCMYW × {1,2,5,10,25,50,100}% 多窗口序列、color-in-context（异色/异 APL 背景）</td></tr>
+</table>
+<p class="muted">规格：10-bit PQ(ST 2084) · BT.2020 · 16-bit PNG（零依赖写出器）+ 8-bit sRGB 预览 + 每张 sidecar JSON。
+   配置用 <code>configs/*.yaml</code>，支持 <code>matrix</code> 笛卡尔展开。</p>
+
+<div class="note" style="background:#12181c;border-color:#243038;color:#cdd6df">
+  <b style="color:#4ea1ff">注意</b>　图卡为 PQ 编码，普通看图器会偏暗/偏色属正常；色准判读以
+  <code>_preview.png</code> 或测量数据为准，<b style="color:#ff8a8a">勿对 PQ 卡套用 sRGB/ICC</b>。
+</div>
+
+<footer>
+  RGBMiniLED-TV-TestTool · 设计说明 · 生成于 2026-06-18 ·
+  代码位于 <code>/Users/macforlu/Documents/RGBMIniled-TV-TestTool</code>
+</footer>
+
+</div>
+</body>
+</html>

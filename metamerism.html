@@ -1203,68 +1203,68 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. 基础定义</h2>
-            <p>四个术语撑起了同色异谱的整个理论框架。先把它们的边界划清楚，下面所有讨论都建立在这之上。</p>
+            <h2><span data-lang="zh">3. 基础定义</span><span data-lang="en">3. Basic definitions</span></h2>
+            <p><span data-lang="zh">四个术语撑起了同色异谱的整个理论框架。先把它们的边界划清楚，下面所有讨论都建立在这之上。</span><span data-lang="en">Four terms hold up the whole theoretical frame of metamerism. Pin down their boundaries first; everything below builds on them.</span></p>
           </div>
-          <div class="note">这一节不是术语字典——只列后文会用到的、容易被混淆的核心概念。</div>
+          <div class="note"><span data-lang="zh">这一节不是术语字典——只列后文会用到的、容易被混淆的核心概念。</span><span data-lang="en">This section isn't a glossary — only the core concepts used later that are easily confused.</span></div>
         </div>
         <div class="def-grid">
           <div class="def">
             <div class="term">Tristimulus & CMF</div>
-            <h4>三刺激值与色匹配函数</h4>
-            <p><b>三刺激值 (X, Y, Z)</b> 是把光谱 S(λ) 与三条标准函数 <code>x̄(λ)</code>、<code>ȳ(λ)</code>、<code>z̄(λ)</code> 逐波长相乘再积分得到的 3 个数。这三条函数叫<b>色匹配函数 (CMF)</b>，是 1931 年 CIE 根据多人色觉实验拟合出来的"标准人眼"。</p>
-            <p>常用观察者：<b>CIE 1931 2°</b>（小色块匹配，目前 RGB/印刷链路默认）、<b>CIE 1964 10°</b>（大色块匹配，工业色差常用）、<b>CIE 2015 生理观察者</b>（按年龄/视场参数化）。</p>
+            <h4><span data-lang="zh">三刺激值与色匹配函数</span><span data-lang="en">Tristimulus values and color-matching functions</span></h4>
+            <p><span data-lang="zh"><b>三刺激值 (X, Y, Z)</b> 是把光谱 S(λ) 与三条标准函数 <code>x̄(λ)</code>、<code>ȳ(λ)</code>、<code>z̄(λ)</code> 逐波长相乘再积分得到的 3 个数。这三条函数叫<b>色匹配函数 (CMF)</b>，是 1931 年 CIE 根据多人色觉实验拟合出来的"标准人眼"。</span><span data-lang="en">The <b>tristimulus values (X, Y, Z)</b> are three numbers obtained by multiplying the spectrum S(λ) by three standard functions <code>x̄(λ)</code>, <code>ȳ(λ)</code>, <code>z̄(λ)</code> wavelength by wavelength and integrating. Those three functions are the <b>color-matching functions (CMF)</b> — the "standard human eye" the CIE fit from many people's color-vision experiments in 1931.</span></p>
+            <p><span data-lang="zh">常用观察者：<b>CIE 1931 2°</b>（小色块匹配，目前 RGB/印刷链路默认）、<b>CIE 1964 10°</b>（大色块匹配，工业色差常用）、<b>CIE 2015 生理观察者</b>（按年龄/视场参数化）。</span><span data-lang="en">Common observers: <b>CIE 1931 2°</b> (small-field matching, today's default in RGB/print chains), <b>CIE 1964 10°</b> (large-field matching, common for industrial color difference), and the <b>CIE 2015 physiological observer</b> (parameterized by age/field size).</span></p>
           </div>
           <div class="def">
             <div class="term">Metameric Match</div>
-            <h4>同色异谱对</h4>
-            <p>当两条<b>光谱形状不同</b>但<b>计算出的 XYZ 完全相等</b>时，它们就是一对同色异谱（metameric pair）。在指定观察者和指定光源下，眼睛把它们视作同一颜色。</p>
-            <p>关键限定：<b>同一观察者 + 同一光源</b>。只要其中一个条件改变，原本的匹配就可能失效——这就是后面要讲的"失败"。</p>
+            <h4><span data-lang="zh">同色异谱对</span><span data-lang="en">Metameric pair</span></h4>
+            <p><span data-lang="zh">当两条<b>光谱形状不同</b>但<b>计算出的 XYZ 完全相等</b>时，它们就是一对同色异谱（metameric pair）。在指定观察者和指定光源下，眼睛把它们视作同一颜色。</span><span data-lang="en">When two spectra have <b>different shapes</b> but <b>compute to exactly equal XYZ</b>, they form a metameric pair. Under a given observer and a given illuminant, the eye treats them as one color.</span></p>
+            <p><span data-lang="zh">关键限定：<b>同一观察者 + 同一光源</b>。只要其中一个条件改变，原本的匹配就可能失效——这就是后面要讲的"失败"。</span><span data-lang="en">The key qualifier: <b>same observer + same illuminant</b>. Change either condition and the match can break — that's the "failure" discussed later.</span></p>
           </div>
           <div class="def">
             <div class="term">Metameric Black</div>
-            <h4>同色异谱黑</h4>
-            <p>一种<b>非零光谱</b>，但它的 X、Y、Z 三个积分都精确为零。把它叠加到任何光谱上，颜色不变——这就是为什么同色异谱必然存在：CMF 的"零空间"里有无穷多种可加光谱。</p>
-            <p>直观理解：metameric black 必然有正有负的波段（物理光谱非负，所以它只能以两条光谱的"差"的形式存在）。任何 XYZ 相同的两条光谱，差值就是一条 metameric black。</p>
+            <h4><span data-lang="zh">同色异谱黑</span><span data-lang="en">Metameric black</span></h4>
+            <p><span data-lang="zh">一种<b>非零光谱</b>，但它的 X、Y、Z 三个积分都精确为零。把它叠加到任何光谱上，颜色不变——这就是为什么同色异谱必然存在：CMF 的"零空间"里有无穷多种可加光谱。</span><span data-lang="en">A <b>non-zero spectrum</b> whose X, Y, and Z integrals are all exactly zero. Add it to any spectrum and the color is unchanged — which is why metamerism must exist: the "null space" of the CMF holds infinitely many spectra you can add.</span></p>
+            <p><span data-lang="zh">直观理解：metameric black 必然有正有负的波段（物理光谱非负，所以它只能以两条光谱的"差"的形式存在）。任何 XYZ 相同的两条光谱，差值就是一条 metameric black。</span><span data-lang="en">Intuitively, a metameric black must have both positive and negative bands (physical spectra are non-negative, so it can only exist as the "difference" of two spectra). The difference of any two spectra with equal XYZ is a metameric black.</span></p>
           </div>
           <div class="def">
             <div class="term">Luther condition</div>
-            <h4>Luther 条件</h4>
-            <p>一台三通道设备（相机、扫描仪、滤色片式色度计）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</p>
-            <p>现实里几乎没有相机精确满足。相机的 RGB 滤色片需要同时兼顾噪声、灵敏度、红外抑制和制造一致性，通常只能接近人眼三刺激值。白平衡和矩阵校正能修正灰轴与一部分色卡，但不能把所有光谱都变成人眼会看到的颜色。</p>
+            <h4><span data-lang="zh">Luther 条件</span><span data-lang="en">The Luther condition</span></h4>
+            <p><span data-lang="zh">一台三通道设备（相机、扫描仪、滤色片式色度计）要做到<b>colorimetric</b>——即"和人眼完全一致地判断颜色相同"——它的光谱灵敏度必须是 CMF 的<b>线性变换</b>。换言之：每条 RGB 通道响应，要能写成 x̄/ȳ/z̄ 的某种加权和。</span><span data-lang="en">For a three-channel device (camera, scanner, filter-based colorimeter) to be <b>colorimetric</b> — i.e. to judge colors identical exactly as the eye does — its spectral sensitivities must be a <b>linear transform</b> of the CMF. In other words, each RGB channel response must be expressible as some weighted sum of x̄/ȳ/z̄.</span></p>
+            <p><span data-lang="zh">现实里几乎没有相机精确满足。相机的 RGB 滤色片需要同时兼顾噪声、灵敏度、红外抑制和制造一致性，通常只能接近人眼三刺激值。白平衡和矩阵校正能修正灰轴与一部分色卡，但不能把所有光谱都变成人眼会看到的颜色。</span><span data-lang="en">In reality almost no camera satisfies it exactly. A camera's RGB filters must balance noise, sensitivity, IR rejection, and manufacturing consistency, so they can only approximate the eye's tristimulus values. White balance and matrix correction can fix the gray axis and part of a chart, but can't turn every spectrum into the color the eye would see.</span></p>
           </div>
         </div>
 
         <div class="observer-compare">
-          <h3>CIE 1931 和 CIE 2015 到底差在哪</h3>
-          <p><b>先说结论：</b>CIE 2015 不是说 1931 错了，也不是要把现有 RGB/XYZ 体系推翻。它更像是把“标准观察者”从一个固定模板，推进成了一个更接近真实生理差异的模型，所以它对解释<b>为什么同一台窄峰显示器会让不同人看到不同白点</b>更有帮助。</p>
+          <h3><span data-lang="zh">CIE 1931 和 CIE 2015 到底差在哪</span><span data-lang="en">What actually differs between CIE 1931 and CIE 2015</span></h3>
+          <p><span data-lang="zh"><b>先说结论：</b>CIE 2015 不是说 1931 错了，也不是要把现有 RGB/XYZ 体系推翻。它更像是把“标准观察者”从一个固定模板，推进成了一个更接近真实生理差异的模型，所以它对解释<b>为什么同一台窄峰显示器会让不同人看到不同白点</b>更有帮助。</span><span data-lang="en"><b>The takeaway first:</b> CIE 2015 doesn't say 1931 was wrong, nor does it overturn the existing RGB/XYZ system. It pushes the "standard observer" from a fixed template toward a model closer to real physiological variation, so it's more useful for explaining <b>why the same narrow-band display makes different people see different white points</b>.</span></p>
 
           <div class="observer-grid">
             <div class="observer-card">
               <div class="eyebrow">CIE 1931 2°</div>
-              <h4>历史上最重要，也最方便工程统一</h4>
-              <p>1931 模型来自颜色匹配实验，核心价值是给行业一个统一坐标系。今天的 <b>XYZ、xy、Lab、ICC、Rec.709/P3/Rec.2020 白点与色域表达</b>，本质上都还建立在这个共同参考上。</p>
+              <h4><span data-lang="zh">历史上最重要，也最方便工程统一</span><span data-lang="en">Historically the most important, and the easiest to standardize on</span></h4>
+              <p><span data-lang="zh">1931 模型来自颜色匹配实验，核心价值是给行业一个统一坐标系。今天的 <b>XYZ、xy、Lab、ICC、Rec.709/P3/Rec.2020 白点与色域表达</b>，本质上都还建立在这个共同参考上。</span><span data-lang="en">The 1931 model came from color-matching experiments; its core value is giving the industry one shared coordinate system. Today's <b>XYZ, xy, Lab, ICC, and Rec.709/P3/Rec.2020 white-point and gamut notation</b> are all still built on this common reference.</span></p>
               <div class="observer-points">
-                <div><b>优点：</b>链路统一、设备兼容、标准与软件实现完整，适合做设备之间的“共同语言”。</div>
-                <div><b>局限：</b>它把观察者压缩成一个固定 2° 标准人眼，没有显式描述年龄、黄斑色素、晶状体老化和视场变化。</div>
-                <div><b>结果：</b>对宽光谱设备通常够用，但遇到 OLED、QD-OLED、激光这类窄峰光谱时，真实人眼差异会比 1931 模型预测得更明显。</div>
+                <div><b><span data-lang="zh">优点：</span><span data-lang="en">Strengths: </span></b><span data-lang="zh">链路统一、设备兼容、标准与软件实现完整，适合做设备之间的“共同语言”。</span><span data-lang="en">a unified chain, device compatibility, and complete standard/software implementations — a good "common language" between devices.</span></div>
+                <div><b><span data-lang="zh">局限：</span><span data-lang="en">Limits: </span></b><span data-lang="zh">它把观察者压缩成一个固定 2° 标准人眼，没有显式描述年龄、黄斑色素、晶状体老化和视场变化。</span><span data-lang="en">it compresses the observer into a single fixed 2° standard eye, with no explicit account of age, macular pigment, lens aging, or field-size change.</span></div>
+                <div><b><span data-lang="zh">结果：</span><span data-lang="en">Result: </span></b><span data-lang="zh">对宽光谱设备通常够用，但遇到 OLED、QD-OLED、激光这类窄峰光谱时，真实人眼差异会比 1931 模型预测得更明显。</span><span data-lang="en">usually fine for broad-spectrum devices, but with narrow-band spectra like OLED, QD-OLED, and laser, real eye-to-eye differences are larger than the 1931 model predicts.</span></div>
               </div>
             </div>
 
             <div class="observer-card">
               <div class="eyebrow">CIE 2015 Physiologically-Relevant Observer</div>
-              <h4>把“标准观察者”往真实人眼又推近了一步</h4>
-              <p>2015 模型建立在锥细胞光谱响应、生理透镜与黄斑吸收数据之上，可以按<b>视场大小</b>、<b>年龄</b>等参数生成观察者函数。它不是只问“平均人怎么配色”，而是更接近“不同类型的人可能怎么响应”。</p>
+              <h4><span data-lang="zh">把“标准观察者”往真实人眼又推近了一步</span><span data-lang="en">Nudging the "standard observer" one step closer to a real eye</span></h4>
+              <p><span data-lang="zh">2015 模型建立在锥细胞光谱响应、生理透镜与黄斑吸收数据之上，可以按<b>视场大小</b>、<b>年龄</b>等参数生成观察者函数。它不是只问“平均人怎么配色”，而是更接近“不同类型的人可能怎么响应”。</span><span data-lang="en">The 2015 model is built on cone spectral responses and physiological lens/macular absorption data, and can generate observer functions parameterized by <b>field size</b>, <b>age</b>, and more. It asks not just "how does the average person match color" but closer to "how might different types of people respond".</span></p>
               <div class="observer-points">
-                <div><b>优化点 1：</b>比 1931 更好地描述短波段与窄峰原色下的观察者差异，尤其适合解释现代广色域显示器上的白点分歧。</div>
-                <div><b>优化点 2：</b>可以把观察者差异显式带进模型，而不是默认所有人都等于同一个 2° 平均眼。</div>
-                <div><b>优化点 3：</b>给“观察者同色异谱补偿”提供基础，方便研究多原色显示、个体化白点和年龄相关补偿。</div>
+                <div><b><span data-lang="zh">优化点 1：</span><span data-lang="en">Improvement 1: </span></b><span data-lang="zh">比 1931 更好地描述短波段与窄峰原色下的观察者差异，尤其适合解释现代广色域显示器上的白点分歧。</span><span data-lang="en">it describes observer differences in short-wavelength bands and under narrow-band primaries better than 1931 — especially apt for the white-point disagreements on modern wide-gamut displays.</span></div>
+                <div><b><span data-lang="zh">优化点 2：</span><span data-lang="en">Improvement 2: </span></b><span data-lang="zh">可以把观察者差异显式带进模型，而不是默认所有人都等于同一个 2° 平均眼。</span><span data-lang="en">it can bring observer differences explicitly into the model, instead of assuming everyone equals the same 2° average eye.</span></div>
+                <div><b><span data-lang="zh">优化点 3：</span><span data-lang="en">Improvement 3: </span></b><span data-lang="zh">给“观察者同色异谱补偿”提供基础，方便研究多原色显示、个体化白点和年龄相关补偿。</span><span data-lang="en">it provides a basis for "observer-metamerism compensation", aiding research on multi-primary displays, individualized white points, and age-related compensation.</span></div>
               </div>
             </div>
           </div>
 
           <div class="observer-summary">
-            <b>它对同色异谱的真正优化，不是“让同色异谱消失”，而是更准确地预测它什么时候会失败。</b> 1931 更适合当行业通用坐标；2015 更适合解释和建模现代窄峰显示设备上的观察者差异。对教学来说，这个更新最重要的意义是：我们终于有了一个更合理的框架，去说明“仪器明明测准了，为什么不同人还是看不一样”。 
+            <b><span data-lang="zh">它对同色异谱的真正优化，不是“让同色异谱消失”，而是更准确地预测它什么时候会失败。</span><span data-lang="en">Its real improvement for metamerism isn't "making metamerism disappear", but predicting more accurately when it will fail.</span></b> <span data-lang="zh">1931 更适合当行业通用坐标；2015 更适合解释和建模现代窄峰显示设备上的观察者差异。对教学来说，这个更新最重要的意义是：我们终于有了一个更合理的框架，去说明“仪器明明测准了，为什么不同人还是看不一样”。</span><span data-lang="en">1931 is better as the industry's common coordinate; 2015 is better for explaining and modeling observer differences on modern narrow-band displays. For teaching, the most important thing about this update is that we finally have a more reasonable framework to explain "the instrument measured it right, so why do different people still see it differently".</span>
           </div>
         </div>
       </div>
@@ -1274,60 +1274,60 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. 五种同色异谱失败</h2>
-            <p>同色异谱本身不是"故障"——它是色彩系统能存在的前提。真正的问题是<b>条件改变时同色异谱匹配失效</b>。CIE/ISO 把这种失效按触发条件分成 4 类，加上相机/扫描仪场景一共 5 类。</p>
+            <h2><span data-lang="zh">4. 五种同色异谱失败</span><span data-lang="en">4. Five kinds of metameric failure</span></h2>
+            <p><span data-lang="zh">同色异谱本身不是"故障"——它是色彩系统能存在的前提。真正的问题是<b>条件改变时同色异谱匹配失效</b>。CIE/ISO 把这种失效按触发条件分成 4 类，加上相机/扫描仪场景一共 5 类。</span><span data-lang="en">Metamerism itself isn't a "fault" — it's the precondition that lets a color system exist at all. The real problem is <b>a metameric match failing when conditions change</b>. CIE/ISO sort this failure into 4 types by trigger, plus the camera/scanner case for 5 in total.</span></p>
           </div>
-          <div class="note">每一行对应一个真实可重现的现象。后面"工作流落地"会逐一对应到摄影/调色/印刷/显示链路里。</div>
+          <div class="note"><span data-lang="zh">每一行对应一个真实可重现的现象。后面"工作流落地"会逐一对应到摄影/调色/印刷/显示链路里。</span><span data-lang="en">Each row maps to a real, reproducible phenomenon. The later "workflow" section maps them one by one onto the photography/grading/print/display chain.</span></div>
         </div>
         <div class="fail-grid">
           <div class="fail-row" data-kind="illum">
-            <span class="ftag">光源 Illuminant</span>
+            <span class="ftag"><span data-lang="zh">光源 Illuminant</span><span data-lang="en">Illuminant</span></span>
             <div>
-              <div class="title">换光源色样变色</div>
+              <div class="title"><span data-lang="zh">换光源色样变色</span><span data-lang="en">Samples shift color under a new illuminant</span></div>
             </div>
             <div class="desc">
-              两个样本在 D65 下匹配，换到 A（白炽灯 2856K）/ F2（冷白荧光）/ 普通商用 LED 下颜色就分开。<b>印刷打样最常见</b>。CIE 用 MI（Metamerism Index）量化偏移，分 A–E 五级（ISO 18314-4:2020）。
-              <small>触发条件：S(λ) 变化。两个反射率不同的样本，在不同光源下产生不同的 XYZ。</small>
+              <span data-lang="zh">两个样本在 D65 下匹配，换到 A（白炽灯 2856K）/ F2（冷白荧光）/ 普通商用 LED 下颜色就分开。<b>印刷打样最常见</b>。CIE 用 MI（Metamerism Index）量化偏移，分 A–E 五级（ISO 18314-4:2020）。</span><span data-lang="en">Two samples match under D65, then split apart under A (incandescent 2856K) / F2 (cool-white fluorescent) / an ordinary commercial LED. <b>Most common in print proofing.</b> The CIE quantifies the shift with the MI (Metamerism Index), graded A–E (ISO 18314-4:2020).</span>
+              <small><span data-lang="zh">触发条件：S(λ) 变化。两个反射率不同的样本，在不同光源下产生不同的 XYZ。</span><span data-lang="en">Trigger: S(λ) changes. Two samples with different reflectances produce different XYZ under different illuminants.</span></small>
             </div>
           </div>
           <div class="fail-row" data-kind="obs">
-            <span class="ftag">观察者 Observer</span>
+            <span class="ftag"><span data-lang="zh">观察者 Observer</span><span data-lang="en">Observer</span></span>
             <div>
-              <div class="title">不同人看不一样</div>
+              <div class="title"><span data-lang="zh">不同人看不一样</span><span data-lang="en">Different people see it differently</span></div>
             </div>
             <div class="desc">
-              个体差异（锥细胞比例、晶状体黄化、视网膜色素密度）让 CMF 因人略异。<b>在 OLED / QD-OLED 等窄峰显示上更明显</b>：窄峰原色可能让不同观察者之间的 ΔE 差异达到 10 以上，这是"为什么有人觉得新 iPhone 偏绿"的原因之一。
-              <small>触发条件：CMF 变化。同一光谱在不同人的视网膜上压成不同的 XYZ。</small>
+              <span data-lang="zh">个体差异（锥细胞比例、晶状体黄化、视网膜色素密度）让 CMF 因人略异。<b>在 OLED / QD-OLED 等窄峰显示上更明显</b>：窄峰原色可能让不同观察者之间的 ΔE 差异达到 10 以上，这是"为什么有人觉得新 iPhone 偏绿"的原因之一。</span><span data-lang="en">Individual differences (cone ratios, lens yellowing, retinal pigment density) make the CMF vary slightly person to person. <b>More pronounced on narrow-band displays like OLED / QD-OLED</b>: narrow-band primaries can drive ΔE between observers above 10 — one reason "some people think the new iPhone looks green".</span>
+              <small><span data-lang="zh">触发条件：CMF 变化。同一光谱在不同人的视网膜上压成不同的 XYZ。</span><span data-lang="en">Trigger: the CMF changes. The same spectrum collapses to different XYZ on different people's retinas.</span></small>
             </div>
           </div>
           <div class="fail-row" data-kind="field">
-            <span class="ftag">视场 Field-size</span>
+            <span class="ftag"><span data-lang="zh">视场 Field-size</span><span data-lang="en">Field size</span></span>
             <div>
-              <div class="title">小块匹配，大块分开</div>
+              <div class="title"><span data-lang="zh">小块匹配，大块分开</span><span data-lang="en">Matches in small patches, splits in large areas</span></div>
             </div>
             <div class="desc">
-              视网膜中心（黄斑区，~2°）和外周（~10°）的锥细胞比例不同。小色卡用 2° 观察者匹配的颜色，铺成大面积墙漆/印张就显出差异。
-              <small>工业色差容差常切到 10° 观察者就是这个原因（CIE 1964）。</small>
+              <span data-lang="zh">视网膜中心（黄斑区，~2°）和外周（~10°）的锥细胞比例不同。小色卡用 2° 观察者匹配的颜色，铺成大面积墙漆/印张就显出差异。</span><span data-lang="en">The cone ratio differs between the retinal center (macula, ~2°) and the periphery (~10°). Colors matched on a small chart with the 2° observer reveal differences once spread over a large wall of paint or a print sheet.</span>
+              <small><span data-lang="zh">工业色差容差常切到 10° 观察者就是这个原因（CIE 1964）。</span><span data-lang="en">This is why industrial color-difference tolerances often switch to the 10° observer (CIE 1964).</span></small>
             </div>
           </div>
           <div class="fail-row" data-kind="geom">
-            <span class="ftag">几何 Geometric</span>
+            <span class="ftag"><span data-lang="zh">几何 Geometric</span><span data-lang="en">Geometric</span></span>
             <div>
-              <div class="title">换角度色样变色</div>
+              <div class="title"><span data-lang="zh">换角度色样变色</span><span data-lang="en">Samples shift color with viewing angle</span></div>
             </div>
             <div class="desc">
-              珠光漆、金属漆、金属相纸（Kodak Endura Metallic）、全息材料等的反射光谱随观察角度变化，从某一角度看的同色异谱对换个角度就拆。汽车油漆和质感软包装中经常出现这类问题。
-              <small>触发条件：S(λ) 的角度依赖性。同一物体在不同方向反射不同光谱。</small>
+              <span data-lang="zh">珠光漆、金属漆、金属相纸（Kodak Endura Metallic）、全息材料等的反射光谱随观察角度变化，从某一角度看的同色异谱对换个角度就拆。汽车油漆和质感软包装中经常出现这类问题。</span><span data-lang="en">The reflectance spectra of pearlescent paint, metallic paint, metallic photo paper (Kodak Endura Metallic), holographic materials, etc. vary with viewing angle, so a metameric pair seen from one angle comes apart from another. Common with automotive paint and textured flexible packaging.</span>
+              <small><span data-lang="zh">触发条件：S(λ) 的角度依赖性。同一物体在不同方向反射不同光谱。</span><span data-lang="en">Trigger: S(λ)'s angle dependence. The same object reflects different spectra in different directions.</span></small>
             </div>
           </div>
           <div class="fail-row" data-kind="cam">
-            <span class="ftag">相机 Camera</span>
+            <span class="ftag"><span data-lang="zh">相机 Camera</span><span data-lang="en">Camera</span></span>
             <div>
-              <div class="title">相机不是人眼</div>
+              <div class="title"><span data-lang="zh">相机不是人眼</span><span data-lang="en">A camera is not the eye</span></div>
             </div>
             <div class="desc">
-              相机用自己的 R/G/B 光谱灵敏度替代了人眼 CMF，几乎不满足 <b>Luther 条件</b>。结果是：两个对眼睛同色异谱的样本，相机可能看不一致；反之，对相机一致的两个样本，眼睛可能区分得清。
-              <small>ISO 17321 用 <b>SMI</b>（Sensitivity Metamerism Index）量化相机与人眼的偏离程度。这是 IDT / ICC 相机配置文件永远不完美的物理基础。</small>
+              <span data-lang="zh">相机用自己的 R/G/B 光谱灵敏度替代了人眼 CMF，几乎不满足 <b>Luther 条件</b>。结果是：两个对眼睛同色异谱的样本，相机可能看不一致；反之，对相机一致的两个样本，眼睛可能区分得清。</span><span data-lang="en">A camera substitutes its own R/G/B spectral sensitivities for the eye's CMF, and almost never satisfies the <b>Luther condition</b>. The result: two samples metameric to the eye may look different to the camera; conversely, two samples identical to the camera may be distinguishable to the eye.</span>
+              <small><span data-lang="zh">ISO 17321 用 <b>SMI</b>（Sensitivity Metamerism Index）量化相机与人眼的偏离程度。这是 IDT / ICC 相机配置文件永远不完美的物理基础。</span><span data-lang="en">ISO 17321 quantifies the camera-vs-eye deviation with the <b>SMI</b> (Sensitivity Metamerism Index). This is the physical reason an IDT / ICC camera profile is never perfect.</span></small>
             </div>
           </div>
         </div>
@@ -1338,76 +1338,76 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. 为什么新显示设备更容易同色异谱失效</h2>
-            <p>现代显示设备为了更高亮度、更大色域和更高效率，越来越依赖窄峰或多峰光谱。问题在于：XYZ 可以被校准到同一个白点，但光谱形状越尖、越不连续，不同观察者之间的差异就越容易被放大。</p>
+            <h2><span data-lang="zh">5. 为什么新显示设备更容易同色异谱失效</span><span data-lang="en">5. Why newer displays fail metamerism more easily</span></h2>
+            <p><span data-lang="zh">现代显示设备为了更高亮度、更大色域和更高效率，越来越依赖窄峰或多峰光谱。问题在于：XYZ 可以被校准到同一个白点，但光谱形状越尖、越不连续，不同观察者之间的差异就越容易被放大。</span><span data-lang="en">For higher brightness, wider gamut, and better efficiency, modern displays increasingly rely on narrow-band or multi-peak spectra. The catch: XYZ can be calibrated to the same white point, but the sharper and more discontinuous the spectrum, the more easily differences between observers are amplified.</span></p>
           </div>
-          <div class="note">关键不一定是显示设备存在校准错误，而是它们用更窄、更集中的光谱去生成同一个三刺激值。仪器按 CIE 1931 标准观察者读数正确，不代表每个真实观察者看到都完全一致。</div>
+          <div class="note"><span data-lang="zh">关键不一定是显示设备存在校准错误，而是它们用更窄、更集中的光谱去生成同一个三刺激值。仪器按 CIE 1931 标准观察者读数正确，不代表每个真实观察者看到都完全一致。</span><span data-lang="en">The key isn't necessarily a calibration error in the display, but that it uses a narrower, more concentrated spectrum to produce the same tristimulus value. A correct reading by the instrument against the CIE 1931 standard observer doesn't mean every real observer sees exactly the same.</span></div>
         </div>
 
         <div class="display-tech-grid">
           <div class="display-tech">
-            <div class="tech-era">传统 LCD / 白 LED 背光</div>
-            <h4>光谱较宽，观察者差异相对温和</h4>
-            <p>白 LED + 彩色滤光片或荧光粉背光的发射峰通常较宽。它不一定色域最大，但不同人的锥细胞差异被宽光谱“平均”了一部分。</p>
-            <span class="tech-metric">宽峰 / 中等色域</span>
+            <div class="tech-era"><span data-lang="zh">传统 LCD / 白 LED 背光</span><span data-lang="en">Traditional LCD / white-LED backlight</span></div>
+            <h4><span data-lang="zh">光谱较宽，观察者差异相对温和</span><span data-lang="en">Broader spectrum, milder observer differences</span></h4>
+            <p><span data-lang="zh">白 LED + 彩色滤光片或荧光粉背光的发射峰通常较宽。它不一定色域最大，但不同人的锥细胞差异被宽光谱“平均”了一部分。</span><span data-lang="en">A white LED + color filters, or a phosphor backlight, usually has broad emission peaks. The gamut may not be the largest, but a broad spectrum partly "averages out" different people's cone differences.</span></p>
+            <span class="tech-metric"><span data-lang="zh">宽峰 / 中等色域</span><span data-lang="en">Broad peaks / medium gamut</span></span>
           </div>
           <div class="display-tech featured">
-            <div class="tech-era">QD-OLED / 量子点 LCD</div>
-            <h4>量子点把红绿推成窄峰</h4>
-            <p>量子点能做出很纯的红、绿原色，提升 P3 / Rec.2020 覆盖率。但窄峰刚好落在 L/M 锥响应变化最敏感的区域，不同观察者的白点和饱和色感知会更容易分开。</p>
-            <span class="tech-metric">窄峰 / 高色域 / 高风险</span>
+            <div class="tech-era">QD-OLED / <span data-lang="zh">量子点 LCD</span><span data-lang="en">QD LCD</span></div>
+            <h4><span data-lang="zh">量子点把红绿推成窄峰</span><span data-lang="en">Quantum dots push red and green into narrow peaks</span></h4>
+            <p><span data-lang="zh">量子点能做出很纯的红、绿原色，提升 P3 / Rec.2020 覆盖率。但窄峰刚好落在 L/M 锥响应变化最敏感的区域，不同观察者的白点和饱和色感知会更容易分开。</span><span data-lang="en">Quantum dots make very pure red and green primaries, boosting P3 / Rec.2020 coverage. But those narrow peaks land right where the L/M cone responses change most steeply, so different observers' white-point and saturated-color perceptions split apart more easily.</span></p>
+            <span class="tech-metric"><span data-lang="zh">窄峰 / 高色域 / 高风险</span><span data-lang="en">Narrow peaks / wide gamut / high risk</span></span>
           </div>
           <div class="display-tech featured">
-            <div class="tech-era">RGB OLED / 激光投影</div>
-            <h4>越接近单色光，越考验“标准观察者”</h4>
-            <p>激光和部分窄带 OLED 的原色更接近线状光谱。校准仪可以把白点调到 D65，但真实观众不是同一个标准观察者，所以有人看偏绿、有人看偏粉。</p>
-            <span class="tech-metric">极窄峰 / 观察者同色异谱</span>
+            <div class="tech-era"><span data-lang="zh">RGB OLED / 激光投影</span><span data-lang="en">RGB OLED / laser projection</span></div>
+            <h4><span data-lang="zh">越接近单色光，越考验“标准观察者”</span><span data-lang="en">The closer to monochromatic, the more it tests the "standard observer"</span></h4>
+            <p><span data-lang="zh">激光和部分窄带 OLED 的原色更接近线状光谱。校准仪可以把白点调到 D65，但真实观众不是同一个标准观察者，所以有人看偏绿、有人看偏粉。</span><span data-lang="en">The primaries of lasers and some narrow-band OLEDs are closer to line spectra. A meter can set the white point to D65, but real viewers aren't one single standard observer, so some see it green-ish and others pink-ish.</span></p>
+            <span class="tech-metric"><span data-lang="zh">极窄峰 / 观察者同色异谱</span><span data-lang="en">Very narrow peaks / observer metamerism</span></span>
           </div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>为什么 HDR 会把问题放大</h3>
-            <p>HDR 不只是亮度更高，也常常伴随更广色域、更高饱和度和更强的显示原色纯度。饱和色越靠近显示器原色，颜色越依赖那几个窄峰，观察者同色异谱就越明显。</p>
-            <p>这也是为什么同一个 HDR 片段在不同 OLED、Mini LED + 量子点电视和参考监视器上，即使测量白点相近，肉眼观感仍可能不一致。</p>
+            <h3><span data-lang="zh">为什么 HDR 会把问题放大</span><span data-lang="en">Why HDR amplifies the problem</span></h3>
+            <p><span data-lang="zh">HDR 不只是亮度更高，也常常伴随更广色域、更高饱和度和更强的显示原色纯度。饱和色越靠近显示器原色，颜色越依赖那几个窄峰，观察者同色异谱就越明显。</span><span data-lang="en">HDR isn't just higher brightness — it usually comes with wider gamut, higher saturation, and purer display primaries. The closer a saturated color is to a display primary, the more it depends on those few narrow peaks, and the more visible observer metamerism becomes.</span></p>
+            <p><span data-lang="zh">这也是为什么同一个 HDR 片段在不同 OLED、Mini LED + 量子点电视和参考监视器上，即使测量白点相近，肉眼观感仍可能不一致。</span><span data-lang="en">This is also why the same HDR clip can look inconsistent to the eye across different OLEDs, Mini-LED + quantum-dot TVs, and reference monitors, even when their measured white points are close.</span></p>
           </div>
           <div class="card">
-            <h3>校准为什么不能彻底解决</h3>
-            <p>常规校准把显示器对齐到一个标准观察者和一个目标白点，例如 CIE 1931 2° 的 D65。它能减少设备误差，但不能消除人眼个体差异。</p>
-            <p>更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。CIE 2015 这类生理观察者模型的价值，不是替代校准，而是帮助我们更诚实地描述“校准后的剩余差异”。</p>
+            <h3><span data-lang="zh">校准为什么不能彻底解决</span><span data-lang="en">Why calibration can't fully fix it</span></h3>
+            <p><span data-lang="zh">常规校准把显示器对齐到一个标准观察者和一个目标白点，例如 CIE 1931 2° 的 D65。它能减少设备误差，但不能消除人眼个体差异。</span><span data-lang="en">Routine calibration aligns a display to one standard observer and one target white point, e.g. D65 under CIE 1931 2°. It reduces device error but can't eliminate individual differences between eyes.</span></p>
+            <p><span data-lang="zh">更严谨的做法是：关键监看使用同型号参考设备；避免用单一消费屏判断最终颜色；对品牌色、肤色、霓虹色等敏感内容做多设备和多人交叉检查。CIE 2015 这类生理观察者模型的价值，不是替代校准，而是帮助我们更诚实地描述“校准后的剩余差异”。</span><span data-lang="en">A more rigorous practice: use the same reference model for critical monitoring; avoid judging final color on a single consumer screen; cross-check sensitive content like brand colors, skin tones, and neon across multiple devices and multiple people. The value of physiological-observer models like CIE 2015 isn't to replace calibration, but to help us describe the "residual difference after calibration" more honestly.</span></p>
           </div>
         </div>
 
         <div class="camera-display-grid">
           <div class="card">
-            <h3>为什么相机拍屏和人眼观察会差很多</h3>
-            <p>显示器校准的目标是让<b>人眼</b>看到目标颜色：在指定观察者模型下得到正确的 XYZ / Lab。相机拍屏时，光没有先经过人眼，而是进入相机自己的 RGB 滤色片。只要相机的三条光谱灵敏度不满足 Luther 条件，它就会把同一条显示光谱压缩成另一组 RGB。</p>
-            <p>传统宽峰 LCD 的光谱较平滑，相机误差有时不明显；OLED、激光投影和 RGB mini LED 的原色更窄，光谱能量集中在少数波段。窄峰越多，相机响应与人眼 CMF 的偏差越容易被放大，所以拍出来可能偏绿、偏粉、肤色不稳，或者不同屏幕在照片里白点差异很大。</p>
-            <p><b>判断显示器颜色时应以人眼观察和仪器测量为准</b>。相机画面只是“这台相机对这台显示器光谱的反应”，不是显示器视觉效果本身。除非为特定相机、镜头、曝光和显示器光谱建立专门校正，否则拍屏不能作为颜色准确性的依据。</p>
+            <h3><span data-lang="zh">为什么相机拍屏和人眼观察会差很多</span><span data-lang="en">Why photographing a screen differs so much from viewing it</span></h3>
+            <p><span data-lang="zh">显示器校准的目标是让<b>人眼</b>看到目标颜色：在指定观察者模型下得到正确的 XYZ / Lab。相机拍屏时，光没有先经过人眼，而是进入相机自己的 RGB 滤色片。只要相机的三条光谱灵敏度不满足 Luther 条件，它就会把同一条显示光谱压缩成另一组 RGB。</span><span data-lang="en">The goal of display calibration is for the <b>eye</b> to see the target color: correct XYZ / Lab under a given observer model. When a camera shoots a screen, the light doesn't pass through an eye first — it enters the camera's own RGB filters. As long as the camera's three spectral sensitivities don't satisfy the Luther condition, it collapses the same display spectrum into a different set of RGB.</span></p>
+            <p><span data-lang="zh">传统宽峰 LCD 的光谱较平滑，相机误差有时不明显；OLED、激光投影和 RGB mini LED 的原色更窄，光谱能量集中在少数波段。窄峰越多，相机响应与人眼 CMF 的偏差越容易被放大，所以拍出来可能偏绿、偏粉、肤色不稳，或者不同屏幕在照片里白点差异很大。</span><span data-lang="en">Broad-peak LCDs have smoother spectra, so camera error is sometimes negligible; OLED, laser projection, and RGB mini-LED have narrower primaries with energy concentrated in a few bands. The more narrow peaks there are, the more the deviation between the camera response and the eye's CMF is amplified — so shots can look green-ish, pink-ish, have unstable skin tones, or show big white-point differences between screens.</span></p>
+            <p><span data-lang="zh"><b>判断显示器颜色时应以人眼观察和仪器测量为准</b>。相机画面只是“这台相机对这台显示器光谱的反应”，不是显示器视觉效果本身。除非为特定相机、镜头、曝光和显示器光谱建立专门校正，否则拍屏不能作为颜色准确性的依据。</span><span data-lang="en"><b>Judge display color by eye observation and instrument measurement.</b> A camera image is only "this camera's reaction to this display's spectrum", not the display's visual result itself. Unless you build a dedicated correction for a specific camera, lens, exposure, and display spectrum, a screen photo can't be evidence of color accuracy.</span></p>
           </div>
           <div class="card">
-            <h3>三个典型设备案例</h3>
+            <h3><span data-lang="zh">三个典型设备案例</span><span data-lang="en">Three typical device cases</span></h3>
             <div class="case-list">
               <div class="case-row">
                 <b>OLED / QD-OLED</b>
-                <span>蓝光 OLED、量子点转换的红绿峰较窄。人眼可被校准到 D65，但相机 RGB 通道可能对这些窄峰过度或不足响应，拍屏常见白点和肤色偏移。</span>
+                <span><span data-lang="zh">蓝光 OLED、量子点转换的红绿峰较窄。人眼可被校准到 D65，但相机 RGB 通道可能对这些窄峰过度或不足响应，拍屏常见白点和肤色偏移。</span><span data-lang="en">Blue OLED with quantum-dot-converted red/green has narrow peaks. The eye can be calibrated to D65, but the camera's RGB channels may over- or under-respond to those narrow peaks, so screen shots commonly show white-point and skin-tone shifts.</span></span>
               </div>
               <div class="case-row">
-                <b>激光投影</b>
-                <span>RGB 激光接近单色光，能覆盖很大色域，也最容易触发观察者差异和相机同色异谱。相机可能把肉眼看起来中性的白或灰拍成明显偏色。</span>
+                <b><span data-lang="zh">激光投影</span><span data-lang="en">Laser projection</span></b>
+                <span><span data-lang="zh">RGB 激光接近单色光，能覆盖很大色域，也最容易触发观察者差异和相机同色异谱。相机可能把肉眼看起来中性的白或灰拍成明显偏色。</span><span data-lang="en">RGB lasers are near-monochromatic, cover a very wide gamut, and most easily trigger observer differences and camera metamerism. A camera may render a white or gray that looks neutral to the eye with an obvious cast.</span></span>
               </div>
               <div class="case-row">
                 <b>RGB mini LED</b>
-                <span>如果背光由独立红、绿、蓝 mini LED 混合而成，光谱比白 LED 背光更离散。它有利于亮度和色域控制，但拍屏时更依赖相机的光谱响应匹配程度。</span>
+                <span><span data-lang="zh">如果背光由独立红、绿、蓝 mini LED 混合而成，光谱比白 LED 背光更离散。它有利于亮度和色域控制，但拍屏时更依赖相机的光谱响应匹配程度。</span><span data-lang="en">If the backlight is mixed from separate red, green, and blue mini-LEDs, the spectrum is more discrete than a white-LED backlight. Good for brightness and gamut control, but screen shots depend even more on how well the camera's spectral response matches.</span></span>
               </div>
             </div>
           </div>
         </div>
 
         <ul class="response-list" style="margin-top:16px">
-          <li><b>工程取舍：</b>更窄的光谱峰带来更大色域和更高效率，但也更容易暴露“标准观察者 ≠ 每个真实观察者”的问题。</li>
-          <li><b>内容制作：</b>不要把“校色仪读数一致”直接等同于“所有人看起来一致”。HDR 广色域母版尤其需要参考环境和参考显示器。</li>
-          <li><b>未来方向：</b>多原色显示、CIE 2015 生理观察者、按年龄/视场建模的观察者补偿，都在试图降低这种差异。</li>
+          <li><b><span data-lang="zh">工程取舍：</span><span data-lang="en">Engineering trade-off: </span></b><span data-lang="zh">更窄的光谱峰带来更大色域和更高效率，但也更容易暴露“标准观察者 ≠ 每个真实观察者”的问题。</span><span data-lang="en">narrower spectral peaks bring wider gamut and higher efficiency, but also more readily expose the problem that "the standard observer ≠ every real observer".</span></li>
+          <li><b><span data-lang="zh">内容制作：</span><span data-lang="en">Content production: </span></b><span data-lang="zh">不要把“校色仪读数一致”直接等同于“所有人看起来一致”。HDR 广色域母版尤其需要参考环境和参考显示器。</span><span data-lang="en">don't equate "the meter reads the same" with "everyone sees the same". Wide-gamut HDR masters especially need a reference environment and a reference display.</span></li>
+          <li><b><span data-lang="zh">未来方向：</span><span data-lang="en">Future directions: </span></b><span data-lang="zh">多原色显示、CIE 2015 生理观察者、按年龄/视场建模的观察者补偿，都在试图降低这种差异。</span><span data-lang="en">multi-primary displays, the CIE 2015 physiological observer, and observer compensation modeled by age/field size are all attempts to reduce this difference.</span></li>
         </ul>
       </div>
     </section>
@@ -1416,26 +1416,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>6. 演示 A：两条不同光谱，同一个颜色</h2>
-            <p>左边是窄峰光谱（类似 OLED / 激光投影原色），右边是宽峰光谱（类似传统 LCD 荧光粉）。调整两组峰的强度，让两侧的 XYZ 三刺激值尽可能接近。当 ΔE 落到 1 以下，人眼就会把两者视为同一颜色——尽管它们的光谱形状完全不一样。</p>
+            <h2><span data-lang="zh">6. 演示 A：两条不同光谱，同一个颜色</span><span data-lang="en">6. Demo A: two different spectra, one color</span></h2>
+            <p><span data-lang="zh">左边是窄峰光谱（类似 OLED / 激光投影原色），右边是宽峰光谱（类似传统 LCD 荧光粉）。调整两组峰的强度，让两侧的 XYZ 三刺激值尽可能接近。当 ΔE 落到 1 以下，人眼就会把两者视为同一颜色——尽管它们的光谱形状完全不一样。</span><span data-lang="en">On the left is a narrow-band spectrum (like OLED / laser-projection primaries); on the right a broad-band spectrum (like traditional LCD phosphors). Adjust the peak strengths to bring the two sides' XYZ tristimulus values as close as possible. Once ΔE drops below 1, the eye treats them as one color — even though their spectral shapes are completely different.</span></p>
           </div>
-          <div class="note">XYZ 用 CIE 1931 2° 标准观察者计算，范围 380–780 nm，步长 5 nm。色卡用 sRGB 显示，超出色域的颜色已截断。</div>
+          <div class="note"><span data-lang="zh">XYZ 用 CIE 1931 2° 标准观察者计算，范围 380–780 nm，步长 5 nm。色卡用 sRGB 显示，超出色域的颜色已截断。</span><span data-lang="en">XYZ is computed with the CIE 1931 2° standard observer over 380–780 nm at 5 nm steps. Swatches are shown in sRGB, with out-of-gamut colors clipped.</span></div>
         </div>
 
         <div class="grid-2">
           <!-- Spectrum A: narrow peaks -->
           <div class="card">
             <div class="spec-head">
-              <h3>光谱 A · 窄峰</h3>
+              <h3><span data-lang="zh">光谱 A · 窄峰</span><span data-lang="en">Spectrum A · narrow peaks</span></h3>
               <div class="swatch" id="swA" aria-label="光谱 A 颜色"></div>
             </div>
             <div class="canvas-box" style="height:220px">
               <canvas id="specA" aria-label="光谱 A 曲线"></canvas>
             </div>
             <div class="sliders">
-              <label>红峰 R · 620 nm <span class="val" id="aRval">80</span><input id="aR" type="range" min="0" max="100" value="80"></label>
-              <label>绿峰 G · 532 nm <span class="val" id="aGval">70</span><input id="aG" type="range" min="0" max="100" value="70"></label>
-              <label>蓝峰 B · 467 nm <span class="val" id="aBval">60</span><input id="aB" type="range" min="0" max="100" value="60"></label>
+              <label><span data-lang="zh">红峰 R · 620 nm</span><span data-lang="en">Red R · 620 nm</span> <span class="val" id="aRval">80</span><input id="aR" type="range" min="0" max="100" value="80"></label>
+              <label><span data-lang="zh">绿峰 G · 532 nm</span><span data-lang="en">Green G · 532 nm</span> <span class="val" id="aGval">70</span><input id="aG" type="range" min="0" max="100" value="70"></label>
+              <label><span data-lang="zh">蓝峰 B · 467 nm</span><span data-lang="en">Blue B · 467 nm</span> <span class="val" id="aBval">60</span><input id="aB" type="range" min="0" max="100" value="60"></label>
             </div>
             <div class="xyz-out">
               <span>X = <b id="aX">0</b></span>
@@ -1447,16 +1447,16 @@
           <!-- Spectrum B: broad peaks -->
           <div class="card">
             <div class="spec-head">
-              <h3>光谱 B · 宽峰</h3>
+              <h3><span data-lang="zh">光谱 B · 宽峰</span><span data-lang="en">Spectrum B · broad peaks</span></h3>
               <div class="swatch" id="swB" aria-label="光谱 B 颜色"></div>
             </div>
             <div class="canvas-box" style="height:220px">
               <canvas id="specB" aria-label="光谱 B 曲线"></canvas>
             </div>
             <div class="sliders">
-              <label>暖峰 · 605 nm <span class="val" id="bRval">55</span><input id="bR" type="range" min="0" max="100" value="55"></label>
-              <label>中峰 · 545 nm <span class="val" id="bGval">60</span><input id="bG" type="range" min="0" max="100" value="60"></label>
-              <label>冷峰 · 475 nm <span class="val" id="bBval">50</span><input id="bB" type="range" min="0" max="100" value="50"></label>
+              <label><span data-lang="zh">暖峰 · 605 nm</span><span data-lang="en">Warm · 605 nm</span> <span class="val" id="bRval">55</span><input id="bR" type="range" min="0" max="100" value="55"></label>
+              <label><span data-lang="zh">中峰 · 545 nm</span><span data-lang="en">Mid · 545 nm</span> <span class="val" id="bGval">60</span><input id="bG" type="range" min="0" max="100" value="60"></label>
+              <label><span data-lang="zh">冷峰 · 475 nm</span><span data-lang="en">Cool · 475 nm</span> <span class="val" id="bBval">50</span><input id="bB" type="range" min="0" max="100" value="50"></label>
             </div>
             <div class="xyz-out">
               <span>X = <b id="bX">0</b></span>
@@ -1475,32 +1475,32 @@
         <!-- Match indicator -->
         <div class="match-card" id="matchCard" data-status="diff">
           <div class="match-metric">
-            <span class="lbl">XYZ 差异</span>
+            <span class="lbl"><span data-lang="zh">XYZ 差异</span><span data-lang="en">XYZ difference</span></span>
             <span class="num" id="deltaXYZ">—</span>
           </div>
           <div class="match-metric">
             <span class="lbl">CIELAB ΔE76</span>
             <span class="num" id="deltaE">—</span>
           </div>
-          <div class="match-status" id="matchStatus">差异明显</div>
-          <div class="match-detail" id="matchDetail">移动滑块或点击匹配按钮，观察两组光谱是否能落到同一组 XYZ。</div>
+          <div class="match-status" id="matchStatus"><span data-lang="zh">差异明显</span><span data-lang="en">Clearly different</span></div>
+          <div class="match-detail" id="matchDetail"><span data-lang="zh">移动滑块或点击匹配按钮，观察两组光谱是否能落到同一组 XYZ。</span><span data-lang="en">Move the sliders or click a match button to see whether the two spectra can land on the same XYZ.</span></div>
         </div>
 
         <div class="actions">
-          <button class="primary" id="findMatch">让 B 尝试匹配 A</button>
-          <button id="findReverse">让 A 尝试匹配 B</button>
-          <button id="resetDemo">重置</button>
+          <button class="primary" id="findMatch"><span data-lang="zh">让 B 尝试匹配 A</span><span data-lang="en">Have B try to match A</span></button>
+          <button id="findReverse"><span data-lang="zh">让 A 尝试匹配 B</span><span data-lang="en">Have A try to match B</span></button>
+          <button id="resetDemo"><span data-lang="zh">重置</span><span data-lang="en">Reset</span></button>
         </div>
 
         <div class="explain">
           <div class="card">
-            <h4>你刚才看到了什么</h4>
-            <p>左右两条光谱在 380–780 nm 上形状完全不同——一边是三个尖锐的窄峰，一边是三个平滑的宽峰。但当 ΔE 小于 1 时，<b>人眼无法区分</b>这两种光。把这两块色卡贴在一起，看到的是同一种颜色。</p>
-            <p>匹配按钮不是保证成功的“自动调色”。它只允许三个峰做 0–100 的非负加法；如果精确解需要负峰值，或需要把某个峰推到 100 以上，就只能给出最接近的结果。</p>
+            <h4><span data-lang="zh">你刚才看到了什么</span><span data-lang="en">What you just saw</span></h4>
+            <p><span data-lang="zh">左右两条光谱在 380–780 nm 上形状完全不同——一边是三个尖锐的窄峰，一边是三个平滑的宽峰。但当 ΔE 小于 1 时，<b>人眼无法区分</b>这两种光。把这两块色卡贴在一起，看到的是同一种颜色。</span><span data-lang="en">The two spectra have completely different shapes across 380–780 nm — three sharp narrow peaks on one side, three smooth broad peaks on the other. But once ΔE is below 1, <b>the eye can't tell them apart</b>. Place the two swatches side by side and you see one color.</span></p>
+            <p><span data-lang="zh">匹配按钮不是保证成功的“自动调色”。它只允许三个峰做 0–100 的非负加法；如果精确解需要负峰值，或需要把某个峰推到 100 以上，就只能给出最接近的结果。</span><span data-lang="en">The match button isn't a guaranteed "auto-grade". It only allows non-negative addition of the three peaks over 0–100; if the exact solution needs a negative peak, or a peak pushed above 100, it can only give the closest result.</span></p>
           </div>
           <div class="card">
-            <h4>为什么会这样</h4>
-            <p>视网膜上只有 3 种锥细胞（L、M、S），任何光谱进入眼睛后都会被压缩成 3 个数字（XYZ 三刺激值）。无穷多种光谱可以产生<b>同一组三刺激值</b>——它们就是同色异谱对（metameric pair）。这是色彩管理的起点。</p>
+            <h4><span data-lang="zh">为什么会这样</span><span data-lang="en">Why this happens</span></h4>
+            <p><span data-lang="zh">视网膜上只有 3 种锥细胞（L、M、S），任何光谱进入眼睛后都会被压缩成 3 个数字（XYZ 三刺激值）。无穷多种光谱可以产生<b>同一组三刺激值</b>——它们就是同色异谱对（metameric pair）。这是色彩管理的起点。</span><span data-lang="en">The retina has only 3 cone types (L, M, S), so any spectrum entering the eye is compressed into 3 numbers (the XYZ tristimulus values). Infinitely many spectra can produce <b>the same tristimulus values</b> — they form a metameric pair. This is the starting point of color management.</span></p>
           </div>
         </div>
       </div>
@@ -1510,80 +1510,80 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>7. 演示 B：换光源，匹配失效</h2>
-            <p>两个反射率不同的样本，可以被设计成在 <b>D65 下完全匹配</b>。但只要换一个光源（白炽灯 / 荧光 / LED），同色异谱匹配就会失效——这就是<b>光源同色异谱失败</b>，也是印刷打样中最常见的问题之一。</p>
+            <h2><span data-lang="zh">7. 演示 B：换光源，匹配失效</span><span data-lang="en">7. Demo B: change the illuminant, the match breaks</span></h2>
+            <p><span data-lang="zh">两个反射率不同的样本，可以被设计成在 <b>D65 下完全匹配</b>。但只要换一个光源（白炽灯 / 荧光 / LED），同色异谱匹配就会失效——这就是<b>光源同色异谱失败</b>，也是印刷打样中最常见的问题之一。</span><span data-lang="en">Two samples with different reflectances can be designed to <b>match exactly under D65</b>. But change the illuminant (incandescent / fluorescent / LED) and the metameric match breaks — this is <b>illuminant metameric failure</b>, one of the most common problems in print proofing.</span></p>
           </div>
-          <div class="note">先点"在 D65 下匹配"让样本 B 与样本 A 同色，然后依次切换光源观察 ΔE。在 A、F2、LED 下，差异会明显跳出来。</div>
+          <div class="note"><span data-lang="zh">先点"在 D65 下匹配"让样本 B 与样本 A 同色，然后依次切换光源观察 ΔE。在 A、F2、LED 下，差异会明显跳出来。</span><span data-lang="en">First click "Match A under D65" to make sample B the same color as sample A, then switch illuminants one by one and watch ΔE. Under A, F2, and LED the difference jumps out clearly.</span></div>
         </div>
 
         <div class="illuminant-tabs" role="tablist" aria-label="光源选择">
-          <button type="button" data-illum="D65" aria-pressed="true">D65 日光</button>
-          <button type="button" data-illum="D50" aria-pressed="false">D50 印刷标准</button>
-          <button type="button" data-illum="A" aria-pressed="false">A 白炽 2856K</button>
-          <button type="button" data-illum="F2" aria-pressed="false">F2 冷白荧光</button>
-          <button type="button" data-illum="LED" aria-pressed="false">商用 LED 3000K</button>
+          <button type="button" data-illum="D65" aria-pressed="true"><span data-lang="zh">D65 日光</span><span data-lang="en">D65 daylight</span></button>
+          <button type="button" data-illum="D50" aria-pressed="false"><span data-lang="zh">D50 印刷标准</span><span data-lang="en">D50 print standard</span></button>
+          <button type="button" data-illum="A" aria-pressed="false"><span data-lang="zh">A 白炽 2856K</span><span data-lang="en">A incandescent 2856K</span></button>
+          <button type="button" data-illum="F2" aria-pressed="false"><span data-lang="zh">F2 冷白荧光</span><span data-lang="en">F2 cool-white fluorescent</span></button>
+          <button type="button" data-illum="LED" aria-pressed="false"><span data-lang="zh">商用 LED 3000K</span><span data-lang="en">Commercial LED 3000K</span></button>
         </div>
 
         <div class="grid-2">
           <div class="card">
             <div class="spec-head">
-              <h3>反射率 + 光源 SPD</h3>
+              <h3><span data-lang="zh">反射率 + 光源 SPD</span><span data-lang="en">Reflectance + illuminant SPD</span></h3>
               <span class="label" id="illumName">D65 日光</span>
             </div>
             <div class="canvas-box" style="height:260px">
               <canvas id="demoBCanvas" aria-label="样本反射率与光源 SPD 叠加图"></canvas>
             </div>
             <p style="margin:10px 0 0;font-size:12.5px;color:var(--soft);line-height:1.6">
-              虚线 = 光源 SPD（按峰值归一化）；实线 = 两个样本的反射率曲线。眼睛看到的 = SPD × 反射率，再经 CMF 积分。
+              <span data-lang="zh">虚线 = 光源 SPD（按峰值归一化）；实线 = 两个样本的反射率曲线。眼睛看到的 = SPD × 反射率，再经 CMF 积分。</span><span data-lang="en">Dashed = illuminant SPD (normalized to its peak); solid = the two samples' reflectance curves. What the eye sees = SPD × reflectance, then integrated against the CMF.</span>
             </p>
           </div>
           <div class="card">
             <div class="spec-head">
-              <h3>样本 B 反射率峰值</h3>
-              <span class="label">3 个高斯峰（FWHM ≈ 65 nm）</span>
+              <h3><span data-lang="zh">样本 B 反射率峰值</span><span data-lang="en">Sample B reflectance peaks</span></h3>
+              <span class="label"><span data-lang="zh">3 个高斯峰（FWHM ≈ 65 nm）</span><span data-lang="en">3 Gaussian peaks (FWHM ≈ 65 nm)</span></span>
             </div>
             <div class="sliders">
-              <label>蓝峰 · 460 nm <span class="val" id="rBlueVal">25</span><input id="rBlue" type="range" min="0" max="100" value="25"></label>
-              <label>绿峰 · 555 nm <span class="val" id="rGreenVal">55</span><input id="rGreen" type="range" min="0" max="100" value="55"></label>
-              <label>红峰 · 630 nm <span class="val" id="rRedVal">40</span><input id="rRed" type="range" min="0" max="100" value="40"></label>
+              <label><span data-lang="zh">蓝峰 · 460 nm</span><span data-lang="en">Blue · 460 nm</span> <span class="val" id="rBlueVal">25</span><input id="rBlue" type="range" min="0" max="100" value="25"></label>
+              <label><span data-lang="zh">绿峰 · 555 nm</span><span data-lang="en">Green · 555 nm</span> <span class="val" id="rGreenVal">55</span><input id="rGreen" type="range" min="0" max="100" value="55"></label>
+              <label><span data-lang="zh">红峰 · 630 nm</span><span data-lang="en">Red · 630 nm</span> <span class="val" id="rRedVal">40</span><input id="rRed" type="range" min="0" max="100" value="40"></label>
             </div>
             <div class="swatch-pair">
               <div class="swatch-tile">
                 <div class="swatch-large" id="swSampleA"></div>
-                <div class="swatch-info"><b>样本 A · 平滑反射</b>固定的宽峰反射曲线</div>
+                <div class="swatch-info"><b><span data-lang="zh">样本 A · 平滑反射</span><span data-lang="en">Sample A · smooth reflectance</span></b><span data-lang="zh">固定的宽峰反射曲线</span><span data-lang="en">a fixed broad-peak reflectance curve</span></div>
               </div>
               <div class="swatch-tile">
                 <div class="swatch-large" id="swSampleB"></div>
-                <div class="swatch-info"><b>样本 B · 三峰反射</b>由上方滑块控制</div>
+                <div class="swatch-info"><b><span data-lang="zh">样本 B · 三峰反射</span><span data-lang="en">Sample B · three-peak reflectance</span></b><span data-lang="zh">由上方滑块控制</span><span data-lang="en">controlled by the sliders above</span></div>
               </div>
             </div>
             <div class="actions" style="margin-top:14px">
-              <button class="primary" id="matchD65">在 D65 下匹配 A</button>
-              <button id="resetDemoB">重置</button>
+              <button class="primary" id="matchD65"><span data-lang="zh">在 D65 下匹配 A</span><span data-lang="en">Match A under D65</span></button>
+              <button id="resetDemoB"><span data-lang="zh">重置</span><span data-lang="en">Reset</span></button>
             </div>
           </div>
         </div>
 
         <div class="match-card" id="matchCardB" data-status="diff" style="margin-top:20px">
           <div class="match-metric">
-            <span class="lbl">当前光源</span>
+            <span class="lbl"><span data-lang="zh">当前光源</span><span data-lang="en">Current illuminant</span></span>
             <span class="num" id="currentIllum" style="font-size:20px">D65</span>
           </div>
           <div class="match-metric">
-            <span class="lbl">两样本 ΔE76</span>
+            <span class="lbl"><span data-lang="zh">两样本 ΔE76</span><span data-lang="en">Sample-to-sample ΔE76</span></span>
             <span class="num" id="deltaEB">—</span>
           </div>
-          <div class="match-status" id="matchStatusB">未匹配</div>
+          <div class="match-status" id="matchStatusB"><span data-lang="zh">未匹配</span><span data-lang="en">Not matched</span></div>
         </div>
 
         <div class="explain">
           <div class="card">
-            <h4>典型操作序列</h4>
-            <p><b>1.</b> 点击"在 D65 下匹配 A"——样本 B 的三个峰自动调整，让两块色卡在 D65 下完全一致（ΔE &lt; 1）。<b>2.</b> 依次切换到 D50、A、F2、LED——观察 ΔE 如何变化。<b>3.</b> 在 A 和 F2 下 ΔE 会显著上升，因为这些光源的 SPD 形状差异很大。</p>
+            <h4><span data-lang="zh">典型操作序列</span><span data-lang="en">A typical sequence</span></h4>
+            <p><span data-lang="zh"><b>1.</b> 点击"在 D65 下匹配 A"——样本 B 的三个峰自动调整，让两块色卡在 D65 下完全一致（ΔE &lt; 1）。<b>2.</b> 依次切换到 D50、A、F2、LED——观察 ΔE 如何变化。<b>3.</b> 在 A 和 F2 下 ΔE 会显著上升，因为这些光源的 SPD 形状差异很大。</span><span data-lang="en"><b>1.</b> Click "Match A under D65" — sample B's three peaks auto-adjust so the two swatches are identical under D65 (ΔE &lt; 1). <b>2.</b> Switch through D50, A, F2, LED in turn and watch how ΔE changes. <b>3.</b> Under A and F2, ΔE rises sharply, because those illuminants have very different SPD shapes.</span></p>
           </div>
           <div class="card">
-            <h4>为什么 F2 特别凶猛</h4>
-            <p>D65 是<b>平滑日光</b>，F2 是<b>带尖锐汞蒸气发射线的荧光</b>（405/436/546 nm 等强线）。F2 在不同波长上能量分布完全不均，<b>对样本反射率的某些波段格外敏感</b>。任何在 D65 下匹配但依赖不同波段反射的两个样本，在 F2 下都很容易产生可见差异。</p>
+            <h4><span data-lang="zh">为什么 F2 特别凶猛</span><span data-lang="en">Why F2 is especially brutal</span></h4>
+            <p><span data-lang="zh">D65 是<b>平滑日光</b>，F2 是<b>带尖锐汞蒸气发射线的荧光</b>（405/436/546 nm 等强线）。F2 在不同波长上能量分布完全不均，<b>对样本反射率的某些波段格外敏感</b>。任何在 D65 下匹配但依赖不同波段反射的两个样本，在 F2 下都很容易产生可见差异。</span><span data-lang="en">D65 is <b>smooth daylight</b>; F2 is <b>fluorescent with sharp mercury emission lines</b> (strong lines at 405/436/546 nm, etc.). F2's energy is very unevenly distributed across wavelengths, making it <b>especially sensitive to certain bands of a sample's reflectance</b>. Any two samples that match under D65 but rely on different reflectance bands easily show a visible difference under F2.</span></p>
           </div>
         </div>
       </div>
@@ -1593,39 +1593,39 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>8. 工作流落地</h2>
-            <p>同色异谱不是抽象概念——它每天都在你的工作链路里制造问题。下面四个场景是高频实例。</p>
+            <h2><span data-lang="zh">8. 工作流落地</span><span data-lang="en">8. Putting it into the workflow</span></h2>
+            <p><span data-lang="zh">同色异谱不是抽象概念——它每天都在你的工作链路里制造问题。下面四个场景是高频实例。</span><span data-lang="en">Metamerism isn't an abstract idea — it causes problems in your workflow every day. The four scenarios below are frequent, concrete examples.</span></p>
           </div>
-          <div class="note">每个场景对应前面"五种失败"里的一类。能定位到具体类型，就能知道该用 ICC profile、还是换观察箱、还是接受现实。</div>
+          <div class="note"><span data-lang="zh">每个场景对应前面"五种失败"里的一类。能定位到具体类型，就能知道该用 ICC profile、还是换观察箱、还是接受现实。</span><span data-lang="en">Each scenario maps to one of the "five failures" above. Once you can pin down the type, you know whether to reach for an ICC profile, switch the viewing booth, or just accept reality.</span></div>
         </div>
         <div class="wf-grid">
           <div class="wf">
-            <span class="ctx">摄影 · 相机同色异谱</span>
-            <h4>相机 IDT 永远不完美</h4>
-            <p>相机用自己的光谱灵敏度替代了人眼 CMF——而几乎没有相机精确满足 Luther 条件。所以 ARRI / Sony / Canon 的 IDT（Input Device Transform）只是<b>最小二乘最优解</b>，不是数学完美匹配。</p>
-            <p>用 ColorChecker 校准只优化了色卡内的 24 块，<b>对色卡光谱之外的物体不保证</b>。荧光物体、窄峰染料（如紫色染料、某些霓虹色）尤其容易出现明显偏差。</p>
-            <p>拍摄显示器也是同一个问题：OLED、激光投影、RGB mini LED 等窄峰光源可能让相机拍出明显偏色，但这不等于人眼看到的显示效果错误。对策：拍屏只作记录，颜色判断以受控环境下的人眼观察、分光测量和目标交付标准为准。</p>
+            <span class="ctx"><span data-lang="zh">摄影 · 相机同色异谱</span><span data-lang="en">Photography · camera metamerism</span></span>
+            <h4><span data-lang="zh">相机 IDT 永远不完美</span><span data-lang="en">A camera IDT is never perfect</span></h4>
+            <p><span data-lang="zh">相机用自己的光谱灵敏度替代了人眼 CMF——而几乎没有相机精确满足 Luther 条件。所以 ARRI / Sony / Canon 的 IDT（Input Device Transform）只是<b>最小二乘最优解</b>，不是数学完美匹配。</span><span data-lang="en">A camera substitutes its own spectral sensitivities for the eye's CMF — and almost no camera satisfies the Luther condition exactly. So an ARRI / Sony / Canon IDT (Input Device Transform) is only a <b>least-squares best fit</b>, not a mathematically perfect match.</span></p>
+            <p><span data-lang="zh">用 ColorChecker 校准只优化了色卡内的 24 块，<b>对色卡光谱之外的物体不保证</b>。荧光物体、窄峰染料（如紫色染料、某些霓虹色）尤其容易出现明显偏差。</span><span data-lang="en">Calibrating with a ColorChecker only optimizes the chart's 24 patches and <b>guarantees nothing for objects outside the chart's spectra</b>. Fluorescent objects and narrow-band dyes (purple dyes, some neon colors) are especially prone to visible error.</span></p>
+            <p><span data-lang="zh">拍摄显示器也是同一个问题：OLED、激光投影、RGB mini LED 等窄峰光源可能让相机拍出明显偏色，但这不等于人眼看到的显示效果错误。对策：拍屏只作记录，颜色判断以受控环境下的人眼观察、分光测量和目标交付标准为准。</span><span data-lang="en">Shooting a display is the same problem: narrow-band sources like OLED, laser projection, and RGB mini-LED can make the camera record an obvious cast, but that doesn't mean the display looks wrong to the eye. The fix: treat screen photos as records only, and base color judgments on eye observation in a controlled environment, spectral measurement, and the target delivery standard.</span></p>
           </div>
           <div class="wf">
-            <span class="ctx">印刷 · 光源同色异谱</span>
-            <h4>D50 标准观察箱为什么必须用</h4>
-            <p>印刷颜色由油墨光谱 × 光源 SPD 决定。墨厂调出的"匹配色"是<b>在指定光源下</b>匹配。如果你在普通办公室灯下看打样，看到的就是<b>不同光源下的同色异谱失败</b>。</p>
-            <p>图文印刷国际标准光源是 D50（ISO 3664：2009）。墨样、打样、看样都必须在 <b>D50 灯箱</b>里进行。带荧光增白剂（OBA）的纸张还要考虑 UV 容差。</p>
-            <p>电视/视频制作改用 D65，是因为目标显示器是 D65 白点——保持评估光源与最终显示光源一致。</p>
+            <span class="ctx"><span data-lang="zh">印刷 · 光源同色异谱</span><span data-lang="en">Print · illuminant metamerism</span></span>
+            <h4><span data-lang="zh">D50 标准观察箱为什么必须用</span><span data-lang="en">Why the D50 standard viewing booth is mandatory</span></h4>
+            <p><span data-lang="zh">印刷颜色由油墨光谱 × 光源 SPD 决定。墨厂调出的"匹配色"是<b>在指定光源下</b>匹配。如果你在普通办公室灯下看打样，看到的就是<b>不同光源下的同色异谱失败</b>。</span><span data-lang="en">Print color is set by ink spectrum × illuminant SPD. A "matched color" mixed at the ink house matches <b>under a specified illuminant</b>. View the proof under ordinary office lighting and what you see is <b>illuminant metameric failure</b>.</span></p>
+            <p><span data-lang="zh">图文印刷国际标准光源是 D50（ISO 3664：2009）。墨样、打样、看样都必须在 <b>D50 灯箱</b>里进行。带荧光增白剂（OBA）的纸张还要考虑 UV 容差。</span><span data-lang="en">The international standard illuminant for graphic-arts printing is D50 (ISO 3664:2009). Ink draw-downs, proofs, and press checks must all happen in a <b>D50 light box</b>. Papers with optical brightening agents (OBA) also need UV tolerance considered.</span></p>
+            <p><span data-lang="zh">电视/视频制作改用 D65，是因为目标显示器是 D65 白点——保持评估光源与最终显示光源一致。</span><span data-lang="en">TV/video production uses D65 instead, because the target display has a D65 white point — keeping the evaluation light consistent with the final display light.</span></p>
           </div>
           <div class="wf">
-            <span class="ctx">显示 · 观察者同色异谱</span>
-            <h4>OLED / QD-OLED 显示中的观察者差异</h4>
-            <p>传统 LCD 用宽峰荧光粉，不同观察者看到的颜色差异较小。OLED 和 QD-OLED 用<b>窄峰发光体</b>（OLED 的窄带蓝、量子点的极窄绿/红），同样的 XYZ 在不同人眼里能产生 ΔE 5–18 的差距（Optics Express 2020 等多项实测）。</p>
-            <p>这就是为什么"有人觉得新 iPhone 偏绿、有人觉得正常"——校色仪用的是 CIE 1931 标准观察者，<b>你的眼睛不是</b>。色域越宽、原色越窄，问题越严重。</p>
-            <p>方向：CIE 2015 生理观察者模型、Asano 八参数个体观察者、显示器自适应观察者补偿——业界还在探索。</p>
+            <span class="ctx"><span data-lang="zh">显示 · 观察者同色异谱</span><span data-lang="en">Display · observer metamerism</span></span>
+            <h4><span data-lang="zh">OLED / QD-OLED 显示中的观察者差异</span><span data-lang="en">Observer differences on OLED / QD-OLED displays</span></h4>
+            <p><span data-lang="zh">传统 LCD 用宽峰荧光粉，不同观察者看到的颜色差异较小。OLED 和 QD-OLED 用<b>窄峰发光体</b>（OLED 的窄带蓝、量子点的极窄绿/红），同样的 XYZ 在不同人眼里能产生 ΔE 5–18 的差距（Optics Express 2020 等多项实测）。</span><span data-lang="en">Traditional LCDs use broad-peak phosphors, so color differences between observers are small. OLED and QD-OLED use <b>narrow-band emitters</b> (OLED's narrow-band blue, quantum dots' very narrow green/red), and the same XYZ can produce ΔE differences of 5–18 between different eyes (measured in Optics Express 2020 and others).</span></p>
+            <p><span data-lang="zh">这就是为什么"有人觉得新 iPhone 偏绿、有人觉得正常"——校色仪用的是 CIE 1931 标准观察者，<b>你的眼睛不是</b>。色域越宽、原色越窄，问题越严重。</span><span data-lang="en">This is why "some people think the new iPhone looks green and others think it's fine" — the meter uses the CIE 1931 standard observer, and <b>your eye isn't it</b>. The wider the gamut and the narrower the primaries, the worse it gets.</span></p>
+            <p><span data-lang="zh">方向：CIE 2015 生理观察者模型、Asano 八参数个体观察者、显示器自适应观察者补偿——业界还在探索。</span><span data-lang="en">Directions: the CIE 2015 physiological observer, Asano's eight-parameter individual observer, and display-adaptive observer compensation — the industry is still exploring.</span></p>
           </div>
           <div class="wf">
-            <span class="ctx">HDR · 广色域副作用</span>
-            <h4>Rec.2020 / 广色域的光谱限制</h4>
-            <p>Rec.2020 用接近单色光的 RGB 原色（630 / 532 / 467 nm），xy 色域面积约为 Rec.709 的 1.9 倍。<b>但单色光原色 = 极窄峰</b>——意味着观察者同色异谱效应被推到极限。</p>
-            <p>实务后果：HDR 母带在不同型号 OLED 上、不同观看角度、不同观察者眼里的偏色比 SDR 显示更明显。这不一定是"屏幕没校准"，也可能来自显示光谱与观察者差异。</p>
-            <p>BT.2100 没有规定补偿方案，目前只能靠：1) 使用相同型号监视器交付；2) 多观察者交叉评估；3) 关键颜色避免落在窄峰原色附近。</p>
+            <span class="ctx"><span data-lang="zh">HDR · 广色域副作用</span><span data-lang="en">HDR · the side effect of wide gamut</span></span>
+            <h4><span data-lang="zh">Rec.2020 / 广色域的光谱限制</span><span data-lang="en">The spectral limits of Rec.2020 / wide gamut</span></h4>
+            <p><span data-lang="zh">Rec.2020 用接近单色光的 RGB 原色（630 / 532 / 467 nm），xy 色域面积约为 Rec.709 的 1.9 倍。<b>但单色光原色 = 极窄峰</b>——意味着观察者同色异谱效应被推到极限。</span><span data-lang="en">Rec.2020 uses near-monochromatic RGB primaries (630 / 532 / 467 nm), with an xy gamut area about 1.9× that of Rec.709. <b>But monochromatic primaries = extremely narrow peaks</b> — pushing the observer-metamerism effect to its limit.</span></p>
+            <p><span data-lang="zh">实务后果：HDR 母带在不同型号 OLED 上、不同观看角度、不同观察者眼里的偏色比 SDR 显示更明显。这不一定是"屏幕没校准"，也可能来自显示光谱与观察者差异。</span><span data-lang="en">Practical consequence: an HDR master shows more color shift across different OLED models, viewing angles, and observers than an SDR display does. This isn't necessarily "an uncalibrated screen" — it can come from the interaction of display spectrum and observer differences.</span></p>
+            <p><span data-lang="zh">BT.2100 没有规定补偿方案，目前只能靠：1) 使用相同型号监视器交付；2) 多观察者交叉评估；3) 关键颜色避免落在窄峰原色附近。</span><span data-lang="en">BT.2100 specifies no compensation scheme, so for now you can only: 1) deliver on the same monitor model; 2) cross-evaluate with multiple observers; 3) keep critical colors away from the narrow-band primaries.</span></p>
           </div>
         </div>
       </div>
@@ -1635,26 +1635,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>9. 常见误区</h2>
-            <p>这四句话在论坛/教程/营销材料里出现频率很高，但每一条都漏掉了同色异谱给出的限定。</p>
+            <h2><span data-lang="zh">9. 常见误区</span><span data-lang="en">9. Common misconceptions</span></h2>
+            <p><span data-lang="zh">这四句话在论坛/教程/营销材料里出现频率很高，但每一条都漏掉了同色异谱给出的限定。</span><span data-lang="en">These four lines turn up constantly in forums, tutorials, and marketing — and each one drops the qualifier that metamerism imposes.</span></p>
           </div>
         </div>
         <div class="myth-grid">
           <div class="myth">
-            <p class="wrong">❌ "ΔE = 0 就是颜色相同"</p>
-            <p class="truth"><b>ΔE = 0 只在指定光源和观察者下成立。</b>换光源或换人，ΔE 就可能不再是 0。色差报告必须标注光源（D65/D50/A...）和观察者（2°/10°），否则不可比。</p>
+            <p class="wrong">❌ <span data-lang="zh">"ΔE = 0 就是颜色相同"</span><span data-lang="en">"ΔE = 0 means the colors are identical"</span></p>
+            <p class="truth"><b><span data-lang="zh">ΔE = 0 只在指定光源和观察者下成立。</span><span data-lang="en">ΔE = 0 only holds under a specified illuminant and observer.</span></b><span data-lang="zh">换光源或换人，ΔE 就可能不再是 0。色差报告必须标注光源（D65/D50/A...）和观察者（2°/10°），否则不可比。</span><span data-lang="en"> Change the illuminant or the person and ΔE may no longer be 0. A color-difference report must state the illuminant (D65/D50/A…) and observer (2°/10°), or it isn't comparable.</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "校色仪准就是眼睛看也准"</p>
-            <p class="truth"><b>校色仪是另一个观察者。</b>它的读数按 CIE 1931 标准观察者计算（滤色片式仪器甚至只是近似这组 CMF）。你的眼睛不是 CIE 1931——尤其在 OLED 窄峰前差异最大。校准只是"对仪器对准"，不保证"你看上去对"。</p>
+            <p class="wrong">❌ <span data-lang="zh">"校色仪准就是眼睛看也准"</span><span data-lang="en">"If the meter is accurate, the eye sees it accurately too"</span></p>
+            <p class="truth"><b><span data-lang="zh">校色仪是另一个观察者。</span><span data-lang="en">A colorimeter is just another observer.</span></b><span data-lang="zh">它的读数按 CIE 1931 标准观察者计算（滤色片式仪器甚至只是近似这组 CMF）。你的眼睛不是 CIE 1931——尤其在 OLED 窄峰前差异最大。校准只是"对仪器对准"，不保证"你看上去对"。</span><span data-lang="en"> Its readings are computed against the CIE 1931 standard observer (filter-based instruments only approximate that CMF). Your eye isn't CIE 1931 — the gap is largest in front of OLED narrow peaks. Calibration only "aligns to the instrument"; it doesn't guarantee "it looks right to you".</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "广色域屏幕颜色更准"</p>
-            <p class="truth"><b>色域大 ≠ 颜色准</b>，反而<b>更易触发观察者同色异谱失败</b>。窄峰原色（Rec.2020、QD-OLED）让不同人看同一台屏的偏色更明显。广色域适合表达，不直接等于"准确"。</p>
+            <p class="wrong">❌ <span data-lang="zh">"广色域屏幕颜色更准"</span><span data-lang="en">"A wide-gamut screen is more accurate"</span></p>
+            <p class="truth"><b><span data-lang="zh">色域大 ≠ 颜色准</span><span data-lang="en">A bigger gamut ≠ accurate color</span></b><span data-lang="zh">，反而<b>更易触发观察者同色异谱失败</b>。窄峰原色（Rec.2020、QD-OLED）让不同人看同一台屏的偏色更明显。广色域适合表达，不直接等于"准确"。</span><span data-lang="en"> — if anything it <b>more easily triggers observer metameric failure</b>. Narrow-band primaries (Rec.2020, QD-OLED) make the cast more obvious between people viewing the same screen. Wide gamut is good for expression; it doesn't directly equal "accurate".</span></p>
           </div>
           <div class="myth">
-            <p class="wrong">❌ "白平衡到 D65 就是还原真实"</p>
-            <p class="truth"><b>白平衡补偿的是相机响应，不是 Luther 条件不满足。</b>白平衡只让灰卡在相机里变成 (R=G=B)，并不能让所有物体的颜色与人眼一致——后者需要光谱级匹配，物理上几乎不可达。</p>
+            <p class="wrong">❌ <span data-lang="zh">"白平衡到 D65 就是还原真实"</span><span data-lang="en">"White-balancing to D65 restores the truth"</span></p>
+            <p class="truth"><b><span data-lang="zh">白平衡补偿的是相机响应，不是 Luther 条件不满足。</span><span data-lang="en">White balance compensates the camera's response, not the unmet Luther condition.</span></b><span data-lang="zh">白平衡只让灰卡在相机里变成 (R=G=B)，并不能让所有物体的颜色与人眼一致——后者需要光谱级匹配，物理上几乎不可达。</span><span data-lang="en"> White balance only makes the gray card read (R=G=B) in the camera; it can't make every object's color match the eye — that would require spectral-level matching, which is physically almost unreachable.</span></p>
           </div>
         </div>
       </div>
@@ -1664,78 +1664,78 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>10. 资料来源</h2>
-            <p>权威标准 + 学术综述 + 实务参考。按照可获取性和实用性排序，引用时请回到原文核实。</p>
+            <h2><span data-lang="zh">10. 资料来源</span><span data-lang="en">10. Sources</span></h2>
+            <p><span data-lang="zh">权威标准 + 学术综述 + 实务参考。按照可获取性和实用性排序，引用时请回到原文核实。</span><span data-lang="en">Authoritative standards + academic reviews + practical references, ordered by accessibility and usefulness. Always go back to the originals when citing.</span></p>
           </div>
         </div>
         <div class="source-group">
-          <h4>权威标准</h4>
+          <h4><span data-lang="zh">权威标准</span><span data-lang="en">Authoritative standards</span></h4>
           <div class="source-list">
             <a href="https://cie.co.at/publications/colorimetry-4th-edition" target="_blank" rel="noreferrer">
               CIE 15:2018 Colorimetry, 4th edition
-              <small>三刺激值、CMF、Special Metamerism Index 的官方定义</small>
+              <small><span data-lang="zh">三刺激值、CMF、Special Metamerism Index 的官方定义</span><span data-lang="en">Official definitions of tristimulus values, the CMF, and the Special Metamerism Index</span></small>
             </a>
             <a href="https://www.iso.org/standard/72315.html" target="_blank" rel="noreferrer">
               ISO 18314-4:2020 Metamerism index for change of illuminant — Calculation and grading (A–E)
-              <small>光源同色异谱指数 (MI) 的计算与分级（A–E）</small>
+              <small><span data-lang="zh">光源同色异谱指数 (MI) 的计算与分级（A–E）</span><span data-lang="en">Calculation and grading (A–E) of the illuminant metamerism index (MI)</span></small>
             </a>
             <a href="https://www.iso.org/standard/74585.html" target="_blank" rel="noreferrer">
               ISO 17321-1:2012 Sensitivity Metamerism Index
-              <small>数码相机 SMI 指标，量化相机与人眼的偏离</small>
+              <small><span data-lang="zh">数码相机 SMI 指标，量化相机与人眼的偏离</span><span data-lang="en">The digital-camera SMI metric, quantifying camera-vs-eye deviation</span></small>
             </a>
             <a href="https://cie.co.at/publications/fundamental-chromaticity-diagram-physiological-axes-part-1" target="_blank" rel="noreferrer">
-              CIE 170-1:2006 / 170-2:2015 生理观察者模型
-              <small>基于 LMS 锥细胞响应推导的 CMF，CIE 2015 在此基础上</small>
+              CIE 170-1:2006 / 170-2:2015 <span data-lang="zh">生理观察者模型</span><span data-lang="en">physiological observer model</span>
+              <small><span data-lang="zh">基于 LMS 锥细胞响应推导的 CMF，CIE 2015 在此基础上</span><span data-lang="en">A CMF derived from LMS cone responses; CIE 2015 builds on it</span></small>
             </a>
           </div>
         </div>
         <div class="source-group">
-          <h4>学术与综述</h4>
+          <h4><span data-lang="zh">学术与综述</span><span data-lang="en">Academic & reviews</span></h4>
           <div class="source-list">
             <a href="https://en.wikipedia.org/wiki/Metamerism_(color)" target="_blank" rel="noreferrer">
               Wikipedia · Metamerism (color)
-              <small>四种同色异谱失败的完整定义和示例</small>
+              <small><span data-lang="zh">四种同色异谱失败的完整定义和示例</span><span data-lang="en">Full definitions and examples of the four kinds of metameric failure</span></small>
             </a>
             <a href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-28-14-20305&id=432907" target="_blank" rel="noreferrer">
               Observer metamerism to display white point — Optics Express 2020
-              <small>实测窄峰显示器在不同观察者间的 ΔE 偏移</small>
+              <small><span data-lang="zh">实测窄峰显示器在不同观察者间的 ΔE 偏移</span><span data-lang="en">Measured ΔE shifts between observers on narrow-band displays</span></small>
             </a>
             <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10607170/" target="_blank" rel="noreferrer">
               Mapping Quantitative Observer Metamerism of Displays · PMC 2023
-              <small>不同显示技术（LCD/OLED/QD）的观察者一致性对比</small>
+              <small><span data-lang="zh">不同显示技术（LCD/OLED/QD）的观察者一致性对比</span><span data-lang="en">Observer-consistency comparison across display technologies (LCD/OLED/QD)</span></small>
             </a>
             <a href="https://s3.cad.rit.edu/cadgallery_production/storage/media/uploads/faculty-f-projects/1374/documents/249/hvei2015-long.pdf" target="_blank" rel="noreferrer">
               Reducing observer metamerism in wide-gamut multiprimary displays
-              <small>RIT 论文：多原色显示器如何减轻观察者同色异谱</small>
+              <small><span data-lang="zh">RIT 论文：多原色显示器如何减轻观察者同色异谱</span><span data-lang="en">RIT paper: how multi-primary displays reduce observer metamerism</span></small>
             </a>
             <a href="https://www.researchgate.net/publication/325489575" target="_blank" rel="noreferrer">
               Correcting Metameric Failure of Wide Color Gamut Displays — SID 2018
-              <small>基于 CIE 2015 个体观察者模型的显示补偿方案</small>
+              <small><span data-lang="zh">基于 CIE 2015 个体观察者模型的显示补偿方案</span><span data-lang="en">A display-compensation scheme based on the CIE 2015 individual-observer model</span></small>
             </a>
             <a href="https://pubmed.ncbi.nlm.nih.gov/36823841/" target="_blank" rel="noreferrer">
               Reducing the CIE colorimetric matching failure on wide color gamut displays
-              <small>757 个 metameric pair 实验拟合新的锥基函数</small>
+              <small><span data-lang="zh">757 个 metameric pair 实验拟合新的锥基函数</span><span data-lang="en">Fitting new cone fundamentals from 757 experimental metameric pairs</span></small>
             </a>
           </div>
         </div>
         <div class="source-group">
-          <h4>实务参考</h4>
+          <h4><span data-lang="zh">实务参考</span><span data-lang="en">Practical references</span></h4>
           <div class="source-list">
             <a href="https://www.datacolor.com/business-solutions/blog/what-is-metamerism/" target="_blank" rel="noreferrer">
               Datacolor · What Is Metamerism in Color Matching
-              <small>纺织/印刷行业的同色异谱实战指引</small>
+              <small><span data-lang="zh">纺织/印刷行业的同色异谱实战指引</span><span data-lang="en">A practical metamerism guide for the textile/print industries</span></small>
             </a>
             <a href="https://www.gtilite.com/2019/05/understanding-metamerism/" target="_blank" rel="noreferrer">
               GTI · Understanding Metamerism
-              <small>观察箱厂商的光源同色异谱讲解，配实物示例</small>
+              <small><span data-lang="zh">观察箱厂商的光源同色异谱讲解，配实物示例</span><span data-lang="en">A viewing-booth maker's explainer on illuminant metamerism, with physical examples</span></small>
             </a>
             <a href="https://www.waveformlighting.com/color-matching/what-is-d50-for-graphic-arts-printing" target="_blank" rel="noreferrer">
               Waveform Lighting · What is D50 for graphic arts &amp; printing
-              <small>为什么图文印刷标准光源是 D50，含 ISO 3664 解读</small>
+              <small><span data-lang="zh">为什么图文印刷标准光源是 D50，含 ISO 3664 解读</span><span data-lang="en">Why D50 is the standard illuminant for graphic-arts printing, with ISO 3664 notes</span></small>
             </a>
             <a href="https://babelcolor.com/colorchecker.htm" target="_blank" rel="noreferrer">
               BabelColor · ColorChecker spectral data
-              <small>X-Rite ColorChecker 24 块色卡的反射率光谱数据库</small>
+              <small><span data-lang="zh">X-Rite ColorChecker 24 块色卡的反射率光谱数据库</span><span data-lang="en">A reflectance-spectra database for the 24 patches of the X-Rite ColorChecker</span></small>
             </a>
           </div>
         </div>
@@ -1744,10 +1744,23 @@
   </main>
 
   <footer style="text-align:center;padding:32px 20px;color:var(--soft);font-size:13px;border-top:1px solid var(--line)">
-    <p>影像色彩与显示技术指南 · <a href="index.html" style="color:var(--cyan)">返回首页</a></p>
+    <p><span data-lang="zh">影像色彩与显示技术指南 · <a href="index.html" style="color:var(--cyan)">返回首页</a></span><span data-lang="en">Imaging Color &amp; Display Guide · <a href="index.html" style="color:var(--cyan)">Back to home</a></span></p>
   </footer>
 
   <script>
+    // ===== Language =====
+    let LANG = (function () { try { return localStorage.getItem("guideLang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; } })();
+    const T = (zh, en) => (LANG === "en" ? en : zh);
+    document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+    const PAGE_TITLE = {
+      zh: "同色异谱 | 影像色彩与显示技术指南",
+      en: "Metamerism | Imaging Color & Display Guide"
+    };
+    const PAGE_DESC = {
+      zh: "同色异谱（metamerism）：两条形状完全不同的光谱，可以在人眼里产生完全相同的颜色。这是色彩管理一切难题的根。",
+      en: "Metamerism: two completely different spectra can produce exactly the same color to the eye. This is the root of every color-management problem."
+    };
+
     // ===== CIE 1931 2° Standard Observer color matching functions =====
     // 380-780 nm at 5 nm intervals (81 points). Source: CIE 15:2018 Table T.4.
     const LAMBDA_MIN = 380;
@@ -2040,7 +2053,7 @@
       ctx.translate(12, (h - pad.b + pad.t) / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = "center";
-      ctx.fillText("光谱功率", 0, 0);
+      ctx.fillText(T("光谱功率", "Spectral power"), 0, 0);
       ctx.restore();
     }
 
@@ -2070,15 +2083,21 @@
     }
 
     function formatRawAmps(raw) {
-      if (!raw) return "无法求出稳定的三峰组合";
+      if (!raw) return T("无法求出稳定的三峰组合", "no stable three-peak combination found");
       return raw.map(v => `${Math.round(v)}`).join(" / ");
     }
 
     function describeClippedMatch(result, targetLabel) {
       if (result.reason === "singular") {
-        return `${targetLabel} 的三个峰无法形成可逆的 XYZ 组合，因此只能回到默认值重新调节。`;
+        return T(
+          `${targetLabel} 的三个峰无法形成可逆的 XYZ 组合，因此只能回到默认值重新调节。`,
+          `${targetLabel}'s three peaks can't form an invertible XYZ combination, so it falls back to defaults to re-adjust.`
+        );
       }
-      return `${targetLabel} 的精确 XYZ 解需要峰值 ${formatRawAmps(result.raw)}。其中小于 0 或大于 100 的部分会被截断到滑块范围内，所以即使色块看起来并不鲜艳，也可能无法精确匹配。`;
+      return T(
+        `${targetLabel} 的精确 XYZ 解需要峰值 ${formatRawAmps(result.raw)}。其中小于 0 或大于 100 的部分会被截断到滑块范围内，所以即使色块看起来并不鲜艳，也可能无法精确匹配。`,
+        `${targetLabel}'s exact XYZ solution needs peaks ${formatRawAmps(result.raw)}. Parts below 0 or above 100 are clipped into the slider range, so even a swatch that looks unsaturated may not match exactly.`
+      );
     }
 
     function update() {
@@ -2134,20 +2153,20 @@
       const detail = $("matchDetail");
       if (dE < 1) {
         card.dataset.status = "match";
-        stat.textContent = "✓ 同色异谱匹配";
-        detail.textContent = "两条光谱的 XYZ 已接近到视觉上难以分辨，但它们的光谱形状仍然不同。";
+        stat.textContent = T("✓ 同色异谱匹配", "✓ Metameric match");
+        detail.textContent = T("两条光谱的 XYZ 已接近到视觉上难以分辨，但它们的光谱形状仍然不同。", "The two spectra's XYZ are now close enough to be visually indistinguishable, yet their spectral shapes still differ.");
       } else if (dE < 3) {
         card.dataset.status = "close";
-        stat.textContent = "几乎一致";
-        detail.textContent = "两组 XYZ 已经很接近；继续微调峰值，通常可以看出剩余差异来自哪一段波长。";
+        stat.textContent = T("几乎一致", "Almost identical");
+        detail.textContent = T("两组 XYZ 已经很接近；继续微调峰值，通常可以看出剩余差异来自哪一段波长。", "The two XYZ are already close; keep nudging the peaks and you can usually see which wavelength band the remaining difference comes from.");
       } else if (dE < 10) {
         card.dataset.status = "diff";
-        stat.textContent = "可见差异";
-        detail.textContent = "当前两组 XYZ 仍有可见差异。点击匹配按钮时，系统会尝试用另一组光谱的三个峰复现这个目标。";
+        stat.textContent = T("可见差异", "Visible difference");
+        detail.textContent = T("当前两组 XYZ 仍有可见差异。点击匹配按钮时，系统会尝试用另一组光谱的三个峰复现这个目标。", "The two XYZ still differ visibly. When you click a match button, the system tries to reproduce this target with the other spectrum's three peaks.");
       } else {
         card.dataset.status = "diff";
-        stat.textContent = "明显不同";
-        detail.textContent = "两组光谱现在对应的 XYZ 差异较大。先用滑块靠近，再尝试自动匹配会更容易观察限制。";
+        stat.textContent = T("明显不同", "Clearly different");
+        detail.textContent = T("两组光谱现在对应的 XYZ 差异较大。先用滑块靠近，再尝试自动匹配会更容易观察限制。", "The two spectra's XYZ differ a lot right now. Get closer with the sliders first, then try auto-match — it's easier to observe the limits that way.");
       }
     }
 
@@ -2166,8 +2185,8 @@
       update();
       if (!exact) {
         $("matchCard").dataset.status = "limited";
-        $("matchStatus").textContent = "受光谱范围限制";
-        $("matchDetail").textContent = describeClippedMatch(result, "光谱 B");
+        $("matchStatus").textContent = T("受光谱范围限制", "Limited by spectral range");
+        $("matchDetail").textContent = describeClippedMatch(result, T("光谱 B", "Spectrum B"));
       }
     });
     $("findReverse").addEventListener("click", () => {
@@ -2179,8 +2198,8 @@
       update();
       if (!exact) {
         $("matchCard").dataset.status = "limited";
-        $("matchStatus").textContent = "受光谱范围限制";
-        $("matchDetail").textContent = describeClippedMatch(result, "光谱 A");
+        $("matchStatus").textContent = T("受光谱范围限制", "Limited by spectral range");
+        $("matchDetail").textContent = describeClippedMatch(result, T("光谱 A", "Spectrum A"));
       }
     });
     $("resetDemo").addEventListener("click", () => {
@@ -2233,11 +2252,11 @@
     const SPD_LED = ledSPD();
 
     const ILLUM = {
-      D65: { name: "D65 日光", spd: SPD_D65 },
-      D50: { name: "D50 印刷标准", spd: SPD_D50 },
-      A:   { name: "A 白炽 2856K", spd: SPD_A },
-      F2:  { name: "F2 冷白荧光", spd: SPD_F2 },
-      LED: { name: "商用 LED 3000K", spd: SPD_LED }
+      D65: { name: () => T("D65 日光", "D65 daylight"), spd: SPD_D65 },
+      D50: { name: () => T("D50 印刷标准", "D50 print standard"), spd: SPD_D50 },
+      A:   { name: () => T("A 白炽 2856K", "A incandescent 2856K"), spd: SPD_A },
+      F2:  { name: () => T("F2 冷白荧光", "F2 cool-white fluorescent"), spd: SPD_F2 },
+      LED: { name: () => T("商用 LED 3000K", "Commercial LED 3000K"), spd: SPD_LED }
     };
 
     // Sample A reflectance — fixed yellow-orange selective: low floor + sharp bell around 595 nm.
@@ -2389,11 +2408,11 @@
       // Legend at top
       ctx.font = "11px system-ui";
       ctx.fillStyle = "#46d9e8";
-      ctx.fillText("— 样本 A 反射", pad.l + 6, pad.t - 10);
+      ctx.fillText(T("— 样本 A 反射", "— Sample A reflectance"), pad.l + 6, pad.t - 10);
       ctx.fillStyle = "#f43f5e";
-      ctx.fillText("— 样本 B 反射", pad.l + 100, pad.t - 10);
+      ctx.fillText(T("— 样本 B 反射", "— Sample B reflectance"), pad.l + (LANG === "en" ? 160 : 100), pad.t - 10);
       ctx.fillStyle = "rgba(255,209,102,.85)";
-      ctx.fillText("⋯ 光源 SPD", pad.l + 196, pad.t - 10);
+      ctx.fillText(T("⋯ 光源 SPD", "⋯ Illuminant SPD"), pad.l + (LANG === "en" ? 330 : 196), pad.t - 10);
     }
 
     // ===== Demo B UI wiring =====
@@ -2423,15 +2442,15 @@
       const labB = xyzToLab(xyzB.X, xyzB.Y, xyzB.Z, WHITE_D65);
       const dE = deltaE76(labA, labB);
       $("deltaEB").textContent = dE.toFixed(2);
-      $("currentIllum").textContent = illum.name.split(" ")[0];
-      $("illumName").textContent = illum.name;
+      $("currentIllum").textContent = illum.name().split(" ")[0];
+      $("illumName").textContent = illum.name();
 
       const card = $("matchCardB");
       const stat = $("matchStatusB");
-      if (dE < 1)      { card.dataset.status = "match"; stat.textContent = "✓ 同色异谱匹配"; }
-      else if (dE < 3) { card.dataset.status = "close"; stat.textContent = "几乎一致"; }
-      else if (dE < 10){ card.dataset.status = "diff";  stat.textContent = "可见差异"; }
-      else             { card.dataset.status = "diff";  stat.textContent = "明显不同"; }
+      if (dE < 1)      { card.dataset.status = "match"; stat.textContent = T("✓ 同色异谱匹配", "✓ Metameric match"); }
+      else if (dE < 3) { card.dataset.status = "close"; stat.textContent = T("几乎一致", "Almost identical"); }
+      else if (dE < 10){ card.dataset.status = "diff";  stat.textContent = T("可见差异", "Visible difference"); }
+      else             { card.dataset.status = "diff";  stat.textContent = T("明显不同", "Clearly different"); }
     }
 
     // Illuminant tab switching
@@ -2477,6 +2496,20 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => { update(); updateDemoB(); }, 80);
     });
+
+    // ===== Language toggle =====
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_TITLE[LANG];
+      const m = document.querySelector('meta[name="description"]');
+      if (m) m.setAttribute("content", PAGE_DESC[LANG]);
+      update();
+      updateDemoB();
+      try { localStorage.setItem("guideLang", LANG); } catch (e) {}
+    }
+    document.querySelectorAll(".lang-toggle .seg").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.set)));
+    document.title = PAGE_TITLE[LANG];
 
     // Initial render
     update();
