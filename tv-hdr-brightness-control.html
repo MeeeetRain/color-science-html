@@ -614,75 +614,75 @@
 
     <section class="section" id="walkthrough">
       <div class="section-head">
-        <h2>计算链路 · 跟随滑杆实时复算</h2>
-        <p>上面的曲线不是画出来的，是用下面这条链路算出来的。每一步都把当前控件的数值代入，拖动滑杆时算式同步更新——可以逐步对照验证。</p>
+        <h2><span data-lang="zh">计算链路 · 跟随滑杆实时复算</span><span data-lang="en">Calculation path · Recomputed with the slider</span></h2>
+        <p><span data-lang="zh">上面的曲线不是画出来的，是用下面这条链路算出来的。每一步都把当前控件的数值代入，拖动滑杆时算式同步更新——可以逐步对照验证。</span><span data-lang="en">The curve above is calculated, not illustrated by hand. Each step substitutes the current control values, and the equations update with the slider so the chain can be verified one stage at a time.</span></p>
       </div>
       <div class="calc-steps">
         <div class="calc-step">
           <div>
-            <h4>① 有效峰值 Peak_eff（亮度意图 + ABL 折算）</h4>
-            <p>用户亮度意图先决定面板驱动峰值能力 Peak_cap；示例再用固定 10% 高光窗口做 ABL 折算，得到当前可用的 Peak_eff。Peak_eff 是高光最终能到达的上限。</p>
+            <h4><span data-lang="zh">① 有效峰值 Peak_eff（亮度意图 + ABL 折算）</span><span data-lang="en">① Effective peak Peak_eff (brightness intent + ABL)</span></h4>
+            <p><span data-lang="zh">用户亮度意图先决定面板驱动峰值能力 Peak_cap；示例再用固定 10% 高光窗口做 ABL 折算，得到当前可用的 Peak_eff。Peak_eff 是高光最终能到达的上限。</span><span data-lang="en">Brightness intent first sets panel-drive capability Peak_cap. The example then applies ABL for a fixed 10% highlight window to obtain the available Peak_eff, the final ceiling for highlights.</span></p>
             <span class="calc-val" id="cs-abl"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>② Reference White 目标 RW_target</h4>
-            <p>同一个用户亮度意图也决定普通白目标。50% 是中性点，RW_target = 203 nits；低于 50% 降低白点，高于 50% 提高白点。</p>
+            <h4><span data-lang="zh">② Reference White 目标 RW_target</span><span data-lang="en">② Reference White target RW_target</span></h4>
+            <p><span data-lang="zh">同一个用户亮度意图也决定普通白目标。50% 是中性点，RW_target = 203 nits；低于 50% 降低白点，高于 50% 提高白点。</span><span data-lang="en">The same brightness intent also sets the ordinary-white target. At the neutral 50% point, RW_target = 203 nits; lower values reduce white and higher values raise it.</span></p>
             <span class="calc-val" id="cs-target"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>③ RW 物理上限 RW_max</h4>
-            <p>为了给高光留出至少 H_min 倍的余量，普通白不能超过 Peak_eff / H_min。这一步只在亮度过高或峰值能力不足时生效。</p>
+            <h4><span data-lang="zh">③ RW 物理上限 RW_max</span><span data-lang="en">③ Physical RW limit RW_max</span></h4>
+            <p><span data-lang="zh">为了给高光留出至少 H_min 倍的余量，普通白不能超过 Peak_eff / H_min。这一步只在亮度过高或峰值能力不足时生效。</span><span data-lang="en">To retain at least H_min times of highlight headroom, ordinary white cannot exceed Peak_eff / H_min. This constraint activates only when brightness is too high or peak capability is insufficient.</span></p>
             <span class="calc-val" id="cs-rwmax"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>④ 最终 RW_final</h4>
-            <p>取目标与上限的较小者。一旦上限生效（大窗口或低 peak），白点被钳住——这正是真实功率约束。</p>
+            <h4><span data-lang="zh">④ 最终 RW_final</span><span data-lang="en">④ Final RW_final</span></h4>
+            <p><span data-lang="zh">取目标与上限的较小者。一旦上限生效（大窗口或低 peak），白点被钳住——这正是真实功率约束。</span><span data-lang="en">Use the smaller of the target and the limit. When the limit activates because of a large window or low peak, white is clamped by the display's real power constraint.</span></p>
             <span class="calc-val" id="cs-rwfinal"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>⑤ 高光 Headroom（结构性保底）</h4>
-            <p>headroom = Peak_eff / RW_final。调亮时 RW 和 Peak 都会变化，所以这里能直接看到普通白与高光余量之间的关系。</p>
+            <h4><span data-lang="zh">⑤ 高光 Headroom（结构性保底）</span><span data-lang="en">⑤ Highlight headroom (structural safeguard)</span></h4>
+            <p><span data-lang="zh">headroom = Peak_eff / RW_final。调亮时 RW 和 Peak 都会变化，所以这里能直接看到普通白与高光余量之间的关系。</span><span data-lang="en">headroom = Peak_eff / RW_final. Both RW and peak change with brightness, exposing the relationship between ordinary white and highlight capacity.</span></p>
             <span class="calc-val" id="cs-headroom"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>⑥ 还原段与 Shoulder 起点</h4>
-            <p>50% 时 0-1000 nits 保持 1:1，还原中低亮度和常见 HDR diffuse 区域；超过 50% 后，RW_final / 203 成为新的白点增益，shoulder 起点从 1000 nits 平滑过渡到 203 nits。</p>
+            <h4><span data-lang="zh">⑥ 还原段与 Shoulder 起点</span><span data-lang="en">⑥ Restoration range and shoulder start</span></h4>
+            <p><span data-lang="zh">50% 时 0-1000 nits 保持 1:1，还原中低亮度和常见 HDR diffuse 区域；超过 50% 后，RW_final / 203 成为新的白点增益，shoulder 起点从 1000 nits 平滑过渡到 203 nits。</span><span data-lang="en">At 50%, 0–1,000 nits remains 1:1 for low and mid luminance and typical HDR diffuse regions. Above 50%, RW_final / 203 becomes the new white gain and the shoulder start transitions smoothly from 1,000 to 203 nits.</span></p>
             <span class="calc-val" id="cs-knee"></span>
           </div>
         </div>
         <div class="calc-step">
           <div>
-            <h4>⑦ Shoulder 收敛</h4>
-            <p>shoulder 起点之后使用 BT.2390 风格的 Hermite shoulder：从当前白点增益平滑进入压缩，并在 Peak_eff 附近逐渐收敛。它的作用是吸收高光，而不是让曲线硬切。</p>
+            <h4><span data-lang="zh">⑦ Shoulder 收敛</span><span data-lang="en">⑦ Shoulder convergence</span></h4>
+            <p><span data-lang="zh">shoulder 起点之后使用 BT.2390 风格的 Hermite shoulder：从当前白点增益平滑进入压缩，并在 Peak_eff 附近逐渐收敛。它的作用是吸收高光，而不是让曲线硬切。</span><span data-lang="en">After the shoulder start, a BT.2390-style Hermite shoulder transitions smoothly from the current white gain into compression and converges near Peak_eff. Its purpose is to absorb highlights rather than hard-clip the curve.</span></p>
             <span class="calc-val" id="cs-tail"></span>
           </div>
         </div>
       </div>
       <p class="note-block">
-        <b>为什么是 203 nits：</b>ITU-R BT.2408 把 HDR Reference White（diffuse / graphics white）定在 203 nits。PQ（SMPTE ST 2084）是<b>绝对亮度</b>编码，所以本文把 203 nits 作为 50% 亮度的还原锚点；离开中性点时，RW_final / 203 就是视频、UI 与字幕共同采用的白点增益。
+        <span data-lang="zh"><b>为什么是 203 nits：</b>ITU-R BT.2408 把 HDR Reference White（diffuse / graphics white）定在 203 nits。PQ（SMPTE ST 2084）是<b>绝对亮度</b>编码，所以本文把 203 nits 作为 50% 亮度的还原锚点；离开中性点时，RW_final / 203 就是视频、UI 与字幕共同采用的白点增益。</span><span data-lang="en"><b>Why 203 nits:</b> ITU-R BT.2408 sets HDR Reference White (diffuse / graphics white) at 203 nits. PQ (SMPTE ST 2084) encodes <b>absolute luminance</b>, so this model uses 203 nits as its restoration anchor at 50% brightness. Away from the neutral point, RW_final / 203 is the shared white gain for video, UI, and subtitles.</span>
       </p>
     </section>
 
     <section class="section" id="algorithm">
       <div class="section-head">
-        <h2>算法框架</h2>
-        <p>页面里的曲线不是装饰图，而是用这组约束动态生成：RW_final 决定视频、UI/字幕/图形白点，Peak_eff 决定可用高光上限；50% 时 0-1000 nits 还原，超过 50% 后白点增益提高，shoulder 起点逐步提前，并使用 BT.2390 风格 Hermite shoulder 接近 Peak_eff。</p>
+        <h2><span data-lang="zh">算法框架</span><span data-lang="en">Algorithm framework</span></h2>
+        <p><span data-lang="zh">页面里的曲线不是装饰图，而是用这组约束动态生成：RW_final 决定视频、UI/字幕/图形白点，Peak_eff 决定可用高光上限；50% 时 0-1000 nits 还原，超过 50% 后白点增益提高，shoulder 起点逐步提前，并使用 BT.2390 风格 Hermite shoulder 接近 Peak_eff。</span><span data-lang="en">The curve is generated dynamically from these constraints: RW_final sets white for video, UI, subtitles, and graphics, while Peak_eff sets the available highlight ceiling. At 50%, 0–1,000 nits is restored. Above 50%, white gain rises, the shoulder begins progressively earlier, and a BT.2390-style Hermite shoulder approaches Peak_eff.</span></p>
       </div>
       <div class="formulas">
-        <div class="formula"><span>有效峰值</span><strong><code>Peak_eff = ABL(Peak_cap, window)</code></strong></div>
-        <div class="formula"><span>RW 上限</span><strong><code>RW_max = Peak_eff / Headroom_min</code></strong></div>
-        <div class="formula"><span>白点增益</span><strong><code>gain = RW_final / 203</code></strong></div>
-        <div class="formula"><span>50% 还原段</span><strong><code>0-1000 nits = 1:1</code></strong></div>
+        <div class="formula"><span><span data-lang="zh">有效峰值</span><span data-lang="en">Effective peak</span></span><strong><code>Peak_eff = ABL(Peak_cap, window)</code></strong></div>
+        <div class="formula"><span><span data-lang="zh">RW 上限</span><span data-lang="en">RW limit</span></span><strong><code>RW_max = Peak_eff / Headroom_min</code></strong></div>
+        <div class="formula"><span><span data-lang="zh">白点增益</span><span data-lang="en">White gain</span></span><strong><code>gain = RW_final / 203</code></strong></div>
+        <div class="formula"><span><span data-lang="zh">50% 还原段</span><span data-lang="en">50% restoration range</span></span><strong><code>0-1000 nits = 1:1</code></strong></div>
       </div>
     </section>
 
