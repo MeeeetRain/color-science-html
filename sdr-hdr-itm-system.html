@@ -37,6 +37,13 @@
   .nav-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .nav-links a{padding:7px 12px;border-radius:999px;color:var(--muted);font-size:13px;transition:.2s}
   .nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+  .nav-right{display:flex;align-items:center;gap:12px;min-width:0}
+  .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.04);flex:none}
+  .lang-toggle .seg{font:inherit;font-size:13px;font-weight:720;line-height:1;padding:7px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+  .lang-toggle .seg:hover{color:var(--ink)}
+  html[lang^="zh"] .lang-toggle .seg[data-set="zh"],html[lang="en"] .lang-toggle .seg[data-set="en"]{background:var(--cyan);color:#071014}
+  html[lang^="zh"] [data-lang="en"]{display:none}
+  html[lang="en"] [data-lang="zh"]{display:none}
 
   /* hero */
   .hero{position:relative;padding:130px 22px 60px;overflow:hidden;isolation:isolate}
@@ -144,12 +151,17 @@
 </head>
 <body>
   <header class="topbar"><nav class="nav">
-    <a href="index.html" class="logo">色彩与显示指南</a>
-    <div class="nav-links">
-      <a href="index.html#chapters">技术章节</a>
-      <a href="ltx-gainmap-itm.html">LTX Gainmap</a>
-      <a href="hdr-color-science.html">SDR→HDR 色彩科学</a>
-      <a href="making-of.html">制作复盘</a>
+    <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="index.html#chapters"><span data-lang="zh">技术章节</span><span data-lang="en">Chapters</span></a>
+        <a href="ltx-gainmap-itm.html">LTX Gainmap</a>
+        <a href="hdr-color-science.html"><span data-lang="zh">SDR→HDR 色彩科学</span><span data-lang="en">SDR→HDR Color Science</span></a>
+        <a href="making-of.html"><span data-lang="zh">制作复盘</span><span data-lang="en">Making of</span></a>
+      </div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="seg" type="button" data-set="zh">中</button><button class="seg" type="button" data-set="en">EN</button>
+      </div>
     </div>
   </nav></header>
 
@@ -157,16 +169,16 @@
   <section class="hero">
     <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
     <div class="hero-inner">
-      <div class="eyebrow">Inverse Tone Mapping · 实战项目</div>
-      <h1>把普通画面<span class="h-accent">还原成 HDR</span><br>——一套逆色调映射系统的思路与打磨</h1>
-      <p class="hero-desc">从一张 SDR 图片或一段 SDR 视频出发，自动判断"哪里该亮、该多亮"，
+      <div class="eyebrow"><span data-lang="zh">Inverse Tone Mapping · 实战项目</span><span data-lang="en">Inverse Tone Mapping · Production Project</span></div>
+      <h1><span data-lang="zh">把普通画面<span class="h-accent">还原成 HDR</span><br>——一套逆色调映射系统的思路与打磨</span><span data-lang="en">Rebuilding Ordinary Images <span class="h-accent">as HDR</span><br>— Designing and Refining an Inverse Tone-Mapping System</span></h1>
+      <p class="hero-desc"><span data-lang="zh">从一张 SDR 图片或一段 SDR 视频出发，自动判断"哪里该亮、该多亮"，
       在物理正确的色彩空间里重建高动态范围画面，输出符合行业标准的 HDR 文件。
-      本页记录系统的核心思路，以及一路上踩过的坑与<b>评测驱动</b>的优化全过程。</p>
+      本页记录系统的核心思路，以及一路上踩过的坑与<b>评测驱动</b>的优化全过程。</span><span data-lang="en">Starting with an SDR image or video, the system automatically decides what should be bright and how bright it should be. It reconstructs a high-dynamic-range image in a physically meaningful color space and outputs an industry-compliant HDR file. This page documents the core design, the pitfalls we hit, and the full process of <b>evaluation-driven</b> refinement.</span></p>
       <div class="chips">
         <span class="chip">Rec.2020 + PQ (ST 2084)</span>
-        <span class="chip">BT.2408 参考白 203nit</span>
-        <span class="chip">YOLOE 开放词汇检测</span>
-        <span class="chip">GPU(MPS) 加速</span>
+        <span class="chip"><span data-lang="zh">BT.2408 参考白 203nit</span><span data-lang="en">BT.2408 reference white: 203 nits</span></span>
+        <span class="chip"><span data-lang="zh">YOLOE 开放词汇检测</span><span data-lang="en">YOLOE open-vocabulary detection</span></span>
+        <span class="chip"><span data-lang="zh">GPU(MPS) 加速</span><span data-lang="en">GPU (MPS) acceleration</span></span>
         <span class="chip">JPEG XL / HDR10</span>
       </div>
     </div>
@@ -174,116 +186,102 @@
 
   <!-- WHAT -->
   <section class="section" id="what">
-    <div class="kicker">01 · 问题</div>
-    <h2>我们到底在解决什么</h2>
-    <p class="lead">绝大多数现存影像都是 <b>SDR（标准动态范围）</b>：白墙、台灯、天空在 SDR 里被压到同一个"白"——
-    亮度信息在编码时就丢了，而 HDR 显示器能呈现的亮度是它的几十倍。</p>
-    <p class="lead" style="margin-top:12px"><b>逆色调映射（ITM）</b>的任务，是从被压扁的 SDR 反推回合理的高动态范围：
-    让光源真正发光、高光刺眼、暗部留层次，而不是把整张图无脑调亮。</p>
+    <div class="kicker"><span data-lang="zh">01 · 问题</span><span data-lang="en">01 · The problem</span></div>
+    <h2><span data-lang="zh">我们到底在解决什么</span><span data-lang="en">What are we actually solving?</span></h2>
+    <p class="lead"><span data-lang="zh">绝大多数现存影像都是 <b>SDR（标准动态范围）</b>：白墙、台灯、天空在 SDR 里被压到同一个"白"——亮度信息在编码时就丢了，而 HDR 显示器能呈现的亮度是它的几十倍。</span><span data-lang="en">Most existing imagery is <b>SDR (standard dynamic range)</b>: a white wall, a desk lamp, and the sky may all be compressed to the same "white." Their luminance differences were lost during encoding, while an HDR display can reproduce tens of times more luminance.</span></p>
+    <p class="lead" style="margin-top:12px"><span data-lang="zh"><b>逆色调映射（ITM）</b>的任务，是从被压扁的 SDR 反推回合理的高动态范围：让光源真正发光、高光刺眼、暗部留层次，而不是把整张图无脑调亮。</span><span data-lang="en"><b>Inverse tone mapping (ITM)</b> attempts to infer a plausible high-dynamic-range image from that compressed SDR signal: light sources should glow, highlights should feel brilliant, and shadows should retain depth, without simply brightening the entire frame.</span></p>
     <div class="grid">
-      <div class="card"><span class="ico">🎯</span><h4>难点一 · 哪里该亮</h4>
-        <p>SDR 里一盏 1000nit 的灯和一面 200nit 的白墙像素值可能完全一样（都削顶到 255）。光靠亮度无法区分，必须理解画面内容。</p></div>
-      <div class="card"><span class="ico">📐</span><h4>难点二 · 该多亮</h4>
-        <p>提多了肤色/白墙过曝刺眼，提少了又没有 HDR 该有的通透。需要在物理正确的亮度刻度上精确标定。</p></div>
-      <div class="card"><span class="ico">🚫</span><h4>难点三 · 别露馅</h4>
-        <p>提亮区与未提亮区之间若有硬边界、色彩断层、块状伪影，观感比 SDR 还差。平滑过渡是底线。</p></div>
+      <div class="card"><span class="ico">🎯</span><h4><span data-lang="zh">难点一 · 哪里该亮</span><span data-lang="en">Challenge 1 · What should be bright?</span></h4><p><span data-lang="zh">SDR 里一盏 1000nit 的灯和一面 200nit 的白墙像素值可能完全一样（都削顶到 255）。光靠亮度无法区分，必须理解画面内容。</span><span data-lang="en">In SDR, a 1,000-nit lamp and a 200-nit white wall can have exactly the same pixel value, both clipped at 255. Luminance alone cannot distinguish them; the system must understand image content.</span></p></div>
+      <div class="card"><span class="ico">📐</span><h4><span data-lang="zh">难点二 · 该多亮</span><span data-lang="en">Challenge 2 · How bright?</span></h4><p><span data-lang="zh">提多了肤色/白墙过曝刺眼，提少了又没有 HDR 该有的通透。需要在物理正确的亮度刻度上精确标定。</span><span data-lang="en">Push too far and skin or white walls become painfully overexposed; push too little and the image lacks HDR clarity. The result must be calibrated on a physically meaningful luminance scale.</span></p></div>
+      <div class="card"><span class="ico">🚫</span><h4><span data-lang="zh">难点三 · 别露馅</span><span data-lang="en">Challenge 3 · Hide the seams</span></h4><p><span data-lang="zh">提亮区与未提亮区之间若有硬边界、色彩断层、块状伪影，观感比 SDR 还差。平滑过渡是底线。</span><span data-lang="en">Hard boundaries, color banding, or block artifacts between enhanced and untouched regions can look worse than SDR. Smooth transitions are non-negotiable.</span></p></div>
     </div>
   </section>
 
   <!-- PIPELINE -->
   <section class="section" id="pipeline">
-    <div class="kicker">02 · 架构</div>
-    <h2>一帧画面要经过的处理管线</h2>
-    <p class="lead">核心原则：<b>所有增强都在"线性光"域完成</b>。SDR 是 gamma 编码的，直接在编码值上运算会污染颜色——
-    必须先解码到线性光，处理完再编码回 HDR 的 PQ 曲线。</p>
+    <div class="kicker"><span data-lang="zh">02 · 架构</span><span data-lang="en">02 · Architecture</span></div>
+    <h2><span data-lang="zh">一帧画面要经过的处理管线</span><span data-lang="en">The processing pipeline for a single frame</span></h2>
+    <p class="lead"><span data-lang="zh">核心原则：<b>所有增强都在"线性光"域完成</b>。SDR 是 gamma 编码的，直接在编码值上运算会污染颜色——必须先解码到线性光，处理完再编码回 HDR 的 PQ 曲线。</span><span data-lang="en">The central rule: <b>all enhancement happens in linear light</b>. SDR is gamma-encoded, so operating directly on encoded values distorts color. It must first be decoded to linear light, processed, then encoded with the HDR PQ curve.</span></p>
     <div class="pipe">
-      <div class="pstep"><div class="n">IN</div><div class="t">SDR 输入</div><div class="d">sRGB / Rec.709 gamma</div></div>
-      <div class="pstep"><div class="n">01</div><div class="t">线性化</div><div class="d">sRGB EOTF → 线性光</div></div>
-      <div class="pstep"><div class="n">02</div><div class="t">区域检测</div><div class="d">自发光/反射/普通</div></div>
-      <div class="pstep"><div class="n">03</div><div class="t">差分 ITM</div><div class="d">三类各自扩展</div></div>
-      <div class="pstep"><div class="n">04</div><div class="t">融合+护栏</div><div class="d">软过渡+保真限制</div></div>
-      <div class="pstep"><div class="n">05</div><div class="t">色域+PQ</div><div class="d">Rec.2020 / ST 2084</div></div>
-      <div class="pstep"><div class="n">OUT</div><div class="t">HDR 输出</div><div class="d">JPEG XL / HDR10</div></div>
+      <div class="pstep"><div class="n">IN</div><div class="t"><span data-lang="zh">SDR 输入</span><span data-lang="en">SDR input</span></div><div class="d">sRGB / Rec.709 gamma</div></div>
+      <div class="pstep"><div class="n">01</div><div class="t"><span data-lang="zh">线性化</span><span data-lang="en">Linearize</span></div><div class="d"><span data-lang="zh">sRGB EOTF → 线性光</span><span data-lang="en">sRGB EOTF → linear light</span></div></div>
+      <div class="pstep"><div class="n">02</div><div class="t"><span data-lang="zh">区域检测</span><span data-lang="en">Region detection</span></div><div class="d"><span data-lang="zh">自发光/反射/普通</span><span data-lang="en">emissive / reflective / ordinary</span></div></div>
+      <div class="pstep"><div class="n">03</div><div class="t"><span data-lang="zh">差分 ITM</span><span data-lang="en">Differential ITM</span></div><div class="d"><span data-lang="zh">三类各自扩展</span><span data-lang="en">expand each class separately</span></div></div>
+      <div class="pstep"><div class="n">04</div><div class="t"><span data-lang="zh">融合+护栏</span><span data-lang="en">Blend + guardrails</span></div><div class="d"><span data-lang="zh">软过渡+保真限制</span><span data-lang="en">soft transitions + fidelity limits</span></div></div>
+      <div class="pstep"><div class="n">05</div><div class="t"><span data-lang="zh">色域+PQ</span><span data-lang="en">Gamut + PQ</span></div><div class="d">Rec.2020 / ST 2084</div></div>
+      <div class="pstep"><div class="n">OUT</div><div class="t"><span data-lang="zh">HDR 输出</span><span data-lang="en">HDR output</span></div><div class="d">JPEG XL / HDR10</div></div>
     </div>
 
-    <h3>三类区域，三种策略</h3>
-    <p class="lead">把每个像素分成三类，因为它们需要完全不同的处理——这是"哪里该亮"的核心答案。</p>
+    <h3><span data-lang="zh">三类区域，三种策略</span><span data-lang="en">Three region types, three strategies</span></h3>
+    <p class="lead"><span data-lang="zh">把每个像素分成三类，因为它们需要完全不同的处理——这是"哪里该亮"的核心答案。</span><span data-lang="en">Every pixel is assigned to one of three classes because each requires a fundamentally different treatment. This is the core answer to "what should be bright?"</span></p>
     <div class="grid">
-      <div class="card"><h4 style="color:#ff8d8d">Type I · 自发光</h4>
-        <p>灯、火焰、屏幕、太阳。<b>该最亮</b>，凸性曲线把削顶白扩展到接近显示峰值（~800nit）。靠 YOLOE 检测 + 近削顶白核兜底。</p></div>
-      <div class="card"><h4 style="color:#9be08a">Type II · 材质反射</h4>
-        <p>玻璃、金属、水面的镜面高光。<b>中等亮</b>（~500nit），保留材质感与色彩体积，边缘需平滑防硬块。</p></div>
-      <div class="card"><h4 style="color:#8fb0ff">Type III · 普通区域</h4>
-        <p>占画面 90%+。<b>温和</b>：漫反射白轻抬到 ~250nit，近削顶高光给"肩部"抬到 ~450nit，其余基本保持原片。</p></div>
+      <div class="card"><h4 style="color:#ff8d8d"><span data-lang="zh">Type I · 自发光</span><span data-lang="en">Type I · Emissive</span></h4><p><span data-lang="zh">灯、火焰、屏幕、太阳。<b>该最亮</b>，凸性曲线把削顶白扩展到接近显示峰值（~800nit）。靠 YOLOE 检测 + 近削顶白核兜底。</span><span data-lang="en">Lamps, flames, screens, and the sun. These <b>should be brightest</b>: a convex curve expands clipped white toward the display peak (~800 nits), using YOLOE detection with a near-clipped white core as fallback.</span></p></div>
+      <div class="card"><h4 style="color:#9be08a"><span data-lang="zh">Type II · 材质反射</span><span data-lang="en">Type II · Specular reflections</span></h4><p><span data-lang="zh">玻璃、金属、水面的镜面高光。<b>中等亮</b>（~500nit），保留材质感与色彩体积，边缘需平滑防硬块。</span><span data-lang="en">Specular highlights on glass, metal, and water. These receive a <b>moderate lift</b> (~500 nits) to preserve material appearance and color volume, with edge smoothing to prevent hard blocks.</span></p></div>
+      <div class="card"><h4 style="color:#8fb0ff"><span data-lang="zh">Type III · 普通区域</span><span data-lang="en">Type III · Ordinary regions</span></h4><p><span data-lang="zh">占画面 90%+。<b>温和</b>：漫反射白轻抬到 ~250nit，近削顶高光给"肩部"抬到 ~450nit，其余基本保持原片。</span><span data-lang="en">More than 90% of the frame. Treatment is <b>gentle</b>: diffuse white rises slightly to ~250 nits, near-clipped highlights get a shoulder up to ~450 nits, and everything else remains close to the source.</span></p></div>
     </div>
   </section>
 
   <!-- BEFORE / AFTER SHOWCASE -->
   <section class="section" id="showcase">
-    <div class="kicker">02b · 处理前后</div>
-    <h2>同一张图，处理前 → 处理后</h2>
-    <p class="lead">左为输入的 <b>SDR 原图</b>，右为系统重建的 <b>真 HDR 输出</b>（Rec.2020 PQ 的 HDR AVIF）。
+    <div class="kicker"><span data-lang="zh">02b · 处理前后</span><span data-lang="en">02b · Before and after</span></div>
+    <h2><span data-lang="zh">同一张图，处理前 → 处理后</span><span data-lang="en">The same image, before → after</span></h2>
+    <p class="lead"><span data-lang="zh">左为输入的 <b>SDR 原图</b>，右为系统重建的 <b>真 HDR 输出</b>（Rec.2020 PQ 的 HDR AVIF）。
     在<b>支持 HDR 的浏览器 + HDR 屏幕</b>（如 macOS 上的 Safari / Chrome，配 XDR / HDR 显示器）上，
-    右图的窗户、灯、高光会<b>真正刺眼地亮起来</b>，超出左图 SDR 的白。</p>
-    <div class="callout">若左右看着差不多，说明当前屏幕或浏览器未启用 HDR——
-    换 HDR 屏 + Safari/Chrome 再看，或参考<a href="#eval" style="color:var(--cyan)">评测章节</a>的 nit 热力图。</div>
+    右图的窗户、灯、高光会<b>真正刺眼地亮起来</b>，超出左图 SDR 的白。</span><span data-lang="en">The left side is the <b>original SDR input</b>; the right is the system's <b>true HDR reconstruction</b>, an HDR AVIF in Rec.2020 PQ. In an <b>HDR-capable browser on an HDR display</b>—such as Safari or Chrome on macOS with an XDR/HDR display—the windows, lamps, and highlights on the right become <b>physically brighter</b> than SDR white.</span></p>
+    <div class="callout"><span data-lang="zh">若左右看着差不多，说明当前屏幕或浏览器未启用 HDR——换 HDR 屏 + Safari/Chrome 再看，或参考<a href="#eval" style="color:var(--cyan)">评测章节</a>的 nit 热力图。</span><span data-lang="en">If both sides look similar, HDR is not active on the current display or browser. Try an HDR display with Safari/Chrome, or see the nit heatmaps in the <a href="#eval" style="color:var(--cyan)">evaluation section</a>.</span></div>
 
     <figure>
       <div class="ba">
-        <div class="half"><img src="assets/IMG_7365_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
-        <div class="half"><img src="assets/IMG_7365_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+        <div class="half"><img src="assets/IMG_7365_sdr.jpg" alt="SDR original"><span class="tag"><span data-lang="zh">处理前 · SDR</span><span data-lang="en">Before · SDR</span></span></div>
+        <div class="half"><img src="assets/IMG_7365_hdr.avif" alt="HDR output"><span class="tag hdr"><span data-lang="zh">处理后 · HDR ✨</span><span data-lang="en">After · HDR ✨</span></span></div>
       </div>
-      <figcaption><b>办公室（白天）</b>：窗外天光、天花板灯被识别为高光，扩展到 ~700nit；地面反光、屏幕中等提亮，桌面/墙壁等漫反射保持自然——这正是"哪里该亮"的判断结果。</figcaption>
+      <figcaption><span data-lang="zh"><b>办公室（白天）</b>：窗外天光、天花板灯被识别为高光，扩展到 ~700nit；地面反光、屏幕中等提亮，桌面/墙壁等漫反射保持自然——这正是"哪里该亮"的判断结果。</span><span data-lang="en"><b>Office (daytime)</b>: daylight outside the windows and ceiling lights are identified as highlights and expanded to ~700 nits; floor reflections and screens receive a moderate lift, while diffuse surfaces such as desks and walls remain natural. This is the result of deciding what should be bright.</span></figcaption>
     </figure>
 
     <figure>
       <div class="ba">
-        <div class="half"><img src="assets/IMG20250823234317_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
-        <div class="half"><img src="assets/IMG20250823234317_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+        <div class="half"><img src="assets/IMG20250823234317_sdr.jpg" alt="SDR original"><span class="tag"><span data-lang="zh">处理前 · SDR</span><span data-lang="en">Before · SDR</span></span></div>
+        <div class="half"><img src="assets/IMG20250823234317_hdr.avif" alt="HDR output"><span class="tag hdr"><span data-lang="zh">处理后 · HDR ✨</span><span data-lang="en">After · HDR ✨</span></span></div>
       </div>
-      <figcaption><b>含光源场景</b>：真正的光源与高光被精准点亮到 700nit+，其余区域不被无脑调亮。</figcaption>
+      <figcaption><span data-lang="zh"><b>含光源场景</b>：真正的光源与高光被精准点亮到 700nit+，其余区域不被无脑调亮。</span><span data-lang="en"><b>Scene with visible light sources</b>: real emitters and highlights are selectively raised above 700 nits without indiscriminately brightening the rest of the image.</span></figcaption>
     </figure>
 
     <figure>
       <div class="ba">
-        <div class="half"><img src="assets/IMG_7901_sdr.jpg" alt="SDR 原图"><span class="tag">处理前 · SDR</span></div>
-        <div class="half"><img src="assets/IMG_7901_hdr.avif" alt="HDR 输出"><span class="tag hdr">处理后 · HDR ✨</span></div>
+        <div class="half"><img src="assets/IMG_7901_sdr.jpg" alt="SDR original"><span class="tag"><span data-lang="zh">处理前 · SDR</span><span data-lang="en">Before · SDR</span></span></div>
+        <div class="half"><img src="assets/IMG_7901_hdr.avif" alt="HDR output"><span class="tag hdr"><span data-lang="zh">处理后 · HDR ✨</span><span data-lang="en">After · HDR ✨</span></span></div>
       </div>
-      <figcaption><b>夜景街道</b>：天桥灯、车灯、路面反光被点亮，但按"折中"理念<b>克制中间调</b>——不像手机那样把整片夜空无脑提亮，峰值约 335nit，保留夜的氛围。</figcaption>
+      <figcaption><span data-lang="zh"><b>夜景街道</b>：天桥灯、车灯、路面反光被点亮，但按"折中"理念<b>克制中间调</b>——不像手机那样把整片夜空无脑提亮，峰值约 335nit，保留夜的氛围。</span><span data-lang="en"><b>Night street</b>: bridge lights, headlights, and road reflections are lifted, but the "balanced" approach <b>restrains the midtones</b>. Unlike phones that may brighten the whole night sky, this result peaks around 335 nits and preserves the nighttime atmosphere.</span></figcaption>
     </figure>
   </section>
 
   <!-- CONCEPTS -->
   <section class="section" id="concepts">
-    <div class="kicker">03 · 基础</div>
-    <h2>几个绕不开的色彩科学概念</h2>
+    <div class="kicker"><span data-lang="zh">03 · 基础</span><span data-lang="en">03 · Foundations</span></div>
+    <h2><span data-lang="zh">几个绕不开的色彩科学概念</span><span data-lang="en">Essential color-science concepts</span></h2>
     <div class="two">
       <div>
-        <h3>BT.2408 参考白 = 203nit</h3>
-        <p>整套系统的"亮度锚点"。行业标准规定：SDR 的<b>漫反射白</b>（纸张、白衬衫）在 HDR 里应对应 <b>203 nit</b>，
-        而非显示器峰值。高光（光源、镜面）才向上延伸到 1000nit。</p>
-        <div class="callout gold">早期有个严重 bug：把 SDR 白直接编码到峰值 1000nit，整张图过曝约 <b>5 倍</b>。修正后才有了正确的亮度基准。</div>
+        <h3><span data-lang="zh">BT.2408 参考白 = 203nit</span><span data-lang="en">BT.2408 reference white = 203 nits</span></h3>
+        <p><span data-lang="zh">整套系统的"亮度锚点"。行业标准规定：SDR 的<b>漫反射白</b>（纸张、白衬衫）在 HDR 里应对应 <b>203 nit</b>，而非显示器峰值。高光（光源、镜面）才向上延伸到 1000nit。</span><span data-lang="en">This is the system's luminance anchor. Industry guidance maps SDR <b>diffuse white</b>—paper or a white shirt—to <b>203 nits</b> in HDR, not to the display peak. Highlights such as emitters and specular reflections extend upward toward 1,000 nits.</span></p>
+        <div class="callout gold"><span data-lang="zh">早期有个严重 bug：把 SDR 白直接编码到峰值 1000nit，整张图过曝约 <b>5 倍</b>。修正后才有了正确的亮度基准。</span><span data-lang="en">An early, serious bug encoded SDR white directly at the 1,000-nit peak, overexposing the whole image by roughly <b>5×</b>. Fixing it established the correct luminance baseline.</span></div>
       </div>
       <div>
-        <h3>PQ 曲线 + Rec.2020</h3>
-        <p><b>PQ（SMPTE ST 2084）</b>是 HDR 传输函数，把 0–10000nit 绝对亮度编码进有限码值，暗部分配更多精度（符合人眼）。
-        <b>Rec.2020</b>是更宽色域。两者组合即 HDR10 / HDR 静图标准。</p>
-        <p style="color:var(--soft);margin-top:10px">线性光 1.0（=203nit）→ ×(203/10000) 进入 PQ 绝对亮度域 → 编码。</p>
+        <h3><span data-lang="zh">PQ 曲线 + Rec.2020</span><span data-lang="en">PQ curve + Rec.2020</span></h3>
+        <p><span data-lang="zh"><b>PQ（SMPTE ST 2084）</b>是 HDR 传输函数，把 0–10,000 nit 绝对亮度编码进有限码值，暗部分配更多精度（符合人眼）。<b>Rec.2020</b>提供更宽的色域容器。两者构成 HDR10 的色彩与亮度基础；完整的 HDR10 交付还涉及 10-bit 位深、信号配置及静态元数据，HDR 静图也需遵循各自的格式配置。</span><span data-lang="en"><b>PQ (SMPTE ST 2084)</b> is an HDR transfer function that encodes absolute luminance from 0 to 10,000 nits into finite code values, allocating more precision to dark tones in line with human vision. <b>Rec.2020</b> provides a wider-gamut container. Together they form the color and luminance foundation of HDR10; a complete HDR10 delivery also requires 10-bit depth, the appropriate signal configuration, and static metadata, while HDR still images follow their own format profiles.</span></p>
+        <p style="color:var(--soft);margin-top:10px"><span data-lang="zh">线性光 1.0（=203nit）→ ×(203/10000) 进入 PQ 绝对亮度域 → 编码。</span><span data-lang="en">Linear-light 1.0 (= 203 nits) → × (203 / 10,000) into PQ's absolute-luminance domain → encode.</span></p>
       </div>
     </div>
-    <h3>Gainmap：手机 HDR 的秘密，也是我们的"真值"</h3>
-    <p class="lead">iPhone / Android 的 HDR 照片其实是 <b>SDR 基础层 + 增益图（gainmap）</b>：增益图是逐像素的"该亮多少"灰度图。
-    这给了一个绝佳评测思路——把手机 HDR 拆成 SDR，用我们的系统重建，再和手机原生 HDR 对比看差距。<a href="#eval" style="color:var(--cyan)">详见评测章节 ↓</a></p>
+    <h3><span data-lang="zh">Gainmap：手机 HDR 的秘密，也是我们的"真值"</span><span data-lang="en">Gain maps: the secret of phone HDR, and our ground truth</span></h3>
+    <p class="lead"><span data-lang="zh">iPhone / Android 的 HDR 照片其实是 <b>SDR 基础层 + 增益图（gainmap）</b>：增益图是逐像素的"该亮多少"灰度图。这给了一个绝佳评测思路——把手机 HDR 拆成 SDR，用我们的系统重建，再和手机原生 HDR 对比看差距。<a href="#eval" style="color:var(--cyan)">详见评测章节 ↓</a></span><span data-lang="en">HDR photos from iPhone and Android are effectively an <b>SDR base image plus a gain map</b>: a per-pixel grayscale map describing how much brighter each area should become. That creates an ideal evaluation method—extract the SDR base from a phone HDR image, rebuild it with our system, and compare it against the phone's native HDR result. <a href="#eval" style="color:var(--cyan)">See the evaluation section ↓</a></span></p>
   </section>
 
   <!-- JOURNEY -->
   <section class="section" id="journey">
-    <div class="kicker">04 · 打磨</div>
-    <h2>优化历程：每一步都是一个踩坑</h2>
-    <p class="lead">按主题串起系统的演进。<span style="color:var(--cyan)">●</span> 画质/算法
-    <span style="color:var(--gold)">●</span> 性能　<span style="color:var(--lime)">●</span> 评测驱动</p>
+    <div class="kicker"><span data-lang="zh">04 · 打磨</span><span data-lang="en">04 · Refinement</span></div>
+    <h2><span data-lang="zh">优化历程：每一步都是一个踩坑</span><span data-lang="en">The optimization journey: every step began with a pitfall</span></h2>
+    <p class="lead"><span data-lang="zh">按主题串起系统的演进。<span style="color:var(--cyan)">●</span> 画质/算法 <span style="color:var(--gold)">●</span> 性能　<span style="color:var(--lime)">●</span> 评测驱动</span><span data-lang="en">The system's evolution, organized by theme. <span style="color:var(--cyan)">●</span> Image quality / algorithms <span style="color:var(--gold)">●</span> Performance <span style="color:var(--lime)">●</span> Evaluation-driven</span></p>
 
-    <div class="tl">
+    <div class="tl" data-lang="zh">
       <div class="item">
         <div class="ph">画质正确性</div>
         <h3>色彩断层与参考白</h3>
@@ -358,13 +356,75 @@
         <p>图像输出对齐工业实现：<b>JPEG XL</b>，Rec.2020 + D65 + PQ + <b>绝对渲染意图</b> + <code>intensity_target</code>。实测硬件编码器会丢 VUI 色彩信息，必须显式注入，否则播放器不切 HDR 模式。可在 macOS 预览 / Safari 直接以正确亮度查看。</p>
       </div>
     </div>
+    <div class="tl" data-lang="en">
+      <div class="item">
+        <div class="ph">Image correctness</div>
+        <h3>Color banding and reference white</h3>
+        <p><span class="prob">Problem:</span> large areas of posterization in the HDR output and global overexposure.</p>
+        <p><span class="fix">Fix:</span> upgrade the entire LAB/HSV/bilateral/CLAHE pipeline from uint8 (256 levels) to float32/uint16 to remove quantization banding; introduce BT.2408 reference white and move SDR white from the incorrect 1,000-nit anchor back to 203 nits.</p>
+      </div>
+      <div class="item">
+        <div class="ph">Detection</div>
+        <h3>From a closed COCO set to YOLOE open vocabulary</h3>
+        <p><span class="prob">Problem:</span> the original model (YOLOv8n / COCO-80) had no classes for desk lamps, pendant lights, candles, neon, or fluorescent tubes, so the most important emissive objects could never be detected.</p>
+        <p><span class="fix">Fix:</span> switch to <b>YOLOE open-vocabulary detection with segmentation</b>. Text prompts—58 prompts in eight groups—describe light sources directly, while pixel-level masks replace rectangular boxes.</p>
+      </div>
+      <div class="item">
+        <div class="ph">Detection · Case study</div>
+        <h3>"The flashlight and tube light stay dark"—five stacked failures</h3>
+        <p>Two real clips contained light sources that refused to brighten. Layer-by-layer diagnosis revealed <span class="prob">five independent problems stacked together</span>:</p>
+        <table>
+          <tr><th>Layer</th><th>Failure</th><th>Fix</th></tr>
+          <tr><td>Prompts</td><td>No flashlight / fluorescent tube</td><td>Add the missing prompts</td></tr>
+          <tr><td>Confidence</td><td>Dark-scene sources scored only 0.05–0.23 and were filtered out</td><td>Three-layer evidence fusion: weak semantics × photometric confirmation inside the box</td></tr>
+          <tr><td>White-core fallback</td><td>Bright white clothing was mistaken for a light source</td><td>Tighten to hard clipping: V≥0.99 &amp; S≤0.15</td></tr>
+          <tr><td>Luminance gate</td><td>Flat-graded warm lamps narrowly failed the test</td><td>Make the gate relative to scene white</td></tr>
+          <tr><td>Highlight curve</td><td>Asymptotic Reinhard could never reach the target peak</td><td>Convex curve + scene-adaptive white anchor (EMA)</td></tr>
+        </table>
+        <div class="callout">Lesson: one visible symptom can originate from detection, classification, tone mapping, and temporal processing at the same time. Stage-by-stage profiling and single-frame diagnostics are far more reliable than tuning by instinct.</div>
+      </div>
+      <div class="item perf">
+        <div class="ph">Performance · Primary bottleneck</div>
+        <h3>scipy mode filtering: 20 seconds per frame</h3>
+        <p><span class="prob">Problem:</span> video rendering took 6.5 hours. Stage-level profiling identified <code>scipy.stats.mode</code> in temporal smoothing as the real culprit: <b>19.87 seconds per call</b> across five 1080p maps, more than 95% of each frame.</p>
+        <p><span class="fix">Fix:</span> the region map has only three labels, so count each label with NumPy and take argmax. The result is <b>516× faster</b> and exactly matches SciPy's output.</p>
+        <div class="metric-row"><div class="metric"><div class="v">19.9s <span class="arrow">→</span> 0.04s</div><div class="l">One mode-filter pass</div></div><div class="metric"><div class="v">516×</div><div class="l">Speedup</div></div></div>
+      </div>
+      <div class="item perf">
+        <div class="ph">Performance · GPU migration</div>
+        <h3>Move the entire ITM pipeline to the MPS GPU</h3>
+        <p><span class="prob">Problem:</span> profiling showed inverse tone mapping consumed <b>82%</b> of each frame (~700 ms at 1080p), entirely on the CPU.</p>
+        <p><span class="fix">Fix:</span> rewrite the whole ITM path in Torch on Apple Silicon's MPS, reproducing the pointwise math numerically. The one remaining problem was a 140 ms bilateral filter on the GPU; replacing it with a <b>guided filter</b>—pure box filtering, O(1), ~2 ms—produced an overall <b>10.7× speedup</b>, with peak luminance matching the CPU version to the nit.</p>
+        <div class="metric-row"><div class="metric"><div class="v">712ms <span class="arrow">→</span> 67ms</div><div class="l">1080p ITM per frame</div></div><div class="metric"><div class="v">10.7×</div><div class="l">Speedup</div></div><div class="metric"><div class="v">±1 nit</div><div class="l">Difference from CPU</div></div></div>
+      </div>
+      <div class="item perf">
+        <div class="ph">Performance · Encoding and resolution</div>
+        <h3>Hardware encoding + selectable resolution</h3>
+        <p>Replace libx265 software encoding with Apple's <b>VideoToolbox hardware HEVC</b>, roughly an order of magnitude faster, and force correct HDR10 tags into the bitstream with the <code>hevc_metadata</code> filter. A selectable processing resolution was also added; 4K→1080p is about four times faster.</p>
+      </div>
+      <div class="item">
+        <div class="ph">Temporal stability</div>
+        <h3>Video cannot flicker frame by frame: detection memory · optical flow · shot changes</h3>
+        <div class="grid">
+          <div class="card"><h4>Detection memory</h4><p>The open-vocabulary model flickers on weak light sources. Decaying memory bridges intermittent misses and prevents sources from flashing on and off.</p></div>
+          <div class="card"><h4>Optical-flow mask tracking</h4><p>When detection runs at intervals, DIS optical flow warps the previous region map into the current frame so masks follow motion. ITM still runs every frame, so the image never freezes.</p></div>
+          <div class="card"><h4>Shot-change detection</h4><p>A sudden change in HSV-histogram correlation marks a hard cut and clears all temporal state. Otherwise masks and exposure anchors from the previous shot leak into the next.</p></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ph">Delivery</div>
+        <h3>Correct HDR file formats</h3>
+        <p>Image output follows an industry implementation: <b>JPEG XL</b> with Rec.2020 + D65 + PQ + <b>absolute rendering intent</b> + <code>intensity_target</code>. Testing showed that the hardware encoder can drop VUI color information, which must be injected explicitly or the player will not enter HDR mode. The files display at the correct luminance in macOS Preview and Safari.</p>
+      </div>
+    </div>
   </section>
 
   <!-- EVAL -->
   <section class="section" id="eval">
-    <div class="kicker">05 · 评测驱动</div>
-    <h2>用手机原生 HDR 当"标准答案"</h2>
-    <p class="lead">调参数最怕"自我感觉良好"。于是搭了一套<b>有真值的评测闭环</b>：手机 gainmap 照片本身同时含 SDR 和 HDR，正好当 ground truth。</p>
+    <div class="kicker"><span data-lang="zh">05 · 评测驱动</span><span data-lang="en">05 · Evaluation-driven</span></div>
+    <h2><span data-lang="zh">用手机原生 HDR 当"标准答案"</span><span data-lang="en">Using native phone HDR as the answer key</span></h2>
+    <p class="lead"><span data-lang="zh">调参数最怕"自我感觉良好"。于是搭了一套<b>有真值的评测闭环</b>：手机 gainmap 照片本身同时含 SDR 和 HDR，正好当 ground truth。</span><span data-lang="en">The greatest danger in tuning is trusting your own impression. We therefore built a <b>closed evaluation loop with ground truth</b>: a phone gain-map photo contains both SDR and HDR representations, making it an ideal reference.</span></p>
+    <div data-lang="zh">
     <div class="pipe">
       <div class="pstep"><div class="n">①</div><div class="t">手机原图</div><div class="d">HEIC / UltraHDR gainmap</div></div>
       <div class="pstep"><div class="n">②</div><div class="t">拆分</div><div class="d">SDR base + 原生 HDR(真值)</div></div>
@@ -399,15 +459,32 @@
       <tr><td>precision（不误增高光）</td><td class="num">1.00</td><td class="num">1.00</td></tr>
     </table>
     <p style="color:var(--soft)">注：夜景下手机会把整片夜空/路面都激进提亮，我们按折中只提真光源——recall 仍偏低，但这是<b>主动选择的理念</b>，不是缺陷。</p>
+    </div>
+    <div data-lang="en">
+      <div class="pipe">
+        <div class="pstep"><div class="n">①</div><div class="t">Phone original</div><div class="d">HEIC / UltraHDR gain map</div></div>
+        <div class="pstep"><div class="n">②</div><div class="t">Split</div><div class="d">SDR base + native HDR (truth)</div></div>
+        <div class="pstep"><div class="n">③</div><div class="t">Our reconstruction</div><div class="d">SDR base → our ITM</div></div>
+        <div class="pstep"><div class="n">④</div><div class="t">Decode and compare</div><div class="d">both → absolute nits</div></div>
+        <div class="pstep"><div class="n">⑤</div><div class="t">Metrics + heatmaps</div><div class="d">peak / coverage / IoU</div></div>
+      </div>
+      <figure><img src="assets/eval_office.png" alt="Office-scene comparison"><figcaption>Office scene | Left: SDR base layer. Center: native phone HDR ground-truth heatmap. Right: our HDR reconstruction. Blue = dark (&lt;100 nits), cyan/green = midrange (~200 nits), red = bright (~700 nits+). The windows and ceiling lights are correctly illuminated.</figcaption></figure>
+      <div class="callout lime"><b>The first diagnosis was painful:</b> across 12 images, average <b>highlight recall was only 0.05</b>—we missed 95% of the phone's highlights, and our peak was just one fifth as bright (350 vs. 1,600 nits). But <b>precision was 1.00</b>: every area we brightened was correct; the system was simply too timid.</div>
+      <h3>Diagnose → calibrate → retest</h3>
+      <p class="lead">The problem was not the lift itself, but coverage and clipping. After choosing a <b>balanced</b> target—diffuse white ~250 nits, highlights ~800 nits, 1,000-nit peak—we adjusted three linked controls:</p>
+      <ul class="clean"><li>Add a shoulder to near-clipped Type III highlights, lifting bright skies and windows even when they are not detected as emitters.</li><li>Increase Type I/II expansion so real light sources reach 700–800 nits.</li><li>Relax the blending guardrail from 2.2× to 4.2× so it no longer truncates the expansion.</li></ul>
+      <table><tr><th>Metric</th><th class="num">Before</th><th class="num">After balanced calibration</th></tr><tr><td>Highlight recall (share of phone highlights found)</td><td class="num">0.05</td><td class="num up">0.15 (3×)</td></tr><tr><td>Reconstructed peak</td><td class="num">~350 nits</td><td class="num up">700+ nits (2×)</td></tr><tr><td>Daytime-scene highlight IoU</td><td class="num">0.01</td><td class="num up">0.36–0.39</td></tr><tr><td>Precision (no false highlight expansion)</td><td class="num">1.00</td><td class="num">1.00</td></tr></table>
+      <p style="color:var(--soft)">Note: phones may aggressively lift the entire sky and road in night scenes. Our balanced approach lifts only genuine light sources, so recall remains lower by <b>deliberate design</b>, not as a defect.</p>
+    </div>
   </section>
 
   <!-- BOUNDARY -->
   <section class="section" id="results">
-    <div class="kicker">06 · 仍在打磨</div>
-    <h2>越激进，越要防"露馅"</h2>
-    <p class="lead">把高光提得更猛后，新问题浮现：<span class="prob">提亮区与未提亮区之间出现硬边界 / 块状伪影</span>。
-    根因有二——反射检测在亮纹理区碎成椒盐麻点（每块都被提亮，边界全是硬边）；陡峭的高光曲线还放大了 SDR 里的 JPEG 块伪影。</p>
+    <div class="kicker"><span data-lang="zh">06 · 仍在打磨</span><span data-lang="en">06 · Still refining</span></div>
+    <h2><span data-lang="zh">越激进，越要防"露馅"</span><span data-lang="en">The harder the push, the more carefully seams must be hidden</span></h2>
+    <p class="lead"><span data-lang="zh">把高光提得更猛后，新问题浮现：<span class="prob">提亮区与未提亮区之间出现硬边界 / 块状伪影</span>。根因有二——反射检测在亮纹理区碎成椒盐麻点（每块都被提亮，边界全是硬边）；陡峭的高光曲线还放大了 SDR 里的 JPEG 块伪影。</span><span data-lang="en">Once highlights were pushed harder, a new problem appeared: <span class="prob">hard boundaries and block artifacts between enhanced and untouched regions</span>. There were two causes: reflection detection fragmented into salt-and-pepper specks across bright texture, creating a hard edge around every lifted patch; and the steep highlight curve amplified existing JPEG blocks in the SDR source.</span></p>
 
+    <div data-lang="zh">
     <figure>
       <img src="assets/region_map.png" alt="碎块区域图">
       <figcaption>诊断图：红=Type I，绿=Type II。反射检测在屏幕/窗户上碎成大量绿色小块，正是硬边界的来源。</figcaption>
@@ -434,13 +511,48 @@
       只取它的<b>亮度判断（gainmap）</b>、像素全用原片，既免规则漏检又不虚构细节。
       → <a href="ltx-gainmap-itm.html" style="color:var(--cyan)">阅读：LTX Gainmap · 新一代 SDR→HDR 思路（含三方实拍对比）</a>
     </div>
+    </div>
+    <div data-lang="en">
+      <figure><img src="assets/region_map.png" alt="Fragmented region map"><figcaption>Diagnostic map: red = Type I, green = Type II. Reflection detection breaks screens and windows into many small green fragments, the direct source of the hard boundaries.</figcaption></figure>
+      <h3>Two fixes</h3>
+      <div class="two"><div class="card"><h4>① Remove fragmented regions</h4><p>After classification, apply opening to remove specks, closing to merge regions, then discard small connected components. Type I/II regions become coherent shapes instead of noise.</p></div><div class="card"><h4>② Edge-aware smoothing of the gain field</h4><p>Borrowing from gain maps, smooth the final ITM multiplier field with a <b>guided filter</b>, using SDR perceptual luminance as the guide. Multipliers remain sharp at real edges such as window frames and lamp outlines, while fragments and JPEG-block multipliers are flattened inside uniform areas, removing enhancement seams at the source.</p></div></div>
+      <figure><img src="assets/boundary_window.png" alt="Window boundary"><figcaption>Close-up of a bright window: SDR above, reconstructed nit heatmap below. The window rises to ~700 nits while the transition becomes softer through successive smoothing passes—the stage currently being refined.</figcaption></figure>
+      <div class="callout"><b>The method behind the system:</b> not subjective impressions, but <b>quantitative evaluation against ground truth + stage-level profiling + single-frame diagnostic visualization</b>. Every "looks wrong" symptom is traced to a specific stage, given a measurable metric, then optimized directly.</div>
+      <div class="callout gold" style="border-left-color:var(--violet);background:linear-gradient(180deg,rgba(167,139,250,.08),transparent)"><b>Missed detections are the fatal weakness of this rule-based approach.</b> The next generation changes the strategy: use the <b>LTX HDR model</b> as a predictor of what should be bright, take only its <b>luminance judgment (gain map)</b>, and preserve every pixel from the original image. This avoids rule-based misses without inventing detail. → <a href="ltx-gainmap-itm.html" style="color:var(--cyan)">Read: LTX Gainmap · A next-generation SDR→HDR approach, with three-way real-world comparisons</a></div>
+    </div>
   </section>
   </main>
 
   <footer>
-    <p>SDR → HDR 逆色调映射系统 · 思路与优化历程 ｜ <a href="index.html">返回色彩与显示指南</a></p>
-    <p style="margin-top:8px;color:var(--soft)">技术栈：Python · PyTorch(MPS) · OpenCV · YOLOE · libjxl · FFmpeg/VideoToolbox · Gradio<br>
-    色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ) · IEC 61966-2-1 (sRGB)</p>
+    <p><span data-lang="zh">SDR → HDR 逆色调映射系统 · 思路与优化历程 ｜ <a href="index.html">返回色彩与显示指南</a></span><span data-lang="en">SDR → HDR Inverse Tone-Mapping System · Design and Optimization ｜ <a href="index.html">Back to the Color &amp; Display Guide</a></span></p>
+    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：Python · PyTorch(MPS) · OpenCV · YOLOE · libjxl · FFmpeg/VideoToolbox · Gradio<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ) · IEC 61966-2-1 (sRGB)</span><span data-lang="en">Stack: Python · PyTorch (MPS) · OpenCV · YOLOE · libjxl · FFmpeg/VideoToolbox · Gradio<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ) · IEC 61966-2-1 (sRGB)</span></p>
   </footer>
+  <script>
+    (function () {
+      const KEY = "guideLang";
+      const TITLE = {
+        zh: "SDR → HDR 逆色调映射系统 · 思路与优化历程",
+        en: "SDR → HDR Inverse Tone-Mapping System · Design and Optimization"
+      };
+      const DESC = {
+        zh: "一套把 SDR 图片/视频自动重建为 HDR 的逆色调映射系统：核心思路、处理管线，以及评测驱动的优化全过程。",
+        en: "An inverse tone-mapping system that automatically reconstructs SDR images and video as HDR: its core design, processing pipeline, and evaluation-driven optimization journey."
+      };
+      const meta = document.querySelector('meta[name="description"]');
+      function apply(lang) {
+        const selected = lang === "en" ? "en" : "zh";
+        document.documentElement.lang = selected === "en" ? "en" : "zh-CN";
+        document.title = TITLE[selected];
+        if (meta) meta.setAttribute("content", DESC[selected]);
+        try { localStorage.setItem(KEY, selected); } catch (e) {}
+      }
+      let saved = "zh";
+      try { saved = localStorage.getItem(KEY) || "zh"; } catch (e) {}
+      apply(saved);
+      document.querySelectorAll(".lang-toggle .seg").forEach(function (button) {
+        button.addEventListener("click", function () { apply(button.dataset.set); });
+      });
+    })();
+  </script>
 </body>
 </html>

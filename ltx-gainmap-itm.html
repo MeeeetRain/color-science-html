@@ -37,6 +37,13 @@
   .nav-links a{padding:7px 12px;border-radius:999px;color:var(--muted);font-size:13px;transition:.2s}
   .nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
   .nav-links a.cur{color:var(--ink);background:rgba(52,223,242,.16)}
+  .nav-right{display:flex;align-items:center;gap:12px;min-width:0}
+  .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.04);flex:none}
+  .lang-toggle .seg{font:inherit;font-size:13px;font-weight:720;line-height:1;padding:7px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+  .lang-toggle .seg:hover{color:var(--ink)}
+  html[lang^="zh"] .lang-toggle .seg[data-set="zh"],html[lang="en"] .lang-toggle .seg[data-set="en"]{background:var(--cyan);color:#071014}
+  html[lang^="zh"] [data-lang="en"]{display:none}
+  html[lang="en"] [data-lang="zh"]{display:none}
 
   .hero{position:relative;padding:130px 22px 60px;overflow:hidden;isolation:isolate}
   .hero-bg{position:absolute;inset:0;z-index:-2;overflow:hidden}
@@ -133,7 +140,7 @@
   ul.clean{color:var(--muted);padding-left:20px}
   ul.clean li{margin:6px 0}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-  @media(max-width:680px){.two{grid-template-columns:1fr}.nav-links{display:none}}
+  @media(max-width:680px){.two{grid-template-columns:1fr}.nav-links{display:none}table{display:block;overflow-x:auto}}
 
   footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);padding:36px 22px;font-size:13.5px}
   footer a{color:var(--cyan)}
@@ -141,12 +148,17 @@
 </head>
 <body>
   <header class="topbar"><nav class="nav">
-    <a href="index.html" class="logo">色彩与显示指南</a>
-    <div class="nav-links">
-      <a href="index.html#chapters">技术章节</a>
-      <a href="sdr-hdr-itm-system.html">区域识别系统</a>
-      <a href="ltx-gainmap-itm.html" class="cur">LTX Gainmap</a>
-      <a href="hdr-color-science.html">SDR→HDR 色彩科学</a>
+    <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="index.html#chapters"><span data-lang="zh">技术章节</span><span data-lang="en">Chapters</span></a>
+        <a href="sdr-hdr-itm-system.html"><span data-lang="zh">区域识别系统</span><span data-lang="en">Region-based system</span></a>
+        <a href="ltx-gainmap-itm.html" class="cur">LTX Gainmap</a>
+        <a href="hdr-color-science.html"><span data-lang="zh">SDR→HDR 色彩科学</span><span data-lang="en">SDR→HDR Color Science</span></a>
+      </div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="seg" type="button" data-set="zh">中</button><button class="seg" type="button" data-set="en">EN</button>
+      </div>
     </div>
   </nav></header>
 
@@ -154,64 +166,56 @@
   <section class="hero">
     <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
     <div class="hero-inner">
-      <a class="backlink" href="sdr-hdr-itm-system.html">← 上一篇 · 区域识别版 SDR→HDR 系统</a>
-      <div class="eyebrow">Inverse Tone Mapping · 新一代思路</div>
-      <h1><span class="h-accent">SDR → HDR</span>：<br>让 AI 只当测光表</h1>
-      <p class="hero-desc">上一套系统靠<b>规则式场景识别</b>判断"哪里是光源"，准但总有漏检。这一套换了思路：
+      <a class="backlink" href="sdr-hdr-itm-system.html"><span data-lang="zh">← 上一篇 · 区域识别版 SDR→HDR 系统</span><span data-lang="en">← Previous · Region-based SDR→HDR system</span></a>
+      <div class="eyebrow"><span data-lang="zh">Inverse Tone Mapping · 新一代思路</span><span data-lang="en">Inverse Tone Mapping · A New Approach</span></div>
+      <h1><span data-lang="zh"><span class="h-accent">SDR → HDR</span>：<br>让 AI 只当测光表</span><span data-lang="en"><span class="h-accent">SDR → HDR</span>:<br>Use AI Only as a Light Meter</span></h1>
+      <p class="hero-desc"><span data-lang="zh">上一套系统靠<b>规则式场景识别</b>判断"哪里是光源"，准但总有漏检。这一套换了思路：
       用 <b>LTX HDR 模型</b>的 EXR 输出当"哪里该亮、该多亮"的<b>增益图（gainmap）</b>，
-      再把这个增益<b>只作用在原始 SDR 的像素上</b>——既拿到 AI 的判断力，又<b>一点不虚构画面细节</b>。</p>
+      再把这个增益<b>只作用在原始 SDR 的像素上</b>——既拿到 AI 的判断力，又<b>一点不虚构画面细节</b>。</span><span data-lang="en">The previous system used <b>rule-based scene recognition</b> to identify light sources. It was accurate, but inevitably missed some. This approach changes the premise: use the EXR output from the <b>LTX HDR model</b> as a <b>gain map</b> describing what should be bright and by how much, then apply that gain <b>only to pixels from the original SDR image</b>. We keep AI's judgment without <b>inventing any image detail</b>.</span></p>
       <div class="chips">
-        <span class="chip">LTX HDR · EXR 线性输出</span>
-        <span class="chip">Gainmap = LTX亮度 ÷ SDR亮度</span>
-        <span class="chip">原片细节零改写</span>
-        <span class="chip">4K 原生 · Rec.2020 PQ</span>
-        <span class="chip">免规则 · 免漏检</span>
+        <span class="chip"><span data-lang="zh">LTX HDR · EXR 线性输出</span><span data-lang="en">LTX HDR · Linear EXR output</span></span>
+        <span class="chip"><span data-lang="zh">Gainmap = LTX亮度 ÷ SDR亮度</span><span data-lang="en">Gain map = LTX luminance ÷ SDR luminance</span></span>
+        <span class="chip"><span data-lang="zh">原片细节零改写</span><span data-lang="en">Original detail preserved</span></span>
+        <span class="chip"><span data-lang="zh">4K 原生 · Rec.2020 PQ</span><span data-lang="en">Native 4K · Rec.2020 PQ</span></span>
+        <span class="chip"><span data-lang="zh">免规则 · 免漏检</span><span data-lang="en">No rules · No missed detections</span></span>
       </div>
     </div>
   </section>
 
   <!-- 01 背景 -->
   <section class="section" id="why">
-    <div class="kicker">01 · 承接</div>
-    <h2>为什么要换思路</h2>
-    <p class="lead"><a href="sdr-hdr-itm-system.html" style="color:var(--cyan)">上一套区域识别系统</a>用 YOLOE 开放词汇检测把每个像素分成
-    自发光 / 反射 / 普通三类，再差异化提亮。它在"懂内容"这件事上已经做得很细，但<b>命门是规则本身</b>：</p>
+    <div class="kicker"><span data-lang="zh">01 · 承接</span><span data-lang="en">01 · Where we left off</span></div>
+    <h2><span data-lang="zh">为什么要换思路</span><span data-lang="en">Why change the approach?</span></h2>
+    <p class="lead"><span data-lang="zh"><a href="sdr-hdr-itm-system.html" style="color:var(--cyan)">上一套区域识别系统</a>用 YOLOE 开放词汇检测把每个像素分成自发光 / 反射 / 普通三类，再差异化提亮。它在"懂内容"这件事上已经做得很细，但<b>命门是规则本身</b>：</span><span data-lang="en">The <a href="sdr-hdr-itm-system.html" style="color:var(--cyan)">previous region-based system</a> used YOLOE open-vocabulary detection to classify each pixel as emissive, reflective, or ordinary, then applied a different lift to each class. Its content awareness was already sophisticated, but <b>the rules themselves were the weak point</b>:</span></p>
     <div class="grid">
-      <div class="card"><span class="ico">🕳️</span><h4>规则覆盖不全 → 漏检</h4>
-        <p>提示词、阈值、形态学全是人定的。遇到非常规光源、复杂反射、奇异材质，规则没覆盖到就<b>漏提亮</b>——这正是实际使用里最常见的抱怨。</p></div>
-      <div class="card"><span class="ico">🧩</span><h4>多环节耦合，调一处动全身</h4>
-        <p>检测、分类、色调映射、时序四个环节互相牵连。一个"效果不对"背后可能是四个问题叠加，调参像走钢丝。</p></div>
-      <div class="card"><span class="ico">🤖</span><h4>而 AI 恰好擅长"理解画面"</h4>
-        <p>LTX 这类模型对"哪里该亮"的语义判断又准又全——正好补上规则的短板。问题只剩：怎么用它，又不被它的副作用反噬。</p></div>
+      <div class="card"><span class="ico">🕳️</span><h4><span data-lang="zh">规则覆盖不全 → 漏检</span><span data-lang="en">Incomplete rules → missed detections</span></h4><p><span data-lang="zh">提示词、阈值、形态学全是人定的。遇到非常规光源、复杂反射、奇异材质，规则没覆盖到就<b>漏提亮</b>——这正是实际使用里最常见的抱怨。</span><span data-lang="en">Prompts, thresholds, and morphology are all hand-authored. Unusual emitters, complex reflections, or unfamiliar materials fall outside the rules and <b>fail to brighten</b>—the most common complaint in real use.</span></p></div>
+      <div class="card"><span class="ico">🧩</span><h4><span data-lang="zh">多环节耦合，调一处动全身</span><span data-lang="en">Coupled stages: tune one, disturb them all</span></h4><p><span data-lang="zh">检测、分类、色调映射、时序四个环节互相牵连。一个"效果不对"背后可能是四个问题叠加，调参像走钢丝。</span><span data-lang="en">Detection, classification, tone mapping, and temporal processing all interact. One bad-looking result may combine four separate failures, making parameter tuning a balancing act.</span></p></div>
+      <div class="card"><span class="ico">🤖</span><h4><span data-lang="zh">而 AI 恰好擅长"理解画面"</span><span data-lang="en">AI happens to excel at understanding the image</span></h4><p><span data-lang="zh">LTX 这类模型对"哪里该亮"的语义判断又准又全——正好补上规则的短板。问题只剩：怎么用它，又不被它的副作用反噬。</span><span data-lang="en">Models like LTX make broad, accurate semantic judgments about what should be bright, directly filling the rules' blind spots. The remaining question is how to use that ability without inheriting its side effects.</span></p></div>
     </div>
   </section>
 
   <!-- 关于 LTX HDR -->
   <section class="section" id="ltx">
-    <div class="kicker">补充 · 关于 LTX HDR</div>
-    <h2>LTX HDR 是什么</h2>
-    <p class="lead">本方案里的那个"AI 测光表"，就是 <b>LTX HDR</b>——它建立在开源视频生成模型
+    <div class="kicker"><span data-lang="zh">补充 · 关于 LTX HDR</span><span data-lang="en">Background · About LTX HDR</span></div>
+    <h2><span data-lang="zh">LTX HDR 是什么</span><span data-lang="en">What is LTX HDR?</span></h2>
+    <p class="lead"><span data-lang="zh">本方案里的那个"AI 测光表"，就是 <b>LTX HDR</b>——它建立在开源视频生成模型
     <b>LTX-Video</b>（Lightricks）之上，是社区放出的一个 <b>HDR IC-LoRA</b>（In-Context LoRA）扩展（beta）。
     给它一帧 SDR，它会"想象"出这帧在 HDR 下应有的样子，并以 <b>线性光 EXR</b>（scene-referred、亮度可超过 1.0）输出——
-    相当于一张携带了真实高光亮度的"参考答案"。</p>
+    相当于一张携带了真实高光亮度的"参考答案"。</span><span data-lang="en">The "AI light meter" in this approach is <b>LTX HDR</b>. Built on Lightricks' open-source <b>LTX-Video</b> generative video model, it is a community-released <b>HDR IC-LoRA</b> (In-Context LoRA) extension in beta. Given an SDR frame, it imagines how that frame should look in HDR and outputs a <b>linear-light EXR</b>—scene-referred, with luminance values allowed above 1.0. In effect, it provides a reference image carrying plausible highlight luminance.</span></p>
     <div class="grid">
-      <div class="card"><span class="ico">🧠</span><h4>它强在哪</h4>
-        <p>靠生成模型的语义理解判断"哪里该亮、该多亮"，能覆盖规则写不全的复杂光源与材质——<b>基本不漏检</b>。</p></div>
-      <div class="card"><span class="ico">🎞️</span><h4>它的副作用</h4>
-        <p>毕竟是生成模型：会<b>改写/虚构</b>纹理与物体，分辨率受限（实测约 ~800p），且<b>逐帧判断会抖动</b>。</p></div>
-      <div class="card"><span class="ico">💡</span><h4>我们怎么用它</h4>
-        <p>只取它 EXR 输出当"亮度参考"、提取增益图，<b>丢掉它生成的像素</b>——把判断力留下，副作用扔掉。</p></div>
+      <div class="card"><span class="ico">🧠</span><h4><span data-lang="zh">它强在哪</span><span data-lang="en">Its strength</span></h4><p><span data-lang="zh">靠生成模型的语义理解判断"哪里该亮、该多亮"，能覆盖规则写不全的复杂光源与材质——<b>基本不漏检</b>。</span><span data-lang="en">The model uses semantic understanding to judge what should be bright and by how much. It covers complex sources and materials that rules cannot enumerate, with <b>very few missed detections</b>.</span></p></div>
+      <div class="card"><span class="ico">🎞️</span><h4><span data-lang="zh">它的副作用</span><span data-lang="en">Its side effects</span></h4><p><span data-lang="zh">毕竟是生成模型：会<b>改写/虚构</b>纹理与物体，分辨率受限（实测约 ~800p），且<b>逐帧判断会抖动</b>。</span><span data-lang="en">It is still a generative model: it may <b>rewrite or invent</b> textures and objects, resolution is limited to about 800p in testing, and <b>frame-by-frame judgments can flicker</b>.</span></p></div>
+      <div class="card"><span class="ico">💡</span><h4><span data-lang="zh">我们怎么用它</span><span data-lang="en">How we use it</span></h4><p><span data-lang="zh">只取它 EXR 输出当"亮度参考"、提取增益图，<b>丢掉它生成的像素</b>——把判断力留下，副作用扔掉。</span><span data-lang="en">Use its EXR output only as a luminance reference from which to extract a gain map, then <b>discard every generated pixel</b>. Keep the judgment; throw away the side effects.</span></p></div>
     </div>
   </section>
 
   <!-- 02 三条路线 -->
   <section class="section" id="routes">
-    <div class="kicker">02 · 三条路线</div>
-    <h2>三种做法，各有死穴</h2>
-    <p class="lead">把同一段室内 SDR 升 HDR，有三条路可走。关键矛盾就一句话：
-    <b>"判断哪里该亮"和"保住画面真实细节"，能不能兼得。</b></p>
+    <div class="kicker"><span data-lang="zh">02 · 三条路线</span><span data-lang="en">02 · Three routes</span></div>
+    <h2><span data-lang="zh">三种做法，各有死穴</span><span data-lang="en">Three approaches, each with a fatal flaw</span></h2>
+    <p class="lead"><span data-lang="zh">把同一段室内 SDR 升 HDR，有三条路可走。关键矛盾就一句话：<b>"判断哪里该亮"和"保住画面真实细节"，能不能兼得。</b></span><span data-lang="en">There are three ways to convert the same indoor SDR clip to HDR. The central tension is simple: <b>can we decide what should be bright while preserving authentic image detail?</b></span></p>
 
-    <table>
+    <table data-lang="zh">
       <tr>
         <th>维度</th>
         <th>路线 A · 区域识别（规则）</th>
@@ -250,135 +254,132 @@
       </tr>
     </table>
 
-    <div class="callout gold">
+    <div class="callout gold" data-lang="zh">
       <b>核心洞察：</b>LTX 直接输出的两个死穴——<b>改写细节</b>、<b>分辨率低</b>——都出在"它生成了像素"。
       但我们其实<b>不需要它的像素</b>，只需要它的<b>亮度判断</b>。把"该多亮"抽出来、丢掉它生成的纹理，问题就解了。
     </div>
+    <table data-lang="en">
+      <tr><th>Dimension</th><th>Route A · Region detection (rules)</th><th>Route B · Direct LTX output</th><th class="col-pick">Route C · LTX gain map ✦</th></tr>
+      <tr><td>What should be bright?</td><td class="mid">Rule-based detection; prone to misses</td><td class="good">AI semantics; accurate and comprehensive</td><td class="col-pick good">AI semantics borrowed from LTX</td></tr>
+      <tr><td>Image detail</td><td class="good">Original and authentic</td><td class="bad">Rewritten or invented by the model</td><td class="col-pick good">Original and authentic; gain changes luminance only</td></tr>
+      <tr><td>Resolution</td><td class="good">Native (4K)</td><td class="bad">Model-limited (~800p)</td><td class="col-pick good">Native 4K</td></tr>
+      <tr><td>Temporal stability</td><td class="mid">Moderate; detection flicker</td><td class="bad">Poor; frame-by-frame generation flicker</td><td class="col-pick mid">Moderate → good; gain is a low-frequency field suitable for temporal filtering</td></tr>
+      <tr><td>Control / explainability</td><td class="good">High</td><td class="bad">Low; black-box generation</td><td class="col-pick good">High; the gain field can be visualized and limited</td></tr>
+    </table>
+    <div class="callout gold" data-lang="en"><b>Core insight:</b> the two fatal flaws of direct LTX output—<b>rewritten detail</b> and <b>low resolution</b>—both come from letting it generate pixels. We do not need those pixels; we need only its <b>luminance judgment</b>. Extract how bright each area should be and discard the generated texture, and both problems disappear.</div>
   </section>
 
   <!-- 03 原理 -->
   <section class="section" id="how">
-    <div class="kicker">03 · 原理</div>
-    <h2>Gainmap：只借 LTX 的"亮度判断"</h2>
-    <p class="lead">手机 HDR 照片的本质就是 <b>SDR 基础层 + 增益图</b>。我们把同一思路反过来用：
-    让 LTX 当那张增益图的"预言家"。</p>
+    <div class="kicker"><span data-lang="zh">03 · 原理</span><span data-lang="en">03 · How it works</span></div>
+    <h2><span data-lang="zh">Gainmap：只借 LTX 的"亮度判断"</span><span data-lang="en">Gain map: borrow only LTX's luminance judgment</span></h2>
+    <p class="lead"><span data-lang="zh">手机 HDR 照片的本质就是 <b>SDR 基础层 + 增益图</b>。我们把同一思路反过来用：让 LTX 当那张增益图的"预言家"。</span><span data-lang="en">A phone HDR photo is fundamentally an <b>SDR base layer plus a gain map</b>. We reverse the same idea and let LTX predict that gain map.</span></p>
 
     <div class="formula">
       <div class="eq">
-        增益图 gainmap = <span class="ltx">LTX&nbsp;亮度</span> <span class="op">÷</span> <span class="sdr">SDR&nbsp;亮度</span>
-        &nbsp;<span class="op">（曝光归一 · 置信门控 · 引导平滑 · 亮度封顶）</span>
+        <span data-lang="zh">增益图 gainmap = <span class="ltx">LTX&nbsp;亮度</span> <span class="op">÷</span> <span class="sdr">SDR&nbsp;亮度</span> &nbsp;<span class="op">（曝光归一 · 置信门控 · 引导平滑 · 亮度封顶）</span></span><span data-lang="en">gain map = <span class="ltx">LTX&nbsp;luminance</span> <span class="op">÷</span> <span class="sdr">SDR&nbsp;luminance</span> &nbsp;<span class="op">(exposure normalization · confidence gating · guided smoothing · luminance ceiling)</span></span>
       </div>
       <div class="eq" style="margin-top:6px">
-        HDR 结果 = <span class="sdr">原始&nbsp;SDR&nbsp;的&nbsp;RGB</span> <span class="op">×</span> gainmap
+        <span data-lang="zh">HDR 结果 = <span class="sdr">原始&nbsp;SDR&nbsp;的&nbsp;RGB</span> <span class="op">×</span> gainmap</span><span data-lang="en">HDR result = <span class="sdr">original&nbsp;SDR&nbsp;RGB</span> <span class="op">×</span> gain map</span>
       </div>
-      <div class="note">LTX 只决定"哪里、提多少"；所有真实像素 / 颜色 / 纹理都来自原片 SDR → 数学上不可能混入虚构细节。</div>
+      <div class="note"><span data-lang="zh">LTX 只决定"哪里、提多少"；所有真实像素 / 颜色 / 纹理都来自原片 SDR → 数学上不可能混入虚构细节。</span><span data-lang="en">LTX decides only where and how much to lift. Every real pixel, color, and texture comes from the original SDR image, so invented detail cannot enter mathematically.</span></div>
     </div>
 
     <div class="pipe">
-      <div class="pstep"><div class="n">IN·a</div><div class="t">SDR 源</div><div class="d">16-bit 读取，保住母版细节</div></div>
-      <div class="pstep"><div class="n">IN·b</div><div class="t">LTX EXR</div><div class="d">线性 HDR，直接读不做 gamma</div></div>
-      <div class="pstep"><div class="n">01</div><div class="t">几何对齐</div><div class="d">宽匹配 + 居中裁切复原</div></div>
-      <div class="pstep"><div class="n">02</div><div class="t">算增益图</div><div class="d">LTX÷SDR 亮度比</div></div>
-      <div class="pstep"><div class="n">03</div><div class="t">归一·门控·平滑</div><div class="d">去全局曝光 / 护栏 / 引导滤波</div></div>
-      <div class="pstep"><div class="n">04</div><div class="t">贴回原片</div><div class="d">增益升采样 × 4K SDR</div></div>
+      <div class="pstep"><div class="n">IN·a</div><div class="t"><span data-lang="zh">SDR 源</span><span data-lang="en">SDR source</span></div><div class="d"><span data-lang="zh">16-bit 读取，保住母版细节</span><span data-lang="en">16-bit ingest preserves master detail</span></div></div>
+      <div class="pstep"><div class="n">IN·b</div><div class="t">LTX EXR</div><div class="d"><span data-lang="zh">线性 HDR，直接读不做 gamma</span><span data-lang="en">Linear HDR; read directly with no gamma</span></div></div>
+      <div class="pstep"><div class="n">01</div><div class="t"><span data-lang="zh">几何对齐</span><span data-lang="en">Geometric alignment</span></div><div class="d"><span data-lang="zh">宽匹配 + 居中裁切复原</span><span data-lang="en">width match + reverse center crop</span></div></div>
+      <div class="pstep"><div class="n">02</div><div class="t"><span data-lang="zh">算增益图</span><span data-lang="en">Compute gain map</span></div><div class="d"><span data-lang="zh">LTX÷SDR 亮度比</span><span data-lang="en">LTX÷SDR luminance ratio</span></div></div>
+      <div class="pstep"><div class="n">03</div><div class="t"><span data-lang="zh">归一·门控·平滑</span><span data-lang="en">Normalize · gate · smooth</span></div><div class="d"><span data-lang="zh">去全局曝光 / 护栏 / 引导滤波</span><span data-lang="en">remove global exposure / guardrails / guided filtering</span></div></div>
+      <div class="pstep"><div class="n">04</div><div class="t"><span data-lang="zh">贴回原片</span><span data-lang="en">Apply to original</span></div><div class="d"><span data-lang="zh">增益升采样 × 4K SDR</span><span data-lang="en">upsampled gain × 4K SDR</span></div></div>
       <div class="pstep"><div class="n">OUT</div><div class="t">HDR10 / JXL</div><div class="d">Rec.2020 PQ</div></div>
     </div>
 
     <div class="two">
       <div>
-        <h3>为什么这能成立</h3>
-        <ul class="clean">
+        <h3><span data-lang="zh">为什么这能成立</span><span data-lang="en">Why this works</span></h3>
+        <ul class="clean" data-lang="zh">
           <li>EXR 是<b>线性、scene-referred</b> 的，真实携带了高光超白亮度，正是"该多亮"的答案；</li>
           <li>实测 LTX 与 SDR 在中间调的亮度比≈1.17、结构相关 0.86——<b>结构一致</b>，增益图有意义；</li>
           <li>增益图是<b>低频平滑场</b>，升采样贴回 4K 不损原片任何细节。</li>
         </ul>
+        <ul class="clean" data-lang="en"><li>EXR is <b>linear and scene-referred</b>, carrying genuine super-white highlight values—the answer to how bright each region should be.</li><li>In testing, the LTX-to-SDR midtone luminance ratio is about 1.17 with structural correlation of 0.86. Their <b>structures align</b>, making the gain map meaningful.</li><li>The gain map is a <b>smooth, low-frequency field</b>; upsampling it back to 4K preserves every source detail.</li></ul>
       </div>
       <div>
-        <h3>几个关键护栏</h3>
-        <ul class="clean">
+        <h3><span data-lang="zh">几个关键护栏</span><span data-lang="en">Key guardrails</span></h3>
+        <ul class="clean" data-lang="zh">
           <li><b>曝光归一化</b>：用中间调比值中位数去掉 LTX 的全局曝光漂移，只留语义提亮；</li>
           <li><b>亮度空间封顶</b>：按输出 nits（而非增益倍数）封顶——既不压暗处真实光源，又让高光不撞钳位、<b>消除高光偏色</b>；</li>
           <li><b>暗部噪点保护</b>：暗区默认压住、真实亮源可越权，避免放大 SDR 噪点。</li>
         </ul>
+        <ul class="clean" data-lang="en"><li><b>Exposure normalization:</b> remove LTX's global exposure drift using the median midtone ratio, retaining only semantic enhancement.</li><li><b>Luminance-domain ceiling:</b> cap output nits rather than gain ratio. This preserves genuine sources in dark regions while keeping highlights away from clipping and <b>eliminating highlight color shifts</b>.</li><li><b>Shadow-noise protection:</b> suppress gain in dark regions by default while allowing genuine bright sources through, avoiding amplified SDR noise.</li></ul>
       </div>
     </div>
   </section>
 
   <!-- 04 演示 -->
   <section class="section" id="demo">
-    <div class="kicker">04 · 交互对比</div>
-    <h2>拖动中线：左 SDR ↔ 右 HDR</h2>
-    <p class="lead">同一帧（室内 · 第 11 秒）。<b>左边永远是 SDR 原片</b>，右边是<b>可切换的 HDR 方案</b>。
-    拖动中间的竖线，直接看同一处在 SDR 与 HDR 下的差别；点上方按钮切换右侧的 HDR 技术方案。</p>
-    <div class="callout">HDR 图在<b>支持 HDR 的浏览器</b>（Chrome / Safari）+ HDR 屏上才会真正"亮起来"。非 HDR 环境下，仍可对比<b>右侧画面细节是否被改写</b>——切到「LTX 直接」尤其明显。</div>
+    <div class="kicker"><span data-lang="zh">04 · 交互对比</span><span data-lang="en">04 · Interactive comparison</span></div>
+    <h2><span data-lang="zh">拖动中线：左 SDR ↔ 右 HDR</span><span data-lang="en">Drag the divider: SDR left ↔ HDR right</span></h2>
+    <p class="lead"><span data-lang="zh">同一帧（室内 · 第 11 秒）。<b>左边永远是 SDR 原片</b>，右边是<b>可切换的 HDR 方案</b>。拖动中间的竖线，直接看同一处在 SDR 与 HDR 下的差别；点上方按钮切换右侧的 HDR 技术方案。</span><span data-lang="en">The same indoor frame at 11 seconds. <b>The left side is always the original SDR image</b>; the right side is a <b>selectable HDR method</b>. Drag the vertical divider to compare the same area in SDR and HDR, then use the buttons above to change the method shown on the right.</span></p>
+    <div class="callout"><span data-lang="zh">HDR 图在<b>支持 HDR 的浏览器</b>（Chrome / Safari）+ HDR 屏上才会真正"亮起来"。非 HDR 环境下，仍可对比<b>右侧画面细节是否被改写</b>——切到「LTX 直接」尤其明显。</span><span data-lang="en">The HDR image becomes physically brighter only in an <b>HDR-capable browser</b> (Chrome / Safari) on an HDR display. In SDR environments, you can still compare <b>whether detail on the right has been rewritten</b>—especially with Direct LTX selected.</span></div>
 
     <div class="cmp">
       <div class="cmp-tabs">
-        <span class="lbl">右侧 HDR 方案：</span>
-        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_region_f11.avif" data-name="区域识别"
-          data-desc="<b>区域识别（规则）</b>：检测自发光/反射/普通三类区域分别提亮。细节真实、可控，但「哪里该亮」全靠规则，复杂光源容易漏检。">区域识别</button>
-        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_ltx_direct_f11.avif" data-name="LTX 直接"
-          data-desc="<b>LTX 直接</b>：直接用 LTX 生成的画面。亮度判断很准，但纹理/物体被「重画」，分辨率仅 ~800p——拖动对比会看到右侧细节与左侧 SDR 对不上。">LTX 直接</button>
-        <button class="cmp-tab active" data-src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" data-name="LTX gainmap"
-          data-desc="<b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。">LTX gainmap ✦</button>
+        <span class="lbl"><span data-lang="zh">右侧 HDR 方案：</span><span data-lang="en">HDR method on the right:</span></span>
+        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_region_f11.avif" data-name-zh="区域识别" data-name-en="Region detection"
+          data-desc-zh="<b>区域识别（规则）</b>：检测自发光/反射/普通三类区域分别提亮。细节真实、可控，但「哪里该亮」全靠规则，复杂光源容易漏检。" data-desc-en="<b>Region detection (rules)</b>: detects emissive, reflective, and ordinary regions and lifts each separately. Detail remains authentic and controllable, but rules alone decide what should be bright, so complex sources are easily missed."><span data-lang="zh">区域识别</span><span data-lang="en">Region detection</span></button>
+        <button class="cmp-tab" data-src="assets/ltx-demo/indoor_ltx_direct_f11.avif" data-name-zh="LTX 直接" data-name-en="Direct LTX"
+          data-desc-zh="<b>LTX 直接</b>：直接用 LTX 生成的画面。亮度判断很准，但纹理/物体被「重画」，分辨率仅 ~800p——拖动对比会看到右侧细节与左侧 SDR 对不上。" data-desc-en="<b>Direct LTX</b>: uses the image generated by LTX itself. Luminance judgment is excellent, but textures and objects are repainted and resolution is only ~800p. Dragging the divider reveals that detail on the right no longer matches the SDR source."><span data-lang="zh">LTX 直接</span><span data-lang="en">Direct LTX</span></button>
+        <button class="cmp-tab active" data-src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" data-name-zh="LTX gainmap" data-name-en="LTX gain map"
+          data-desc-zh="<b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。" data-desc-en="<b>LTX gain map (selected)</b>: borrows LTX's luminance judgment while using only source pixels. Native 4K, authentic detail, and precise enhancement all coexist. As you drag, the right side only becomes brighter; its structure remains identical to the SDR source.">LTX gainmap ✦</button>
       </div>
       <div class="cmp-stage" id="cmpStage" style="--pos:50%">
-        <img class="cmp-img cmp-sdr" src="assets/ltx-demo/indoor_sdr_f11.avif" alt="SDR 原片" loading="lazy">
-        <img class="cmp-img cmp-hdr" id="cmpHdr" src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" alt="HDR 结果" loading="lazy">
+        <img class="cmp-img cmp-sdr" src="assets/ltx-demo/indoor_sdr_f11.avif" alt="Original SDR" loading="lazy">
+        <img class="cmp-img cmp-hdr" id="cmpHdr" src="assets/ltx-demo/indoor_ltx_gainmap_f11.avif" alt="HDR result" loading="lazy">
         <div class="cmp-label l">SDR</div>
         <div class="cmp-label r" id="cmpLabelR">HDR · LTX gainmap</div>
         <div class="cmp-divider"><div class="cmp-handle">❮❯</div></div>
       </div>
-      <p class="cmp-desc" id="cmpDesc"><b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。</p>
+      <p class="cmp-desc" id="cmpDesc"><span data-lang="zh"><b>LTX gainmap（选定）</b>：借 LTX 的亮度判断、像素全用原片。4K 原生、细节真实、提亮精准——三者兼得。拖动时右侧只是变亮，画面结构和左侧 SDR 完全一致。</span><span data-lang="en"><b>LTX gain map (selected)</b>: borrows LTX's luminance judgment while using only source pixels. Native 4K, authentic detail, and precise enhancement all coexist. As you drag, the right side only becomes brighter; its structure remains identical to the SDR source.</span></p>
     </div>
   </section>
 
   <!-- 05 为什么选它 -->
   <section class="section" id="pick">
-    <div class="kicker">05 · 结论</div>
-    <h2>为什么选 LTX gainmap</h2>
-    <p class="lead">把三条路线放回最初那句矛盾——<b>"判断哪里该亮" × "保住真实细节"</b>——只有路线 C 同时占住两头：</p>
+    <div class="kicker"><span data-lang="zh">05 · 结论</span><span data-lang="en">05 · Conclusion</span></div>
+    <h2><span data-lang="zh">为什么选 LTX gainmap</span><span data-lang="en">Why choose the LTX gain map?</span></h2>
+    <p class="lead"><span data-lang="zh">把三条路线放回最初那句矛盾——<b>"判断哪里该亮" × "保住真实细节"</b>——只有路线 C 同时占住两头：</span><span data-lang="en">Return the three routes to the original tension—<b>deciding what should be bright × preserving authentic detail</b>—and only Route C satisfies both:</span></p>
     <div class="grid">
-      <div class="card"><h4 style="color:#ffd166">拿了 AI 的长处</h4>
-        <p>"哪里该亮、该多亮"交给 LTX 的语义理解，<b>不再靠规则、不再漏检</b>——直接解决上一套系统的命门。</p></div>
-      <div class="card"><h4 style="color:#9be08a">丢了 AI 的副作用</h4>
-        <p>只取它的<b>亮度判断</b>，丢掉它生成的像素。细节、颜色、分辨率全来自原片 → 数学上<b>不可能虚构细节</b>。</p></div>
-      <div class="card"><h4 style="color:#7fe0ff">保留了工程可控性</h4>
-        <p>增益图可视化、可限幅、可时域滤波。延续上一套"<b>有真值评测 + 单帧诊断</b>"的方法论，黑盒变白盒。</p></div>
+      <div class="card"><h4 style="color:#ffd166"><span data-lang="zh">拿了 AI 的长处</span><span data-lang="en">Keep AI's strength</span></h4><p><span data-lang="zh">"哪里该亮、该多亮"交给 LTX 的语义理解，<b>不再靠规则、不再漏检</b>——直接解决上一套系统的命门。</span><span data-lang="en">LTX's semantic understanding decides what should be bright and by how much. <b>No hand-written rules and far fewer misses</b> directly address the previous system's weakness.</span></p></div>
+      <div class="card"><h4 style="color:#9be08a"><span data-lang="zh">丢了 AI 的副作用</span><span data-lang="en">Discard AI's side effects</span></h4><p><span data-lang="zh">只取它的<b>亮度判断</b>，丢掉它生成的像素。细节、颜色、分辨率全来自原片 → 数学上<b>不可能虚构细节</b>。</span><span data-lang="en">Keep only its <b>luminance judgment</b> and discard generated pixels. Detail, color, and resolution all come from the source, making invented detail <b>mathematically impossible</b>.</span></p></div>
+      <div class="card"><h4 style="color:#7fe0ff"><span data-lang="zh">保留了工程可控性</span><span data-lang="en">Retain engineering control</span></h4><p><span data-lang="zh">增益图可视化、可限幅、可时域滤波。延续上一套"<b>有真值评测 + 单帧诊断</b>"的方法论，黑盒变白盒。</span><span data-lang="en">The gain map can be visualized, limited, and temporally filtered. The previous system's <b>ground-truth evaluation + single-frame diagnosis</b> method turns the black box into something inspectable.</span></p></div>
     </div>
-    <div class="callout gold">
-      <b>一句话：</b>LTX 直接输出是"<b>AI 重画一遍</b>"，区域识别是"<b>人写规则提亮</b>"，
-      而 LTX gainmap 是"<b>让 AI 只当测光表，原片自己变亮</b>"——这才是既准又真、还能上 4K 的解。
-    </div>
+    <div class="callout gold"><span data-lang="zh"><b>一句话：</b>LTX 直接输出是"<b>AI 重画一遍</b>"，区域识别是"<b>人写规则提亮</b>"，而 LTX gainmap 是"<b>让 AI 只当测光表，原片自己变亮</b>"——这才是既准又真、还能上 4K 的解。</span><span data-lang="en"><b>In one sentence:</b> direct LTX means <b>AI repaints the image</b>; region detection means <b>people write rules to brighten it</b>; the LTX gain map means <b>AI acts only as a light meter while the original image brightens itself</b>. That is the route that is accurate, authentic, and viable at 4K.</span></div>
   </section>
 
   <!-- 06 局限 -->
   <section class="section" id="limits">
-    <div class="kicker">06 · 仍在打磨</div>
-    <h2>已知局限与下一步</h2>
-    <p class="lead">室内场景已经很稳；当前主要待解的是<b>室外的帧间一致性</b>。</p>
+    <div class="kicker"><span data-lang="zh">06 · 仍在打磨</span><span data-lang="en">06 · Still refining</span></div>
+    <h2><span data-lang="zh">已知局限与下一步</span><span data-lang="en">Known limitations and next steps</span></h2>
+    <p class="lead"><span data-lang="zh">室内场景已经很稳；当前主要待解的是<b>室外的帧间一致性</b>。</span><span data-lang="en">Indoor scenes are already stable. The main remaining problem is <b>outdoor frame-to-frame consistency</b>.</span></p>
     <div class="two">
       <div>
-        <h3 class="bad">问题 · 室外局部闪烁</h3>
-        <p>实测全片高光闪烁均值仅 2.4%，但<b>室外大动态区</b>（天空 / 树叶 / 水面高光）存在局部闪烁。根因是
-        <b>LTX 逐帧对这些高频亮区的判断在抖</b>，而室外常伴随平移/推拉，固定像素位置的时域平滑会错位。</p>
+        <h3 class="bad"><span data-lang="zh">问题 · 室外局部闪烁</span><span data-lang="en">Problem · Local outdoor flicker</span></h3>
+        <p><span data-lang="zh">实测全片高光闪烁均值仅 2.4%，但<b>室外大动态区</b>（天空 / 树叶 / 水面高光）存在局部闪烁。根因是<b>LTX 逐帧对这些高频亮区的判断在抖</b>，而室外常伴随平移/推拉，固定像素位置的时域平滑会错位。</span><span data-lang="en">Measured average highlight flicker across the full clip is only 2.4%, but <b>high-dynamic-range outdoor regions</b>—sky, foliage, and water highlights—show local flicker. LTX's frame-by-frame judgment of these high-frequency bright areas varies, while outdoor shots often pan or zoom, causing temporal smoothing at fixed pixel positions to misalign.</span></p>
       </div>
       <div>
-        <h3 class="good">方向 · 运动补偿时域滤波</h3>
-        <p>增益图是低频场，特别适合时域处理：先估相邻帧运动把上一帧增益 <b>warp 对齐</b>再做<b>时域中值/EMA</b>，
-        即可强力压闪而不糊运动；更进一步可让 <b>LTX 跑关键帧 + 中间帧光流插值</b>，从源头消抖动还省算力。</p>
+        <h3 class="good"><span data-lang="zh">方向 · 运动补偿时域滤波</span><span data-lang="en">Direction · Motion-compensated temporal filtering</span></h3>
+        <p><span data-lang="zh">增益图是低频场，特别适合时域处理：先估相邻帧运动把上一帧增益 <b>warp 对齐</b>再做<b>时域中值/EMA</b>，即可强力压闪而不糊运动；更进一步可让 <b>LTX 跑关键帧 + 中间帧光流插值</b>，从源头消抖动还省算力。</span><span data-lang="en">Because the gain map is a low-frequency field, it is well suited to temporal processing. Estimate inter-frame motion, <b>warp the previous gain map into alignment</b>, then apply a <b>temporal median or EMA</b> to suppress flicker without blurring motion. A further step would run <b>LTX only on keyframes and use optical-flow interpolation between them</b>, reducing both instability and compute.</span></p>
       </div>
     </div>
-    <div class="callout">
-      方法论不变：<b>先实测定位（是闪烁还是真变化、在哪一段）</b>，再针对性上时域方案，用 nit/JXL 对比验证压制效果——而不是盲调参数。
-    </div>
+    <div class="callout"><span data-lang="zh">方法论不变：<b>先实测定位（是闪烁还是真变化、在哪一段）</b>，再针对性上时域方案，用 nit/JXL 对比验证压制效果——而不是盲调参数。</span><span data-lang="en">The method remains unchanged: <b>measure first to determine whether a change is flicker or real motion, and where it occurs</b>; then apply a targeted temporal solution and verify suppression through nit/JXL comparisons instead of tuning blindly.</span></div>
   </section>
   </main>
 
   <footer>
-    <p>LTX Gainmap · SDR→HDR 新一代思路 ｜ <a href="sdr-hdr-itm-system.html">← 区域识别版系统</a> ｜ <a href="index.html">返回色彩与显示指南</a></p>
-    <p style="margin-top:8px;color:var(--soft)">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · FFmpeg / libx265 · libjxl<br>
-    色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</p>
+    <p><span data-lang="zh">LTX Gainmap · SDR→HDR 新一代思路 ｜ <a href="sdr-hdr-itm-system.html">← 区域识别版系统</a> ｜ <a href="index.html">返回色彩与显示指南</a></span><span data-lang="en">LTX Gain Map · A New SDR→HDR Approach ｜ <a href="sdr-hdr-itm-system.html">← Region-based system</a> ｜ <a href="index.html">Back to the Color &amp; Display Guide</a></span></p>
+    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · FFmpeg / libx265 · libjxl<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span><span data-lang="en">Stack: LTX HDR (EXR) · Python · OpenCV (OpenEXR) · guided filtering · FFmpeg / libx265 · libjxl<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span></p>
   </footer>
 
   <script>
@@ -400,14 +401,49 @@
       stage.addEventListener('pointermove', function(e){ if(dragging) setPos(e.clientX); });
       stage.addEventListener('pointerup', function(){ dragging = false; });
       stage.addEventListener('pointercancel', function(){ dragging = false; });
+      function renderTab(t){
+        var lang = document.documentElement.lang === 'en' ? 'en' : 'zh';
+        hdr.src = t.dataset.src;
+        labelR.textContent = 'HDR · ' + (lang === 'en' ? t.dataset.nameEn : t.dataset.nameZh);
+        desc.innerHTML = lang === 'en' ? t.dataset.descEn : t.dataset.descZh;
+      }
       tabs.forEach(function(t){
         t.addEventListener('click', function(){
           tabs.forEach(function(x){ x.classList.remove('active'); });
           t.classList.add('active');
-          hdr.src = t.dataset.src;
-          labelR.textContent = 'HDR · ' + t.dataset.name;
-          desc.innerHTML = t.dataset.desc;
+          renderTab(t);
         });
+      });
+      window.updateLtxDemoLanguage = function(){
+        var active = document.querySelector('.cmp-tab.active');
+        if(active) renderTab(active);
+      };
+    })();
+
+    (function(){
+      var KEY = 'guideLang';
+      var TITLE = {
+        zh: 'LTX Gainmap · 让 AI 当测光表的 SDR→HDR',
+        en: 'LTX Gain Map · SDR→HDR with AI as a Light Meter'
+      };
+      var DESC = {
+        zh: "SDR 上变换 HDR 的新一代思路：用 LTX HDR 模型的 EXR 输出当'哪里该亮'的增益图（gainmap），只把增益作用在原始 SDR 像素上——既有 AI 的判断力，又不虚构画面细节。与区域识别、LTX 直接输出三方对比。",
+        en: "A new approach to SDR-to-HDR conversion: derive a gain map from the LTX HDR model's EXR output, then apply it only to original SDR pixels—keeping AI's luminance judgment without inventing image detail. Includes a three-way comparison with region detection and direct LTX output."
+      };
+      var meta = document.querySelector('meta[name="description"]');
+      function apply(lang){
+        var selected = lang === 'en' ? 'en' : 'zh';
+        document.documentElement.lang = selected === 'en' ? 'en' : 'zh-CN';
+        document.title = TITLE[selected];
+        if(meta) meta.setAttribute('content', DESC[selected]);
+        try{ localStorage.setItem(KEY, selected); }catch(e){}
+        if(window.updateLtxDemoLanguage) window.updateLtxDemoLanguage();
+      }
+      var saved = 'zh';
+      try{ saved = localStorage.getItem(KEY) || 'zh'; }catch(e){}
+      apply(saved);
+      document.querySelectorAll('.lang-toggle .seg').forEach(function(button){
+        button.addEventListener('click', function(){ apply(button.dataset.set); });
       });
     })();
   </script>

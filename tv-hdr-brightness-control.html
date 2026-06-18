@@ -29,6 +29,12 @@
       font: 16px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     a { color: inherit; text-decoration: none; }
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .lang-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.04); flex: none; }
+    .lang-toggle .seg { font: inherit; font-size: 13px; font-weight: 720; line-height: 1; padding: 7px 13px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"], html[lang="en"] .lang-toggle .seg[data-set="en"] { background: var(--cyan); color: #071014; }
     .topbar {
       position: sticky;
       top: 0;
@@ -429,15 +435,18 @@
 <body>
   <header class="topbar">
     <nav class="nav">
-      <a href="index.html" class="logo">色彩与显示指南</a>
-      <div class="nav-links">
-        <a href="#terms">名称约定</a>
-        <a href="#idea">核心逻辑</a>
-        <a href="#modes">控制链路</a>
-        <a href="#lab">曲线模型</a>
-        <a href="#walkthrough">计算链路</a>
-        <a href="#algorithm">算法框架</a>
-        <a href="#pipeline">处理流程</a>
+      <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="#terms"><span data-lang="zh">名称约定</span><span data-lang="en">Terms</span></a>
+          <a href="#idea"><span data-lang="zh">核心逻辑</span><span data-lang="en">Core Logic</span></a>
+          <a href="#modes"><span data-lang="zh">控制链路</span><span data-lang="en">Control Paths</span></a>
+          <a href="#lab"><span data-lang="zh">曲线模型</span><span data-lang="en">Curve Model</span></a>
+          <a href="#walkthrough"><span data-lang="zh">计算链路</span><span data-lang="en">Calculation</span></a>
+          <a href="#algorithm"><span data-lang="zh">算法框架</span><span data-lang="en">Algorithm</span></a>
+          <a href="#pipeline"><span data-lang="zh">处理流程</span><span data-lang="en">Pipeline</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language"><button class="seg" type="button" data-set="zh">中</button><button class="seg" type="button" data-set="en">EN</button></div>
       </div>
     </nav>
   </header>
@@ -447,91 +456,91 @@
       <div class="hero-inner">
         <div>
           <div class="eyebrow">HDR Brightness Control</div>
-          <h1>电视亮度，不再只是<span class="accent">背光强弱</span></h1>
-          <p class="lead">在 HDR 显示链路中，电视菜单里的“亮度”并不等同于背光或面板峰值。本文把它拆成一组可计算的约束：Reference White 决定画面白点，Peak_eff 决定高光上限，Tone Mapping 在两者之间建立平滑过渡。<b>50% 是还原锚点；继续调亮时，参考白与 UI、字幕、视频白点一起上移，高光再由 shoulder 吸收进当前 headroom。</b></p>
+          <h1><span data-lang="zh">电视亮度，不再只是<span class="accent">背光强弱</span></span><span data-lang="en">TV brightness is more than <span class="accent">backlight intensity</span></span></h1>
+          <p class="lead"><span data-lang="zh">在 HDR 显示链路中，电视菜单里的“亮度”并不等同于背光或面板峰值。本文把它拆成一组可计算的约束：Reference White 决定画面白点，Peak_eff 决定高光上限，Tone Mapping 在两者之间建立平滑过渡。<b>50% 是还原锚点；继续调亮时，参考白与 UI、字幕、视频白点一起上移，高光再由 shoulder 吸收进当前 headroom。</b></span><span data-lang="en">In an HDR display pipeline, the TV menu's “brightness” control is not simply the backlight or panel peak. This article decomposes it into computable constraints: Reference White sets the image white point, Peak_eff sets the highlight ceiling, and tone mapping builds a smooth transition between them. <b>50% is the restoration anchor; above it, reference white and the white points of video, UI, and subtitles rise together, while the shoulder fits highlights into the available headroom.</b></span></p>
         </div>
       </div>
     </section>
 
     <section class="section" id="terms">
       <div class="section-head">
-        <h2>名称约定</h2>
-        <p>为了避免把电视菜单里的“亮度”、HDR 标准里的“参考白”和面板物理峰值混在一起，本文先固定下面这些名称。</p>
+        <h2><span data-lang="zh">名称约定</span><span data-lang="en">Terminology</span></h2>
+        <p><span data-lang="zh">为了避免把电视菜单里的“亮度”、HDR 标准里的“参考白”和面板物理峰值混在一起，本文先固定下面这些名称。</span><span data-lang="en">To avoid conflating menu brightness, HDR reference white, and the panel's physical peak, this article uses the following terms consistently.</span></p>
       </div>
       <div class="principle-grid">
         <div class="principle">
           <b>Reference White / RW</b>
-          <p>普通白的亮度锚点。字幕、UI、SDR 白和 HDR diffuse white 都围绕它对齐；本文把 203 nits 作为 50% 亮度下的还原参考。</p>
+          <p><span data-lang="zh">普通白的亮度锚点。字幕、UI、SDR 白和 HDR diffuse white 都围绕它对齐；本文把 203 nits 作为 50% 亮度下的还原参考。</span><span data-lang="en">The luminance anchor for ordinary white. Subtitles, UI, SDR white, and HDR diffuse white align around it; this model uses 203 nits as the restoration reference at 50% brightness.</span></p>
         </div>
         <div class="principle">
           <b>Peak_eff</b>
-          <p>当前帧真正可用的有效峰值亮度。它不是面板标称峰值，而是经过 ABL、窗口面积和功率预算折算后的结果。</p>
+          <p><span data-lang="zh">当前帧真正可用的有效峰值亮度。它不是面板标称峰值，而是经过 ABL、窗口面积和功率预算折算后的结果。</span><span data-lang="en">The effective peak luminance actually available for the current frame. It is not the panel's advertised peak, but the result after ABL, window area, and the power budget are taken into account.</span></p>
         </div>
         <div class="principle">
           <b>Headroom</b>
-          <p>参考白以上留给高光的余量，计算为 <code>Peak_eff / RW_final</code>。它是结果，不是用户直接调的滑杆。</p>
+          <p><span data-lang="zh">参考白以上留给高光的余量，计算为 <code>Peak_eff / RW_final</code>。它是结果，不是用户直接调的滑杆。</span><span data-lang="en">The range above reference white reserved for highlights, calculated as <code>Peak_eff / RW_final</code>. It is a derived result, not a user-facing slider.</span></p>
         </div>
         <div class="principle">
-          <b>用户亮度意图</b>
-          <p>页面里的“亮度滑杆”表示用户希望整条观看亮度上移或下移。它会改变 RW，也会让视频、UI、字幕等内容按同一白点增益一起变化；超过 50% 后，曲线不再追求绝对 1:1，而是优先保持观感上的亮度关系。</p>
+          <b><span data-lang="zh">用户亮度意图</span><span data-lang="en">User brightness intent</span></b>
+          <p><span data-lang="zh">页面里的“亮度滑杆”表示用户希望整条观看亮度上移或下移。它会改变 RW，也会让视频、UI、字幕等内容按同一白点增益一起变化；超过 50% 后，曲线不再追求绝对 1:1，而是优先保持观感上的亮度关系。</span><span data-lang="en">The page's brightness slider represents the user's intent to raise or lower the overall viewing level. It changes RW and applies the same white gain to video, UI, and subtitles. Above 50%, the curve no longer targets a strict 1:1 mapping and instead preserves perceptual luminance relationships.</span></p>
         </div>
         <div class="principle">
-          <b>高光窗口占比 / ABL</b>
-          <p>画面中接近峰值亮度的面积比例。窗口越大，电视越可能因功耗、热量或背光预算降低 Peak_eff。</p>
+          <b><span data-lang="zh">高光窗口占比 / ABL</span><span data-lang="en">Highlight window / ABL</span></b>
+          <p><span data-lang="zh">画面中接近峰值亮度的面积比例。窗口越大，电视越可能因功耗、热量或背光预算降低 Peak_eff。</span><span data-lang="en">The share of the image near peak luminance. As the window grows, the TV is more likely to reduce Peak_eff because of power, thermal, or backlight constraints.</span></p>
         </div>
         <div class="principle">
           <b>Tone Mapping / Panel Drive</b>
-          <p>Tone Mapping 决定内容亮度如何映射到可用显示范围；Panel Drive 是最终驱动 OLED 电流或 Mini-LED 背光/LCD 透过率的硬件层。</p>
+          <p><span data-lang="zh">Tone Mapping 决定内容亮度如何映射到可用显示范围；Panel Drive 是最终驱动 OLED 电流或 Mini-LED 背光/LCD 透过率的硬件层。</span><span data-lang="en">Tone mapping determines how content luminance maps into the available display range. Panel drive is the hardware layer that ultimately controls OLED current or the Mini-LED backlight and LCD transmittance.</span></p>
         </div>
       </div>
     </section>
 
     <section class="section" id="idea">
       <div class="section-head">
-        <h2>核心逻辑</h2>
-        <p>用户调亮度时，系统真正调整的是普通白有多亮、高光保留多少空间、中间调如何适配观看环境，而不是简单把整块面板推亮。Headroom 不是可调输入，它是 Peak_eff 与 Reference White 的比值——一个被动导出的余量。50% 时 0-1000 nits 作为还原段；超过 50% 后，白点增益抬高画面，shoulder 起点再从 1000 nits 平滑前移，避免刚调亮时中间调反而变暗。</p>
+        <h2><span data-lang="zh">核心逻辑</span><span data-lang="en">Core logic</span></h2>
+        <p><span data-lang="zh">用户调亮度时，系统真正调整的是普通白有多亮、高光保留多少空间、中间调如何适配观看环境，而不是简单把整块面板推亮。Headroom 不是可调输入，它是 Peak_eff 与 Reference White 的比值——一个被动导出的余量。50% 时 0-1000 nits 作为还原段；超过 50% 后，白点增益抬高画面，shoulder 起点再从 1000 nits 平滑前移，避免刚调亮时中间调反而变暗。</span><span data-lang="en">When the user changes brightness, the system is really adjusting how bright ordinary white appears, how much space remains for highlights, and how midtones adapt to the viewing environment. It is not simply driving the whole panel harder. Headroom is not an input; it is the ratio of Peak_eff to Reference White. At 50%, 0–1,000 nits is the restoration range. Above 50%, white gain lifts the image while the shoulder start moves smoothly down from 1,000 nits, preventing midtones from becoming darker just as brightness is increased.</span></p>
       </div>
-      <div class="callout">电视 HDR 亮度控制不再直接等同于背光强弱，而是由 Reference White、Display Headroom、Tone Mapping 和 Panel Drive 共同决定。</div>
+      <div class="callout"><span data-lang="zh">电视 HDR 亮度控制不再直接等同于背光强弱，而是由 Reference White、Display Headroom、Tone Mapping 和 Panel Drive 共同决定。</span><span data-lang="en">HDR brightness control is not equivalent to backlight intensity; it is jointly determined by Reference White, display headroom, tone mapping, and panel drive.</span></div>
       <div class="principle-grid">
         <div class="principle">
-          <b>① Reference White 是锚点</b>
-          <p>SDR 白、HDR diffuse white、UI、字幕都对齐到它。它是用户"亮度"真正改变的量，也是整条曲线的白点增益来源。</p>
+          <b><span data-lang="zh">① Reference White 是锚点</span><span data-lang="en">① Reference White is the anchor</span></b>
+          <p><span data-lang="zh">SDR 白、HDR diffuse white、UI、字幕都对齐到它。它是用户"亮度"真正改变的量，也是整条曲线的白点增益来源。</span><span data-lang="en">SDR white, HDR diffuse white, UI, and subtitles all align to it. This is what the user's brightness setting actually changes and the source of white gain for the entire curve.</span></p>
         </div>
         <div class="principle">
-          <b>② Peak 是窗口的函数</b>
-          <p>OLED/Mini-LED 受 ABL 限制，峰值随高光窗口面积逐场景漂移。Peak_eff 不是常数。</p>
+          <b><span data-lang="zh">② Peak 是窗口的函数</span><span data-lang="en">② Peak depends on window size</span></b>
+          <p><span data-lang="zh">OLED/Mini-LED 受 ABL 限制，峰值随高光窗口面积逐场景漂移。Peak_eff 不是常数。</span><span data-lang="en">OLED and Mini-LED displays are constrained by ABL, so peak luminance varies with highlight area from scene to scene. Peak_eff is not constant.</span></p>
         </div>
         <div class="principle">
-          <b>③ 高光收敛进 headroom</b>
-          <p>RW_final 决定画面白点，Peak_eff 决定高光天花板。两者之间由动态 shoulder 连接，把超过当前余量的高光平滑压缩，而不是硬切或突然变暗。</p>
+          <b><span data-lang="zh">③ 高光收敛进 headroom</span><span data-lang="en">③ Highlights converge into headroom</span></b>
+          <p><span data-lang="zh">RW_final 决定画面白点，Peak_eff 决定高光天花板。两者之间由动态 shoulder 连接，把超过当前余量的高光平滑压缩，而不是硬切或突然变暗。</span><span data-lang="en">RW_final sets image white and Peak_eff sets the highlight ceiling. A dynamic shoulder connects them, smoothly compressing highlights beyond the available range instead of clipping or suddenly dimming them.</span></p>
         </div>
       </div>
     </section>
 
     <section class="section" id="modes">
       <div class="section-head">
-        <h2>亮度意图的两条控制链路</h2>
-        <p>页面只保留一个用户可控量：亮度意图。它同时进入白点链路和面板驱动链路，前者决定整条信号的白点增益，后者决定高光区还能保留多少空间。</p>
+        <h2><span data-lang="zh">亮度意图的两条控制链路</span><span data-lang="en">Two control paths for brightness intent</span></h2>
+        <p><span data-lang="zh">页面只保留一个用户可控量：亮度意图。它同时进入白点链路和面板驱动链路，前者决定整条信号的白点增益，后者决定高光区还能保留多少空间。</span><span data-lang="en">The page exposes one user control: brightness intent. It feeds both the white-point path and the panel-drive path. The former sets white gain for the full signal; the latter determines how much highlight space remains.</span></p>
       </div>
       <div class="mode-grid">
         <article class="mode-card">
-          <h3>白点链路：RW_final</h3>
-          <p>亮度意图先决定普通白锚点，并把它用于 UI、字幕和图形平面的白点控制。50% 是还原锚点；50% 以上白点增益会让视频与图形一起变亮，因此曲线不再是绝对 1:1。</p>
+          <h3><span data-lang="zh">白点链路：RW_final</span><span data-lang="en">White-point path: RW_final</span></h3>
+          <p><span data-lang="zh">亮度意图先决定普通白锚点，并把它用于 UI、字幕和图形平面的白点控制。50% 是还原锚点；50% 以上白点增益会让视频与图形一起变亮，因此曲线不再是绝对 1:1。</span><span data-lang="en">Brightness intent first sets the ordinary-white anchor used by UI, subtitles, and graphics planes. 50% is the restoration anchor. Above it, white gain brightens video and graphics together, so the curve is no longer strictly 1:1.</span></p>
           <ul>
-            <li><b>输入</b><span>用户亮度意图 0-100%。</span></li>
-            <li><b>中性点</b><span>50% 时 RW_final = 203 nits，0-1000 nits 输出等于输入。</span></li>
-            <li><b>范围</b><span>RW_final 从 100 nits 到 600 nits。</span></li>
-            <li><b>信号</b><span>50% 时 1:1；50% 以上按 RW_final / 203 提高视频与图形白点。</span></li>
+            <li><b><span data-lang="zh">输入</span><span data-lang="en">Input</span></b><span><span data-lang="zh">用户亮度意图 0-100%。</span><span data-lang="en">User brightness intent, 0–100%.</span></span></li>
+            <li><b><span data-lang="zh">中性点</span><span data-lang="en">Neutral point</span></b><span><span data-lang="zh">50% 时 RW_final = 203 nits，0-1000 nits 输出等于输入。</span><span data-lang="en">At 50%, RW_final = 203 nits and output equals input from 0–1,000 nits.</span></span></li>
+            <li><b><span data-lang="zh">范围</span><span data-lang="en">Range</span></b><span><span data-lang="zh">RW_final 从 100 nits 到 600 nits。</span><span data-lang="en">RW_final ranges from 100 to 600 nits.</span></span></li>
+            <li><b><span data-lang="zh">信号</span><span data-lang="en">Signal</span></b><span><span data-lang="zh">50% 时 1:1；50% 以上按 RW_final / 203 提高视频与图形白点。</span><span data-lang="en">1:1 at 50%; above 50%, video and graphics white rise by RW_final / 203.</span></span></li>
           </ul>
         </article>
         <article class="mode-card">
-          <h3>面板链路：Peak_cap</h3>
-          <p>同一个亮度意图也会提高面板驱动允许的峰值能力。这样 RW 升高时，headroom 关系会同步变化；50% 时 0-1000 nits 还原，50% 以上则让 shoulder 起点从 1000 nits 平滑移向 203 nits，最后用官方 tone mapping 常见的 shoulder 吸收限制。</p>
+          <h3><span data-lang="zh">面板链路：Peak_cap</span><span data-lang="en">Panel path: Peak_cap</span></h3>
+          <p><span data-lang="zh">同一个亮度意图也会提高面板驱动允许的峰值能力。这样 RW 升高时，headroom 关系会同步变化；50% 时 0-1000 nits 还原，50% 以上则让 shoulder 起点从 1000 nits 平滑移向 203 nits，最后用官方 tone mapping 常见的 shoulder 吸收限制。</span><span data-lang="en">The same brightness intent also raises the peak capability allowed by panel drive. Headroom therefore changes along with RW. At 50%, 0–1,000 nits is restored; above 50%, the shoulder start moves smoothly from 1,000 toward 203 nits, using the kind of shoulder common in standardized tone-mapping guidance to absorb the limit.</span></p>
           <ul>
-            <li><b>输入</b><span>同一个用户亮度意图。</span></li>
-            <li><b>范围</b><span>Peak_cap 从 600 nits 到 4000 nits。</span></li>
-            <li><b>ABL</b><span>示例固定用 10% 高光窗口折算 Peak_eff。</span></li>
-            <li><b>结果</b><span>Headroom 由 Peak_eff / RW_final 被动导出。</span></li>
+            <li><b><span data-lang="zh">输入</span><span data-lang="en">Input</span></b><span><span data-lang="zh">同一个用户亮度意图。</span><span data-lang="en">The same user brightness intent.</span></span></li>
+            <li><b><span data-lang="zh">范围</span><span data-lang="en">Range</span></b><span><span data-lang="zh">Peak_cap 从 600 nits 到 4000 nits。</span><span data-lang="en">Peak_cap ranges from 600 to 4,000 nits.</span></span></li>
+            <li><b>ABL</b><span><span data-lang="zh">示例固定用 10% 高光窗口折算 Peak_eff。</span><span data-lang="en">The example derives Peak_eff using a fixed 10% highlight window.</span></span></li>
+            <li><b><span data-lang="zh">结果</span><span data-lang="en">Result</span></b><span><span data-lang="zh">Headroom 由 Peak_eff / RW_final 被动导出。</span><span data-lang="en">Headroom is derived as Peak_eff / RW_final.</span></span></li>
           </ul>
         </article>
       </div>
@@ -539,18 +548,18 @@
 
     <section class="section" id="lab">
       <div class="section-head">
-        <h2>真实可用的曲线模型</h2>
-        <p>横轴是输入 PQ 绝对亮度（线性 nits），纵轴是显示输出亮度（线性 nits）。这里把电视菜单里的“亮度”建模成一个综合控制量：它改变 Reference White，也改变面板驱动峰值能力。50% 时 0-1000 nits 保持 1:1；超过 50% 后参考白提高，shoulder 起点从 1000 nits 平滑移向 203 nits，避免刚调亮时中间调反而变暗。</p>
+        <h2><span data-lang="zh">真实可用的曲线模型</span><span data-lang="en">A practical curve model</span></h2>
+        <p><span data-lang="zh">横轴是输入 PQ 绝对亮度（线性 nits），纵轴是显示输出亮度（线性 nits）。这里把电视菜单里的“亮度”建模成一个综合控制量：它改变 Reference White，也改变面板驱动峰值能力。50% 时 0-1000 nits 保持 1:1；超过 50% 后参考白提高，shoulder 起点从 1000 nits 平滑移向 203 nits，避免刚调亮时中间调反而变暗。</span><span data-lang="en">The horizontal axis is input PQ absolute luminance in linear nits; the vertical axis is output display luminance in linear nits. Menu brightness is modeled as a compound control that changes both Reference White and panel peak capability. At 50%, 0–1,000 nits remains 1:1. Above 50%, reference white rises while the shoulder start moves smoothly from 1,000 toward 203 nits, preventing midtones from darkening when brightness is first increased.</span></p>
       </div>
       <div class="lab">
         <div class="controls">
           <div class="control">
-            <label for="user-brightness">用户亮度意图 <output id="brightness-out">50%</output></label>
+            <label for="user-brightness"><span data-lang="zh">用户亮度意图</span><span data-lang="en">User brightness intent</span> <output id="brightness-out">50%</output></label>
             <input id="user-brightness" type="range" min="0" max="100" value="50" step="1">
           </div>
           <div class="abl-explainer" id="brightness-explainer">
-            <div><b>单一亮度控制</b>同时影响两条链路：一条是视频与 UI/字幕/图形共同参考的白点 <code>RW_final</code>，另一条是面板驱动允许的峰值能力 <code>Peak_cap</code>。50% 是还原中性点；超过 50% 时参考白提高，shoulder 起点提前，曲线自然不再是 1:1。</div>
-            <div id="brightness-explain-readout">当前亮度意图会生成一组 RW、Peak 与 headroom 关系。</div>
+            <div><span data-lang="zh"><b>单一亮度控制</b>同时影响两条链路：一条是视频与 UI/字幕/图形共同参考的白点 <code>RW_final</code>，另一条是面板驱动允许的峰值能力 <code>Peak_cap</code>。50% 是还原中性点；超过 50% 时参考白提高，shoulder 起点提前，曲线自然不再是 1:1。</span><span data-lang="en"><b>One brightness control</b> affects two paths: the shared white point <code>RW_final</code> for video, UI, subtitles, and graphics, and the panel-drive peak capability <code>Peak_cap</code>. 50% is the neutral restoration point; above it, reference white rises, the shoulder begins earlier, and the curve naturally stops being 1:1.</span></div>
+            <div id="brightness-explain-readout"><span data-lang="zh">当前亮度意图会生成一组 RW、Peak 与 headroom 关系。</span><span data-lang="en">The current brightness intent generates a corresponding RW, peak, and headroom relationship.</span></div>
           </div>
         </div>
         <div class="output-panel">
@@ -699,7 +708,7 @@
             <span class="pipe-tag">进入线性光 RGB</span>
           </div>
           <div class="pipe-body">
-            <p>YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到线性光 RGB——数值直接对应绝对亮度 nits（0.0001 ~ 10000）。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</p>
+            <p>YCbCr → R'G'B'（BT.2020 矩阵），再过 ST 2084 PQ EOTF（1D LUT）得到相对于 10,000 cd/m² 标尺的线性光 RGB 分量，定义范围为 0–10,000 cd/m²。三个分量不能各自直接当作 nit 值；绝对亮度 Y 还需结合信号白点及 RGB→Y 关系计算。HLG 输入则按 BT.2100 OOTF 折算到同一线性域。</p>
             <p class="pipe-key"><b>要点：</b>之后所有亮度与色彩决策都必须在线性光域做；管线内部精度至少 16-bit 浮点（或等效定点），否则 0.1–1 nit 的低亮度细节会量化成 banding，也会让白点增益和 shoulder 过渡显得粗糙。</p>
           </div>
         </div>
@@ -709,7 +718,7 @@
             <span class="pipe-tag">控制面</span>
           </div>
           <div class="pipe-body">
-            <p>解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision、ST 2094-50 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</p>
+            <p>解析静态元数据（MaxCLL / MaxFALL、Mastering Display）与动态元数据（HDR10+、Dolby Vision，以及 SMPTE ST 2094-50 公开委员会草案 Application #5 的 Reference White Anchor）；同时对当前帧做直方图统计：APL、高光像素占比、场景切换检测。统计结果送入 ABL 功率模型，得到本帧的 Peak_eff。</p>
             <p class="pipe-key"><b>要点：</b>真机中的高光窗口来自实时统计，而不是用户手动控制。本文 demo 将窗口固定在 10%，让唯一的用户亮度意图同时进入 RW_final 与 Peak_cap 两条控制链路。</p>
           </div>
         </div>

@@ -957,7 +957,7 @@
             <div class="card">
               <span class="tag" style="background:var(--rose)">PQ流程</span>
               <h3>通知模式（Notify）</h3>
-              <p>PQ 制作需要传递母版显示信息（ST 2086）以及 MaxCLL、MaxFALL（CTA-861.3）等静态元数据；动态格式（HDR10+/Dolby Vision）还会逐场景或逐镜头给出映射建议，指导显示端自适应 Tone Mapping。</p>
+              <p>ST 2084 只定义 PQ EOTF 及其反函数，本身不要求携带静态元数据。在 HDR10 等具体交付配置中，通常还会传递 ST 2086 母版显示信息，以及 CTA-861.3 定义的 MaxCLL、MaxFALL；HDR10+、Dolby Vision 等动态格式还可逐场景或逐镜头给出映射信息，辅助显示端自适应 Tone Mapping。</p>
             </div>
             <div class="card">
               <span class="tag" style="background:var(--blue)">HLG流程</span>
@@ -1162,7 +1162,7 @@
           <p>Dolby Vision 以逐场景/逐帧动态元数据和 Dolby 专有的显示映射链路为核心。元数据分层（L1 自动动态亮度、L2/L8 手动 Trim、L6 可选 MaxCLL/MaxFALL），允许调色师精确控制不同终端能力下的再现效果。常见发行链路多为 PQ / ST 2084，但 Dolby Vision 也有 HLG 兼容配置：Profile 8.4 使用 HLG base layer、BT.2020、HEVC Main10，并叠加 Dolby Vision RPU 元数据，非 Dolby Vision 设备可按 HLG 基础层显示。</p>
           <div class="specs">
             <div class="spec"><small>传递函数</small>PQ / ST 2084；Profile 8.4 可为 HLG base layer</div>
-            <div class="spec"><small>元数据</small>动态：Dolby / ST 2094-10</div>
+            <div class="spec"><small>元数据</small>Dolby Vision 私有 RPU；不同于 ST 2094-10 Application #1</div>
             <div class="spec"><small>位深</small>最高 12 bit 工作流</div>
             <div class="spec"><small>授权</small>专有认证生态（厂商付费）</div>
           </div>
@@ -1207,7 +1207,7 @@
         </div>
         <div class="tab-panel" id="tab-eclipsa" role="tabpanel">
           <h3>Eclipsa Video：围绕参考白和 Headroom 的开放动态元数据</h3>
-          <p>Eclipsa Video 是基于 <b>SMPTE ST 2094-50</b> 的 HDR 视频方案，由 Google、Apple、NBCUniversal 等推动，并由 HDR10+ Technologies 启动相关项目。它不是简单追求更高峰值亮度，而是把“标准内容的参考白”和“参考白以上的 HDR headroom”显式写进适配逻辑，让同一屏幕上的 SDR、网页 UI 与 HDR 视频更稳定地共存。</p>
+          <p>Eclipsa Video 采用 <b>SMPTE ST 2094-50 公开委员会草案（Application #5）</b>所描述的动态元数据方案，由 Google、Apple、NBCUniversal 等推动，并由 HDR10+ Technologies 启动相关项目。该文档目前不应称为已发布的现行 SMPTE 标准。它不是简单追求更高峰值亮度，而是把“标准内容的参考白”和“参考白以上的 HDR headroom”显式写进适配逻辑，让同一屏幕上的 SDR、网页 UI 与 HDR 视频更稳定地共存。</p>
           <div class="grid-2" style="gap:12px;margin-top:12px">
             <div class="card" style="padding:14px">
               <span class="tag" style="background:var(--gold)">Reference White Anchor</span>
@@ -1221,7 +1221,7 @@
             </div>
           </div>
           <div class="specs" style="margin-top:12px">
-            <div class="spec"><small>标准基础</small>SMPTE ST 2094-50</div>
+            <div class="spec"><small>文档基础</small>SMPTE ST 2094-50 公开委员会草案 · Application #5</div>
             <div class="spec"><small>核心元数据</small>Reference White Anchor + Headroom-Adaptive Gain Curves</div>
             <div class="spec"><small>目标场景</small>浏览器、手机、笔记本、混合 SDR/HDR 界面</div>
             <div class="spec"><small>生态</small>开放 HDR 视频项目，HDR10+ Technologies 负责项目推进</div>
@@ -1241,7 +1241,7 @@
           <div class="grid-2" style="gap:16px;align-items:start">
             <div>
               <p><b style="color:var(--gold)">MaxCLL</b>（Maximum Content Light Level）：整段内容中<b>单个像素出现的最高亮度</b>，单位 cd/m²。显示端用它判断高光峰值，决定映射曲线的上限锚点。</p>
-              <p><b style="color:var(--cyan)">MaxFALL</b>（Maximum Frame-Average Light Level）：整段内容中<b>帧平均亮度的最高值</b>。反映"最亮的一帧总体发光量"，用于控制 OLED 等依赖 ABL 的显示器，防止过热或亮度骤降。</p>
+              <p><b style="color:var(--cyan)">MaxFALL</b>（Maximum Frame-Average Light Level）：整段内容中<b>帧平均亮度的最高值</b>，是显示端可参考的内容亮度描述，可辅助判断全屏亮度负载与映射策略。面板保护、热管理和 ABL 如何动作属于终端自身策略，并非由 MaxFALL 直接控制。</p>
               <p style="font-size:13px;color:var(--muted)">典型值：影院母版 MaxCLL ≈ 1000–4000 nit，MaxFALL ≈ 100–400 nit。HDR10 用这两个值作为全片唯一的静态描述；HDR10+ / Dolby Vision 则在此基础上叠加逐场景动态元数据。</p>
             </div>
             <div>
@@ -1304,11 +1304,11 @@
           <ul class="sources">
             <li><a href="https://www.itu.int/rec/R-REC-BT.709" target="_blank" rel="noreferrer">ITU-R BT.709</a> 与 <a href="https://www.itu.int/rec/R-REC-BT.2020" target="_blank" rel="noreferrer">BT.2020</a>：HDTV / UHDTV 色域原色与图像参数。</li>
             <li><a href="https://pub.smpte.org/latest/st2084/st2084-2014.pdf" target="_blank" rel="noreferrer">SMPTE ST 2084</a>：PQ EOTF 规范；<a href="https://pub.smpte.org/latest/st2086/st2086-2018.pdf" target="_blank" rel="noreferrer">SMPTE ST 2086</a>：母版显示色彩体积元数据（原色、白点、最大/最小亮度）；MaxCLL/MaxFALL 由 CTA-861.3 定义。</li>
-            <li><a href="https://pub.smpte.org/latest/st2094-10/st2094-10-2021.pdf" target="_blank" rel="noreferrer">SMPTE ST 2094-10</a>（Dolby）/ <a href="https://pub.smpte.org/latest/st2094-40/st2094-40-2020.pdf" target="_blank" rel="noreferrer">ST 2094-40</a>（HDR10+）：动态元数据框架规范。</li>
+            <li><a href="https://pub.smpte.org/latest/st2094-10/st2094-10-2021.pdf" target="_blank" rel="noreferrer">SMPTE ST 2094-10</a>：Application #1 的参数化色彩体积变换元数据；它不等同于 Dolby Vision 私有 RPU 语法。<a href="https://pub.smpte.org/latest/st2094-40/st2094-40-2020.pdf" target="_blank" rel="noreferrer">ST 2094-40</a>：HDR10+ 使用的 Application #4 场景自适应动态元数据。</li>
             <li><a href="https://www.arib.or.jp/english/html/overview/doc/2-STD-B67v2_0.pdf" target="_blank" rel="noreferrer">ARIB STD-B67</a>：HLG 传递函数日本广播标准（BBC/NHK 联合提交基础）。</li>
             <li><a href="https://www.cuva.org.cn/" target="_blank" rel="noreferrer">CUVA 005-2021 / HDR Vivid</a>：中国超高清视频产业联盟动态元数据 HDR 标准。</li>
             <li><a href="https://hdr10plus.org/" target="_blank" rel="noreferrer">HDR10+ Technologies</a>、<a href="https://professional.dolby.com/tv/dolby-vision/" target="_blank" rel="noreferrer">Dolby Vision</a>、<a href="https://professionalsupport.dolby.com/s/article/Dolby-Vision-Recommended-Source-Formats" target="_blank" rel="noreferrer">Dolby Vision Recommended Source Formats</a>（Profile 8.4 HLG base layer）官方技术资料。</li>
-            <li><a href="https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/" target="_blank" rel="noreferrer">Google Chromium Blog: Bringing a clearer, more consistent HDR video experience to Chrome</a>、<a href="https://github.com/SMPTE/st2094-50" target="_blank" rel="noreferrer">SMPTE ST 2094-50 public repository</a> 与 <a href="https://hdr10plus.org/wp-content/uploads/2026/05/EclipsaVideo-release-final.html" target="_blank" rel="noreferrer">HDR10+ Technologies: Eclipsa Video Program</a>：Eclipsa Video、Reference White Anchor 与 Headroom-Adaptive Gain Curves 资料。</li>
+            <li><a href="https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/" target="_blank" rel="noreferrer">Google Chromium Blog: Bringing a clearer, more consistent HDR video experience to Chrome</a>、<a href="https://github.com/SMPTE/st2094-50" target="_blank" rel="noreferrer">SMPTE ST 2094-50 public committee draft repository</a> 与 <a href="https://hdr10plus.org/wp-content/uploads/2026/05/EclipsaVideo-release-final.html" target="_blank" rel="noreferrer">HDR10+ Technologies: Eclipsa Video Program</a>：Eclipsa Video、Application #5、Reference White Anchor 与 Headroom-Adaptive Gain Curves 资料。</li>
           </ul>
         </div>
       </div>
@@ -2294,10 +2294,10 @@
       { name: "SDR / BT.709", eotf: "BT.709 OETF + BT.1886 EOTF (γ≈2.4)", bit: "8", metadata: "无（固定显示环境假定）", gamut: "BT.709（35.9% CIE）", license: "ITU 开放广播标准", use: "标清/高清电视、电脑显示、传统广播（基准参考）" },
       { name: "HDR10", eotf: "PQ / ST 2084", bit: "10", metadata: "静态：ST 2086 + MaxCLL/MaxFALL（CTA-861.3）", gamut: "BT.2020 容器", license: "开放媒体配置", use: "UHD Blu-ray、流媒体基础 HDR" },
       { name: "HDR10+", eotf: "PQ / ST 2084", bit: "10", metadata: "动态：ST 2094-40，逐场景映射", gamut: "BT.2020 容器", license: "HDR10+ 认证生态（相对开放）", use: "流媒体、电视、移动端" },
-      { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：ST 2094-10 / Dolby RPU，逐帧映射", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
+      { name: "Dolby Vision", eotf: "PQ / ST 2084；Profile 8.4 可用 HLG base layer", bit: "最高 12 bit 工作流；HLG Profile 8.4 常见 10 bit HEVC Main10", metadata: "动态：Dolby Vision 私有 RPU，逐帧/逐场景映射；不等同于 ST 2094-10", gamut: "BT.2020 容器，常见 P3 母版；Profile 8.4 为 BT.2020", license: "专有授权认证（厂商付费）", use: "影院、流媒体、电视、移动端、游戏；iPhone 等 HLG 兼容采集/分发" },
       { name: "HLG", eotf: "HLG OETF + 可变系统γ", bit: "10/12", metadata: "可无，依靠识别符 / 约定", gamut: "BT.2020", license: "广播开放标准（BBC/NHK/ITU）", use: "直播、体育、新闻、电视播出" },
       { name: "HDR Vivid", eotf: "PQ 或 HLG（双模式）", bit: "常见 10", metadata: "动态：CUVA 005-2021", gamut: "BT.2020 容器", license: "中国超高清产业生态（CUVA）", use: "IPTV、OTT、国产终端、超高清平台" },
-      { name: "Eclipsa Video", eotf: "PQ / ST 2084，围绕显示 headroom 适配", bit: "常见 10 bit HEVC/AVC 工作流", metadata: "动态：SMPTE ST 2094-50，Reference White Anchor 与 Headroom-Adaptive Gain Curves", gamut: "BT.2020 容器，常见 P3 内容", license: "开放 HDR 视频项目，HDR10+ Technologies 认证生态", use: "Chrome / Android / 移动端与混合 SDR-HDR 界面中的 HDR 视频" },
+      { name: "Eclipsa Video", eotf: "PQ / ST 2084，围绕显示 headroom 适配", bit: "常见 10 bit HEVC/AVC 工作流", metadata: "动态：SMPTE ST 2094-50 公开委员会草案 Application #5，Reference White Anchor 与 Headroom-Adaptive Gain Curves", gamut: "BT.2020 容器，常见 P3 内容", license: "开放 HDR 视频项目，HDR10+ Technologies 认证生态", use: "Chrome / Android / 移动端与混合 SDR-HDR 界面中的 HDR 视频" },
       { name: "SL-HDR1/2/3", eotf: "PQ/HLG 与 SDR 兼容重建", bit: "10", metadata: "动态或静态重建信息（ETSI TS 103 433）", gamut: "BT.709/BT.2020", license: "ETSI/Technicolor/Philips 相关", use: "SDR-HDR 兼容分发" }
     ];
     let sortKey = "name", sortAsc = true;

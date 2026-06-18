@@ -1144,7 +1144,7 @@ ffmpeg -loop 1 -i tmp.jxl \
         <div class="takeaways">
           <div class="takeaway">
             <div class="big"><span data-lang="zh">先锚定绝对亮度<br>再谈 HDR</span><span data-lang="en">Anchor absolute luminance<br>before talking HDR</span></div>
-            <p><span data-lang="zh">PQ 是绝对亮度曲线，任何 SDR 数据进 PQ 前都得先映射到参考白（203 nits），否则必然过曝。</span><span data-lang="en">PQ is an absolute-luminance curve; any SDR data must be mapped to reference white (203 nits) before entering PQ, or overexposure is inevitable.</span></p>
+            <p><span data-lang="zh">PQ 是绝对亮度曲线；在本站采用的 BT.2408 SDR→PQ 工作流中，先把 SDR 漫反射白映射到 203 nit，再为高光保留向上的余量。203 nit 是本工作流的参考白锚点，并非所有 SDR→PQ 转换不可改变的前置条件；真正需要避免的是未定义亮度标尺就把 SDR 码值直接当作 PQ 绝对亮度。</span><span data-lang="en">PQ is an absolute-luminance curve. In the BT.2408 SDR-to-PQ workflow used on this site, SDR diffuse white is first mapped to 203 nits, leaving headroom above it for highlights. Here, 203 nits is the workflow's reference-white anchor, not an immutable prerequisite for every SDR-to-PQ conversion; the real error is treating SDR code values as PQ absolute luminance without first defining a luminance scale.</span></p>
           </div>
           <div class="takeaway">
             <div class="big"><span data-lang="zh">指数关系<br>要在指数域里调</span><span data-lang="en">Exponential relationships<br>tune in the exponential domain</span></div>
