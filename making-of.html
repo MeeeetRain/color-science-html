@@ -59,10 +59,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brand { font-weight: 780; flex: none; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; justify-content: flex-end; }
+    .links { display: flex; gap: 6px; flex: 0 1 auto; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 12px;
       border-radius: 999px;
@@ -74,6 +76,39 @@
       color: var(--ink);
       background: rgba(255,255,255,.08);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #0a1014;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+
     main { overflow: hidden; }
     section {
       padding: 72px 20px;
@@ -409,18 +444,24 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#why">为什么复盘</a>
-        <a href="#topic">选题</a>
-        <a href="#research">资料</a>
-        <a href="#outline">大纲</a>
-        <a href="#demo">交互演示</a>
-        <a href="#mobile">细节适配</a>
-        <a href="#ai-collab">AI 协作</a>
-        <a href="#ship">收尾发布</a>
-        <a href="#method">方法论</a>
-        <a href="#sources">参考</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#why"><span data-lang="zh">为什么复盘</span><span data-lang="en">Why</span></a>
+          <a href="#topic"><span data-lang="zh">选题</span><span data-lang="en">Topic</span></a>
+          <a href="#research"><span data-lang="zh">资料</span><span data-lang="en">Sources</span></a>
+          <a href="#outline"><span data-lang="zh">大纲</span><span data-lang="en">Outline</span></a>
+          <a href="#demo"><span data-lang="zh">交互演示</span><span data-lang="en">Demos</span></a>
+          <a href="#mobile"><span data-lang="zh">细节适配</span><span data-lang="en">Mobile</span></a>
+          <a href="#ai-collab"><span data-lang="zh">AI 协作</span><span data-lang="en">AI Collab</span></a>
+          <a href="#ship"><span data-lang="zh">收尾发布</span><span data-lang="en">Ship</span></a>
+          <a href="#method"><span data-lang="zh">方法论</span><span data-lang="en">Method</span></a>
+          <a href="#sources"><span data-lang="zh">参考</span><span data-lang="en">References</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -428,9 +469,12 @@
   <main>
     <section class="hero" id="top">
       <div class="wrap">
-        <div class="eyebrow">Making of · 制作复盘</div>
-        <h1>一个章节是怎么做出来的</h1>
-        <p class="lead">以「同色异谱」这一章为例，从确定选题方向、资料核对、写大纲，到和 AI 一起做交互演示、逐条批注修改、移动端适配，再到收尾发布，把整个流程和真实踩过的坑完整复盘一遍。重点不是结果，而是每一步的判断依据。</p>
+        <div class="eyebrow"><span data-lang="zh">Making of · 制作复盘</span><span data-lang="en">Making of · Production Retrospective</span></div>
+        <h1><span data-lang="zh">一个章节是怎么做出来的</span><span data-lang="en">How a Chapter Gets Made</span></h1>
+        <p class="lead">
+          <span data-lang="zh">以「同色异谱」这一章为例，从确定选题方向、资料核对、写大纲，到和 AI 一起做交互演示、逐条批注修改、移动端适配，再到收尾发布，把整个流程和真实踩过的坑完整复盘一遍。重点不是结果，而是每一步的判断依据。</span>
+          <span data-lang="en">Taking the metamerism chapter as a running example — from settling on the topic, fact-checking sources, and outlining, to building interactive demos with AI, annotating and revising line by line, and adapting for mobile, all the way to publishing — this is a full retrospective of the whole process and the real pitfalls along the way. The point isn't the result, but the reasoning behind each step.</span>
+        </p>
       </div>
     </section>
 
@@ -438,27 +482,33 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">开场</span>
-            <h2>为什么用同色异谱复盘</h2>
-            <p>这一章覆盖了一个章节会遇到的全部环节：抽象概念、必须查证的标准数据、两个从零写的交互演示、移动端布局陷阱、文案语气把控。流程跑通一遍，方法就能复用到下一章。</p>
+            <span class="phase-tag"><span data-lang="zh">开场</span><span data-lang="en">Intro</span></span>
+            <h2><span data-lang="zh">为什么用同色异谱复盘</span><span data-lang="en">Why use metamerism as the retrospective</span></h2>
+            <p>
+              <span data-lang="zh">这一章覆盖了一个章节会遇到的全部环节：抽象概念、必须查证的标准数据、两个从零写的交互演示、移动端布局陷阱、文案语气把控。流程跑通一遍，方法就能复用到下一章。</span>
+              <span data-lang="en">This chapter touches every stage a chapter can involve: an abstract concept, standard data that must be verified, two interactive demos written from scratch, mobile layout traps, and tone control. Run the process once and the method carries over to the next chapter.</span>
+            </p>
           </div>
-          <div class="note">本项目的定位是<b>技术科普 + 工作流说明</b>，不是参数百科。所有方法都服务于一个目标：让读者建立直觉，而不是记住名词。</div>
+          <div class="note">
+            <span data-lang="zh">本项目的定位是<b>技术科普 + 工作流说明</b>，不是参数百科。所有方法都服务于一个目标：让读者建立直觉，而不是记住名词。</span>
+            <span data-lang="en">This project is positioned as a <b>technical explainer + workflow notes</b>, not a parameter encyclopedia. Every method serves one goal: helping readers build intuition rather than memorize terms.</span>
+          </div>
         </div>
         <div class="grid-3">
           <div class="card">
-            <div class="kicker">这章的难点</div>
-            <h4>概念抽象</h4>
-            <p>「不同光谱产生同一颜色」无法靠文字讲清楚，必须做出可以拖动、能看到颜色塌缩的演示。</p>
+            <div class="kicker"><span data-lang="zh">这章的难点</span><span data-lang="en">The hard part</span></div>
+            <h4><span data-lang="zh">概念抽象</span><span data-lang="en">An abstract concept</span></h4>
+            <p><span data-lang="zh">「不同光谱产生同一颜色」无法靠文字讲清楚，必须做出可以拖动、能看到颜色塌缩的演示。</span><span data-lang="en">"Different spectra producing the same color" can't be explained with words alone — it needs a demo you can drag and watch the color collapse in.</span></p>
           </div>
           <div class="card">
-            <div class="kicker">这章的难点</div>
-            <h4>数据要查证</h4>
-            <p>CIE 色匹配函数、各光源光谱、ISO 同色异谱指数，都不能凭记忆，必须回到标准原文。</p>
+            <div class="kicker"><span data-lang="zh">这章的难点</span><span data-lang="en">The hard part</span></div>
+            <h4><span data-lang="zh">数据要查证</span><span data-lang="en">Data must be verified</span></h4>
+            <p><span data-lang="zh">CIE 色匹配函数、各光源光谱、ISO 同色异谱指数，都不能凭记忆，必须回到标准原文。</span><span data-lang="en">CIE color-matching functions, illuminant spectra, the ISO metamerism index — none can rely on memory; they must go back to the original standards.</span></p>
           </div>
           <div class="card">
-            <div class="kicker">这章的难点</div>
-            <h4>演示要可信</h4>
-            <p>两个 Canvas 演示要让匹配真的成立又真的失效，背后是一套需要调参的数值模型。</p>
+            <div class="kicker"><span data-lang="zh">这章的难点</span><span data-lang="en">The hard part</span></div>
+            <h4><span data-lang="zh">演示要可信</span><span data-lang="en">Demos must be credible</span></h4>
+            <p><span data-lang="zh">两个 Canvas 演示要让匹配真的成立又真的失效，背后是一套需要调参的数值模型。</span><span data-lang="en">The two Canvas demos have to make the match genuinely hold and genuinely fail, backed by a numerical model that needs tuning.</span></p>
           </div>
         </div>
       </div>
@@ -468,30 +518,36 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第一阶段</span>
-            <h2>确定选题方向</h2>
-            <p>每篇文章先回答一个具体问题，而不是从名词百科开始。选题阶段只做两件事：把问题问对，把它挂到工作流上。</p>
+            <span class="phase-tag"><span data-lang="zh">第一阶段</span><span data-lang="en">Stage 1</span></span>
+            <h2><span data-lang="zh">确定选题方向</span><span data-lang="en">Settling on the topic</span></h2>
+            <p>
+              <span data-lang="zh">每篇文章先回答一个具体问题，而不是从名词百科开始。选题阶段只做两件事：把问题问对，把它挂到工作流上。</span>
+              <span data-lang="en">Every article first answers a specific question rather than starting from an encyclopedia entry. The topic stage does just two things: ask the question right, and hang it onto the workflow.</span>
+            </p>
           </div>
         </div>
         <div class="gb-grid">
           <div class="gb good">
-            <h4>好选题：先有困惑</h4>
+            <h4><span data-lang="zh">好选题：先有困惑</span><span data-lang="en">Good topic: start from a confusion</span></h4>
             <ul>
-              <li>为什么手机屏看色卡总差一点</li>
-              <li>为什么不同人看同一台 OLED 颜色不一致</li>
-              <li>Assign 和 Convert 为什么不是一回事</li>
+              <li><span data-lang="zh">为什么手机屏看色卡总差一点</span><span data-lang="en">Why a color chart always looks a little off on a phone screen</span></li>
+              <li><span data-lang="zh">为什么不同人看同一台 OLED 颜色不一致</span><span data-lang="en">Why different people see different colors on the same OLED</span></li>
+              <li><span data-lang="zh">Assign 和 Convert 为什么不是一回事</span><span data-lang="en">Why Assign and Convert aren't the same thing</span></li>
             </ul>
           </div>
           <div class="gb bad">
-            <h4>坏选题：名词罗列</h4>
+            <h4><span data-lang="zh">坏选题：名词罗列</span><span data-lang="en">Bad topic: a list of terms</span></h4>
             <ul>
-              <li>同色异谱知识点汇总</li>
-              <li>CIE 色度学参数介绍</li>
-              <li>Metamerism Index 标准说明</li>
+              <li><span data-lang="zh">同色异谱知识点汇总</span><span data-lang="en">A roundup of metamerism facts</span></li>
+              <li><span data-lang="zh">CIE 色度学参数介绍</span><span data-lang="en">An intro to CIE colorimetry parameters</span></li>
+              <li><span data-lang="zh">Metamerism Index 标准说明</span><span data-lang="en">The Metamerism Index standard, explained</span></li>
             </ul>
           </div>
         </div>
-        <p>同色异谱最终被定位成「<b>色彩管理一切难题的根</b>」——这句话决定了它在工作流里的位置：放在最前面的「基础」段，后面拍摄、后期、显示三段的问题都能回头挂到它身上。选题不只是定标题，更是定它和其他章节的关系。</p>
+        <p>
+          <span data-lang="zh">同色异谱最终被定位成「<b>色彩管理一切难题的根</b>」——这句话决定了它在工作流里的位置：放在最前面的「基础」段，后面拍摄、后期、显示三段的问题都能回头挂到它身上。选题不只是定标题，更是定它和其他章节的关系。</span>
+          <span data-lang="en">Metamerism ended up framed as "<b>the root of every color-management problem</b>" — and that framing decides its place in the workflow: it goes in the very first "Basics" stage, and the problems in the later Capture, Post, and Display stages can all trace back to it. Choosing a topic isn't just setting a title; it's setting its relationship to the other chapters.</span>
+        </p>
       </div>
     </section>
 
@@ -499,20 +555,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第二阶段</span>
-            <h2>资料核对与立论</h2>
-            <p>涉及标准参数、格式、厂商曲线时必须查资料，不凭记忆写。引用优先级：ITU-R / SMPTE / ICC / W3C / 厂商官方文档。</p>
+            <span class="phase-tag"><span data-lang="zh">第二阶段</span><span data-lang="en">Stage 2</span></span>
+            <h2><span data-lang="zh">资料核对与立论</span><span data-lang="en">Fact-checking and building the argument</span></h2>
+            <p>
+              <span data-lang="zh">涉及标准参数、格式、厂商曲线时必须查资料，不凭记忆写。引用优先级：ITU-R / SMPTE / ICC / W3C / 厂商官方文档。</span>
+              <span data-lang="en">Anything involving standard parameters, formats, or vendor curves must be looked up, not written from memory. Citation priority: ITU-R / SMPTE / ICC / W3C / vendor official docs.</span>
+            </p>
           </div>
-          <div class="note">最重要的一条纪律：<b>「示意算法」和「真实测量」必须在页面里分清楚</b>。读者要能判断哪些数字可以引用，哪些只是为了建立直觉。</div>
+          <div class="note">
+            <span data-lang="zh">最重要的一条纪律：<b>「示意算法」和「真实测量」必须在页面里分清楚</b>。读者要能判断哪些数字可以引用，哪些只是为了建立直觉。</span>
+            <span data-lang="en">The most important rule: <b>"illustrative algorithm" and "real measurement" must be clearly separated on the page</b>. Readers need to tell which numbers can be cited and which exist only to build intuition.</span>
+          </div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <h4>必须查证的数据</h4>
-            <p>CIE 1931 2° 色匹配函数（逐 5nm 的 x̄ ȳ z̄ 表）、D65/D50/A/F2 等光源光谱、ISO 18314-4 的同色异谱指数分级。这些直接写进了演示的计算核心，错一个数演示就不可信。</p>
+            <h4><span data-lang="zh">必须查证的数据</span><span data-lang="en">Data that must be verified</span></h4>
+            <p><span data-lang="zh">CIE 1931 2° 色匹配函数（逐 5nm 的 x̄ ȳ z̄ 表）、D65/D50/A/F2 等光源光谱、ISO 18314-4 的同色异谱指数分级。这些直接写进了演示的计算核心，错一个数演示就不可信。</span><span data-lang="en">The CIE 1931 2° color-matching functions (the x̄ ȳ z̄ table at 5nm steps), illuminant spectra for D65/D50/A/F2, and the ISO 18314-4 metamerism index grades. These go straight into the demo's computation core — one wrong number and the demo loses credibility.</span></p>
           </div>
           <div class="card">
-            <h4>标注为「示意」的部分</h4>
-            <p>演示里用三个高斯峰合成的光谱不是真实测量光谱，是为了让读者能拖动、能直观比较而设计的模型。页面里明确说明这是示意模型，避免被当成实测数据引用。</p>
+            <h4><span data-lang="zh">标注为「示意」的部分</span><span data-lang="en">The parts labeled "illustrative"</span></h4>
+            <p><span data-lang="zh">演示里用三个高斯峰合成的光谱不是真实测量光谱，是为了让读者能拖动、能直观比较而设计的模型。页面里明确说明这是示意模型，避免被当成实测数据引用。</span><span data-lang="en">The spectra synthesized from three Gaussian peaks in the demo aren't real measured spectra — they're a model designed to let readers drag and compare intuitively. The page states clearly that this is an illustrative model, to avoid it being cited as measured data.</span></p>
           </div>
         </div>
       </div>
@@ -522,18 +584,21 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第三阶段</span>
-            <h2>写大纲与章节结构</h2>
-            <p>用项目推荐的结构搭骨架：问题场景 → 核心直觉 → 基础定义 → 可交互演示 → 工作流落地 → 常见误区 → 资料来源。每段只讲一个要点，先讲「为什么」再讲「公式是什么」。</p>
+            <span class="phase-tag"><span data-lang="zh">第三阶段</span><span data-lang="en">Stage 3</span></span>
+            <h2><span data-lang="zh">写大纲与章节结构</span><span data-lang="en">Outlining and chapter structure</span></h2>
+            <p>
+              <span data-lang="zh">用项目推荐的结构搭骨架：问题场景 → 核心直觉 → 基础定义 → 可交互演示 → 工作流落地 → 常见误区 → 资料来源。每段只讲一个要点，先讲「为什么」再讲「公式是什么」。</span>
+              <span data-lang="en">Build the skeleton with the project's recommended structure: problem scenario → core intuition → basic definitions → interactive demo → workflow application → common misconceptions → sources. Each section makes one point, and explains "why" before "what the formula is".</span>
+            </p>
           </div>
         </div>
         <div class="steps">
-          <div class="step"><span class="n">1</span><div><h4>问题场景</h4><p>四个真实困惑（跨屏、打样、不同人看 OLED、相机偏色）先让读者认出自己被影响过。</p></div></div>
-          <div class="step"><span class="n">2</span><div><h4>核心直觉</h4><p>一句话点破：人眼把无穷维光谱压成三维 XYZ，所以无穷多种光谱可以同色。</p></div></div>
-          <div class="step"><span class="n">3</span><div><h4>基础定义</h4><p>只解释后文要用到的术语：三刺激值 / CMF、同色异谱匹配、Luther 条件。</p></div></div>
-          <div class="step"><span class="n">4</span><div><h4>五种失败</h4><p>把抽象概念拆成光源、观察者、视场、几何、相机五类可识别的失效场景。</p></div></div>
-          <div class="step"><span class="n">5–7</span><div><h4>两个交互演示 + 工作流落地</h4><p>演示 A 证明「不同光谱可同色」，演示 B 证明「换光源会失配」，再落到摄影/印刷/显示/HDR。</p></div></div>
-          <div class="step"><span class="n">8–10</span><div><h4>误区 + 资料来源</h4><p>澄清常见误解，列出可点击的权威链接收尾。</p></div></div>
+          <div class="step"><span class="n">1</span><div><h4><span data-lang="zh">问题场景</span><span data-lang="en">Problem scenario</span></h4><p><span data-lang="zh">四个真实困惑（跨屏、打样、不同人看 OLED、相机偏色）先让读者认出自己被影响过。</span><span data-lang="en">Four real confusions (cross-screen, proofing, different people on OLED, camera color shift) first get readers to recognize they've been affected.</span></p></div></div>
+          <div class="step"><span class="n">2</span><div><h4><span data-lang="zh">核心直觉</span><span data-lang="en">Core intuition</span></h4><p><span data-lang="zh">一句话点破：人眼把无穷维光谱压成三维 XYZ，所以无穷多种光谱可以同色。</span><span data-lang="en">One line lands it: the eye compresses an infinite-dimensional spectrum into three-dimensional XYZ, so infinitely many spectra can share a color.</span></p></div></div>
+          <div class="step"><span class="n">3</span><div><h4><span data-lang="zh">基础定义</span><span data-lang="en">Basic definitions</span></h4><p><span data-lang="zh">只解释后文要用到的术语：三刺激值 / CMF、同色异谱匹配、Luther 条件。</span><span data-lang="en">Only the terms used later: tristimulus values / CMF, metameric match, the Luther condition.</span></p></div></div>
+          <div class="step"><span class="n">4</span><div><h4><span data-lang="zh">五种失败</span><span data-lang="en">Five failures</span></h4><p><span data-lang="zh">把抽象概念拆成光源、观察者、视场、几何、相机五类可识别的失效场景。</span><span data-lang="en">Break the abstract concept into five recognizable failure cases: illuminant, observer, field of view, geometry, camera.</span></p></div></div>
+          <div class="step"><span class="n">5–7</span><div><h4><span data-lang="zh">两个交互演示 + 工作流落地</span><span data-lang="en">Two interactive demos + workflow application</span></h4><p><span data-lang="zh">演示 A 证明「不同光谱可同色」，演示 B 证明「换光源会失配」，再落到摄影/印刷/显示/HDR。</span><span data-lang="en">Demo A proves "different spectra can match", Demo B proves "changing the illuminant breaks the match", then it lands in photography / print / display / HDR.</span></p></div></div>
+          <div class="step"><span class="n">8–10</span><div><h4><span data-lang="zh">误区 + 资料来源</span><span data-lang="en">Misconceptions + sources</span></h4><p><span data-lang="zh">澄清常见误解，列出可点击的权威链接收尾。</span><span data-lang="en">Clear up common misunderstandings, and close with clickable authoritative links.</span></p></div></div>
         </div>
       </div>
     </section>
@@ -542,55 +607,67 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第四阶段</span>
-            <h2>做交互演示：最难也最容易翻车</h2>
-            <p>交互图表是为了建立直觉，不是让页面显得复杂。坐标轴、单位、刻度、曲线来源都要标清楚。这一阶段的两个坑，是整章花时间最多的地方。</p>
+            <span class="phase-tag"><span data-lang="zh">第四阶段</span><span data-lang="en">Stage 4</span></span>
+            <h2><span data-lang="zh">做交互演示：最难也最容易翻车</span><span data-lang="en">Building the demos: hardest and most failure-prone</span></h2>
+            <p>
+              <span data-lang="zh">交互图表是为了建立直觉，不是让页面显得复杂。坐标轴、单位、刻度、曲线来源都要标清楚。这一阶段的两个坑，是整章花时间最多的地方。</span>
+              <span data-lang="en">Interactive charts are for building intuition, not for making the page look complex. Axes, units, ticks, and curve sources all need to be labeled. The pitfalls in this stage took the most time of the whole chapter.</span>
+            </p>
           </div>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 1 · 演示 A 的匹配不对称</div>
+          <div class="ptitle"><span data-lang="zh">坑 1 · 演示 A 的匹配不对称</span><span data-lang="en">Pitfall 1 · Demo A's match is asymmetric</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>用 B 给一个看起来不鲜艳的颜色，让 A 去匹配，<b>怎么调都匹配不上</b>。</dd>
-            <dt>原因</dt>
-            <dd>A 用窄高斯峰、B 用宽高斯峰。振幅相同时，宽峰的积分能量是窄峰的 3–4 倍，A 永远追不上 B 的亮度。</dd>
-            <dt>修复</dt>
-            <dd>对高斯峰<b>按面积归一化</b>，让振幅直接等于总功率，宽窄峰就能对称匹配。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">用 B 给一个看起来不鲜艳的颜色，让 A 去匹配，<b>怎么调都匹配不上</b>。</span><span data-lang="en">Set a dull-looking color with B and ask A to match it, and <b>no amount of adjusting gets there</b>.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">A 用窄高斯峰、B 用宽高斯峰。振幅相同时，宽峰的积分能量是窄峰的 3–4 倍，A 永远追不上 B 的亮度。</span><span data-lang="en">A uses narrow Gaussian peaks, B uses wide ones. At equal amplitude, a wide peak's integrated energy is 3–4× a narrow peak's, so A can never catch up to B's brightness.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">对高斯峰<b>按面积归一化</b>，让振幅直接等于总功率，宽窄峰就能对称匹配。</span><span data-lang="en"><b>Area-normalize</b> the Gaussian peaks so amplitude equals total power directly, and wide and narrow peaks can match symmetrically.</span></dd>
           </dl>
-<pre><span class="cmt">// 改前：振幅相同，宽峰积分能量是窄峰的 3–4 倍 → A 永远追不上 B</span>
+<pre data-lang="zh"><span class="cmt">// 改前：振幅相同，宽峰积分能量是窄峰的 3–4 倍 → A 永远追不上 B</span>
 <span class="bad">sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w);</span>
 
 <span class="cmt">// 改后：按面积归一化，振幅 = 总功率，宽窄峰可对称匹配</span>
 <span class="good">const norm = 1 / (peak.w * Math.sqrt(2 * Math.PI));
 sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
+<pre data-lang="en"><span class="cmt">// Before: equal amplitude → a wide peak's integrated energy is 3–4× a narrow one → A never catches B</span>
+<span class="bad">sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w);</span>
+
+<span class="cmt">// After: area-normalize so amplitude = total power; wide/narrow peaks match symmetrically</span>
+<span class="good">const norm = 1 / (peak.w * Math.sqrt(2 * Math.PI));
+sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 2 · 「自动匹配」不等于一定匹配成功</div>
+          <div class="ptitle"><span data-lang="zh">坑 2 · 「自动匹配」不等于一定匹配成功</span><span data-lang="en">Pitfall 2 · "Auto-match" doesn't mean the match will succeed</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>演示 A 里有些颜色看起来并不鲜艳，但点击自动匹配后仍然只能逼近，读者会以为算法坏了。</dd>
-            <dt>原因</dt>
-            <dd>另一组光谱基函数只能做 <b>0–100 的非负加法</b>。精确解可能需要负峰值，或需要某个峰超过滑块上限。视觉上的「不鲜艳」不等于落在另一组光谱模型的可达 XYZ 范围内。</dd>
-            <dt>修复</dt>
-            <dd>按钮改成「尝试匹配」，失败状态改为「受光谱范围限制」，并把求解出的原始峰值显示给读者。交互演示不只要展示成功，也要解释失败为什么合理。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">演示 A 里有些颜色看起来并不鲜艳，但点击自动匹配后仍然只能逼近，读者会以为算法坏了。</span><span data-lang="en">Some colors in Demo A don't look saturated, yet clicking auto-match only gets close — readers assume the algorithm is broken.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">另一组光谱基函数只能做 <b>0–100 的非负加法</b>。精确解可能需要负峰值，或需要某个峰超过滑块上限。视觉上的「不鲜艳」不等于落在另一组光谱模型的可达 XYZ 范围内。</span><span data-lang="en">The other set of spectral basis functions can only do <b>non-negative addition over 0–100</b>. An exact solution might need a negative peak, or a peak beyond the slider's ceiling. "Looks dull" doesn't mean it falls inside the XYZ range the other spectral model can reach.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">按钮改成「尝试匹配」，失败状态改为「受光谱范围限制」，并把求解出的原始峰值显示给读者。交互演示不只要展示成功，也要解释失败为什么合理。</span><span data-lang="en">Rename the button "Try to match", change the failure state to "limited by spectral range", and show readers the raw solved peak values. An interactive demo should not only show success but also explain why failure is reasonable.</span></dd>
           </dl>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 3 · 演示 B 换光源后 ΔE 不够明显</div>
+          <div class="ptitle"><span data-lang="zh">坑 3 · 演示 B 换光源后 ΔE 不够明显</span><span data-lang="en">Pitfall 3 · Demo B's ΔE isn't dramatic enough after switching illuminant</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>换光源后两个样本的色差只有 ΔE≈1.7，肉眼几乎看不出，<b>失去教学冲击力</b>。</dd>
-            <dt>原因</dt>
-            <dd>样本反射率太平、太亮，对波长不够敏感，换光源时颜色变化被平均掉了。</dd>
-            <dt>修复</dt>
-            <dd>把样本 A 设计成<b>对波长高度选择性</b>（黄橙窄峰、低底噪），样本 B 用三个分离峰。结果：D65 下 ΔE=0.48（匹配），换到白炽灯 A 光源 ΔE=6.72、F2 荧光 ΔE=4.35、商用 LED ΔE=4.62（明显失配）。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">换光源后两个样本的色差只有 ΔE≈1.7，肉眼几乎看不出，<b>失去教学冲击力</b>。</span><span data-lang="en">After switching illuminant, the two samples differ by only ΔE≈1.7, barely visible to the eye — <b>losing the teaching impact</b>.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">样本反射率太平、太亮，对波长不够敏感，换光源时颜色变化被平均掉了。</span><span data-lang="en">The sample reflectances were too flat and too bright, not wavelength-selective enough, so the color change averaged out when the illuminant changed.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">把样本 A 设计成<b>对波长高度选择性</b>（黄橙窄峰、低底噪），样本 B 用三个分离峰。结果：D65 下 ΔE=0.48（匹配），换到白炽灯 A 光源 ΔE=6.72、F2 荧光 ΔE=4.35、商用 LED ΔE=4.62（明显失配）。</span><span data-lang="en">Make sample A <b>highly wavelength-selective</b> (a narrow yellow-orange peak, low noise floor) and give sample B three separated peaks. Result: ΔE=0.48 under D65 (matched), then ΔE=6.72 under incandescent A, 4.35 under F2 fluorescent, and 4.62 under a commercial LED (clearly mismatched).</span></dd>
           </dl>
         </div>
 
-        <div class="note">两条经验：关键公式要<b>单独命名成函数</b>（如 <code>buildSPD()</code>、<code>planckianSPD()</code>），不要写进绘图循环；演示的「成功」和「失败」都要能稳定复现，而且失败原因也要在界面上说清楚。</div>
+        <div class="note">
+          <span data-lang="zh">两条经验：关键公式要<b>单独命名成函数</b>（如 <code>buildSPD()</code>、<code>planckianSPD()</code>），不要写进绘图循环；演示的「成功」和「失败」都要能稳定复现，而且失败原因也要在界面上说清楚。</span>
+          <span data-lang="en">Two lessons: key formulas should be <b>named as separate functions</b> (like <code>buildSPD()</code>, <code>planckianSPD()</code>) rather than buried in the drawing loop; and both the demo's "success" and "failure" should reproduce reliably, with the reason for failure spelled out in the UI.</span>
+        </div>
       </div>
     </section>
 
@@ -598,50 +675,64 @@ sum += (amps[k] / 100) * gaussian(lam, peak.c, peak.w) * norm;</span></pre>
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第五阶段</span>
-            <h2>细节调整与移动端适配</h2>
-            <p>桌面端写完只是一半。多列布局、Canvas 高度、滑块溢出在手机上都会出问题，必须用 375px 宽度逐项核查。</p>
+            <span class="phase-tag"><span data-lang="zh">第五阶段</span><span data-lang="en">Stage 5</span></span>
+            <h2><span data-lang="zh">细节调整与移动端适配</span><span data-lang="en">Detail tuning and mobile adaptation</span></h2>
+            <p>
+              <span data-lang="zh">桌面端写完只是一半。多列布局、Canvas 高度、滑块溢出在手机上都会出问题，必须用 375px 宽度逐项核查。</span>
+              <span data-lang="en">Finishing the desktop version is only half the job. Multi-column layouts, Canvas height, and slider overflow all break on phones — you have to check each one at 375px width.</span>
+            </p>
           </div>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 4 · Canvas 在手机上塌成 150px</div>
+          <div class="ptitle"><span data-lang="zh">坑 4 · Canvas 在手机上塌成 150px</span><span data-lang="en">Pitfall 4 · Canvas collapses to 150px on mobile</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>图表在手机上只渲染成一条窄带，高度约 150px。</dd>
-            <dt>原因</dt>
-            <dd><code>canvas { height: 100% }</code> 需要父元素有<b>明确的 height</b> 才能解析；父元素只有 <code>min-height</code> 时百分比高度失效，canvas 回退到 HTML 默认的 150px。</dd>
-            <dt>修复</dt>
-            <dd>把父元素的 <code>min-height</code> 改成明确的 <code>height</code>（或让父元素进入 grid/flex 由布局给出确定高度）。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">图表在手机上只渲染成一条窄带，高度约 150px。</span><span data-lang="en">The chart renders as a thin strip on mobile, about 150px tall.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh"><code>canvas { height: 100% }</code> 需要父元素有<b>明确的 height</b> 才能解析；父元素只有 <code>min-height</code> 时百分比高度失效，canvas 回退到 HTML 默认的 150px。</span><span data-lang="en"><code>canvas { height: 100% }</code> needs the parent to have an <b>explicit height</b> to resolve; when the parent only has <code>min-height</code>, the percentage height fails and the canvas falls back to HTML's default 150px.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">把父元素的 <code>min-height</code> 改成明确的 <code>height</code>（或让父元素进入 grid/flex 由布局给出确定高度）。</span><span data-lang="en">Change the parent's <code>min-height</code> to an explicit <code>height</code> (or put the parent in a grid/flex so the layout gives it a definite height).</span></dd>
           </dl>
-<pre><span class="cmt">/* 失效：父元素只有 min-height，canvas 塌回 150px */</span>
+<pre data-lang="zh"><span class="cmt">/* 失效：父元素只有 min-height，canvas 塌回 150px */</span>
 <span class="bad">.canvas-box { min-height: 240px; }
 canvas { height: 100%; }</span>
 
 <span class="cmt">/* 有效：父元素给明确 height，height:100% 才能解析 */</span>
 <span class="good">.canvas-box { height: 240px; }</span></pre>
+<pre data-lang="en"><span class="cmt">/* Fails: parent only has min-height, canvas collapses to 150px */</span>
+<span class="bad">.canvas-box { min-height: 240px; }
+canvas { height: 100%; }</span>
+
+<span class="cmt">/* Works: parent has an explicit height, so height:100% resolves */</span>
+<span class="good">.canvas-box { height: 240px; }</span></pre>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 5 · 媒体查询里的选择器优先级</div>
+          <div class="ptitle"><span data-lang="zh">坑 5 · 媒体查询里的选择器优先级</span><span data-lang="en">Pitfall 5 · Selector specificity in media queries</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>媒体查询里写了单列规则，但手机上多列布局没折叠。</dd>
-            <dt>原因</dt>
-            <dd>原规则是 <code>.parent .child</code>（两级），媒体查询里只写 <code>.child</code>（一级），优先级更低，覆盖不掉。</dd>
-            <dt>修复</dt>
-            <dd>媒体查询里用<b>同等或更高优先级</b>的选择器。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">媒体查询里写了单列规则，但手机上多列布局没折叠。</span><span data-lang="en">A single-column rule is written in the media query, but the multi-column layout doesn't collapse on mobile.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">原规则是 <code>.parent .child</code>（两级），媒体查询里只写 <code>.child</code>（一级），优先级更低，覆盖不掉。</span><span data-lang="en">The original rule is <code>.parent .child</code> (two levels); the media query only writes <code>.child</code> (one level), which has lower specificity and can't override it.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">媒体查询里用<b>同等或更高优先级</b>的选择器。</span><span data-lang="en">Use a selector of <b>equal or higher specificity</b> in the media query.</span></dd>
           </dl>
-<pre><span class="cmt">/* 不生效：优先级低于原规则 */</span>
+<pre data-lang="zh"><span class="cmt">/* 不生效：优先级低于原规则 */</span>
 <span class="bad">@media (max-width:560px){ .summary-chain{ grid-template-columns:1fr; } }</span>
 
 <span class="cmt">/* 生效：保持同等优先级 */</span>
 <span class="good">@media (max-width:560px){ .gamma-summary .summary-chain{ grid-template-columns:1fr; } }</span></pre>
+<pre data-lang="en"><span class="cmt">/* Doesn't apply: lower specificity than the original rule */</span>
+<span class="bad">@media (max-width:560px){ .summary-chain{ grid-template-columns:1fr; } }</span>
+
+<span class="cmt">/* Applies: keeps the same specificity */</span>
+<span class="good">@media (max-width:560px){ .gamma-summary .summary-chain{ grid-template-columns:1fr; } }</span></pre>
         </div>
 
         <div class="card" style="margin-top:18px">
-          <h4>375px 发布前四项核查</h4>
-          <p>1. 多列布局是否折叠为单列。&nbsp; 2. Canvas 实际渲染高度是否接近设计值，而不是 150px。&nbsp; 3. readout / tooltip 是否遮挡图表主体（加 <code>max-width</code> 限制）。&nbsp; 4. <code>input[type=range]</code> 是否在容器内、没有横向溢出（窄屏要 <code>min-width:0; width:100%</code>）。</p>
+          <h4><span data-lang="zh">375px 发布前四项核查</span><span data-lang="en">Four pre-publish checks at 375px</span></h4>
+          <p><span data-lang="zh">1. 多列布局是否折叠为单列。&nbsp; 2. Canvas 实际渲染高度是否接近设计值，而不是 150px。&nbsp; 3. readout / tooltip 是否遮挡图表主体（加 <code>max-width</code> 限制）。&nbsp; 4. <code>input[type=range]</code> 是否在容器内、没有横向溢出（窄屏要 <code>min-width:0; width:100%</code>）。</span><span data-lang="en">1. Do multi-column layouts collapse to one column? &nbsp; 2. Is the Canvas's actual rendered height close to the design value, not 150px? &nbsp; 3. Do readouts / tooltips cover the chart body (add a <code>max-width</code> limit)? &nbsp; 4. Is <code>input[type=range]</code> inside its container without horizontal overflow (narrow screens need <code>min-width:0; width:100%</code>)?</span></p>
         </div>
       </div>
     </section>
@@ -650,68 +741,74 @@ canvas { height: 100%; }</span>
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第六阶段</span>
-            <h2>和 AI 协作：让它快，但不要让它定稿</h2>
-            <p>这个项目不是让 AI 一次性生成网页，而是把 AI 当成「研究助理 + 前端执行者 + 反复修改的搭档」。真正决定质量的，是人如何指出问题、要求查证、并把含糊的反馈变成可验证的修改项。</p>
+            <span class="phase-tag"><span data-lang="zh">第六阶段</span><span data-lang="en">Stage 6</span></span>
+            <h2><span data-lang="zh">和 AI 协作：让它快，但不要让它定稿</span><span data-lang="en">Working with AI: let it be fast, but don't let it have the final say</span></h2>
+            <p>
+              <span data-lang="zh">这个项目不是让 AI 一次性生成网页，而是把 AI 当成「研究助理 + 前端执行者 + 反复修改的搭档」。真正决定质量的，是人如何指出问题、要求查证、并把含糊的反馈变成可验证的修改项。</span>
+              <span data-lang="en">This project wasn't about having AI generate the page in one shot, but treating AI as a "research assistant + front-end executor + iteration partner". What really decides quality is how the human points out problems, demands verification, and turns vague feedback into verifiable edits.</span>
+            </p>
           </div>
-          <div class="note">最有效的协作方式不是写一个很长的万能 prompt，而是持续用浏览器批注指出：哪里看不懂、哪里不严谨、哪里不符合专业语气。</div>
+          <div class="note">
+            <span data-lang="zh">最有效的协作方式不是写一个很长的万能 prompt，而是持续用浏览器批注指出：哪里看不懂、哪里不严谨、哪里不符合专业语气。</span>
+            <span data-lang="en">The most effective collaboration isn't one long do-everything prompt, but continuously using browser annotations to point out what's unclear, what's not rigorous, and what doesn't match a professional tone.</span>
+          </div>
         </div>
 
         <div class="grid-3">
           <div class="card">
-            <div class="kicker">AI 适合做</div>
-            <h4>搭骨架和快速试错</h4>
-            <p>先让 AI 把章节结构、交互控件、Canvas 图表、响应式布局做出来。第一版不追求完美，重点是尽快变成可以看的页面。</p>
+            <div class="kicker"><span data-lang="zh">AI 适合做</span><span data-lang="en">AI is good at</span></div>
+            <h4><span data-lang="zh">搭骨架和快速试错</span><span data-lang="en">Scaffolding and fast iteration</span></h4>
+            <p><span data-lang="zh">先让 AI 把章节结构、交互控件、Canvas 图表、响应式布局做出来。第一版不追求完美，重点是尽快变成可以看的页面。</span><span data-lang="en">Let AI first build the chapter structure, interactive controls, Canvas charts, and responsive layout. The first version doesn't aim for perfect — the point is to reach a viewable page fast.</span></p>
           </div>
           <div class="card">
-            <div class="kicker">人必须做</div>
-            <h4>判断内容是否成立</h4>
-            <p>PQ / HLG 曲线、CIE 马蹄图、Luther 条件、EDID、gain map 这类内容不能只靠 AI 记忆。关键数据要回到标准、厂商文档或论文。</p>
+            <div class="kicker"><span data-lang="zh">人必须做</span><span data-lang="en">The human must do</span></div>
+            <h4><span data-lang="zh">判断内容是否成立</span><span data-lang="en">Judging whether the content holds</span></h4>
+            <p><span data-lang="zh">PQ / HLG 曲线、CIE 马蹄图、Luther 条件、EDID、gain map 这类内容不能只靠 AI 记忆。关键数据要回到标准、厂商文档或论文。</span><span data-lang="en">Content like PQ / HLG curves, the CIE horseshoe, the Luther condition, EDID, and gain maps can't rely on AI memory alone. Key data goes back to standards, vendor docs, or papers.</span></p>
           </div>
           <div class="card">
-            <div class="kicker">反复做</div>
-            <h4>用批注压实页面</h4>
-            <p>「这个图为什么从中间开始」「坐标轴没有数字」「公式看不懂」「文案太像 AI」这类具体批注，比抽象地说「优化一下」有效得多。</p>
+            <div class="kicker"><span data-lang="zh">反复做</span><span data-lang="en">Done repeatedly</span></div>
+            <h4><span data-lang="zh">用批注压实页面</span><span data-lang="en">Tightening the page with annotations</span></h4>
+            <p><span data-lang="zh">「这个图为什么从中间开始」「坐标轴没有数字」「公式看不懂」「文案太像 AI」这类具体批注，比抽象地说「优化一下」有效得多。</span><span data-lang="en">Concrete annotations like "why does this chart start from the middle", "the axis has no numbers", "this formula is unreadable", "the copy sounds too much like AI" are far more effective than vaguely saying "improve it".</span></p>
           </div>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">经验 1 · 让 AI 先解释，再让它改页面</div>
+          <div class="ptitle"><span data-lang="zh">经验 1 · 让 AI 先解释，再让它改页面</span><span data-lang="en">Lesson 1 · Have AI explain first, then change the page</span></div>
           <dl>
-            <dt>做法</dt>
-            <dd>遇到争议点时，先问「为什么会这样」，再让 AI 修改。比如演示 A 里淡色也匹配失败，先确认原因是非负峰值约束，而不是直接改成「看起来能匹配」。</dd>
-            <dt>价值</dt>
-            <dd>这样能避免把真实限制藏掉。好的科普页面不是把所有问题美化成成功，而是让读者知道失败在物理上为什么合理。</dd>
+            <dt><span data-lang="zh">做法</span><span data-lang="en">Approach</span></dt>
+            <dd><span data-lang="zh">遇到争议点时，先问「为什么会这样」，再让 AI 修改。比如演示 A 里淡色也匹配失败，先确认原因是非负峰值约束，而不是直接改成「看起来能匹配」。</span><span data-lang="en">On a contested point, ask "why does this happen" first, then have AI make changes. For example, when a pale color also fails to match in Demo A, first confirm the cause is the non-negative peak constraint, instead of just changing it to "looks like it matches".</span></dd>
+            <dt><span data-lang="zh">价值</span><span data-lang="en">Value</span></dt>
+            <dd><span data-lang="zh">这样能避免把真实限制藏掉。好的科普页面不是把所有问题美化成成功，而是让读者知道失败在物理上为什么合理。</span><span data-lang="en">This avoids hiding real constraints. A good explainer page doesn't dress every problem up as success; it lets readers see why failure is physically reasonable.</span></dd>
           </dl>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">经验 2 · 交互图表必须可读，不只是可动</div>
+          <div class="ptitle"><span data-lang="zh">经验 2 · 交互图表必须可读，不只是可动</span><span data-lang="en">Lesson 2 · Interactive charts must be readable, not just movable</span></div>
           <dl>
-            <dt>常见问题</dt>
-            <dd>曲线有了，但没有坐标轴数字；图能拖动，但横纵比例不对；模式切换按钮有了，但读者不知道当前看的是哪一种模式。</dd>
-            <dt>改法</dt>
-            <dd>每个交互图表都要回答三件事：X 轴是什么、Y 轴是什么、当前模式是什么。PQ / HLG / SDR 同图对比时，必须写明是线性亮度、对数亮度，还是分段线性亮度。</dd>
+            <dt><span data-lang="zh">常见问题</span><span data-lang="en">Common issue</span></dt>
+            <dd><span data-lang="zh">曲线有了，但没有坐标轴数字；图能拖动，但横纵比例不对；模式切换按钮有了，但读者不知道当前看的是哪一种模式。</span><span data-lang="en">There's a curve but no axis numbers; the chart is draggable but the aspect ratio is wrong; there's a mode-switch button but readers don't know which mode they're looking at.</span></dd>
+            <dt><span data-lang="zh">改法</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">每个交互图表都要回答三件事：X 轴是什么、Y 轴是什么、当前模式是什么。PQ / HLG / SDR 同图对比时，必须写明是线性亮度、对数亮度，还是分段线性亮度。</span><span data-lang="en">Every interactive chart must answer three things: what's the X axis, what's the Y axis, and what's the current mode. When comparing PQ / HLG / SDR on one chart, state whether it's linear, log, or piecewise-linear luminance.</span></dd>
           </dl>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">经验 3 · 公式不要只「写出来」，要排成读者能读的形状</div>
+          <div class="ptitle"><span data-lang="zh">经验 3 · 公式不要只「写出来」，要排成读者能读的形状</span><span data-lang="en">Lesson 3 · Don't just "write out" a formula — lay it out so readers can read it</span></div>
           <dl>
-            <dt>问题</dt>
-            <dd>ST 2084、HLG、OOTF 这类公式如果挤成一行，读者只会跳过。AI 很容易把公式当成普通文本堆上去。</dd>
-            <dt>改法</dt>
-            <dd>把公式拆成步骤：先定义输入输出，再列分段条件，再列常数。需要时用「先算 N」「再算亮度比例」这样的短句代替一整条长公式。</dd>
+            <dt><span data-lang="zh">问题</span><span data-lang="en">Problem</span></dt>
+            <dd><span data-lang="zh">ST 2084、HLG、OOTF 这类公式如果挤成一行，读者只会跳过。AI 很容易把公式当成普通文本堆上去。</span><span data-lang="en">Formulas like ST 2084, HLG, and OOTF, if crammed into one line, just get skipped. AI tends to dump formulas in as ordinary text.</span></dd>
+            <dt><span data-lang="zh">改法</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">把公式拆成步骤：先定义输入输出，再列分段条件，再列常数。需要时用「先算 N」「再算亮度比例」这样的短句代替一整条长公式。</span><span data-lang="en">Break the formula into steps: define inputs and outputs first, then list the piecewise conditions, then the constants. Where it helps, use short phrases like "first compute N", "then the luminance ratio" instead of one long formula.</span></dd>
           </dl>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">经验 4 · 文案要克制，少用漂亮但空的比喻</div>
+          <div class="ptitle"><span data-lang="zh">经验 4 · 文案要克制，少用漂亮但空的比喻</span><span data-lang="en">Lesson 4 · Keep the copy restrained; avoid pretty but empty metaphors</span></div>
           <dl>
-            <dt>问题</dt>
-            <dd>「时代的新痛」「奥秘」「神器」「物理学的代价」这类说法看起来顺，但会让技术页面显得不可信。</dd>
-            <dt>改法</dt>
-            <dd>把比喻改成可验证的描述：例如「OLED / QD-OLED 显示中的观察者差异」「窄峰原色会放大观察者同色异谱」。标题也要直接告诉读者这一节解决什么问题。</dd>
+            <dt><span data-lang="zh">问题</span><span data-lang="en">Problem</span></dt>
+            <dd><span data-lang="zh">「时代的新痛」「奥秘」「神器」「物理学的代价」这类说法看起来顺，但会让技术页面显得不可信。</span><span data-lang="en">Phrases like "the new pain of our era", "mystery", "killer tool", or "the price of physics" read smoothly but make a technical page feel untrustworthy.</span></dd>
+            <dt><span data-lang="zh">改法</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">把比喻改成可验证的描述：例如「OLED / QD-OLED 显示中的观察者差异」「窄峰原色会放大观察者同色异谱」。标题也要直接告诉读者这一节解决什么问题。</span><span data-lang="en">Turn metaphors into verifiable descriptions: e.g. "observer differences on OLED / QD-OLED displays", "narrow-band primaries amplify observer metamerism". Headings should also tell readers directly what problem the section solves.</span></dd>
           </dl>
         </div>
       </div>
@@ -721,39 +818,42 @@ canvas { height: 100%; }</span>
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">第七阶段</span>
-            <h2>收尾与发布</h2>
-            <p>文案语气要克制、可验证，避免营销腔和 AI 腔。最后过一遍发布清单，确认入口接好。</p>
+            <span class="phase-tag"><span data-lang="zh">第七阶段</span><span data-lang="en">Stage 7</span></span>
+            <h2><span data-lang="zh">收尾与发布</span><span data-lang="en">Wrapping up and publishing</span></h2>
+            <p>
+              <span data-lang="zh">文案语气要克制、可验证，避免营销腔和 AI 腔。最后过一遍发布清单，确认入口接好。</span>
+              <span data-lang="en">The tone should be restrained and verifiable, avoiding marketing-speak and AI-speak. Finally, run through the publish checklist and confirm the entry points are wired up.</span>
+            </p>
           </div>
         </div>
         <div class="gb-grid">
           <div class="gb good">
-            <h4>优先用</h4>
+            <h4><span data-lang="zh">优先用</span><span data-lang="en">Prefer</span></h4>
             <ul>
-              <li>观察者差异 / 明显偏差 / 显著上升</li>
-              <li>光谱限制 / 设计特征</li>
-              <li>形成完整工作链路</li>
+              <li><span data-lang="zh">观察者差异 / 明显偏差 / 显著上升</span><span data-lang="en">observer difference / clear deviation / significant rise</span></li>
+              <li><span data-lang="zh">光谱限制 / 设计特征</span><span data-lang="en">spectral limitation / design characteristic</span></li>
+              <li><span data-lang="zh">形成完整工作链路</span><span data-lang="en">forms a complete workflow chain</span></li>
             </ul>
           </div>
           <div class="gb bad">
-            <h4>避免用</h4>
+            <h4><span data-lang="zh">避免用</span><span data-lang="en">Avoid</span></h4>
             <ul>
-              <li>时代的新痛 / 踩坑翻车</li>
-              <li>奥秘 / 玄学 / 神器救命</li>
-              <li>突然连成一条线 / 物理学的代价</li>
+              <li><span data-lang="zh">时代的新痛 / 踩坑翻车</span><span data-lang="en">the new pain of our era / hitting potholes</span></li>
+              <li><span data-lang="zh">奥秘 / 玄学 / 神器救命</span><span data-lang="en">mystery / dark art / life-saving killer tool</span></li>
+              <li><span data-lang="zh">突然连成一条线 / 物理学的代价</span><span data-lang="en">suddenly connects into a line / the price of physics</span></li>
             </ul>
           </div>
         </div>
-        <h3 style="margin:24px 0 0">发布前清单</h3>
+        <h3 style="margin:24px 0 0"><span data-lang="zh">发布前清单</span><span data-lang="en">Pre-publish checklist</span></h3>
         <div class="checklist">
-          <div>页面标题和 meta description 已更新</div>
-          <div>所有资料来源链接可点击</div>
-          <div>图表坐标轴、单位、刻度完整</div>
-          <div>交互控件默认状态清晰</div>
-          <div>移动端无文字溢出或按钮挤压</div>
-          <div>首页工作流入口已接好</div>
-          <div>JS 改完跑过一次语法检查</div>
-          <div><code>git status</code> 只含本次要发布的文件</div>
+          <div><span data-lang="zh">页面标题和 meta description 已更新</span><span data-lang="en">Page title and meta description updated</span></div>
+          <div><span data-lang="zh">所有资料来源链接可点击</span><span data-lang="en">All source links are clickable</span></div>
+          <div><span data-lang="zh">图表坐标轴、单位、刻度完整</span><span data-lang="en">Chart axes, units, and ticks are complete</span></div>
+          <div><span data-lang="zh">交互控件默认状态清晰</span><span data-lang="en">Interactive controls have a clear default state</span></div>
+          <div><span data-lang="zh">移动端无文字溢出或按钮挤压</span><span data-lang="en">No text overflow or button crowding on mobile</span></div>
+          <div><span data-lang="zh">首页工作流入口已接好</span><span data-lang="en">Homepage workflow entry is wired up</span></div>
+          <div><span data-lang="zh">JS 改完跑过一次语法检查</span><span data-lang="en">Ran a syntax check after editing JS</span></div>
+          <div><span data-lang="zh"><code>git status</code> 只含本次要发布的文件</span><span data-lang="en"><code>git status</code> contains only the files for this release</span></div>
         </div>
       </div>
     </section>
@@ -762,23 +862,26 @@ canvas { height: 100%; }</span>
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">收尾</span>
-            <h2>可复用的方法论</h2>
-            <p>把整章的流程压缩成三句话，下一章可以直接套用。</p>
+            <span class="phase-tag"><span data-lang="zh">收尾</span><span data-lang="en">Wrap-up</span></span>
+            <h2><span data-lang="zh">可复用的方法论</span><span data-lang="en">A reusable method</span></h2>
+            <p>
+              <span data-lang="zh">把整章的流程压缩成三句话，下一章可以直接套用。</span>
+              <span data-lang="en">Compress the whole chapter's process into three sentences, ready to apply to the next one.</span>
+            </p>
           </div>
         </div>
         <div class="takeaways">
           <div class="takeaway">
-            <div class="big">先有问题<br>再有内容</div>
-            <p>每章开头是一个真实困惑，不是名词定义。选题阶段就把它挂到工作流上。</p>
+            <div class="big"><span data-lang="zh">先有问题<br>再有内容</span><span data-lang="en">Question first,<br>content second</span></div>
+            <p><span data-lang="zh">每章开头是一个真实困惑，不是名词定义。选题阶段就把它挂到工作流上。</span><span data-lang="en">Each chapter opens with a real confusion, not a definition. Hang it onto the workflow at the topic stage.</span></p>
           </div>
           <div class="takeaway">
-            <div class="big">先有直觉<br>再有公式</div>
-            <p>交互演示先让读者看到现象，再给计算模型。示意算法和真实数据要分清。</p>
+            <div class="big"><span data-lang="zh">先有直觉<br>再有公式</span><span data-lang="en">Intuition first,<br>formula second</span></div>
+            <p><span data-lang="zh">交互演示先让读者看到现象，再给计算模型。示意算法和真实数据要分清。</span><span data-lang="en">Interactive demos show the phenomenon first, then the computational model. Keep illustrative algorithms and real data separate.</span></p>
           </div>
           <div class="takeaway">
-            <div class="big">先在手机上<br>看一眼再发布</div>
-            <p>375px 宽度逐项核查 Canvas 高度、网格折叠、滑块溢出，再走发布清单。</p>
+            <div class="big"><span data-lang="zh">先在手机上<br>看一眼再发布</span><span data-lang="en">Take a look on mobile<br>before publishing</span></div>
+            <p><span data-lang="zh">375px 宽度逐项核查 Canvas 高度、网格折叠、滑块溢出，再走发布清单。</span><span data-lang="en">At 375px width, check Canvas height, grid collapse, and slider overflow one by one, then run the publish checklist.</span></p>
           </div>
         </div>
       </div>
@@ -788,23 +891,26 @@ canvas { height: 100%; }</span>
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">参考</span>
-            <h2>相关文档</h2>
-            <p>这页是经验复盘，落地规范都写在项目文档里，新章节请以文档为准。</p>
+            <span class="phase-tag"><span data-lang="zh">参考</span><span data-lang="en">References</span></span>
+            <h2><span data-lang="zh">相关文档</span><span data-lang="en">Related docs</span></h2>
+            <p>
+              <span data-lang="zh">这页是经验复盘，落地规范都写在项目文档里，新章节请以文档为准。</span>
+              <span data-lang="en">This page is an experience retrospective; the actionable rules live in the project docs — follow the docs for new chapters.</span>
+            </p>
           </div>
         </div>
         <div class="source-list">
           <a href="EDITING_GUIDE.md">
-            EDITING_GUIDE.md · 编辑规范
-            <small>内容定位、文章结构、交互图表规范、移动端适配经验、文案语气、发布清单的完整约定</small>
+            <span data-lang="zh">EDITING_GUIDE.md · 编辑规范</span><span data-lang="en">EDITING_GUIDE.md · Editorial guidelines</span>
+            <small><span data-lang="zh">内容定位、文章结构、交互图表规范、移动端适配经验、文案语气、发布清单的完整约定</span><span data-lang="en">The full conventions for content positioning, article structure, interactive-chart rules, mobile-adaptation lessons, tone, and the publish checklist</span></small>
           </a>
           <a href="metamerism.html">
-            同色异谱章节 · 本文的贯穿案例
-            <small>看成品如何落地：四个问题场景、两个交互演示、五种失败、工作流落地</small>
+            <span data-lang="zh">同色异谱章节 · 本文的贯穿案例</span><span data-lang="en">The metamerism chapter · the running example here</span>
+            <small><span data-lang="zh">看成品如何落地：四个问题场景、两个交互演示、五种失败、工作流落地</span><span data-lang="en">See how the finished piece lands: four problem scenarios, two interactive demos, five failures, and workflow application</span></small>
           </a>
           <a href="index.html">
-            首页 · 工作流管线
-            <small>基础 → 拍摄 → 后期 → 显示，看新章节如何接入整体导航</small>
+            <span data-lang="zh">首页 · 工作流管线</span><span data-lang="en">Home · workflow pipeline</span>
+            <small><span data-lang="zh">基础 → 拍摄 → 后期 → 显示，看新章节如何接入整体导航</span><span data-lang="en">Basics → Capture → Post → Display — see how a new chapter plugs into the overall navigation</span></small>
           </a>
         </div>
       </div>
@@ -812,7 +918,7 @@ canvas { height: 100%; }</span>
   </main>
 
   <footer>
-    <p>影像色彩与显示技术指南 · <a href="index.html">返回首页</a></p>
+    <p><span data-lang="zh">影像色彩与显示技术指南 · <a href="index.html">返回首页</a></span><span data-lang="en">Imaging Color &amp; Display Guide · <a href="index.html">Back to home</a></span></p>
   </footer>
 
   <script>
@@ -822,6 +928,33 @@ canvas { height: 100%; }</span>
       const p = max > 0 ? h.scrollTop / max : 0;
       document.getElementById("progress").style.transform = `scaleX(${p})`;
     });
+
+    // Language toggle (shared key across the site so the choice persists between pages)
+    (function () {
+      const KEY = "guideLang";
+      const TITLE = {
+        zh: "一个章节是怎么做出来的 | 影像色彩与显示技术指南",
+        en: "How a Chapter Gets Made | Imaging Color & Display Guide"
+      };
+      const DESC = {
+        zh: "以同色异谱章节为例，复盘一个新章节从确定选题方向、资料核对、写大纲、AI 协作、交互演示、移动端适配到发布的完整制作流程与真实踩坑经验。",
+        en: "Using the metamerism chapter as a worked example, a full retrospective of how a new chapter goes from picking the topic, fact-checking sources, outlining, AI collaboration, interactive demos, and mobile adaptation to publishing — and the real pitfalls along the way."
+      };
+      const meta = document.querySelector('meta[name="description"]');
+      function apply(lang) {
+        const code = lang === "en" ? "en" : "zh-CN";
+        document.documentElement.lang = code;
+        document.title = lang === "en" ? TITLE.en : TITLE.zh;
+        if (meta) meta.setAttribute("content", lang === "en" ? DESC.en : DESC.zh);
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+      }
+      let saved = "zh";
+      try { saved = localStorage.getItem(KEY) || "zh"; } catch (e) {}
+      apply(saved === "en" ? "en" : "zh");
+      document.querySelectorAll(".lang-toggle .seg").forEach(function (b) {
+        b.addEventListener("click", function () { apply(b.dataset.set); });
+      });
+    })();
   </script>
 </body>
 </html>

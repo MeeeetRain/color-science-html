@@ -60,10 +60,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brand { font-weight: 780; flex: none; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; justify-content: flex-end; }
+    .links { display: flex; gap: 6px; flex: 0 1 auto; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 12px;
       border-radius: 999px;
@@ -75,6 +77,40 @@
       color: var(--ink);
       background: rgba(255,255,255,.08);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      min-height: 0;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #0a1014;
+      font-weight: 780;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
     main { overflow: hidden; }
     section {
       padding: 72px 20px;
@@ -1037,18 +1073,24 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#intro">问题</a>
-        <a href="#concept">直觉</a>
-        <a href="#defs">定义</a>
-        <a href="#types">五种失败</a>
-        <a href="#modern-display">新显示</a>
-        <a href="#demo-a">演示 A</a>
-        <a href="#demo-b">演示 B</a>
-        <a href="#workflow">工作流</a>
-        <a href="#myths">误区</a>
-        <a href="#sources">来源</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#intro"><span data-lang="zh">问题</span><span data-lang="en">Problem</span></a>
+          <a href="#concept"><span data-lang="zh">直觉</span><span data-lang="en">Intuition</span></a>
+          <a href="#defs"><span data-lang="zh">定义</span><span data-lang="en">Defs</span></a>
+          <a href="#types"><span data-lang="zh">五种失败</span><span data-lang="en">5 failures</span></a>
+          <a href="#modern-display"><span data-lang="zh">新显示</span><span data-lang="en">New displays</span></a>
+          <a href="#demo-a"><span data-lang="zh">演示 A</span><span data-lang="en">Demo A</span></a>
+          <a href="#demo-b"><span data-lang="zh">演示 B</span><span data-lang="en">Demo B</span></a>
+          <a href="#workflow"><span data-lang="zh">工作流</span><span data-lang="en">Workflow</span></a>
+          <a href="#myths"><span data-lang="zh">误区</span><span data-lang="en">Myths</span></a>
+          <a href="#sources"><span data-lang="zh">来源</span><span data-lang="en">Sources</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -1057,8 +1099,8 @@
     <section class="hero" id="top">
       <div class="wrap">
         <div class="eyebrow">Metamerism</div>
-        <h1>同色异谱：不同光谱，同一颜色</h1>
-        <p class="lead">人眼把无穷维光谱压缩成三维 XYZ。所以无穷多种"不一样的光"，可以在眼里变成"同一个颜色"。这是色彩管理一切难题的根，也是为什么手机屏看色卡总差一点、印刷打样到办公室就变色、不同人看同一台 OLED 颜色不一致。</p>
+        <h1><span data-lang="zh">同色异谱：不同光谱，同一颜色</span><span data-lang="en">Metamerism: different spectra, the same color</span></h1>
+        <p class="lead"><span data-lang="zh">人眼把无穷维光谱压缩成三维 XYZ。所以无穷多种"不一样的光"，可以在眼里变成"同一个颜色"。这是色彩管理一切难题的根，也是为什么手机屏看色卡总差一点、印刷打样到办公室就变色、不同人看同一台 OLED 颜色不一致。</span><span data-lang="en">The eye compresses an infinite-dimensional spectrum into three-dimensional XYZ. So infinitely many "different lights" can become "the same color" to the eye. This is the root of every color-management problem — and why a color chart never quite looks right on a phone, why a print proof shifts color once it reaches the office, and why different people see the same OLED differently.</span></p>
       </div>
     </section>
 
@@ -1066,31 +1108,31 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. 问题场景：你已经被它影响了</h2>
-            <p>下面四个困惑，本质都是同色异谱的不同侧面。先认出它们，再回头看原理就会顺很多。</p>
+            <h2><span data-lang="zh">1. 问题场景：你已经被它影响了</span><span data-lang="en">1. Problem scenarios: it's already affecting you</span></h2>
+            <p><span data-lang="zh">下面四个困惑，本质都是同色异谱的不同侧面。先认出它们，再回头看原理就会顺很多。</span><span data-lang="en">The four confusions below are all different faces of metamerism. Recognize them first, and the theory afterward goes down much easier.</span></p>
           </div>
-          <div class="note">这一章讨论的不是单纯的设备误差，而是<b>颜色匹配成立所依赖的条件</b>。当光源、观察者或测量方式变化时，原本成立的匹配可能失效。</div>
+          <div class="note"><span data-lang="zh">这一章讨论的不是单纯的设备误差，而是<b>颜色匹配成立所依赖的条件</b>。当光源、观察者或测量方式变化时，原本成立的匹配可能失效。</span><span data-lang="en">This chapter isn't about plain device error, but about <b>the conditions a color match depends on</b>. When the illuminant, observer, or measurement method changes, a match that once held can break.</span></div>
         </div>
         <div class="grid-4">
           <div class="scenario">
             <span class="ico">📱</span>
-            <h4>跨屏不一致</h4>
-            <p>同一张图在 iPhone OLED 和 MacBook LCD 上，颜色就是不一样——而且不是简单的色温偏移。</p>
+            <h4><span data-lang="zh">跨屏不一致</span><span data-lang="en">Cross-screen inconsistency</span></h4>
+            <p><span data-lang="zh">同一张图在 iPhone OLED 和 MacBook LCD 上，颜色就是不一样——而且不是简单的色温偏移。</span><span data-lang="en">The same image just looks different on an iPhone OLED versus a MacBook LCD — and it isn't a simple color-temperature shift.</span></p>
           </div>
           <div class="scenario">
             <span class="ico">🖨️</span>
-            <h4>打样变色</h4>
-            <p>印刷打样在 D50 灯箱里完美还原，搬到办公室白炽灯下样张就和原稿对不上了。</p>
+            <h4><span data-lang="zh">打样变色</span><span data-lang="en">Proof shifts color</span></h4>
+            <p><span data-lang="zh">印刷打样在 D50 灯箱里完美还原，搬到办公室白炽灯下样张就和原稿对不上了。</span><span data-lang="en">A print proof matches perfectly in a D50 light box, then no longer matches the original once you move it under office incandescent light.</span></p>
           </div>
           <div class="scenario">
             <span class="ico">👁️</span>
-            <h4>校色仪 vs 眼睛</h4>
-            <p>校色仪测出屏幕白点是 D65，同事看觉得偏粉、自己看觉得偏绿，没有人是错的。</p>
+            <h4><span data-lang="zh">校色仪 vs 眼睛</span><span data-lang="en">Meter vs. eye</span></h4>
+            <p><span data-lang="zh">校色仪测出屏幕白点是 D65，同事看觉得偏粉、自己看觉得偏绿，没有人是错的。</span><span data-lang="en">A colorimeter reads the screen's white point as D65; a colleague sees it as pinkish, you see it as greenish, and nobody is wrong.</span></p>
           </div>
           <div class="scenario">
             <span class="ico">📷</span>
-            <h4>相机色卡校不齐</h4>
-            <p>用 ColorChecker 拉 IDT 后，色卡内的方块都还原得很准，拍其他物体却总有些颜色对不上。</p>
+            <h4><span data-lang="zh">相机色卡校不齐</span><span data-lang="en">Camera chart won't line up</span></h4>
+            <p><span data-lang="zh">用 ColorChecker 拉 IDT 后，色卡内的方块都还原得很准，拍其他物体却总有些颜色对不上。</span><span data-lang="en">After building an IDT from a ColorChecker, the chart's own patches reproduce accurately, yet shooting other objects, some colors are always off.</span></p>
           </div>
         </div>
       </div>
@@ -1100,58 +1142,58 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. 核心直觉：颜色是光谱的简化结果</h2>
-            <p>同色异谱并不是一个孤立术语。它来自一条很简单的链路：物体或屏幕发出一段光谱，人眼只保留其中能刺激三类视锥细胞的部分，最后大脑得到一个颜色感受。</p>
+            <h2><span data-lang="zh">2. 核心直觉：颜色是光谱的简化结果</span><span data-lang="en">2. Core intuition: color is a simplification of a spectrum</span></h2>
+            <p><span data-lang="zh">同色异谱并不是一个孤立术语。它来自一条很简单的链路：物体或屏幕发出一段光谱，人眼只保留其中能刺激三类视锥细胞的部分，最后大脑得到一个颜色感受。</span><span data-lang="en">Metamerism isn't an isolated term. It comes from a simple chain: an object or screen emits a spectrum, the eye keeps only the part that stimulates its three cone types, and the brain ends up with a single color sensation.</span></p>
           </div>
-          <div class="note">先记住一句话：<b>眼睛不保存完整光谱，只保存三类视锥的响应结果。</b>因此，两条形状不同的光谱，只要三类响应相同，就可能被看成同一个颜色。</div>
+          <div class="note"><span data-lang="zh">先记住一句话：<b>眼睛不保存完整光谱，只保存三类视锥的响应结果。</b>因此，两条形状不同的光谱，只要三类响应相同，就可能被看成同一个颜色。</span><span data-lang="en">Remember one line: <b>the eye doesn't store the full spectrum, only the responses of its three cone types.</b> So two differently shaped spectra, as long as those three responses match, can be seen as the same color.</span></div>
         </div>
 
         <div class="concept-example" aria-label="同色异谱直观例子">
           <div class="spectrum-card">
-            <h4>光谱 A：连续、宽峰</h4>
+            <h4><span data-lang="zh">光谱 A：连续、宽峰</span><span data-lang="en">Spectrum A: continuous, broad peaks</span></h4>
             <div class="spectrum-strip wide" aria-hidden="true"></div>
-            <p>例如日光、荧光粉背光或某些反射材料。它在很多波长上都有能量，形状比较平滑。</p>
+            <p><span data-lang="zh">例如日光、荧光粉背光或某些反射材料。它在很多波长上都有能量，形状比较平滑。</span><span data-lang="en">Like daylight, a phosphor backlight, or some reflective materials. It has energy across many wavelengths and a fairly smooth shape.</span></p>
           </div>
           <div class="concept-equal">≈</div>
           <div class="spectrum-card">
-            <h4>光谱 B：窄峰、离散</h4>
+            <h4><span data-lang="zh">光谱 B：窄峰、离散</span><span data-lang="en">Spectrum B: narrow, discrete peaks</span></h4>
             <div class="spectrum-strip narrow" aria-hidden="true"></div>
-            <p>例如 OLED、量子点或激光原色组合。它只在少数波长附近有明显能量。</p>
+            <p><span data-lang="zh">例如 OLED、量子点或激光原色组合。它只在少数波长附近有明显能量。</span><span data-lang="en">Like an OLED, quantum dots, or a laser primary combination. It only has notable energy near a few wavelengths.</span></p>
           </div>
         </div>
 
-        <p class="concept-line">这两条光谱在物理上并不相同，但如果它们让 L、M、S 三类视锥细胞产生相同响应，人眼就会把它们归为同一个颜色。色彩管理里的 XYZ，就是把这种三类响应整理成标准化的 3 个数。</p>
+        <p class="concept-line"><span data-lang="zh">这两条光谱在物理上并不相同，但如果它们让 L、M、S 三类视锥细胞产生相同响应，人眼就会把它们归为同一个颜色。色彩管理里的 XYZ，就是把这种三类响应整理成标准化的 3 个数。</span><span data-lang="en">These two spectra aren't physically the same, but if they make the L, M, and S cones respond identically, the eye treats them as one color. XYZ in color management is just those three responses tidied into three standardized numbers.</span></p>
 
         <div class="concept-flow">
           <div class="concept-step">
             <span class="num">1</span>
-            <h4>真实世界先给出光谱</h4>
-            <p>光谱可以很复杂：可能来自太阳、LED、OLED 像素、油墨反射或金属漆反射。</p>
+            <h4><span data-lang="zh">真实世界先给出光谱</span><span data-lang="en">The real world gives a spectrum</span></h4>
+            <p><span data-lang="zh">光谱可以很复杂：可能来自太阳、LED、OLED 像素、油墨反射或金属漆反射。</span><span data-lang="en">The spectrum can be complex: from the sun, an LED, an OLED pixel, ink reflection, or metallic-paint reflection.</span></p>
           </div>
           <div class="concept-step">
             <span class="num">2</span>
-            <h4>眼睛只采样三类响应</h4>
-            <p>L、M、S 三类视锥对不同波长敏感。它们不会记录完整光谱，只输出三类响应强度。</p>
+            <h4><span data-lang="zh">眼睛只采样三类响应</span><span data-lang="en">The eye samples just three responses</span></h4>
+            <p><span data-lang="zh">L、M、S 三类视锥对不同波长敏感。它们不会记录完整光谱，只输出三类响应强度。</span><span data-lang="en">The L, M, and S cones are sensitive to different wavelengths. They don't record the full spectrum — only three response strengths.</span></p>
           </div>
           <div class="concept-step">
             <span class="num">3</span>
-            <h4>XYZ 是标准化记录</h4>
-            <p>CIE 色匹配函数把标准观察者的三类响应整理成 X、Y、Z，方便设备和软件计算颜色。</p>
+            <h4><span data-lang="zh">XYZ 是标准化记录</span><span data-lang="en">XYZ is the standardized record</span></h4>
+            <p><span data-lang="zh">CIE 色匹配函数把标准观察者的三类响应整理成 X、Y、Z，方便设备和软件计算颜色。</span><span data-lang="en">The CIE color-matching functions turn the standard observer's three responses into X, Y, Z so devices and software can compute color.</span></p>
           </div>
           <div class="concept-step">
             <span class="num">4</span>
-            <h4>信息丢失导致同色异谱</h4>
-            <p>从完整光谱到 3 个数的过程中，很多细节被丢掉。因此不同光谱可以得到同一组 XYZ。</p>
+            <h4><span data-lang="zh">信息丢失导致同色异谱</span><span data-lang="en">Lost information causes metamerism</span></h4>
+            <p><span data-lang="zh">从完整光谱到 3 个数的过程中，很多细节被丢掉。因此不同光谱可以得到同一组 XYZ。</span><span data-lang="en">Going from a full spectrum to three numbers throws away a lot of detail. So different spectra can yield the same XYZ.</span></p>
           </div>
         </div>
 
         <div class="concept-formula">
-          <div><em>数学写法：三刺激值定义</em></div>
+          <div><em><span data-lang="zh">数学写法：三刺激值定义</span><span data-lang="en">In math: definition of the tristimulus values</span></em></div>
           <div>X = ∫ S(λ) · <b>x̄</b>(λ) dλ &nbsp;&nbsp;&nbsp; Y = ∫ S(λ) · <b>ȳ</b>(λ) dλ &nbsp;&nbsp;&nbsp; Z = ∫ S(λ) · <b>z̄</b>(λ) dλ</div>
-          <div style="margin-top:10px"><em>同色异谱成立条件</em></div>
-          <div>S₁(λ) ≠ S₂(λ) &nbsp;&nbsp; <b>但</b> &nbsp;&nbsp; (X, Y, Z)₁ = (X, Y, Z)₂</div>
+          <div style="margin-top:10px"><em><span data-lang="zh">同色异谱成立条件</span><span data-lang="en">Condition for a metameric match</span></em></div>
+          <div>S₁(λ) ≠ S₂(λ) &nbsp;&nbsp; <b><span data-lang="zh">但</span><span data-lang="en">but</span></b> &nbsp;&nbsp; (X, Y, Z)₁ = (X, Y, Z)₂</div>
           <div style="margin-top:10px;color:var(--muted);font-family:inherit;font-size:13px;line-height:1.6">
-            S(λ) 是进入眼睛的光谱功率分布；x̄/ȳ/z̄ 是 CIE 色匹配函数。积分的作用可以理解为：把完整光谱按三条响应曲线加权求和，得到 X、Y、Z 三个数。
+            <span data-lang="zh">S(λ) 是进入眼睛的光谱功率分布；x̄/ȳ/z̄ 是 CIE 色匹配函数。积分的作用可以理解为：把完整光谱按三条响应曲线加权求和，得到 X、Y、Z 三个数。</span><span data-lang="en">S(λ) is the spectral power distribution entering the eye; x̄/ȳ/z̄ are the CIE color-matching functions. The integral is a weighted sum of the full spectrum against the three response curves, producing the three numbers X, Y, Z.</span>
           </div>
         </div>
       </div>

@@ -74,6 +74,12 @@
       color: transparent;
       white-space: nowrap;
     }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
     .nav-links {
       display: flex;
       gap: 8px;
@@ -91,6 +97,38 @@
       color: var(--ink);
       background: rgba(255,255,255,.07);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 760;
+      line-height: 1;
+      padding: 7px 12px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #061014;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
 
     .hero {
       position: relative;
@@ -437,7 +475,7 @@
       .workflow-pipeline { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 680px) {
-      .nav { align-items: flex-start; }
+      .nav { align-items: center; }
       .nav-links { display: none; }
       .hero { padding-top: 86px; min-height: auto; }
       h1 { font-size: clamp(40px, 12vw, 60px); }
@@ -450,12 +488,18 @@
 <body>
   <header class="topbar">
     <nav class="nav">
-      <a href="index.html" class="logo">色彩与显示指南</a>
-      <div class="nav-links">
-        <a href="#chapters">技术章节</a>
-        <a href="#daily-picks">每日精选</a>
-        <a href="making-of.html">制作复盘</a>
-        <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="#chapters"><span data-lang="zh">技术章节</span><span data-lang="en">Chapters</span></a>
+          <a href="#daily-picks"><span data-lang="zh">每日精选</span><span data-lang="en">Daily Picks</span></a>
+          <a href="making-of.html"><span data-lang="zh">制作复盘</span><span data-lang="en">Making of</span></a>
+          <a href="https://github.com/MeeeetRain/color-science-html" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -472,15 +516,16 @@
       <div class="hero-inner">
         <div class="hero-copy">
           <div class="eyebrow">Color Science / Display Tech</div>
-          <h1 aria-label="影像色彩与显示技术分析">
-            <span class="h-word h-plain">影像</span><span class="h-word h-accent">色彩</span><span class="h-word h-plain">与显示技术分析</span>
+          <h1 id="heroTitle" aria-label="影像色彩与显示技术分析">
+            <span data-lang="zh"><span class="h-word h-plain">影像</span><span class="h-word h-accent">色彩</span><span class="h-word h-plain">与显示技术分析</span></span><span data-lang="en"><span class="h-word h-plain">Imaging</span> <span class="h-word h-accent">Color</span> <span class="h-word h-plain">&amp; Display Tech</span></span>
           </h1>
           <p class="hero-desc">
-            从同色异谱到 HDR，从相机 Log 到显示器与电视。用可交互图表把影像链路里的色彩问题讲清楚。
+            <span data-lang="zh">从同色异谱到 HDR，从相机 Log 到显示器与电视。用可交互图表把影像链路里的色彩问题讲清楚。</span>
+            <span data-lang="en">From metamerism to HDR, from camera Log to monitors and TVs — interactive charts that make the color problems across the imaging pipeline clear.</span>
           </p>
           <div class="cta-group">
-            <a href="#chapters" class="btn btn-primary">进入章节流程</a>
-            <a href="hdr-color-science.html" class="btn">从 SDR → HDR 开始</a>
+            <a href="#chapters" class="btn btn-primary"><span data-lang="zh">进入章节流程</span><span data-lang="en">Enter the chapter flow</span></a>
+            <a href="hdr-color-science.html" class="btn"><span data-lang="zh">从 SDR → HDR 开始</span><span data-lang="en">Start from SDR → HDR</span></a>
           </div>
         </div>
       </div>
@@ -489,41 +534,41 @@
     <section class="section" id="chapters">
       <div class="section-head">
         <div>
-          <h2>章节流程</h2>
-          <p>把复杂技术按影像工作流拆开：基础 → 拍摄 → 后期 → 显示。</p>
+          <h2><span data-lang="zh">章节流程</span><span data-lang="en">Chapter flow</span></h2>
+          <p><span data-lang="zh">把复杂技术按影像工作流拆开：基础 → 拍摄 → 后期 → 显示。</span><span data-lang="en">Breaking complex topics down by imaging workflow: Basics → Capture → Post → Display.</span></p>
         </div>
       </div>
 
       <div class="workflow-pipeline">
         <div class="pipe-stage stage-0">
-          <div class="pipe-head"><span class="stage-num">0</span><span class="stage-title">基础</span></div>
+          <div class="pipe-head"><span class="stage-num">0</span><span class="stage-title"><span data-lang="zh">基础</span><span data-lang="en">Basics</span></span></div>
           <div class="pipe-cards">
-            <a class="pipe-card" href="metamerism.html"><span class="kicker">同色异谱 / CMF</span><h3>同色异谱：色彩管理的根</h3></a>
+            <a class="pipe-card" href="metamerism.html"><span class="kicker">同色异谱 / CMF</span><h3><span data-lang="zh">同色异谱：色彩管理的根</span><span data-lang="en">Metamerism: the root of color management</span></h3></a>
           </div>
         </div>
         <div class="pipe-stage stage-1">
-          <div class="pipe-head"><span class="stage-num">1</span><span class="stage-title">拍摄</span></div>
+          <div class="pipe-head"><span class="stage-num">1</span><span class="stage-title"><span data-lang="zh">拍摄</span><span data-lang="en">Capture</span></span></div>
           <div class="pipe-cards">
-            <a class="pipe-card" href="log-gamma.html"><span class="kicker">相机 / Log / Gamut</span><h3>为什么相机用 Log 拍摄</h3></a>
-            <div class="pipe-card soon"><span class="kicker">计划中</span><h3>相机色彩还原 IDT</h3></div>
+            <a class="pipe-card" href="log-gamma.html"><span class="kicker">相机 / Log / Gamut</span><h3><span data-lang="zh">为什么相机用 Log 拍摄</span><span data-lang="en">Why cameras shoot Log</span></h3></a>
+            <div class="pipe-card soon"><span class="kicker"><span data-lang="zh">计划中</span><span data-lang="en">Planned</span></span><h3><span data-lang="zh">相机色彩还原 IDT</span><span data-lang="en">Camera color reproduction (IDT)</span></h3></div>
           </div>
         </div>
         <div class="pipe-stage stage-2">
-          <div class="pipe-head"><span class="stage-num">2</span><span class="stage-title">后期</span></div>
+          <div class="pipe-head"><span class="stage-num">2</span><span class="stage-title"><span data-lang="zh">后期</span><span data-lang="en">Post</span></span></div>
           <div class="pipe-cards">
             <a class="pipe-card" href="scene-display-referred.html"><span class="kicker">调色 / ACES</span><h3>Scene vs Display-referred</h3></a>
-            <a class="pipe-card" href="image-color-management.html"><span class="kicker">ICC / sRGB / P3</span><h3>图片色彩管理</h3></a>
-            <a class="pipe-card" href="davinci-hdr-dolby-course.html"><span class="kicker">Resolve / HDR / Dolby Vision</span><h3>达芬奇 HDR 与杜比视界课程</h3></a>
+            <a class="pipe-card" href="image-color-management.html"><span class="kicker">ICC / sRGB / P3</span><h3><span data-lang="zh">图片色彩管理</span><span data-lang="en">Image color management</span></h3></a>
+            <a class="pipe-card" href="davinci-hdr-dolby-course.html"><span class="kicker">Resolve / HDR / Dolby Vision</span><h3><span data-lang="zh">达芬奇 HDR 与杜比视界课程</span><span data-lang="en">DaVinci HDR &amp; Dolby Vision course</span></h3></a>
           </div>
         </div>
         <div class="pipe-stage stage-3">
-          <div class="pipe-head"><span class="stage-num">3</span><span class="stage-title">显示</span></div>
+          <div class="pipe-head"><span class="stage-num">3</span><span class="stage-title"><span data-lang="zh">显示</span><span data-lang="en">Display</span></span></div>
           <div class="pipe-cards">
-            <a class="pipe-card" href="hdr-color-science.html"><span class="kicker">HDR / 传递函数</span><h3>SDR 到 HDR 色彩科学</h3></a>
-            <a class="pipe-card" href="HDR-Relay.html"><span class="kicker">HDR Relay / 增益图</span><h3>HDR 照片怎么变成 HDR 视频</h3></a>
-            <a class="pipe-card" href="sdr-hdr-itm-system.html"><span class="kicker">逆色调映射 / 实战项目</span><h3>把 SDR 自动重建成 HDR</h3></a>
-            <a class="pipe-card" href="ltx-gainmap-itm.html"><span class="kicker">LTX Gainmap / 新一代思路</span><h3>让 AI 当测光表的 SDR→HDR</h3></a>
-            <div class="pipe-card soon"><span class="kicker">计划中</span><h3>显示器与电视技术</h3></div>
+            <a class="pipe-card" href="hdr-color-science.html"><span class="kicker">HDR / 传递函数</span><h3><span data-lang="zh">SDR 到 HDR 色彩科学</span><span data-lang="en">SDR to HDR color science</span></h3></a>
+            <a class="pipe-card" href="HDR-Relay.html"><span class="kicker">HDR Relay / 增益图</span><h3><span data-lang="zh">HDR 照片怎么变成 HDR 视频</span><span data-lang="en">How a HDR photo becomes a HDR video</span></h3></a>
+            <a class="pipe-card" href="sdr-hdr-itm-system.html"><span class="kicker"><span data-lang="zh">逆色调映射 / 实战项目</span><span data-lang="en">Inverse tone mapping / project</span></span><h3><span data-lang="zh">把 SDR 自动重建成 HDR</span><span data-lang="en">Automatically rebuilding SDR into HDR</span></h3></a>
+            <a class="pipe-card" href="ltx-gainmap-itm.html"><span class="kicker"><span data-lang="zh">LTX Gainmap / 新一代思路</span><span data-lang="en">LTX Gainmap / next-gen</span></span><h3><span data-lang="zh">让 AI 当测光表的 SDR→HDR</span><span data-lang="en">SDR→HDR with AI as the light meter</span></h3></a>
+            <div class="pipe-card soon"><span class="kicker"><span data-lang="zh">计划中</span><span data-lang="en">Planned</span></span><h3><span data-lang="zh">显示器与电视技术</span><span data-lang="en">Monitor &amp; TV technology</span></h3></div>
           </div>
         </div>
       </div>
@@ -532,23 +577,106 @@
     <section class="section daily-picks" id="daily-picks">
       <div class="daily-picks-head">
         <div>
-          <h2>每日精选</h2>
-          <p class="daily-picks-intro">每个工作日早晨挑选两篇与 HDR 制作、色彩科学、色彩管理和影像工作流相关的高价值资料。</p>
-          <a class="daily-history-link" href="daily-picks-history.html">查看历史推荐 →</a>
+          <h2><span data-lang="zh">每日精选</span><span data-lang="en">Daily Picks</span></h2>
+          <p class="daily-picks-intro"><span data-lang="zh">每个工作日早晨挑选两篇与 HDR 制作、色彩科学、色彩管理和影像工作流相关的高价值资料。</span><span data-lang="en">Every weekday morning, two high-value reads on HDR production, color science, color management, and imaging workflows.</span></p>
+          <a class="daily-history-link" href="daily-picks-history.html"><span data-lang="zh">查看历史推荐 →</span><span data-lang="en">View past picks →</span></a>
         </div>
-        <div class="pick-updated">更新中</div>
+        <div class="pick-updated"><span data-lang="zh">更新中</span><span data-lang="en">Updating</span></div>
       </div>
       <div class="pick-grid" id="daily-picks-list" aria-live="polite"></div>
     </section>
   </main>
 
   <footer>
-    <p>影像色彩与显示技术分析 · <a href="making-of.html">制作复盘</a></p>
+    <p><span data-lang="zh">影像色彩与显示技术分析 · <a href="making-of.html">制作复盘</a></span><span data-lang="en">Imaging Color &amp; Display Analysis · <a href="making-of.html">Making of</a></span></p>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ===== Language =====
+    const LANG_KEY = "guideLang";
+    const PAGE_I18N = {
+      title: {
+        zh: "影像色彩与显示技术指南",
+        en: "Imaging Color & Display Guide"
+      },
+      desc: {
+        zh: "面向 HDR 制作、色彩科学、色彩管理与显示工作流的中文知识指南。",
+        en: "A knowledge guide to HDR production, color science, color management, and display workflows."
+      },
+      heroAria: {
+        zh: "影像色彩与显示技术分析",
+        en: "Imaging Color & Display Tech"
+      },
+      updatedPrefix: { zh: "更新：", en: "Updated: " },
+      updating: { zh: "更新中", en: "Updating" },
+      notYet: { zh: "暂未更新", en: "Not updated yet" },
+      openLink: { zh: "打开链接 →", en: "Open link →" },
+      loadFail: {
+        zh: "每日精选暂时无法加载，请稍后再试。",
+        en: "Daily picks are temporarily unavailable. Please try again later."
+      }
+    };
+
+    let LANG = "zh";
+    let latestPicks = null;     // cached picks data so re-render can follow language
+    let picksFailed = false;
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const dailyPicksList = document.querySelector("#daily-picks-list");
+    const dailyUpdated = document.querySelector(".pick-updated");
+    const heroTitle = document.querySelector("#heroTitle");
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function renderPickCard(pick) {
+      return `
+        <a class="pick-card" href="${escapeHtml(pick.url)}" target="_blank" rel="noreferrer">
+          <div class="pick-meta">
+            <span class="pick-tag">${escapeHtml(pick.tag)}</span>
+            <span>${escapeHtml(pick.source)}</span>
+          </div>
+          <h3 class="pick-title">${escapeHtml(pick.title)}</h3>
+          <p class="pick-desc">${escapeHtml(pick.description)}</p>
+          <span class="pick-link">${PAGE_I18N.openLink[LANG]}</span>
+        </a>
+      `;
+    }
+
+    // Render picks + status text using the current language. Safe to call repeatedly.
+    function renderPicksState() {
+      if (picksFailed) {
+        dailyUpdated.textContent = PAGE_I18N.notYet[LANG];
+        dailyPicksList.innerHTML = `<p class="pick-status">${PAGE_I18N.loadFail[LANG]}</p>`;
+        return;
+      }
+      if (latestPicks) {
+        dailyUpdated.textContent = PAGE_I18N.updatedPrefix[LANG] + latestPicks.date;
+        dailyPicksList.innerHTML = latestPicks.picks.slice(0, 2).map(renderPickCard).join("");
+      } else {
+        dailyUpdated.textContent = PAGE_I18N.updating[LANG];
+      }
+    }
+
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_I18N.title[LANG];
+      if (metaDesc) metaDesc.setAttribute("content", PAGE_I18N.desc[LANG]);
+      if (heroTitle) heroTitle.setAttribute("aria-label", PAGE_I18N.heroAria[LANG]);
+      renderPicksState();
+      try { localStorage.setItem(LANG_KEY, LANG); } catch (e) {}
+    }
 
     function runIntro() {
       if (!window.gsap || prefersReducedMotion) return;
@@ -580,33 +708,6 @@
       });
     }
 
-    const dailyPicksList = document.querySelector("#daily-picks-list");
-    const dailyUpdated = document.querySelector(".pick-updated");
-
-    function escapeHtml(value) {
-      return String(value || "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "\"": "&quot;",
-        "'": "&#39;"
-      }[char]));
-    }
-
-    function renderPickCard(pick) {
-      return `
-        <a class="pick-card" href="${escapeHtml(pick.url)}" target="_blank" rel="noreferrer">
-          <div class="pick-meta">
-            <span class="pick-tag">${escapeHtml(pick.tag)}</span>
-            <span>${escapeHtml(pick.source)}</span>
-          </div>
-          <h3 class="pick-title">${escapeHtml(pick.title)}</h3>
-          <p class="pick-desc">${escapeHtml(pick.description)}</p>
-          <span class="pick-link">打开链接 →</span>
-        </a>
-      `;
-    }
-
     async function loadDailyPicks() {
       try {
         const response = await fetch("data/daily-picks.json", { cache: "no-store" });
@@ -614,13 +715,21 @@
         const data = await response.json();
         const latest = data.days?.[0];
         if (!latest || !Array.isArray(latest.picks)) throw new Error("daily picks data invalid");
-        dailyUpdated.textContent = `更新：${latest.date}`;
-        dailyPicksList.innerHTML = latest.picks.slice(0, 2).map(renderPickCard).join("");
+        latestPicks = latest;
+        picksFailed = false;
       } catch (error) {
-        dailyUpdated.textContent = "暂未更新";
-        dailyPicksList.innerHTML = '<p class="pick-status">每日精选暂时无法加载，请稍后再试。</p>';
+        picksFailed = true;
       }
+      renderPicksState();
     }
+
+    // Init language from shared store, then wire the toggle.
+    let savedLang = "zh";
+    try { savedLang = localStorage.getItem(LANG_KEY) || "zh"; } catch (e) {}
+    applyLang(savedLang === "en" ? "en" : "zh");
+    document.querySelectorAll(".lang-toggle .seg").forEach(function (b) {
+      b.addEventListener("click", function () { applyLang(b.dataset.set); });
+    });
 
     loadDailyPicks();
     runIntro();

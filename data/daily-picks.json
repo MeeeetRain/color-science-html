@@ -1,6 +1,25 @@
 {
-  "updated": "2026-06-17",
+  "updated": "2026-06-18",
   "days": [
+    {
+      "date": "2026-06-18",
+      "picks": [
+        {
+          "tag": "讨论",
+          "source": "ACESCentral",
+          "title": "Linear -> PQ luminance mapping in Resolve",
+          "description": "这条讨论值得读，因为它正好把站内最近更新的 HDR Relay 章节里那个最容易被当成“经验参数”的问题讲透了：为什么 scene-referred 线性值进到 PQ / HDR 输出后，不会天然等于你脑中的 203 nit 参考白。Scott Dyer 和 Daniele Siragusano 的回复很有价值，一边给出 ACES 2 在不同峰值亮度下 0.18 灰和 1.0 白分别会落到多少 nit，一边明确指出 BT.2408 的 203 nit 更多是广播兼容语境下的实践锚点，而不是所有电影式输出都必须硬套的绝对答案。对理解“参考白、headroom、输出变换和创作选择不是一回事”非常有帮助。",
+          "url": "https://community.acescentral.com/t/linear-pq-luminance-mapping-in-resolve/5789"
+        },
+        {
+          "tag": "讨论",
+          "source": "ACESCentral",
+          "title": "ODTs and the Judd-Vos correction",
+          "description": "这条讨论值得读，因为它正面回答了站内最近更新的同色异谱章节继续往监看工作流追时一定会遇到的问题：OLED 为了更接近人眼感知而做的白点偏移，到底该不该写进 ODT，还是只该留在显示校准层。讨论里最有价值的是几位参与 ACES 输出链路的人把边界讲得很清楚：Judd-Vos 这类修正主要是为了减轻窄峰显示带来的 observer metamerism，它服务的是特定设备的 perceptual match，不应该被烘焙进通用信号本身。对理解“信号正确”和“显示看起来一致”为什么是两件事非常有帮助。",
+          "url": "https://community.acescentral.com/t/odts-and-the-judd-vos-correction/1259"
+        }
+      ]
+    },
     {
       "date": "2026-06-17",
       "picks": [

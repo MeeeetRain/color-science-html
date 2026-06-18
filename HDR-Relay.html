@@ -59,10 +59,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brand { font-weight: 780; flex: none; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; justify-content: flex-end; }
+    .links { display: flex; gap: 6px; flex: 0 1 auto; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 12px;
       border-radius: 999px;
@@ -74,6 +76,39 @@
       color: var(--ink);
       background: rgba(255,255,255,.08);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #0a1014;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+
     main { overflow: hidden; }
     section {
       padding: 58px 20px;
@@ -552,18 +587,24 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#idea">起点</a>
-        <a href="#design">架构</a>
-        <a href="#core">核心算法</a>
-        <a href="#parse">解析输入</a>
-        <a href="#rgbgain">三通道</a>
-        <a href="#optimize">看结果调算法</a>
-        <a href="#video">转成视频</a>
-        <a href="#evolve">形态进化</a>
-        <a href="#method">方法论</a>
-        <a href="#sources">参考</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#idea"><span data-lang="zh">起点</span><span data-lang="en">Origin</span></a>
+          <a href="#design"><span data-lang="zh">架构</span><span data-lang="en">Architecture</span></a>
+          <a href="#core"><span data-lang="zh">核心算法</span><span data-lang="en">Core</span></a>
+          <a href="#parse"><span data-lang="zh">解析输入</span><span data-lang="en">Parsing</span></a>
+          <a href="#rgbgain"><span data-lang="zh">三通道</span><span data-lang="en">RGB</span></a>
+          <a href="#optimize"><span data-lang="zh">看结果调算法</span><span data-lang="en">Debug by Output</span></a>
+          <a href="#video"><span data-lang="zh">转成视频</span><span data-lang="en">To Video</span></a>
+          <a href="#evolve"><span data-lang="zh">形态进化</span><span data-lang="en">Evolution</span></a>
+          <a href="#method"><span data-lang="zh">方法论</span><span data-lang="en">Method</span></a>
+          <a href="#sources"><span data-lang="zh">参考</span><span data-lang="en">References</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -571,8 +612,8 @@
   <main>
     <section class="hero" id="top">
       <div class="wrap">
-        <div class="eyebrow">Making of · 工程复盘</div>
-        <h1>一张 HDR 照片<br>怎么变成一段 HDR 视频</h1>
+        <div class="eyebrow"><span data-lang="zh">Making of · 工程复盘</span><span data-lang="en">Making of · Engineering Retrospective</span></div>
+        <h1><span data-lang="zh">一张 HDR 照片<br>怎么变成一段 HDR 视频</span><span data-lang="en">How a HDR Photo<br>Becomes a HDR Video</span></h1>
       </div>
     </section>
 
@@ -580,27 +621,42 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">起点</span>
-            <h2>想法是从一个矛盾开始的</h2>
-            <p>矛盾是这样的：手机拍的 HDR 照片，在手机屏上高光透亮、明暗层次都在；可一想搬到客厅那台 HDR 电视的大屏上看，就尴尬了——电视明明播 HDR 视频（HDR10）毫无压力，却偏偏认不出这种带增益图的 HDR 照片，要么当成普通 SDR 图显示、HDR 效果当场全丢，要么干脆打不开。<b>设备有 HDR 显示的本事，却因为「照片」这个格式用不上。</b></p>
+            <span class="phase-tag"><span data-lang="zh">起点</span><span data-lang="en">Origin</span></span>
+            <h2><span data-lang="zh">想法是从一个矛盾开始的</span><span data-lang="en">The idea started from a contradiction</span></h2>
+            <p>
+              <span data-lang="zh">矛盾是这样的：手机拍的 HDR 照片，在手机屏上高光透亮、明暗层次都在；可一想搬到客厅那台 HDR 电视的大屏上看，就尴尬了——电视明明播 HDR 视频（HDR10）毫无压力，却偏偏认不出这种带增益图的 HDR 照片，要么当成普通 SDR 图显示、HDR 效果当场全丢，要么干脆打不开。<b>设备有 HDR 显示的本事，却因为「照片」这个格式用不上。</b></span>
+              <span data-lang="en">Here's the contradiction: an HDR photo shot on a phone looks great on the phone screen — bright highlights, full tonal range. But move it to the big HDR TV in the living room and it gets awkward. The TV plays HDR video (HDR10) without any trouble, yet it can't recognize this gain-map HDR photo — either showing it as an ordinary SDR image with the HDR effect lost entirely, or failing to open it at all. <b>The device has HDR display capability but can't use it, all because of the "photo" format.</b></span>
+            </p>
           </div>
-          <div class="note">一句话目标：既然电视早就能正常解码 HDR <b>视频</b>，那就把 HDR <b>照片</b>还原成真实 HDR 亮度、再编码成电视认得的 HDR 视频（H.265 / HDR10）——把原本只能在手机上发挥的 HDR，搬上电视大屏。</div>
+          <div class="note">
+            <span data-lang="zh">一句话目标：既然电视早就能正常解码 HDR <b>视频</b>，那就把 HDR <b>照片</b>还原成真实 HDR 亮度、再编码成电视认得的 HDR 视频（H.265 / HDR10）——把原本只能在手机上发挥的 HDR，搬上电视大屏。</span>
+            <span data-lang="en">The goal in one sentence: since the TV already decodes HDR <b>video</b> just fine, restore the HDR <b>photo</b> to real HDR luminance and re-encode it into a HDR video the TV recognizes (H.265 / HDR10) — bringing HDR that only worked on the phone onto the big screen.</span>
+          </div>
         </div>
         <div class="grid-3">
           <div class="card">
-            <div class="kicker">矛盾</div>
-            <h4>电视点不亮 HDR 照片</h4>
-            <p>同一台 HDR 电视，播 HDR10 视频毫无压力，可它的相册 / 图片浏览根本不认带增益图的 HDR 照片——只能当普通 SDR 图显示，或者直接打不开。屏幕有 HDR 能力，却因为「照片」这个格式用不上。</p>
+            <div class="kicker"><span data-lang="zh">矛盾</span><span data-lang="en">Contradiction</span></div>
+            <h4><span data-lang="zh">电视点不亮 HDR 照片</span><span data-lang="en">The TV can't light up HDR photos</span></h4>
+            <p>
+              <span data-lang="zh">同一台 HDR 电视，播 HDR10 视频毫无压力，可它的相册 / 图片浏览根本不认带增益图的 HDR 照片——只能当普通 SDR 图显示，或者直接打不开。屏幕有 HDR 能力，却因为「照片」这个格式用不上。</span>
+              <span data-lang="en">The same HDR TV plays HDR10 video without issue, but its gallery / image viewer doesn't recognize gain-map HDR photos at all — it can only show them as ordinary SDR images, or fails to open them. The screen has HDR capability but can't use it because of the "photo" format.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">原理</div>
-            <h4>增益图里就存着 HDR</h4>
-            <p>手机存的其实是「一张 SDR 图 + 一张增益图（Gain Map）」。HEIC 里是 Apple 的 <code>tmap</code>，UltraHDR JPEG 里是 <code>hdrgm:</code> 命名空间，本质都是「逐像素的 log2 提亮量」。两层合起来才是完整 HDR。</p>
+            <div class="kicker"><span data-lang="zh">原理</span><span data-lang="en">Principle</span></div>
+            <h4><span data-lang="zh">增益图里就存着 HDR</span><span data-lang="en">The HDR lives in the gain map</span></h4>
+            <p>
+              <span data-lang="zh">手机存的其实是「一张 SDR 图 + 一张增益图（Gain Map）」。HEIC 里是 Apple 的 <code>tmap</code>，UltraHDR JPEG 里是 <code>hdrgm:</code> 命名空间，本质都是「逐像素的 log2 提亮量」。两层合起来才是完整 HDR。</span>
+              <span data-lang="en">What the phone stores is really "one SDR image + one gain map". In HEIC it's Apple's <code>tmap</code>; in UltraHDR JPEG it's the <code>hdrgm:</code> namespace — both are essentially "per-pixel log2 boost amounts". The two layers together make the full HDR.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">方案</div>
-            <h4>HDR 视频兼容性最好</h4>
-            <p>静态 HDR 格式（JXL）电视基本不认，但 H.265 HDR10 的 MOV 在电视、QuickTime、剪辑软件里都能直接放。把一张 HDR 照片做成静止 HDR 视频，就能直接用上电视本来就支持的 HDR 视频解码。</p>
+            <div class="kicker"><span data-lang="zh">方案</span><span data-lang="en">Approach</span></div>
+            <h4><span data-lang="zh">HDR 视频兼容性最好</span><span data-lang="en">HDR video has the best compatibility</span></h4>
+            <p>
+              <span data-lang="zh">静态 HDR 格式（JXL）电视基本不认，但 H.265 HDR10 的 MOV 在电视、QuickTime、剪辑软件里都能直接放。把一张 HDR 照片做成静止 HDR 视频，就能直接用上电视本来就支持的 HDR 视频解码。</span>
+              <span data-lang="en">Static HDR formats (JXL) are mostly unrecognized by TVs, but an H.265 HDR10 MOV plays directly on TVs, in QuickTime, and in editing software. Turning a HDR photo into a still HDR video reuses the HDR video decoding the TV already supports.</span>
+            </p>
           </div>
         </div>
       </div>
@@ -610,25 +666,28 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">架构</span>
-            <h2>把流程拆成五个能单独测的模块</h2>
-            <p>核心是一个 C++ 引擎 <code>hdr2jxl</code>，外面套一层 Flask + WKWebView 的本地界面。引擎按「一件事一个文件」拆开，每个环节都能单独喂数据、单独验证，避免一条长函数从头错到尾。</p>
+            <span class="phase-tag"><span data-lang="zh">架构</span><span data-lang="en">Architecture</span></span>
+            <h2><span data-lang="zh">把流程拆成五个能单独测的模块</span><span data-lang="en">Splitting the pipeline into five independently testable modules</span></h2>
+            <p>
+              <span data-lang="zh">核心是一个 C++ 引擎 <code>hdr2jxl</code>，外面套一层 Flask + WKWebView 的本地界面。引擎按「一件事一个文件」拆开，每个环节都能单独喂数据、单独验证，避免一条长函数从头错到尾。</span>
+              <span data-lang="en">At the core is a C++ engine <code>hdr2jxl</code>, wrapped in a local Flask + WKWebView interface. The engine is split "one job per file", so every stage can be fed data and verified on its own — avoiding one long function that goes wrong from start to finish.</span>
+            </p>
           </div>
         </div>
 
         <div class="pipeline">
-          <div class="pipe"><div class="pn">01 读取</div><h4>格式检测 + 解码</h4><p>heic_reader / jpeg_reader：认出格式，拆出 base 层、增益图、元数据</p></div>
-          <div class="pipe"><div class="pn">02 合并</div><h4>增益图 → 线性 HDR</h4><p>gainmap：按 log2 公式把 SDR 提亮成线性光</p></div>
-          <div class="pipe"><div class="pn">03 编码</div><h4>线性 → PQ</h4><p>SMPTE ST 2084 绝对亮度编码，并写入 HDR10 色彩标签</p></div>
-          <div class="pipe"><div class="pn">04 落地</div><h4>JXL / HEVC</h4><p>jxl_writer 出静态图；video_writer 调 ffmpeg 出视频</p></div>
-          <div class="pipe"><div class="pn">05 旁证</div><h4>导出中间层</h4><p>image_writer：base 层 + 增益图灰度，供核对</p></div>
+          <div class="pipe"><div class="pn"><span data-lang="zh">01 读取</span><span data-lang="en">01 Read</span></div><h4><span data-lang="zh">格式检测 + 解码</span><span data-lang="en">Format detect + decode</span></h4><p><span data-lang="zh">heic_reader / jpeg_reader：认出格式，拆出 base 层、增益图、元数据</span><span data-lang="en">heic_reader / jpeg_reader: identify the format, extract the base layer, gain map, and metadata</span></p></div>
+          <div class="pipe"><div class="pn"><span data-lang="zh">02 合并</span><span data-lang="en">02 Merge</span></div><h4><span data-lang="zh">增益图 → 线性 HDR</span><span data-lang="en">Gain map → linear HDR</span></h4><p><span data-lang="zh">gainmap：按 log2 公式把 SDR 提亮成线性光</span><span data-lang="en">gainmap: boost SDR to linear light via the log2 formula</span></p></div>
+          <div class="pipe"><div class="pn"><span data-lang="zh">03 编码</span><span data-lang="en">03 Encode</span></div><h4><span data-lang="zh">线性 → PQ</span><span data-lang="en">Linear → PQ</span></h4><p><span data-lang="zh">SMPTE ST 2084 绝对亮度编码，并写入 HDR10 色彩标签</span><span data-lang="en">SMPTE ST 2084 absolute-luminance encoding, plus writing HDR10 color tags</span></p></div>
+          <div class="pipe"><div class="pn"><span data-lang="zh">04 落地</span><span data-lang="en">04 Output</span></div><h4>JXL / HEVC</h4><p><span data-lang="zh">jxl_writer 出静态图；video_writer 调 ffmpeg 出视频</span><span data-lang="en">jxl_writer produces the still image; video_writer calls ffmpeg for video</span></p></div>
+          <div class="pipe"><div class="pn"><span data-lang="zh">05 旁证</span><span data-lang="en">05 Evidence</span></div><h4><span data-lang="zh">导出中间层</span><span data-lang="en">Export intermediate layers</span></h4><p><span data-lang="zh">image_writer：base 层 + 增益图灰度，供核对</span><span data-lang="en">image_writer: base layer + gain-map grayscale, for verification</span></p></div>
         </div>
 
         <div class="steps">
-          <div class="step"><span class="n">1</span><div><h4>读取层只负责「拆」</h4><p>判断是 HEIC 还是 JPEG，把 base 图、增益图、元数据（gamma、hdrCapacityMin/Max、offset）原样吐出来，不做任何亮度计算。读取出错就早退，不让坏数据流进算法。</p></div></div>
-          <div class="step"><span class="n">2</span><div><h4>合并层是唯一的「数学中心」</h4><p>所有亮度相关的公式都集中在 <code>gainmap.cpp</code>：增益合并、sRGB↔线性、PQ↔线性、HLG↔线性。后面所有 bug 几乎都在这里改，集中放好处巨大。</p></div></div>
-          <div class="step"><span class="n">3</span><div><h4>写出层只负责「编码 + 容器」</h4><p>JXL 走 libjxl，写入 PQ / HDR 色彩信息；视频走 ffmpeg，补齐 HDR10 的编码与容器标签。写出层不重新调亮度，只把已经算好的线性 HDR 编进文件。</p></div></div>
-          <div class="step"><span class="n">4</span><div><h4>主程序只做编排</h4><p><code>Main.cpp</code> 解析参数、串起读取→合并→写出，并且<b>无论成不成功都导出 base 层和增益图</b>。这条「总是导出旁证」的设计，是后面定位过曝 bug 的关键。</p></div></div>
+          <div class="step"><span class="n">1</span><div><h4><span data-lang="zh">读取层只负责「拆」</span><span data-lang="en">The read layer only "unpacks"</span></h4><p><span data-lang="zh">判断是 HEIC 还是 JPEG，把 base 图、增益图、元数据（gamma、hdrCapacityMin/Max、offset）原样吐出来，不做任何亮度计算。读取出错就早退，不让坏数据流进算法。</span><span data-lang="en">Decide whether it's HEIC or JPEG, and emit the base image, gain map, and metadata (gamma, hdrCapacityMin/Max, offset) as-is, doing no luminance math. On a read error it bails early, so bad data never flows into the algorithm.</span></p></div></div>
+          <div class="step"><span class="n">2</span><div><h4><span data-lang="zh">合并层是唯一的「数学中心」</span><span data-lang="en">The merge layer is the only "math center"</span></h4><p><span data-lang="zh">所有亮度相关的公式都集中在 <code>gainmap.cpp</code>：增益合并、sRGB↔线性、PQ↔线性、HLG↔线性。后面所有 bug 几乎都在这里改，集中放好处巨大。</span><span data-lang="en">All luminance-related formulas live in <code>gainmap.cpp</code>: gain merging, sRGB↔linear, PQ↔linear, HLG↔linear. Almost every later bug was fixed here — concentrating it pays off enormously.</span></p></div></div>
+          <div class="step"><span class="n">3</span><div><h4><span data-lang="zh">写出层只负责「编码 + 容器」</span><span data-lang="en">The write layer only does "encode + container"</span></h4><p><span data-lang="zh">JXL 走 libjxl，写入 PQ / HDR 色彩信息；视频走 ffmpeg，补齐 HDR10 的编码与容器标签。写出层不重新调亮度，只把已经算好的线性 HDR 编进文件。</span><span data-lang="en">JXL goes through libjxl, writing PQ / HDR color info; video goes through ffmpeg, filling in HDR10 encoding and container tags. The write layer doesn't re-adjust luminance — it just encodes the already-computed linear HDR into the file.</span></p></div></div>
+          <div class="step"><span class="n">4</span><div><h4><span data-lang="zh">主程序只做编排</span><span data-lang="en">The main program only orchestrates</span></h4><p><span data-lang="zh"><code>Main.cpp</code> 解析参数、串起读取→合并→写出，并且<b>无论成不成功都导出 base 层和增益图</b>。这条「总是导出旁证」的设计，是后面定位过曝 bug 的关键。</span><span data-lang="en"><code>Main.cpp</code> parses arguments, chains read→merge→write, and <b>always exports the base layer and gain map whether or not it succeeds</b>. This "always export the evidence" design was key to later tracking down the overexposure bug.</span></p></div></div>
         </div>
       </div>
     </section>
@@ -637,26 +696,40 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">核心算法</span>
-            <h2>增益图合并：一条指数公式</h2>
-            <p>增益图的值是 0–1 的归一化数，代表「在最小和最大提亮量之间插到哪」。真正的提亮是 2 的指数次方——这点决定了后面所有调参都得在 log2 域里做。</p>
+            <span class="phase-tag"><span data-lang="zh">核心算法</span><span data-lang="en">Core Algorithm</span></span>
+            <h2><span data-lang="zh">增益图合并：一条指数公式</span><span data-lang="en">Gain-map merge: a single exponential formula</span></h2>
+            <p>
+              <span data-lang="zh">增益图的值是 0–1 的归一化数，代表「在最小和最大提亮量之间插到哪」。真正的提亮是 2 的指数次方——这点决定了后面所有调参都得在 log2 域里做。</span>
+              <span data-lang="en">The gain-map value is a normalized number from 0–1, representing "where to interpolate between the minimum and maximum boost". The actual boost is 2 raised to a power — which is why all later tuning must happen in the log2 domain.</span>
+            </p>
           </div>
         </div>
 
         <div class="formula">
           HDR = base × 2<sup>(<span class="v">g</span> × (capMax − capMin) + capMin)</sup> + offset
-          <small>g = 增益图像素值（先按 1/gamma 校正）；capMin / capMax / offset 来自图片元数据</small>
+          <small><span data-lang="zh">g = 增益图像素值（先按 1/gamma 校正）；capMin / capMax / offset 来自图片元数据</span><span data-lang="en">g = gain-map pixel value (first corrected by 1/gamma); capMin / capMax / offset come from the image metadata</span></small>
         </div>
 
-        <p>实现上逐像素跑这条公式，刻意<b>不把结果裁剪到 1.0 以内</b>——超过 1.0 的部分正是 HDR 高光，裁掉就退回 SDR 了。算完线性 HDR，再用 PQ（SMPTE ST 2084）曲线编码进 16-bit，交给 JXL 或 ffmpeg。</p>
+        <p>
+          <span data-lang="zh">实现上逐像素跑这条公式，刻意<b>不把结果裁剪到 1.0 以内</b>——超过 1.0 的部分正是 HDR 高光，裁掉就退回 SDR 了。算完线性 HDR，再用 PQ（SMPTE ST 2084）曲线编码进 16-bit，交给 JXL 或 ffmpeg。</span>
+          <span data-lang="en">The implementation runs this formula per pixel and deliberately <b>does not clamp the result to within 1.0</b> — the part above 1.0 is exactly the HDR highlights; clamping it falls back to SDR. After computing linear HDR, it encodes into 16-bit via the PQ (SMPTE ST 2084) curve, handed off to JXL or ffmpeg.</span>
+        </p>
 
-<pre><span class="cmt">// gainmap.cpp — 合并的核心循环（节选）</span>
+<pre data-lang="zh"><span class="cmt">// gainmap.cpp — 合并的核心循环（节选）</span>
 <span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;   <span class="cmt">// 映射到 log2 提亮量</span>
 <span class="kw">float</span> factor   = std::pow(2.0f, log2Gain);             <span class="cmt">// 指数 → 线性增益因子</span>
 <span class="kw">float</span> hdr      = base * factor + offsetHdr;
 hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只保非负，不裁上限（保住高光）</span></pre>
+<pre data-lang="en"><span class="cmt">// gainmap.cpp — core merge loop (excerpt)</span>
+<span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;   <span class="cmt">// map to the log2 boost amount</span>
+<span class="kw">float</span> factor   = std::pow(2.0f, log2Gain);             <span class="cmt">// exponent → linear gain factor</span>
+<span class="kw">float</span> hdr      = base * factor + offsetHdr;
+hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// keep non-negative only, no upper clamp (preserve highlights)</span></pre>
 
-        <div class="note" style="margin-top:18px">关键判断：PQ 是一条<b>绝对亮度</b>曲线——编码值直接对应「多少 nits」，1.0 = 10000 nits。这句话听起来无害，却正是整个项目最大那个坑的根源（见下面「看结果调算法」第一条）。</div>
+        <div class="note" style="margin-top:18px">
+          <span data-lang="zh">关键判断：PQ 是一条<b>绝对亮度</b>曲线——编码值直接对应「多少 nits」，1.0 = 10000 nits。这句话听起来无害，却正是整个项目最大那个坑的根源（见下面「看结果调算法」第一条）。</span>
+          <span data-lang="en">Key insight: PQ is an <b>absolute-luminance</b> curve — the encoded value maps directly to "how many nits", with 1.0 = 10000 nits. This sounds harmless but is the root of the project's biggest pitfall (see "Debug by Output", item 1 below).</span>
+        </div>
       </div>
     </section>
 
@@ -664,38 +737,50 @@ hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只�
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">解析输入</span>
-            <h2>难的不是算，是先把增益图找出来</h2>
-            <p>三家厂商把增益图藏在三个不同的地方。读取层要足够健壮：标准路径走不通时要有退路，否则一张被压过的图就让整个转换失败。</p>
+            <span class="phase-tag"><span data-lang="zh">解析输入</span><span data-lang="en">Parsing Input</span></span>
+            <h2><span data-lang="zh">难的不是算，是先把增益图找出来</span><span data-lang="en">The hard part isn't the math — it's finding the gain map first</span></h2>
+            <p>
+              <span data-lang="zh">三家厂商把增益图藏在三个不同的地方。读取层要足够健壮：标准路径走不通时要有退路，否则一张被压过的图就让整个转换失败。</span>
+              <span data-lang="en">Three vendors hide the gain map in three different places. The read layer must be robust enough: when the standard path fails, it needs a fallback, or one re-compressed image breaks the whole conversion.</span>
+            </p>
           </div>
         </div>
         <div class="grid-3">
           <div class="card">
             <div class="kicker">iPhone · HEIC</div>
-            <h4>tmap 辅助图</h4>
-            <p>遍历 HEIF 容器里的 item，按 fourcc <code>'t','m','a','p'</code> 找到增益图项，单独解码成单通道亮度图。位深可能是 8/10/12/16 位，按最大值归一化到 0–1。</p>
+            <h4><span data-lang="zh">tmap 辅助图</span><span data-lang="en">tmap auxiliary image</span></h4>
+            <p>
+              <span data-lang="zh">遍历 HEIF 容器里的 item，按 fourcc <code>'t','m','a','p'</code> 找到增益图项，单独解码成单通道亮度图。位深可能是 8/10/12/16 位，按最大值归一化到 0–1。</span>
+              <span data-lang="en">Walk the items in the HEIF container, find the gain-map item by fourcc <code>'t','m','a','p'</code>, and decode it separately into a single-channel luminance map. Bit depth may be 8/10/12/16-bit; normalize to 0–1 by the max value.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">安卓 · UltraHDR</div>
-            <h4>XMP + 内嵌 JPEG</h4>
-            <p>从 <code>hdrgm:</code> 命名空间正则提取 gamma、capacity、offset；增益图本身是文件尾部第二张内嵌 JPEG，靠 <code>Container:Item</code> 长度定位。</p>
+            <div class="kicker"><span data-lang="zh">安卓 · UltraHDR</span><span data-lang="en">Android · UltraHDR</span></div>
+            <h4><span data-lang="zh">XMP + 内嵌 JPEG</span><span data-lang="en">XMP + embedded JPEG</span></h4>
+            <p>
+              <span data-lang="zh">从 <code>hdrgm:</code> 命名空间正则提取 gamma、capacity、offset；增益图本身是文件尾部第二张内嵌 JPEG，靠 <code>Container:Item</code> 长度定位。</span>
+              <span data-lang="en">Regex-extract gamma, capacity, and offset from the <code>hdrgm:</code> namespace; the gain map itself is a second JPEG embedded at the end of the file, located via the <code>Container:Item</code> length.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">退路</div>
-            <h4>双阶段定位</h4>
-            <p>优先用 MPF 段里的绝对偏移直接跳到增益图；MPF 缺失或被改写时，<b>退回全文件扫描 JPEG 起始标记</b>（<code>0xFFD8</code>）找第二张图。两条路都留着。</p>
+            <div class="kicker"><span data-lang="zh">退路</span><span data-lang="en">Fallback</span></div>
+            <h4><span data-lang="zh">双阶段定位</span><span data-lang="en">Two-stage location</span></h4>
+            <p>
+              <span data-lang="zh">优先用 MPF 段里的绝对偏移直接跳到增益图；MPF 缺失或被改写时，<b>退回全文件扫描 JPEG 起始标记</b>（<code>0xFFD8</code>）找第二张图。两条路都留着。</span>
+              <span data-lang="en">Prefer the absolute offset in the MPF segment to jump straight to the gain map; when MPF is missing or rewritten, <b>fall back to scanning the whole file for the JPEG start marker</b> (<code>0xFFD8</code>) to find the second image. Both paths are kept.</span>
+            </p>
           </div>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 0 · 增益图尺寸常常小于主图</div>
+          <div class="ptitle"><span data-lang="zh">坑 0 · 增益图尺寸常常小于主图</span><span data-lang="en">Pitfall 0 · The gain map is often smaller than the main image</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>增益图像素数和主图对不上，直接套用就<b>错位甚至崩溃</b>。</dd>
-            <dt>原因</dt>
-            <dd>为省空间，厂商常把增益图存成主图的 1/2 或 1/4 分辨率。</dd>
-            <dt>修复</dt>
-            <dd>读取层先把增益图<b>双线性放大</b>到主图尺寸再交给合并层，让后续逐像素公式能直接一一对齐。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">增益图像素数和主图对不上，直接套用就<b>错位甚至崩溃</b>。</span><span data-lang="en">The gain map's pixel count doesn't match the main image; applying it directly causes <b>misalignment or even a crash</b>.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">为省空间，厂商常把增益图存成主图的 1/2 或 1/4 分辨率。</span><span data-lang="en">To save space, vendors often store the gain map at 1/2 or 1/4 the resolution of the main image.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">读取层先把增益图<b>双线性放大</b>到主图尺寸再交给合并层，让后续逐像素公式能直接一一对齐。</span><span data-lang="en">The read layer <b>bilinearly upscales</b> the gain map to the main image's size before handing it to the merge layer, so the per-pixel formula aligns one-to-one.</span></dd>
           </dl>
         </div>
       </div>
@@ -705,62 +790,86 @@ hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只�
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">三通道 HDR</span>
-            <h2>彩色高光不只是更亮，还要把颜色救回来</h2>
-            <p>普通单通道 Gain Map 只回答一个问题：这个像素该提亮多少。RGB 三通道 Gain Map 多回答了两个问题：红、绿、蓝分别该提多少，以及哪个通道曾经在 SDR base 里被截断得更严重。对霓虹、屏幕、夕阳、车灯、强光下肤色这类彩色高光来说，这个差别非常大。</p>
+            <span class="phase-tag"><span data-lang="zh">三通道 HDR</span><span data-lang="en">Three-Channel HDR</span></span>
+            <h2><span data-lang="zh">彩色高光不只是更亮，还要把颜色救回来</span><span data-lang="en">Colored highlights aren't just brighter — the color has to be brought back</span></h2>
+            <p>
+              <span data-lang="zh">普通单通道 Gain Map 只回答一个问题：这个像素该提亮多少。RGB 三通道 Gain Map 多回答了两个问题：红、绿、蓝分别该提多少，以及哪个通道曾经在 SDR base 里被截断得更严重。对霓虹、屏幕、夕阳、车灯、强光下肤色这类彩色高光来说，这个差别非常大。</span>
+              <span data-lang="en">An ordinary single-channel gain map answers one question: how much should this pixel be brightened. An RGB three-channel gain map answers two more: how much should red, green, and blue each be boosted, and which channel was clipped more severely in the SDR base. For colored highlights like neon, screens, sunsets, car lights, and skin under strong light, this difference is large.</span>
+            </p>
           </div>
-          <div class="note">一句话价值：单通道能把发灰的高光重新点亮；三通道才有机会把「被 SDR 截断压平的颜色」也一起找回来。</div>
+          <div class="note">
+            <span data-lang="zh">一句话价值：单通道能把发灰的高光重新点亮；三通道才有机会把「被 SDR 截断压平的颜色」也一起找回来。</span>
+            <span data-lang="en">Value in one sentence: a single channel can relight grayed-out highlights; only three channels have a chance of also recovering "the color flattened by SDR clipping".</span>
+          </div>
         </div>
 
         <div class="rgb-showcase">
           <figure class="rgb-main">
-            <img src="assets/hdr-demo-rgb/idg_rgb_base.jpg" alt="IDG_2026061_RGBGainmap.jpg 的 SDR base 层" loading="lazy">
-            <figcaption class="vid-cap"><b>IDG_2026061_RGBGainmap.jpg · Apple iPhone 17 Pro · SDR base</b><small>这层负责兼容普通显示。高光已经被 SDR 上限压住，局部颜色会发白、发灰，尤其是彩色亮部。</small></figcaption>
+            <img src="assets/hdr-demo-rgb/idg_rgb_base.jpg" alt="IDG_2026061_RGBGainmap.jpg SDR base layer" loading="lazy">
+            <figcaption class="vid-cap"><b>IDG_2026061_RGBGainmap.jpg · Apple iPhone 17 Pro · SDR base</b><small><span data-lang="zh">这层负责兼容普通显示。高光已经被 SDR 上限压住，局部颜色会发白、发灰，尤其是彩色亮部。</span><span data-lang="en">This layer handles compatibility with ordinary displays. The highlights are already capped by the SDR ceiling, so local colors wash out and gray — especially colored bright areas.</span></small></figcaption>
           </figure>
-          <div class="channel-strip" aria-label="RGB 三通道增益层">
+          <div class="channel-strip" aria-label="RGB gain channels">
             <figure class="rgb-channel r">
-              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_r.jpg" alt="R 通道增益层" loading="lazy">
-              <figcaption class="vid-cap"><b>R gain</b><small>红色通道的补偿量</small></figcaption>
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_r.jpg" alt="R channel gain layer" loading="lazy">
+              <figcaption class="vid-cap"><b>R gain</b><small><span data-lang="zh">红色通道的补偿量</span><span data-lang="en">Red channel compensation</span></small></figcaption>
             </figure>
             <figure class="rgb-channel g">
-              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_g.jpg" alt="G 通道增益层" loading="lazy">
-              <figcaption class="vid-cap"><b>G gain</b><small>绿色通道的补偿量</small></figcaption>
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_g.jpg" alt="G channel gain layer" loading="lazy">
+              <figcaption class="vid-cap"><b>G gain</b><small><span data-lang="zh">绿色通道的补偿量</span><span data-lang="en">Green channel compensation</span></small></figcaption>
             </figure>
             <figure class="rgb-channel b">
-              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_b.jpg" alt="B 通道增益层" loading="lazy">
-              <figcaption class="vid-cap"><b>B gain</b><small>蓝色通道的补偿量</small></figcaption>
+              <img src="assets/hdr-demo-rgb/idg_rgb_gainmap_b.jpg" alt="B channel gain layer" loading="lazy">
+              <figcaption class="vid-cap"><b>B gain</b><small><span data-lang="zh">蓝色通道的补偿量</span><span data-lang="en">Blue channel compensation</span></small></figcaption>
             </figure>
           </div>
         </div>
 
-        <p>这张 <code>IDG_2026061_RGBGainmap.jpg</code> 的元数据显示，拍摄设备为 <b>Apple iPhone 17 Pro</b>；文件封装是 JPEG + MPF 内嵌第二张 JPEG 的 Gain Map 结构，并同时带有 Adobe <code>hdrgm:</code> XMP 与 ISO 21496 标记。它的增益图不是一张灰度图复制三遍，而是 RGB 三通道 Gain Map：R、G、B 各自有不同的增益范围，在每个颜色通道上分别记录「还应该往 HDR 里抬多少」。这对彩色高光很关键，因为 SDR 截断通常不是三个通道一起、均匀地撞顶。</p>
+        <p>
+          <span data-lang="zh">这张 <code>IDG_2026061_RGBGainmap.jpg</code> 的元数据显示，拍摄设备为 <b>Apple iPhone 17 Pro</b>；文件封装是 JPEG + MPF 内嵌第二张 JPEG 的 Gain Map 结构，并同时带有 Adobe <code>hdrgm:</code> XMP 与 ISO 21496 标记。它的增益图不是一张灰度图复制三遍，而是 RGB 三通道 Gain Map：R、G、B 各自有不同的增益范围，在每个颜色通道上分别记录「还应该往 HDR 里抬多少」。这对彩色高光很关键，因为 SDR 截断通常不是三个通道一起、均匀地撞顶。</span>
+          <span data-lang="en">This <code>IDG_2026061_RGBGainmap.jpg</code>'s metadata shows the capture device as <b>Apple iPhone 17 Pro</b>; the file is wrapped as JPEG + an MPF-embedded second JPEG gain-map structure, carrying both Adobe <code>hdrgm:</code> XMP and ISO 21496 markers. Its gain map isn't one grayscale image copied three times, but an RGB three-channel gain map: R, G, and B each have their own gain range, separately recording "how much further to lift toward HDR" in each color channel. This matters for colored highlights, because SDR clipping usually doesn't hit all three channels together and evenly.</span>
+        </p>
 
         <div class="rgb-logic">
           <div class="card">
-            <div class="kicker">问题 1</div>
-            <h4>SDR 截断会让颜色失真</h4>
-            <p>彩色高光进入 SDR base 时，可能是红通道先撞顶，也可能是绿、蓝被压得更多。三通道被不同程度截断后，原来的色相和饱和度就被压平了，画面看起来会发白、褪色。</p>
+            <div class="kicker"><span data-lang="zh">问题 1</span><span data-lang="en">Problem 1</span></div>
+            <h4><span data-lang="zh">SDR 截断会让颜色失真</span><span data-lang="en">SDR clipping distorts color</span></h4>
+            <p>
+              <span data-lang="zh">彩色高光进入 SDR base 时，可能是红通道先撞顶，也可能是绿、蓝被压得更多。三通道被不同程度截断后，原来的色相和饱和度就被压平了，画面看起来会发白、褪色。</span>
+              <span data-lang="en">When colored highlights enter the SDR base, the red channel may hit the ceiling first, or green/blue may be compressed more. Once the three channels are clipped to different degrees, the original hue and saturation are flattened and the image looks washed-out and faded.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">问题 2</div>
-            <h4>单通道只能提亮，不能解截断</h4>
-            <p>单通道 Gain Map 给 RGB 同一个倍数，只能把已经褪色的高光整体抬亮。亮度回来了，但被压坏的通道比例没有回来，所以彩色灯牌、屏幕和夕阳容易变成「亮，但没颜色」。</p>
+            <div class="kicker"><span data-lang="zh">问题 2</span><span data-lang="en">Problem 2</span></div>
+            <h4><span data-lang="zh">单通道只能提亮，不能解截断</span><span data-lang="en">A single channel can only brighten, not undo clipping</span></h4>
+            <p>
+              <span data-lang="zh">单通道 Gain Map 给 RGB 同一个倍数，只能把已经褪色的高光整体抬亮。亮度回来了，但被压坏的通道比例没有回来，所以彩色灯牌、屏幕和夕阳容易变成「亮，但没颜色」。</span>
+              <span data-lang="en">A single-channel gain map gives RGB the same multiplier, so it can only lift the already-faded highlights as a whole. Brightness comes back, but the ratio of the damaged channels doesn't — so colored signs, screens, and sunsets tend to become "bright but colorless".</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">价值</div>
-            <h4>三通道能重建颜色比例</h4>
-            <p>RGB Gain Map 可以让每个通道按自己的轨迹恢复：该补红就补红，该补蓝就补蓝。它做的不是简单调饱和度，而是在 HDR 合成阶段把被 SDR base 截断的颜色关系重新拉开。</p>
+            <div class="kicker"><span data-lang="zh">价值</span><span data-lang="en">Value</span></div>
+            <h4><span data-lang="zh">三通道能重建颜色比例</span><span data-lang="en">Three channels can rebuild color ratios</span></h4>
+            <p>
+              <span data-lang="zh">RGB Gain Map 可以让每个通道按自己的轨迹恢复：该补红就补红，该补蓝就补蓝。它做的不是简单调饱和度，而是在 HDR 合成阶段把被 SDR base 截断的颜色关系重新拉开。</span>
+              <span data-lang="en">An RGB gain map lets each channel recover along its own trajectory: add red where red is needed, add blue where blue is needed. It isn't simply adjusting saturation — it re-separates the color relationships clipped by the SDR base during HDR compositing.</span>
+            </p>
           </div>
         </div>
 
         <div class="formula">
           HDR<sub>r,g,b</sub> = base<sub>r,g,b</sub> × 2<sup>gain<sub>r,g,b</sub></sup>
-          <small>单通道：三个颜色共用一个 gain；三通道：R/G/B 分别有自己的 gain、min/max 和 offset</small>
+          <small><span data-lang="zh">单通道：三个颜色共用一个 gain；三通道：R/G/B 分别有自己的 gain、min/max 和 offset</span><span data-lang="en">Single channel: the three colors share one gain; three channels: R/G/B each have their own gain, min/max, and offset</span></small>
         </div>
 
-        <p>还有一个感知层面的理由：<b>Hunt 效应</b>。人眼在更高亮度下，会期待颜色看起来更鲜艳；真实世界里的霓虹、LED 屏、夕阳和强反射也确实常常又亮又有色。如果 HDR 只把高光亮度提上去，却保留 SDR 截断后的低饱和颜色，视觉上就会显得「亮但脏」「亮但假」。三通道 Gain Map 同时补亮度和通道比例，才更接近这些彩色高光本来该有的样子。</p>
+        <p>
+          <span data-lang="zh">还有一个感知层面的理由：<b>Hunt 效应</b>。人眼在更高亮度下，会期待颜色看起来更鲜艳；真实世界里的霓虹、LED 屏、夕阳和强反射也确实常常又亮又有色。如果 HDR 只把高光亮度提上去，却保留 SDR 截断后的低饱和颜色，视觉上就会显得「亮但脏」「亮但假」。三通道 Gain Map 同时补亮度和通道比例，才更接近这些彩色高光本来该有的样子。</span>
+          <span data-lang="en">There's also a perceptual reason: the <b>Hunt effect</b>. At higher luminance, the eye expects colors to look more saturated; real-world neon, LED screens, sunsets, and strong reflections are indeed often both bright and colorful. If HDR only raises highlight brightness while keeping the low-saturation color left by SDR clipping, it looks "bright but dirty", "bright but fake". A three-channel gain map restores both brightness and channel ratios, getting closer to how these colored highlights should look.</span>
+        </p>
 
-        <div class="note" style="margin-top:18px">所以三通道 HDR 的价值不是「更艳一点」这么简单，而是把 HDR 从亮度恢复推进到颜色恢复：先避免 SDR 把彩色高光压白，再利用 HDR 亮度空间把应该鲜艳的高光放回去。</div>
+        <div class="note" style="margin-top:18px">
+          <span data-lang="zh">所以三通道 HDR 的价值不是「更艳一点」这么简单，而是把 HDR 从亮度恢复推进到颜色恢复：先避免 SDR 把彩色高光压白，再利用 HDR 亮度空间把应该鲜艳的高光放回去。</span>
+          <span data-lang="en">So the value of three-channel HDR isn't simply "a bit more vivid" — it pushes HDR from luminance recovery to color recovery: first avoid SDR washing colored highlights white, then use the HDR luminance space to put the highlights that should be vivid back where they belong.</span>
+        </div>
       </div>
     </section>
 
@@ -768,88 +877,109 @@ hdrImage[idx] = std::max(0.0f, hdr);                  <span class="cmt">// 只�
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">看结果调算法</span>
-            <h2>真正的算法，是被导出结果逼出来的</h2>
+            <span class="phase-tag"><span data-lang="zh">看结果调算法</span><span data-lang="en">Debug by Output</span></span>
+            <h2><span data-lang="zh">真正的算法，是被导出结果逼出来的</span><span data-lang="en">The real algorithm was forced out by the exported results</span></h2>
           </div>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 1 · 整张图严重过曝，白得刺眼</div>
+          <div class="ptitle"><span data-lang="zh">坑 1 · 整张图严重过曝，白得刺眼</span><span data-lang="en">Pitfall 1 · The whole image is badly overexposed, blindingly white</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>导出的 JXL / 视频整体过亮，本该是参考白的区域亮得发光。</dd>
-            <dt>原因</dt>
-            <dd>PQ 是绝对亮度曲线，<b>线性 1.0 = 10000 nits</b>。直接把 sRGB 满亮度 1.0 喂进 PQ，等于把「纸面白」当成了 10000 nits 的超亮高光。</dd>
-            <dt>修复</dt>
-            <dd>合并前先把 base 层<b>锚定到 SDR 参考白</b>：乘以 <code>sdrWhiteNits / 10000</code>。203 nits 来自 ITU-R BT.2408 / libultrahdr 推荐值，让「SDR 1.0」对应到 PQ 的 203 nits 而不是满量程。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">导出的 JXL / 视频整体过亮，本该是参考白的区域亮得发光。</span><span data-lang="en">The exported JXL / video is overall too bright; areas that should be reference white glow.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">PQ 是绝对亮度曲线，<b>线性 1.0 = 10000 nits</b>。直接把 sRGB 满亮度 1.0 喂进 PQ，等于把「纸面白」当成了 10000 nits 的超亮高光。</span><span data-lang="en">PQ is an absolute-luminance curve, <b>linear 1.0 = 10000 nits</b>. Feeding sRGB full brightness 1.0 straight into PQ treats "paper white" as a 10000-nit ultra-bright highlight.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">合并前先把 base 层<b>锚定到 SDR 参考白</b>：乘以 <code>sdrWhiteNits / 10000</code>。203 nits 来自 ITU-R BT.2408 / libultrahdr 推荐值，让「SDR 1.0」对应到 PQ 的 203 nits 而不是满量程。</span><span data-lang="en">Before merging, <b>anchor the base layer to SDR reference white</b>: multiply by <code>sdrWhiteNits / 10000</code>. The 203 nits comes from the ITU-R BT.2408 / libultrahdr recommended value, mapping "SDR 1.0" to PQ's 203 nits rather than full scale.</span></dd>
           </dl>
-<pre><span class="cmt">// 改前：sRGB 1.0 直接进 PQ → 被当成 10000 nits，全图过曝</span>
+<pre data-lang="zh"><span class="cmt">// 改前：sRGB 1.0 直接进 PQ → 被当成 10000 nits，全图过曝</span>
 <span class="bad">float baseR = baseImage[idx];</span>
 
 <span class="cmt">// 改后：先把 SDR 参考白锚到 203 nits 的绝对亮度位置</span>
 <span class="good">const float k = sdrWhiteNits / 10000.0f;   // 203 / 10000
 float baseR = baseImage[idx] * k;</span></pre>
+<pre data-lang="en"><span class="cmt">// Before: sRGB 1.0 straight into PQ → treated as 10000 nits, whole image overexposed</span>
+<span class="bad">float baseR = baseImage[idx];</span>
+
+<span class="cmt">// After: anchor SDR reference white to the absolute position of 203 nits first</span>
+<span class="good">const float k = sdrWhiteNits / 10000.0f;   // 203 / 10000
+float baseR = baseImage[idx] * k;</span></pre>
 
           <div class="formula">
             k = L<sub>white</sub> ÷ 10000 = 203 ÷ 10000 ≈ <span class="v">0.0203</span>
-            <small>203 nits 是 HDR 系统里的漫反射白 / 图文白，不是峰值亮度；203 以上的空间留给灯光、反射、太阳等真正高光</small>
+            <small><span data-lang="zh">203 nits 是 HDR 系统里的漫反射白 / 图文白，不是峰值亮度；203 以上的空间留给灯光、反射、太阳等真正高光</span><span data-lang="en">203 nits is the diffuse white / graphics white in a HDR system, not peak brightness; the room above 203 is left for lights, reflections, the sun, and other true highlights</span></small>
           </div>
 
-          <p style="margin:12px 0 0">这个数不是靠肉眼试出来的调色参数，而是把 SDR base 的相对参考白接到 PQ 绝对亮度坐标里的锚点。BT.2408 和 libultrahdr 都把 HDR 参考白放在 203 nits；没有这个锚点，SDR 的 1.0 会被 PQ 当成 10000 nits，整张图自然过曝。</p>
+          <p style="margin:12px 0 0">
+            <span data-lang="zh">这个数不是靠肉眼试出来的调色参数，而是把 SDR base 的相对参考白接到 PQ 绝对亮度坐标里的锚点。BT.2408 和 libultrahdr 都把 HDR 参考白放在 203 nits；没有这个锚点，SDR 的 1.0 会被 PQ 当成 10000 nits，整张图自然过曝。</span>
+            <span data-lang="en">This number isn't a color-grading parameter found by eye, but the anchor that ties the SDR base's relative reference white to PQ's absolute-luminance coordinates. Both BT.2408 and libultrahdr place HDR reference white at 203 nits; without this anchor, SDR's 1.0 is treated by PQ as 10000 nits and the whole image naturally overexposes.</span>
+          </p>
 
-          <p style="margin:16px 0 0">同一张 OPPO UltraHDR 原图，分别用「漏掉锚定」的旧算法和修好的算法转成 HDR 视频，差别一眼可见——左边整屏发光、招牌和路面全糊成一片白，右边夜景层次正常、只有灯箱该亮的地方亮：</p>
+          <p style="margin:16px 0 0">
+            <span data-lang="zh">同一张 OPPO UltraHDR 原图，分别用「漏掉锚定」的旧算法和修好的算法转成 HDR 视频，差别一眼可见——左边整屏发光、招牌和路面全糊成一片白，右边夜景层次正常、只有灯箱该亮的地方亮：</span>
+            <span data-lang="en">The same OPPO UltraHDR original, converted to HDR video with the old algorithm that "skipped the anchor" versus the fixed one, shows an obvious difference — the left glows across the whole screen with signage and road blurred into white, the right has normal night-scene tonality with only the light boxes bright where they should be:</span>
+          </p>
           <div class="vid-compare">
             <div class="vid-figure bad">
               <video src="assets/hdr-demo/hdr_wrong.mov" poster="assets/hdr-demo/hdr_wrong_poster.jpg" autoplay muted loop playsinline></video>
-              <div class="vid-cap"><b>错误算法 · 漏掉 SDR 锚定</b><small>base 直接进 PQ，平均亮度 ≈ 785 nits、峰值顶到 10000 nits，整图过曝</small></div>
+              <div class="vid-cap"><b><span data-lang="zh">错误算法 · 漏掉 SDR 锚定</span><span data-lang="en">Wrong algorithm · missing SDR anchor</span></b><small><span data-lang="zh">base 直接进 PQ，平均亮度 ≈ 785 nits、峰值顶到 10000 nits，整图过曝</span><span data-lang="en">base goes straight into PQ, average ≈ 785 nits, peak hitting 10000 nits, whole image overexposed</span></small></div>
             </div>
             <div class="vid-figure good">
               <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
-              <div class="vid-cap"><b>正确算法 · 锚定到 203 nits</b><small>base 先乘 203/10000，平均亮度 ≈ 16 nits、峰值 ≈ 828 nits，高光只留给该亮的地方</small></div>
+              <div class="vid-cap"><b><span data-lang="zh">正确算法 · 锚定到 203 nits</span><span data-lang="en">Correct algorithm · anchored to 203 nits</span></b><small><span data-lang="zh">base 先乘 203/10000，平均亮度 ≈ 16 nits、峰值 ≈ 828 nits，高光只留给该亮的地方</span><span data-lang="en">base first multiplied by 203/10000, average ≈ 16 nits, peak ≈ 828 nits, highlights only where they belong</span></small></div>
             </div>
           </div>
-          <p class="vid-note">注：两段都是真正的 HDR10（HEVC / PQ / BT.2020）视频。在 HDR 屏上差距更夸张；这里看到的已是浏览器把 HDR 压回 SDR 后的效果，过曝那条仍然惨白。</p>
+          <p class="vid-note"><span data-lang="zh">注：两段都是真正的 HDR10（HEVC / PQ / BT.2020）视频。在 HDR 屏上差距更夸张；这里看到的已是浏览器把 HDR 压回 SDR 后的效果，过曝那条仍然惨白。</span><span data-lang="en">Note: both clips are genuine HDR10 (HEVC / PQ / BT.2020) video. The gap is even more dramatic on a HDR screen; what you see here is already the browser tone-mapping HDR back to SDR, yet the overexposed one is still washed white.</span></p>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 2 · 把强度拖到「纯 SDR」反而又过曝了</div>
+          <div class="ptitle"><span data-lang="zh">坑 2 · 把强度拖到「纯 SDR」反而又过曝了</span><span data-lang="en">Pitfall 2 · Dragging strength to "pure SDR" overexposed again</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>增益强度 = 1（完整 HDR）正常，可一拖到 0（纯 SDR）画面又爆掉。</dd>
-            <dt>原因</dt>
-            <dd>强度为 0 时为了省事走了一条快捷分支，<b>忘了同样乘 <code>sdrWhiteNits/10000</code></b>，于是 sRGB 1.0 又变回 10000 nits。两条代码路径不一致。</dd>
-            <dt>修复</dt>
-            <dd>让所有强度分支共用同一个 <code>k = sdrWhiteNits/10000</code> 系数，保证 0、1 和中间值落在同一套亮度坐标里。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">增益强度 = 1（完整 HDR）正常，可一拖到 0（纯 SDR）画面又爆掉。</span><span data-lang="en">At gain strength = 1 (full HDR) it's fine, but dragging to 0 (pure SDR) blows out again.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">强度为 0 时为了省事走了一条快捷分支，<b>忘了同样乘 <code>sdrWhiteNits/10000</code></b>，于是 sRGB 1.0 又变回 10000 nits。两条代码路径不一致。</span><span data-lang="en">At strength 0, a shortcut branch was taken for convenience that <b>forgot to also multiply by <code>sdrWhiteNits/10000</code></b>, so sRGB 1.0 became 10000 nits again. The two code paths were inconsistent.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">让所有强度分支共用同一个 <code>k = sdrWhiteNits/10000</code> 系数，保证 0、1 和中间值落在同一套亮度坐标里。</span><span data-lang="en">Make all strength branches share the same <code>k = sdrWhiteNits/10000</code> coefficient, so 0, 1, and intermediate values land in the same luminance coordinate system.</span></dd>
           </dl>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 3 · 中间强度档位高光发灰、不自然</div>
+          <div class="ptitle"><span data-lang="zh">坑 3 · 中间强度档位高光发灰、不自然</span><span data-lang="en">Pitfall 3 · Mid-strength highlights look gray and unnatural</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>增益强度取 0.5 这类中间值时，高光过渡浑浊，不像「一半 HDR」。</dd>
-            <dt>原因</dt>
-            <dd>一开始在<b>像素值上线性插值</b>（(1−s)·SDR + s·HDR）。但提亮是 2 的指数关系，对指数结果做线性混合会破坏曝光的几何级数。</dd>
-            <dt>修复</dt>
-            <dd>把插值挪到 <b>log2 域</b>：直接缩放指数 <code>log2Gain × gainStrength</code>，再做 <code>2^</code>。强度 0 = 不提亮，强度 1 = 完整提亮，中间是平滑的曝光过渡。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">增益强度取 0.5 这类中间值时，高光过渡浑浊，不像「一半 HDR」。</span><span data-lang="en">At intermediate values like gain strength 0.5, the highlight transition is muddy, not like "half HDR".</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">一开始在<b>像素值上线性插值</b>（(1−s)·SDR + s·HDR）。但提亮是 2 的指数关系，对指数结果做线性混合会破坏曝光的几何级数。</span><span data-lang="en">At first it <b>linearly interpolated on pixel values</b> ((1−s)·SDR + s·HDR). But the boost is a power-of-2 relationship, and linearly blending exponential results breaks the geometric progression of exposure.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">把插值挪到 <b>log2 域</b>：直接缩放指数 <code>log2Gain × gainStrength</code>，再做 <code>2^</code>。强度 0 = 不提亮，强度 1 = 完整提亮，中间是平滑的曝光过渡。</span><span data-lang="en">Move the interpolation to the <b>log2 domain</b>: scale the exponent directly with <code>log2Gain × gainStrength</code>, then apply <code>2^</code>. Strength 0 = no boost, strength 1 = full boost, with a smooth exposure transition in between.</span></dd>
           </dl>
-<pre><span class="cmt">// 在指数上插值，而不是在像素上插值</span>
+<pre data-lang="zh"><span class="cmt">// 在指数上插值，而不是在像素上插值</span>
 <span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;
 log2Gain *= gainStrength;                 <span class="cmt">// ← 关键：缩放的是指数</span>
+<span class="kw">float</span> factor = std::pow(2.0f, log2Gain);</pre>
+<pre data-lang="en"><span class="cmt">// Interpolate on the exponent, not on the pixel</span>
+<span class="kw">float</span> log2Gain = gain * (capMax - capMin) + capMin;
+log2Gain *= gainStrength;                 <span class="cmt">// ← key: it's the exponent being scaled</span>
 <span class="kw">float</span> factor = std::pow(2.0f, log2Gain);</pre>
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 4 · 视频在 QuickTime 里打不开 / 不走 HDR</div>
+          <div class="ptitle"><span data-lang="zh">坑 4 · 视频在 QuickTime 里打不开 / 不走 HDR</span><span data-lang="en">Pitfall 4 · Video won't open in QuickTime / doesn't go HDR</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>ffmpeg 编出来的 MOV，QuickTime 要么打不开，要么当成普通 SDR 播放。</dd>
-            <dt>原因</dt>
-            <dd>QuickTime 只认 <code>hvc1</code> 标签的 HEVC（不认默认的 <code>hev1</code>），而且必须带齐 HDR10 的颜色元数据才会进 HDR 通路。</dd>
-            <dt>修复</dt>
-            <dd>编码时显式加 <code>-tag:v hvc1</code>、用 10-bit <code>p010le</code>，并补全 BT.2020 / ST.2084 / BT.2020-ncl 三件套。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">ffmpeg 编出来的 MOV，QuickTime 要么打不开，要么当成普通 SDR 播放。</span><span data-lang="en">The MOV encoded by ffmpeg either won't open in QuickTime or plays as ordinary SDR.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">QuickTime 只认 <code>hvc1</code> 标签的 HEVC（不认默认的 <code>hev1</code>），而且必须带齐 HDR10 的颜色元数据才会进 HDR 通路。</span><span data-lang="en">QuickTime only recognizes HEVC tagged <code>hvc1</code> (not the default <code>hev1</code>), and it needs the full HDR10 color metadata to enter the HDR path.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">编码时显式加 <code>-tag:v hvc1</code>、用 10-bit <code>p010le</code>，并补全 BT.2020 / ST.2084 / BT.2020-ncl 三件套。</span><span data-lang="en">Explicitly add <code>-tag:v hvc1</code> during encoding, use 10-bit <code>p010le</code>, and fill in the BT.2020 / ST.2084 / BT.2020-ncl trio.</span></dd>
           </dl>
-<pre><span class="cmt"># 让 QuickTime 认得、且走 HDR10 通路的关键参数</span>
+<pre data-lang="zh"><span class="cmt"># 让 QuickTime 认得、且走 HDR10 通路的关键参数</span>
+ffmpeg -loop 1 -i tmp.jxl \
+  -c:v hevc_videotoolbox -profile:v main10 -pix_fmt p010le \
+  <span class="good">-tag:v hvc1</span> \
+  <span class="good">-color_primaries bt2020 -color_trc smpte2084 -colorspace bt2020_ncl</span> ...</pre>
+<pre data-lang="en"><span class="cmt"># Key parameters so QuickTime recognizes it and uses the HDR10 path</span>
 ffmpeg -loop 1 -i tmp.jxl \
   -c:v hevc_videotoolbox -profile:v main10 -pix_fmt p010le \
   <span class="good">-tag:v hvc1</span> \
@@ -857,14 +987,14 @@ ffmpeg -loop 1 -i tmp.jxl \
         </div>
 
         <div class="pitfall">
-          <div class="ptitle">坑 5 · 声明 16-bit 却传了浮点数据，解码花屏</div>
+          <div class="ptitle"><span data-lang="zh">坑 5 · 声明 16-bit 却传了浮点数据，解码花屏</span><span data-lang="en">Pitfall 5 · Declared 16-bit but passed float data, decoding garbles</span></div>
           <dl>
-            <dt>症状</dt>
-            <dd>JXL 文件能写出来，但解码时颜色错乱 / 花屏。</dd>
-            <dt>原因</dt>
-            <dd>basic_info 里声明的位深，必须和实际像素的数据类型严格对应；混用 16-bit 声明 + float 数据会让解码器按错误布局读取。</dd>
-            <dt>修复</dt>
-            <dd>分成两条干净的路径：<b>16-bit 走整型量化</b>（<code>uint16</code>），<b>32-bit 走浮点</b>（<code>JXL_TYPE_FLOAT</code>），声明与数据一一对应。</dd>
+            <dt><span data-lang="zh">症状</span><span data-lang="en">Symptom</span></dt>
+            <dd><span data-lang="zh">JXL 文件能写出来，但解码时颜色错乱 / 花屏。</span><span data-lang="en">The JXL file writes out, but colors are scrambled / garbled on decode.</span></dd>
+            <dt><span data-lang="zh">原因</span><span data-lang="en">Cause</span></dt>
+            <dd><span data-lang="zh">basic_info 里声明的位深，必须和实际像素的数据类型严格对应；混用 16-bit 声明 + float 数据会让解码器按错误布局读取。</span><span data-lang="en">The bit depth declared in basic_info must strictly match the actual pixel data type; mixing a 16-bit declaration with float data makes the decoder read with the wrong layout.</span></dd>
+            <dt><span data-lang="zh">修复</span><span data-lang="en">Fix</span></dt>
+            <dd><span data-lang="zh">分成两条干净的路径：<b>16-bit 走整型量化</b>（<code>uint16</code>），<b>32-bit 走浮点</b>（<code>JXL_TYPE_FLOAT</code>），声明与数据一一对应。</span><span data-lang="en">Split into two clean paths: <b>16-bit uses integer quantization</b> (<code>uint16</code>), <b>32-bit uses float</b> (<code>JXL_TYPE_FLOAT</code>), declaration matching data one-to-one.</span></dd>
           </dl>
         </div>
       </div>
@@ -874,37 +1004,43 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">转成视频</span>
-            <h2>静态图怎么变成 HDR10 视频</h2>
-            <p>没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</p>
+            <span class="phase-tag"><span data-lang="zh">转成视频</span><span data-lang="en">To Video</span></span>
+            <h2><span data-lang="zh">静态图怎么变成 HDR10 视频</span><span data-lang="en">How a still image becomes a HDR10 video</span></h2>
+            <p>
+              <span data-lang="zh">没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</span>
+              <span data-lang="en">Rather than writing a H.265 encoder, it reuses the already-computed linear HDR: first drop a temporary JXL, then use ffmpeg to "loop" that image into a still video, stamped with full HDR10 color tags.</span>
+            </p>
           </div>
         </div>
         <div class="steps">
-          <div class="step"><span class="n">1</span><div><h4>先出一张临时 HDR 图</h4><p>用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</p></div></div>
-          <div class="step"><span class="n">2</span><div><h4>ffmpeg 循环成视频</h4><p><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</p></div></div>
-          <div class="step"><span class="n">3</span><div><h4>打满 HDR10 颜色三件套</h4><p><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</p></div></div>
-          <div class="step"><span class="n">4</span><div><h4>硬件优先，软件兜底</h4><p>先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</p></div></div>
+          <div class="step"><span class="n">1</span><div><h4><span data-lang="zh">先出一张临时 HDR 图</span><span data-lang="en">First produce a temporary HDR image</span></h4><p><span data-lang="zh">用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</span><span data-lang="en">Generate the temp file with exactly the same JXL write logic as the static export, ensuring video and image luminance handling are identical to the letter.</span></p></div></div>
+          <div class="step"><span class="n">2</span><div><h4><span data-lang="zh">ffmpeg 循环成视频</span><span data-lang="en">ffmpeg loops it into video</span></h4><p><span data-lang="zh"><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</span><span data-lang="en"><code>-loop 1</code> repeats the single frame to the chosen duration and frame rate, encoding H.265 main10, pixel format <code>p010le</code>.</span></p></div></div>
+          <div class="step"><span class="n">3</span><div><h4><span data-lang="zh">打满 HDR10 颜色三件套</span><span data-lang="en">Stamp the full HDR10 color trio</span></h4><p><span data-lang="zh"><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</span><span data-lang="en"><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code> — miss one and the player won't recognize HDR.</span></p></div></div>
+          <div class="step"><span class="n">4</span><div><h4><span data-lang="zh">硬件优先，软件兜底</span><span data-lang="en">Hardware first, software fallback</span></h4><p><span data-lang="zh">先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</span><span data-lang="en">Try Apple <code>hevc_videotoolbox</code> hardware encoding first; on failure, automatically fall back to <code>libx265</code> software encoding — slower but reliable.</span></p></div></div>
         </div>
 
-        <h3 style="margin:30px 0 0">拆开看：HDR 其实是两层叠出来的</h3>
-        <p style="margin-top:10px">还是这张 OPPO UltraHDR 原图，导出它内部的两个中间层就能看清 HDR 是怎么合成出来的——<b>SDR base 层</b>是普通屏幕能显示的部分（参考白封顶、招牌已经有点发灰），<b>增益图</b>是一张灰度图，记录每个像素还要往上提多少 stop：灰度越亮提得越多。两层按指数公式 <code>base × 2<sup>g</sup></code> 相乘，灯箱、招牌就被抬到 SDR 顶不住的亮度，得到下面那段 HDR 视频。</p>
+        <h3 style="margin:30px 0 0"><span data-lang="zh">拆开看：HDR 其实是两层叠出来的</span><span data-lang="en">Taken apart: HDR is really two layers stacked</span></h3>
+        <p style="margin-top:10px">
+          <span data-lang="zh">还是这张 OPPO UltraHDR 原图，导出它内部的两个中间层就能看清 HDR 是怎么合成出来的——<b>SDR base 层</b>是普通屏幕能显示的部分（参考白封顶、招牌已经有点发灰），<b>增益图</b>是一张灰度图，记录每个像素还要往上提多少 stop：灰度越亮提得越多。两层按指数公式 <code>base × 2<sup>g</sup></code> 相乘，灯箱、招牌就被抬到 SDR 顶不住的亮度，得到下面那段 HDR 视频。</span>
+          <span data-lang="en">Same OPPO UltraHDR original — exporting its two internal intermediate layers makes clear how HDR is composited. The <b>SDR base layer</b> is the part an ordinary screen can show (capped at reference white, the signage already a little gray); the <b>gain map</b> is a grayscale image recording how many more stops each pixel should be lifted: brighter gray means more boost. The two are multiplied by the exponential formula <code>base × 2<sup>g</sup></code>, lifting the light boxes and signs to a brightness SDR can't hold, giving the HDR video below.</span>
+        </p>
         <div class="vid-compare">
           <div class="vid-figure layer">
-            <img src="assets/hdr-demo/hdr_base.jpg" alt="SDR base 层" loading="lazy">
-            <div class="vid-cap"><b>① SDR base 层</b><small>普通屏幕看到的样子，亮度被参考白封顶，招牌高光已经顶格、开始发灰</small></div>
+            <img src="assets/hdr-demo/hdr_base.jpg" alt="SDR base layer" loading="lazy">
+            <div class="vid-cap"><b><span data-lang="zh">① SDR base 层</span><span data-lang="en">① SDR base layer</span></b><small><span data-lang="zh">普通屏幕看到的样子，亮度被参考白封顶，招牌高光已经顶格、开始发灰</span><span data-lang="en">What an ordinary screen sees; brightness capped at reference white, the signage highlights maxed out and starting to gray</span></small></div>
           </div>
           <div class="vid-figure layer">
-            <img src="assets/hdr-demo/hdr_gainmap.jpg" alt="增益图 gain map" loading="lazy">
-            <div class="vid-cap"><b>② 增益图 gain map</b><small>灰度=提亮量：灯箱、招牌处最亮（提得最多），夜空和路面接近黑（基本不提）</small></div>
+            <img src="assets/hdr-demo/hdr_gainmap.jpg" alt="gain map" loading="lazy">
+            <div class="vid-cap"><b><span data-lang="zh">② 增益图 gain map</span><span data-lang="en">② Gain map</span></b><small><span data-lang="zh">灰度=提亮量：灯箱、招牌处最亮（提得最多），夜空和路面接近黑（基本不提）</span><span data-lang="en">Grayscale = boost amount: brightest at the light boxes and signs (boosted most), the night sky and road near black (barely boosted)</span></small></div>
           </div>
         </div>
-        <p class="vid-note">注意增益图里发亮的区域，正好对应成品里冲破 SDR 上限的高光——这就是「base 决定底色、增益图决定哪里该更亮」。</p>
+        <p class="vid-note"><span data-lang="zh">注意增益图里发亮的区域，正好对应成品里冲破 SDR 上限的高光——这就是「base 决定底色、增益图决定哪里该更亮」。</span><span data-lang="en">Notice the bright areas in the gain map correspond exactly to the highlights that break the SDR ceiling in the result — this is "the base sets the ground color, the gain map decides where it should be brighter".</span></p>
 
-        <p style="margin:24px 0 0">把这两层按 203 nits 锚定 + PQ 编码合并，再循环成视频，就是整条流水线跑通后的成品：</p>
+        <p style="margin:24px 0 0"><span data-lang="zh">把这两层按 203 nits 锚定 + PQ 编码合并，再循环成视频，就是整条流水线跑通后的成品：</span><span data-lang="en">Merge these two layers with 203-nit anchoring + PQ encoding, then loop into video, and you get the finished output of the whole pipeline running end to end:</span></p>
         <div class="vid-solo">
           <video src="assets/hdr-demo/hdr_correct.mov" poster="assets/hdr-demo/hdr_correct_poster.jpg" autoplay muted loop playsinline></video>
         </div>
-        <p class="vid-note">真正的 HDR10（HEVC / PQ / BT.2020）视频。在支持 HDR 的屏幕上，灯箱和高光会冲破 SDR 上限真正「亮」起来；这里是浏览器压回 SDR 后的预览。下一节就从这段视频回看——同一条算法稍微写错一步，画面会变成什么样。</p>
+        <p class="vid-note"><span data-lang="zh">真正的 HDR10（HEVC / PQ / BT.2020）视频。在支持 HDR 的屏幕上，灯箱和高光会冲破 SDR 上限真正「亮」起来；这里是浏览器压回 SDR 后的预览。下一节就从这段视频回看——同一条算法稍微写错一步，画面会变成什么样。</span><span data-lang="en">Genuine HDR10 (HEVC / PQ / BT.2020) video. On a HDR-capable screen the light boxes and highlights break the SDR ceiling and truly "light up"; here is the browser's SDR preview after tone-mapping. The next section looks back at this clip — what the image becomes when the same algorithm is written one step wrong.</span></p>
       </div>
     </section>
 
@@ -912,63 +1048,84 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">形态进化</span>
-            <h2>三种形态，同一个内核</h2>
-            <p>引擎 <code>hdr2jxl</code> 写好之后，能力就固定了。真正变化的是外层的交互方式——从命令行到网页再到 Mac App，每一层都只解决一个问题：<b>上一层，谁还用不了</b>。内核一行没改，受众却一级一级扩大。</p>
+            <span class="phase-tag"><span data-lang="zh">形态进化</span><span data-lang="en">Form Evolution</span></span>
+            <h2><span data-lang="zh">三种形态，同一个内核</span><span data-lang="en">Three forms, one core</span></h2>
+            <p>
+              <span data-lang="zh">引擎 <code>hdr2jxl</code> 写好之后，能力就固定了。真正变化的是外层的交互方式——从命令行到网页再到 Mac App，每一层都只解决一个问题：<b>上一层，谁还用不了</b>。内核一行没改，受众却一级一级扩大。</span>
+              <span data-lang="en">Once the engine <code>hdr2jxl</code> was written, its capability was fixed. What actually changed was the outer interaction — from command line to web page to Mac App, each layer solving just one problem: <b>who still couldn't use the previous layer</b>. The core didn't change a single line, yet the audience widened step by step.</span>
+            </p>
           </div>
-          <div class="note">设计思路很克制：<b>不重写内核，只换交互层</b>。Web 把「命令」翻译成「界面」，App 把「环境依赖」收进「双击」。每一跳都是纯收益，没有为了好用牺牲引擎能力。</div>
+          <div class="note">
+            <span data-lang="zh">设计思路很克制：<b>不重写内核，只换交互层</b>。Web 把「命令」翻译成「界面」，App 把「环境依赖」收进「双击」。每一跳都是纯收益，没有为了好用牺牲引擎能力。</span>
+            <span data-lang="en">The design is restrained: <b>don't rewrite the core, only swap the interaction layer</b>. The Web translates "commands" into a "UI"; the App folds "environment dependencies" into a "double-click". Each jump is pure gain, with no engine capability sacrificed for usability.</span>
+          </div>
         </div>
 
         <div class="grid-3">
           <div class="card">
-            <div class="kicker">第一形态 · CLI</div>
-            <h4>命令行内核</h4>
-            <p>交互式问路径，或一串 <code>-g -e -w -v -d -f</code> 参数。引擎能力 100%，但门槛也 100%：得会用终端、记得住参数、还要先装好 Homebrew 那套库。基本只有作者自己用得动。</p>
+            <div class="kicker"><span data-lang="zh">第一形态 · CLI</span><span data-lang="en">Form 1 · CLI</span></div>
+            <h4><span data-lang="zh">命令行内核</span><span data-lang="en">Command-line core</span></h4>
+            <p>
+              <span data-lang="zh">交互式问路径，或一串 <code>-g -e -w -v -d -f</code> 参数。引擎能力 100%，但门槛也 100%：得会用终端、记得住参数、还要先装好 Homebrew 那套库。基本只有作者自己用得动。</span>
+              <span data-lang="en">Interactively ask for paths, or a string of <code>-g -e -w -v -d -f</code> flags. 100% of the engine's capability, but also 100% of the barrier: you must know the terminal, remember the flags, and have the Homebrew libraries installed first. Basically only the author could use it.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">第二形态 · Web UI</div>
-            <h4>浏览器界面</h4>
-            <p>同一个内核外面包一层 Flask，浏览器打开就是图形界面。拖拽上传、可视化调参、实时预览。<b>会用浏览器就能用</b>——这一跳把「会背命令」的门槛彻底拆掉。</p>
+            <div class="kicker"><span data-lang="zh">第二形态 · Web UI</span><span data-lang="en">Form 2 · Web UI</span></div>
+            <h4><span data-lang="zh">浏览器界面</span><span data-lang="en">Browser interface</span></h4>
+            <p>
+              <span data-lang="zh">同一个内核外面包一层 Flask，浏览器打开就是图形界面。拖拽上传、可视化调参、实时预览。<b>会用浏览器就能用</b>——这一跳把「会背命令」的门槛彻底拆掉。</span>
+              <span data-lang="en">The same core wrapped in a layer of Flask — open the browser and it's a graphical interface. Drag-and-drop upload, visual parameter tuning, live preview. <b>If you can use a browser, you can use it</b> — this jump fully removes the "memorize the commands" barrier.</span>
+            </p>
           </div>
           <div class="card">
-            <div class="kicker">第三形态 · Mac App</div>
-            <h4>双击即用</h4>
-            <p>用 py2app 把 Python、Flask、WKWebView 和所有 dylib 打进一个 <code>.app</code>：独立窗口、原生文件选择/保存面板、零依赖。DMG 拖进 Applications 就能用，全程不碰终端。</p>
+            <div class="kicker"><span data-lang="zh">第三形态 · Mac App</span><span data-lang="en">Form 3 · Mac App</span></div>
+            <h4><span data-lang="zh">双击即用</span><span data-lang="en">Double-click to use</span></h4>
+            <p>
+              <span data-lang="zh">用 py2app 把 Python、Flask、WKWebView 和所有 dylib 打进一个 <code>.app</code>：独立窗口、原生文件选择/保存面板、零依赖。DMG 拖进 Applications 就能用，全程不碰终端。</span>
+              <span data-lang="en">Use py2app to pack Python, Flask, WKWebView, and all dylibs into one <code>.app</code>: standalone window, native file open/save panels, zero dependencies. Drag the DMG into Applications and it works — never touching the terminal.</span>
+            </p>
           </div>
         </div>
 
-        <h3 style="margin:30px 0 0">关键的一跳：命令行 → 网页，易用性提升在哪</h3>
-        <p style="margin-top:10px">这一跳收益最大。同样的转换能力，交互方式换了，「能用」的人一下子从「会终端的少数」变成「会浏览器的所有人」。具体提升可以拆成五个维度：</p>
+        <h3 style="margin:30px 0 0"><span data-lang="zh">关键的一跳：命令行 → 网页，易用性提升在哪</span><span data-lang="en">The key jump: command line → web, where usability improves</span></h3>
+        <p style="margin-top:10px">
+          <span data-lang="zh">这一跳收益最大。同样的转换能力，交互方式换了，「能用」的人一下子从「会终端的少数」变成「会浏览器的所有人」。具体提升可以拆成五个维度：</span>
+          <span data-lang="en">This jump pays off most. The same conversion capability, a different interaction, and the people who "can use it" jump from "the few who know the terminal" to "everyone who knows a browser". The improvement breaks down into five dimensions:</span>
+        </p>
         <div class="gb-grid">
           <div class="gb bad">
-            <h4>命令行的摩擦</h4>
+            <h4><span data-lang="zh">命令行的摩擦</span><span data-lang="en">The friction of the command line</span></h4>
             <ul>
-              <li>参数靠记：<code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code> 一长串</li>
-              <li>输入靠手打完整文件路径，错一个字符就失败</li>
-              <li>转换前看不到这张图是不是 HDR、增益图在不在</li>
-              <li>调一次参数就重跑一次，还得另开看图器看效果</li>
-              <li>成功还是失败，只能从一屏终端日志里找</li>
+              <li><span data-lang="zh">参数靠记：<code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code> 一长串</span><span data-lang="en">Memorize flags: a long string like <code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code></span></li>
+              <li><span data-lang="zh">输入靠手打完整文件路径，错一个字符就失败</span><span data-lang="en">Type the full file path by hand; one wrong character fails</span></li>
+              <li><span data-lang="zh">转换前看不到这张图是不是 HDR、增益图在不在</span><span data-lang="en">Before converting, you can't see whether the image is HDR or whether the gain map is there</span></li>
+              <li><span data-lang="zh">调一次参数就重跑一次，还得另开看图器看效果</span><span data-lang="en">Each parameter change means a full rerun, plus opening a separate viewer to check</span></li>
+              <li><span data-lang="zh">成功还是失败，只能从一屏终端日志里找</span><span data-lang="en">Success or failure can only be found in a screen of terminal logs</span></li>
             </ul>
           </div>
           <div class="gb good">
-            <h4>网页消除了它</h4>
+            <h4><span data-lang="zh">网页消除了它</span><span data-lang="en">The web removes it</span></h4>
             <ul>
-              <li>滑块 + 按钮，参数自带范围约束，填不出非法值</li>
-              <li>拖拽上传，文件名和路径自动带过去</li>
-              <li>上传即解析：相机、ISO、HDR 格式、增益图容量一目了然</li>
-              <li>实时预览 + 原图／成品左右对比，所见即所得</li>
-              <li>进度条反馈 + 一键下载到本地，不用盯日志</li>
+              <li><span data-lang="zh">滑块 + 按钮，参数自带范围约束，填不出非法值</span><span data-lang="en">Sliders + buttons, parameters come with range constraints, no illegal values possible</span></li>
+              <li><span data-lang="zh">拖拽上传，文件名和路径自动带过去</span><span data-lang="en">Drag-and-drop upload, file name and path carried over automatically</span></li>
+              <li><span data-lang="zh">上传即解析：相机、ISO、HDR 格式、增益图容量一目了然</span><span data-lang="en">Parse on upload: camera, ISO, HDR format, gain-map capacity at a glance</span></li>
+              <li><span data-lang="zh">实时预览 + 原图／成品左右对比，所见即所得</span><span data-lang="en">Live preview + side-by-side original/result comparison, WYSIWYG</span></li>
+              <li><span data-lang="zh">进度条反馈 + 一键下载到本地，不用盯日志</span><span data-lang="en">Progress-bar feedback + one-click download, no log-watching</span></li>
             </ul>
           </div>
         </div>
 
         <div class="steps">
-          <div class="step"><span class="n">→</span><div><h4>把「命令」变成「界面」</h4><p>CLI 的每个 flag 在网页里都对应一个控件：<code>-g</code> 变增益滑块、<code>-w</code> 变 203/100 nits 切换、<code>-v -d -f</code> 变视频时长帧率输入。用户不再需要知道参数叫什么，只需要知道自己想要什么效果。</p></div></div>
-          <div class="step"><span class="n">→</span><div><h4>把「盲转」变成「先看后转」</h4><p>命令行是把文件丢进去碰运气；网页在上传瞬间就解析 EXIF 和 HDR 元数据并显示出来，用户在转换前就知道这张图有没有增益图、是哪家的 HDR 格式，再决定参数。</p></div></div>
-          <div class="step"><span class="n">→</span><div><h4>把「重跑」变成「实时反馈」</h4><p>调参从「改命令 → 回车 → 等 → 另开软件看 → 不满意再来」压缩成「拖滑块 → 预览里直接看到原图和成品的差别」。反馈回路从几十秒缩短到几乎即时。</p></div></div>
+          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「命令」变成「界面」</span><span data-lang="en">Turn "commands" into a "UI"</span></h4><p><span data-lang="zh">CLI 的每个 flag 在网页里都对应一个控件：<code>-g</code> 变增益滑块、<code>-w</code> 变 203/100 nits 切换、<code>-v -d -f</code> 变视频时长帧率输入。用户不再需要知道参数叫什么，只需要知道自己想要什么效果。</span><span data-lang="en">Every CLI flag maps to a control on the web: <code>-g</code> becomes a gain slider, <code>-w</code> becomes a 203/100 nits toggle, <code>-v -d -f</code> become video duration / frame-rate inputs. Users no longer need to know what a flag is called, only what effect they want.</span></p></div></div>
+          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「盲转」变成「先看后转」</span><span data-lang="en">Turn "blind conversion" into "look before converting"</span></h4><p><span data-lang="zh">命令行是把文件丢进去碰运气；网页在上传瞬间就解析 EXIF 和 HDR 元数据并显示出来，用户在转换前就知道这张图有没有增益图、是哪家的 HDR 格式，再决定参数。</span><span data-lang="en">The command line throws the file in and hopes for the best; the web parses EXIF and HDR metadata the instant you upload and displays it, so before converting you already know whether the image has a gain map and which vendor's HDR format it is, then decide the parameters.</span></p></div></div>
+          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「重跑」变成「实时反馈」</span><span data-lang="en">Turn "rerun" into "live feedback"</span></h4><p><span data-lang="zh">调参从「改命令 → 回车 → 等 → 另开软件看 → 不满意再来」压缩成「拖滑块 → 预览里直接看到原图和成品的差别」。反馈回路从几十秒缩短到几乎即时。</span><span data-lang="en">Tuning compresses from "edit command → Enter → wait → open another app to look → not satisfied, repeat" to "drag a slider → see the difference between original and result right in the preview". The feedback loop shrinks from tens of seconds to nearly instant.</span></p></div></div>
         </div>
 
-        <div class="note" style="margin-top:18px">最后这一步交给 App：网页虽好，仍要 <code>./start_webui.sh</code>、装 Python 和 Homebrew、再手动打开浏览器。Mac App 这一层把这些<b>环境依赖也一并消灭</b>——双击图标，独立窗口直接弹出，对完全不懂技术的人也成立。</div>
+        <div class="note" style="margin-top:18px">
+          <span data-lang="zh">最后这一步交给 App：网页虽好，仍要 <code>./start_webui.sh</code>、装 Python 和 Homebrew、再手动打开浏览器。Mac App 这一层把这些<b>环境依赖也一并消灭</b>——双击图标，独立窗口直接弹出，对完全不懂技术的人也成立。</span>
+          <span data-lang="en">The last step goes to the App: as good as the web is, it still needs <code>./start_webui.sh</code>, Python and Homebrew installed, then manually opening a browser. The Mac App layer <b>eliminates these environment dependencies too</b> — double-click the icon and a standalone window pops up directly, working even for the completely non-technical.</span>
+        </div>
       </div>
     </section>
 
@@ -976,36 +1133,39 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">方法论</span>
-            <h2>这个项目教会的三件事</h2>
-            <p>把整个过程压缩成三句话，换个图像处理项目也能套用。</p>
+            <span class="phase-tag"><span data-lang="zh">方法论</span><span data-lang="en">Method</span></span>
+            <h2><span data-lang="zh">这个项目教会的三件事</span><span data-lang="en">Three things this project taught</span></h2>
+            <p>
+              <span data-lang="zh">把整个过程压缩成三句话，换个图像处理项目也能套用。</span>
+              <span data-lang="en">Compress the whole process into three sentences, applicable to another image-processing project too.</span>
+            </p>
           </div>
         </div>
         <div class="takeaways">
           <div class="takeaway">
-            <div class="big">先锚定绝对亮度<br>再谈 HDR</div>
-            <p>PQ 是绝对亮度曲线，任何 SDR 数据进 PQ 前都得先映射到参考白（203 nits），否则必然过曝。</p>
+            <div class="big"><span data-lang="zh">先锚定绝对亮度<br>再谈 HDR</span><span data-lang="en">Anchor absolute luminance<br>before talking HDR</span></div>
+            <p><span data-lang="zh">PQ 是绝对亮度曲线，任何 SDR 数据进 PQ 前都得先映射到参考白（203 nits），否则必然过曝。</span><span data-lang="en">PQ is an absolute-luminance curve; any SDR data must be mapped to reference white (203 nits) before entering PQ, or overexposure is inevitable.</span></p>
           </div>
           <div class="takeaway">
-            <div class="big">指数关系<br>要在指数域里调</div>
-            <p>增益是 2 的指数次方，强度、插值、曝光补偿都该在 log2 域操作，在像素值上线性混合一定走样。</p>
+            <div class="big"><span data-lang="zh">指数关系<br>要在指数域里调</span><span data-lang="en">Exponential relationships<br>tune in the exponential domain</span></div>
+            <p><span data-lang="zh">增益是 2 的指数次方，强度、插值、曝光补偿都该在 log2 域操作，在像素值上线性混合一定走样。</span><span data-lang="en">Gain is a power of 2, so strength, interpolation, and exposure compensation should all operate in the log2 domain; linear blending on pixel values always distorts.</span></p>
           </div>
           <div class="takeaway">
-            <div class="big">永远导出旁证<br>用结果反推 bug</div>
-            <p>每次转换都吐出 base 层、增益图和亮度统计。画面不对时，靠这些中间结果几分钟就能定位是哪一步算错。</p>
+            <div class="big"><span data-lang="zh">永远导出旁证<br>用结果反推 bug</span><span data-lang="en">Always export evidence<br>infer bugs from results</span></div>
+            <p><span data-lang="zh">每次转换都吐出 base 层、增益图和亮度统计。画面不对时，靠这些中间结果几分钟就能定位是哪一步算错。</span><span data-lang="en">Every conversion emits the base layer, gain map, and luminance stats. When the image is wrong, these intermediate results pin down which step miscalculated within minutes.</span></p>
           </div>
         </div>
 
-        <h3 style="margin:28px 0 0">每改一版算法后的核对清单</h3>
+        <h3 style="margin:28px 0 0"><span data-lang="zh">每改一版算法后的核对清单</span><span data-lang="en">Checklist after each algorithm revision</span></h3>
         <div class="checklist">
-          <div>成品画面在 HDR 屏上不过曝、不发灰</div>
-          <div>min / max / avg 亮度统计落在合理区间</div>
-          <div>增益强度 0 / 0.5 / 1 三档过渡平滑</div>
-          <div>base 层导出图本身是正常 SDR</div>
-          <div>视频在 QuickTime 能播且标为 HDR</div>
-          <div>硬件编码失败时软件兜底跑通</div>
-          <div>HEIC / UltraHDR / 普通 JPEG 都跑一遍</div>
-          <div>16-bit 与 32-bit 路径都能正确解码</div>
+          <div><span data-lang="zh">成品画面在 HDR 屏上不过曝、不发灰</span><span data-lang="en">Final image on a HDR screen isn't overexposed or gray</span></div>
+          <div><span data-lang="zh">min / max / avg 亮度统计落在合理区间</span><span data-lang="en">min / max / avg luminance stats fall in a reasonable range</span></div>
+          <div><span data-lang="zh">增益强度 0 / 0.5 / 1 三档过渡平滑</span><span data-lang="en">Gain strength 0 / 0.5 / 1 transitions smoothly</span></div>
+          <div><span data-lang="zh">base 层导出图本身是正常 SDR</span><span data-lang="en">The exported base layer is itself normal SDR</span></div>
+          <div><span data-lang="zh">视频在 QuickTime 能播且标为 HDR</span><span data-lang="en">Video plays in QuickTime and is tagged HDR</span></div>
+          <div><span data-lang="zh">硬件编码失败时软件兜底跑通</span><span data-lang="en">Software fallback works when hardware encoding fails</span></div>
+          <div><span data-lang="zh">HEIC / UltraHDR / 普通 JPEG 都跑一遍</span><span data-lang="en">Run HEIC / UltraHDR / ordinary JPEG all once</span></div>
+          <div><span data-lang="zh">16-bit 与 32-bit 路径都能正确解码</span><span data-lang="en">Both 16-bit and 32-bit paths decode correctly</span></div>
         </div>
       </div>
     </section>
@@ -1014,23 +1174,26 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag">参考</span>
-            <h2>相关资料</h2>
-            <p>想看成品和背后的色彩科学，可以从这几处继续。</p>
+            <span class="phase-tag"><span data-lang="zh">参考</span><span data-lang="en">References</span></span>
+            <h2><span data-lang="zh">相关资料</span><span data-lang="en">Related material</span></h2>
+            <p>
+              <span data-lang="zh">想看成品和背后的色彩科学，可以从这几处继续。</span>
+              <span data-lang="en">To see the result and the color science behind it, continue from these.</span>
+            </p>
           </div>
         </div>
         <div class="source-list">
           <a href="hdr-color-science.html">
-            SDR 到 HDR 色彩科学 · 本项目的理论底座
-            <small>PQ / HLG 传递函数、BT.2020 色域、绝对亮度与参考白——理解上面所有算法决策的前提</small>
+            <span data-lang="zh">SDR 到 HDR 色彩科学 · 本项目的理论底座</span><span data-lang="en">SDR to HDR Color Science · the theoretical base of this project</span>
+            <small><span data-lang="zh">PQ / HLG 传递函数、BT.2020 色域、绝对亮度与参考白——理解上面所有算法决策的前提</span><span data-lang="en">PQ / HLG transfer functions, BT.2020 gamut, absolute luminance and reference white — the premise behind every algorithm decision above</span></small>
           </a>
           <a href="log-gamma.html">
-            为什么相机用 Log 拍摄 · 曝光与指数编码
-            <small>解释「为什么提亮要在 log 域做」的同一套直觉，和坑 3 的修复思路相通</small>
+            <span data-lang="zh">为什么相机用 Log 拍摄 · 曝光与指数编码</span><span data-lang="en">Why Cameras Shoot Log · exposure and exponential encoding</span>
+            <small><span data-lang="zh">解释「为什么提亮要在 log 域做」的同一套直觉，和坑 3 的修复思路相通</span><span data-lang="en">The same intuition for "why brightening should happen in the log domain", echoing the fix for Pitfall 3</span></small>
           </a>
           <a href="index.html">
-            首页 · 工作流管线
-            <small>基础 → 拍摄 → 后期 → 显示，看这篇复盘在整体导航里的位置</small>
+            <span data-lang="zh">首页 · 工作流管线</span><span data-lang="en">Home · workflow pipeline</span>
+            <small><span data-lang="zh">基础 → 拍摄 → 后期 → 显示，看这篇复盘在整体导航里的位置</span><span data-lang="en">Basics → Capture → Post → Display — where this retrospective sits in the overall navigation</span></small>
           </a>
         </div>
       </div>
@@ -1038,7 +1201,7 @@ ffmpeg -loop 1 -i tmp.jxl \
   </main>
 
   <footer>
-    <p>影像色彩与显示技术指南 · <a href="index.html">返回首页</a></p>
+    <p><span data-lang="zh">影像色彩与显示技术指南 · <a href="index.html">返回首页</a></span><span data-lang="en">Imaging Color &amp; Display Guide · <a href="index.html">Back to home</a></span></p>
   </footer>
 
   <script>
@@ -1048,6 +1211,33 @@ ffmpeg -loop 1 -i tmp.jxl \
       const p = max > 0 ? h.scrollTop / max : 0;
       document.getElementById("progress").style.transform = `scaleX(${p})`;
     });
+
+    // Language toggle (shared key across the site so the choice persists between pages)
+    (function () {
+      const KEY = "guideLang";
+      const TITLE = {
+        zh: "一张 HDR 照片怎么变成 HDR 视频 | 影像色彩与显示技术指南",
+        en: "How a HDR Photo Becomes a HDR Video | Imaging Color & Display Guide"
+      };
+      const DESC = {
+        zh: "复盘 HDR Relay 转换引擎从想法到落地的完整过程：手机 HDR 照片里的增益图原理、C++ 引擎的模块设计、增益图合并算法，以及根据导出结果反复修正的几个关键算法 bug。",
+        en: "A retrospective of the HDR Relay conversion engine from idea to shipping: the gain-map principle inside phone HDR photos, the C++ engine's module design, the gain-map merge algorithm, and the key algorithm bugs found and fixed by inspecting the exported results."
+      };
+      const meta = document.querySelector('meta[name="description"]');
+      function apply(lang) {
+        const code = lang === "en" ? "en" : "zh-CN";
+        document.documentElement.lang = code;
+        document.title = lang === "en" ? TITLE.en : TITLE.zh;
+        if (meta) meta.setAttribute("content", lang === "en" ? DESC.en : DESC.zh);
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+      }
+      let saved = "zh";
+      try { saved = localStorage.getItem(KEY) || "zh"; } catch (e) {}
+      apply(saved === "en" ? "en" : "zh");
+      document.querySelectorAll(".lang-toggle .seg").forEach(function (b) {
+        b.addEventListener("click", function () { apply(b.dataset.set); });
+      });
+    })();
   </script>
 </body>
 </html>

@@ -66,13 +66,23 @@
       text-decoration: none;
       white-space: nowrap;
     }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      justify-content: flex-end;
+    }
     .links {
       display: flex;
       gap: 6px;
       justify-content: end;
       overflow-x: auto;
       scrollbar-width: none;
+      flex: 0 1 auto;
+      min-width: 0;
     }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 10px;
       border-radius: 999px;
@@ -85,6 +95,40 @@
       color: var(--ink);
       background: rgba(255,255,255,.09);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      min-height: 0;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #0a1014;
+      font-weight: 780;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
 
     main { overflow: hidden; }
     section {
@@ -128,9 +172,9 @@
     }
     h1 {
       margin: 0 0 18px;
-      max-width: 13ch;
-      font-size: clamp(42px, 7vw, 84px);
-      line-height: .98;
+      max-width: 17ch;
+      font-size: clamp(40px, 6.4vw, 76px);
+      line-height: 1.0;
       letter-spacing: 0;
     }
     h2 {
@@ -141,7 +185,7 @@
     h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
     p { margin: 0 0 14px; color: var(--muted); }
     .lead {
-      max-width: 720px;
+      max-width: 760px;
       color: #e7edf7;
       font-size: clamp(17px, 2vw, 21px);
     }
@@ -270,6 +314,7 @@
       border-color: transparent;
       font-weight: 760;
     }
+    .lang-toggle .seg { min-height: 0; }
     .canvas-box {
       position: relative;
       min-height: 380px;
@@ -363,6 +408,7 @@
     }
     @media (max-width: 900px) {
       .nav { grid-template-columns: 1fr; }
+      .nav-right { justify-content: space-between; }
       .links { justify-content: start; }
       .section-head, .grid-2, .grid-3 { grid-template-columns: 1fr; }
       .flow { grid-template-columns: repeat(5, 220px); }
@@ -370,7 +416,7 @@
     @media (max-width: 560px) {
       section { padding: 54px 16px; }
       .hero { min-height: 62vh; }
-      h1 { font-size: 42px; }
+      h1 { font-size: 40px; }
       .swatch-row { grid-template-columns: 1fr; }
       .canvas-box { min-height: 320px; }
       .cie-box { min-height: 620px; }
@@ -382,15 +428,21 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#problem">问题</a>
-        <a href="#rgb">RGB</a>
-        <a href="#profile">Profile</a>
-        <a href="#assign">指定/转换</a>
-        <a href="#web">Web</a>
-        <a href="#workflow">导出</a>
-        <a href="#tools">工具</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#problem"><span data-lang="zh">问题</span><span data-lang="en">Problem</span></a>
+          <a href="#rgb">RGB</a>
+          <a href="#profile">Profile</a>
+          <a href="#assign"><span data-lang="zh">指定/转换</span><span data-lang="en">Assign/Convert</span></a>
+          <a href="#web">Web</a>
+          <a href="#workflow"><span data-lang="zh">导出</span><span data-lang="en">Export</span></a>
+          <a href="#tools"><span data-lang="zh">工具</span><span data-lang="en">Tools</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -399,8 +451,8 @@
     <section class="hero" id="top">
       <div class="wrap">
         <div class="eyebrow">Image Color Management</div>
-        <h1>图片色彩管理到底在管什么</h1>
-        <p class="lead">同一张图在不同软件、浏览器和屏幕上变色，通常不是图片“坏了”，而是 RGB 数字、色彩配置文件、系统色彩管理和显示器能力没有被同一种规则解释。</p>
+        <h1><span data-lang="zh">图片色彩管理到底在管什么</span><span data-lang="en">What does image color management actually manage?</span></h1>
+        <p class="lead"><span data-lang="zh">同一张图在不同软件、浏览器和屏幕上变色，通常不是图片"坏了"，而是 RGB 数字、色彩配置文件、系统色彩管理和显示器能力没有被同一种规则解释。</span><span data-lang="en">When the same image shifts color across different apps, browsers, and screens, it's usually not that the image is "broken" — it's that the RGB numbers, the color profile, the system's color management, and the monitor's capability weren't all interpreted by the same rules.</span></p>
       </div>
     </section>
 
@@ -408,15 +460,15 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. 先从一个常见问题开始</h2>
-            <p>摄影师、设计师和视频创作者经常遇到：Photoshop 里正常，浏览器里偏艳，手机上更亮，社交平台压缩后又变淡。色彩管理要解决的不是“让颜色更好看”，而是让颜色被正确解释。</p>
+            <h2><span data-lang="zh">1. 先从一个常见问题开始</span><span data-lang="en">1. Start with a common problem</span></h2>
+            <p><span data-lang="zh">摄影师、设计师和视频创作者经常遇到：Photoshop 里正常，浏览器里偏艳，手机上更亮，社交平台压缩后又变淡。色彩管理要解决的不是"让颜色更好看"，而是让颜色被正确解释。</span><span data-lang="en">Photographers, designers, and video creators hit this constantly: fine in Photoshop, too saturated in the browser, brighter on the phone, washed out after a social platform recompresses it. Color management isn't about "making colors prettier" — it's about getting colors interpreted correctly.</span></p>
           </div>
-          <div class="note">核心句：RGB 数字不是颜色。只有配合色彩空间和 Profile，它才对应到真实的色度、白点和亮度响应。</div>
+          <div class="note"><span data-lang="zh">核心句：RGB 数字不是颜色。只有配合色彩空间和 Profile，它才对应到真实的色度、白点和亮度响应。</span><span data-lang="en">Key sentence: RGB numbers aren't a color. Only together with a color space and a profile do they map to real chromaticity, white point, and tone response.</span></div>
         </div>
         <div class="grid-3">
-          <div class="card"><span class="tag">文件</span><h3>图片带着 RGB 数字</h3><p>例如 255, 0, 0。数字本身只说明三个通道的比例，不说明这个红到底有多红。</p></div>
-          <div class="card"><span class="tag" style="background:var(--cyan)">解释</span><h3>Profile 像说明书</h3><p>sRGB、Display P3、Adobe RGB 会把同一组 RGB 解释成不同的真实颜色。</p></div>
-          <div class="card"><span class="tag" style="background:var(--lime)">输出</span><h3>屏幕也有自己的性格</h3><p>系统还要根据显示器 ICC Profile，把目标颜色转换成这台屏幕需要的驱动值。</p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">文件</span><span data-lang="en">File</span></span><h3><span data-lang="zh">图片带着 RGB 数字</span><span data-lang="en">An image carries RGB numbers</span></h3><p><span data-lang="zh">例如 255, 0, 0。数字本身只说明三个通道的比例，不说明这个红到底有多红。</span><span data-lang="en">Like 255, 0, 0. The numbers alone only state the ratio of the three channels, not how red this red actually is.</span></p></div>
+          <div class="card"><span class="tag" style="background:var(--cyan)"><span data-lang="zh">解释</span><span data-lang="en">Interpret</span></span><h3><span data-lang="zh">Profile 像说明书</span><span data-lang="en">A profile is like an instruction sheet</span></h3><p><span data-lang="zh">sRGB、Display P3、Adobe RGB 会把同一组 RGB 解释成不同的真实颜色。</span><span data-lang="en">sRGB, Display P3, and Adobe RGB interpret the same RGB into different real colors.</span></p></div>
+          <div class="card"><span class="tag" style="background:var(--lime)"><span data-lang="zh">输出</span><span data-lang="en">Output</span></span><h3><span data-lang="zh">屏幕也有自己的性格</span><span data-lang="en">The screen has its own personality too</span></h3><p><span data-lang="zh">系统还要根据显示器 ICC Profile，把目标颜色转换成这台屏幕需要的驱动值。</span><span data-lang="en">The system also uses the monitor's ICC profile to convert the target color into the drive values this particular screen needs.</span></p></div>
         </div>
       </div>
     </section>
@@ -425,10 +477,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. RGB 数字不是颜色</h2>
-            <p>下面用同一组 RGB 数字，在不同色彩空间里解释。你会看到：数值不变，但在 CIE xy 图上的落点不同。P3 与 Adobe RGB 的红/绿原色比 sRGB 更外扩，因此同样的 255 可能代表更饱和的颜色。</p>
+            <h2><span data-lang="zh">2. RGB 数字不是颜色</span><span data-lang="en">2. RGB numbers aren't a color</span></h2>
+            <p><span data-lang="zh">下面用同一组 RGB 数字，在不同色彩空间里解释。你会看到：数值不变，但在 CIE xy 图上的落点不同。P3 与 Adobe RGB 的红/绿原色比 sRGB 更外扩，因此同样的 255 可能代表更饱和的颜色。</span><span data-lang="en">Below, the same RGB numbers are interpreted in different color spaces. You'll see the values stay the same but land at different points on the CIE xy chart. P3 and Adobe RGB's red/green primaries reach further out than sRGB's, so the same 255 can mean a more saturated color.</span></p>
           </div>
-          <div class="note">这里展示的是“按不同 Profile 解释同一 RGB”。实际屏幕能否显示出来，还取决于显示器色域和浏览器色彩管理。</div>
+          <div class="note"><span data-lang="zh">这里展示的是"按不同 Profile 解释同一 RGB"。实际屏幕能否显示出来，还取决于显示器色域和浏览器色彩管理。</span><span data-lang="en">This shows "interpreting the same RGB under different profiles". Whether your screen can actually display it still depends on the monitor's gamut and the browser's color management.</span></div>
         </div>
         <div class="grid-2">
           <div class="card">
@@ -436,21 +488,21 @@
               <label>R <input id="rgbR" type="range" min="0" max="255" value="255"></label>
               <label>G <input id="rgbG" type="range" min="0" max="255" value="0"></label>
               <label>B <input id="rgbB" type="range" min="0" max="255" value="0"></label>
-              <select id="rgbSpace" aria-label="选择色彩空间">
+              <select id="rgbSpace" aria-label="Color space">
                 <option value="srgb">sRGB</option>
                 <option value="p3">Display P3</option>
                 <option value="adobe">Adobe RGB (1998)</option>
               </select>
             </div>
             <div class="swatch-row">
-              <div class="swatch" id="managedSwatch"><b>按所选空间解释</b></div>
-              <div class="swatch" id="srgbSwatch"><b>当作 sRGB 解释</b></div>
+              <div class="swatch" id="managedSwatch"><b data-lang="zh">按所选空间解释</b><b data-lang="en">As the chosen space</b></div>
+              <div class="swatch" id="srgbSwatch"><b data-lang="zh">当作 sRGB 解释</b><b data-lang="en">As sRGB</b></div>
             </div>
             <div class="result" id="rgbReadout">RGB(255, 0, 0)</div>
           </div>
           <div class="canvas-box cie-box">
-            <canvas id="cieCanvas" aria-label="CIE 1931 xy 色度图与 RGB 色域三角形"></canvas>
-            <div class="readout" id="cieReadout">切换色彩空间查看 xy 落点</div>
+            <canvas id="cieCanvas" aria-label="CIE 1931 xy chromaticity diagram with RGB gamut triangles"></canvas>
+            <div class="readout" id="cieReadout"><span data-lang="zh">切换色彩空间查看 xy 落点</span><span data-lang="en">Switch color space to see the xy point</span></div>
           </div>
         </div>
       </div>
@@ -460,65 +512,65 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. Profile 是图片的说明书</h2>
-            <p>ICC Profile 不是滤镜，也不是调色预设。它是一份机器可读的颜色说明书：告诉软件“这组 RGB 数字如何换算成设备无关颜色”，也告诉系统“这台显示器需要怎样的信号才能发出目标颜色”。</p>
+            <h2><span data-lang="zh">3. Profile 是图片的说明书</span><span data-lang="en">3. A profile is the image's instruction sheet</span></h2>
+            <p><span data-lang="zh">ICC Profile 不是滤镜，也不是调色预设。它是一份机器可读的颜色说明书：告诉软件"这组 RGB 数字如何换算成设备无关颜色"，也告诉系统"这台显示器需要怎样的信号才能发出目标颜色"。</span><span data-lang="en">An ICC profile isn't a filter or a grading preset. It's a machine-readable color instruction sheet: it tells software "how this set of RGB numbers converts to a device-independent color", and tells the system "what signal this monitor needs to emit the target color".</span></p>
           </div>
-          <div class="note">没有 Profile，RGB 只是三个比例数字；有了源 Profile、显示器 Profile 和 CMM，颜色才有机会在不同设备之间保持一致。</div>
+          <div class="note"><span data-lang="zh">没有 Profile，RGB 只是三个比例数字；有了源 Profile、显示器 Profile 和 CMM，颜色才有机会在不同设备之间保持一致。</span><span data-lang="en">Without a profile, RGB is just three ratio numbers; with a source profile, a monitor profile, and a CMM, colors have a chance to stay consistent across devices.</span></div>
         </div>
 
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
-            <span class="tag">Profile 里有什么</span>
+            <span class="tag"><span data-lang="zh">Profile 里有什么</span><span data-lang="en">What's in a profile</span></span>
             <ul class="detail-list">
-              <li><b>色域原色与白点</b><br>说明红、绿、蓝原色和参考白在 CIE 坐标中的位置，例如 sRGB、Display P3、Adobe RGB 的三角形不同。</li>
-              <li><b>TRC / 响应曲线</b><br>说明 RGB 码值如何变成线性光。sRGB、Adobe RGB、显示器实测响应都可能不同。</li>
-              <li><b>转换表或矩阵</b><br>简单矩阵 Profile 用原色矩阵转换；复杂设备 Profile 可能包含 A2B / B2A 查找表。</li>
-              <li><b>渲染意图</b><br>当源色域大于目标色域时，告诉 CMM 应该裁切、压缩还是保持相对关系。</li>
+              <li><b><span data-lang="zh">色域原色与白点</span><span data-lang="en">Gamut primaries and white point</span></b><br><span data-lang="zh">说明红、绿、蓝原色和参考白在 CIE 坐标中的位置，例如 sRGB、Display P3、Adobe RGB 的三角形不同。</span><span data-lang="en">States where the red, green, blue primaries and reference white sit in CIE coordinates — sRGB, Display P3, and Adobe RGB triangles differ, for example.</span></li>
+              <li><b>TRC / <span data-lang="zh">响应曲线</span><span data-lang="en">response curve</span></b><br><span data-lang="zh">说明 RGB 码值如何变成线性光。sRGB、Adobe RGB、显示器实测响应都可能不同。</span><span data-lang="en">States how RGB code values become linear light. sRGB, Adobe RGB, and a monitor's measured response can all differ.</span></li>
+              <li><b><span data-lang="zh">转换表或矩阵</span><span data-lang="en">Conversion tables or matrices</span></b><br><span data-lang="zh">简单矩阵 Profile 用原色矩阵转换；复杂设备 Profile 可能包含 A2B / B2A 查找表。</span><span data-lang="en">Simple matrix profiles convert with a primaries matrix; complex device profiles may contain A2B / B2A lookup tables.</span></li>
+              <li><b><span data-lang="zh">渲染意图</span><span data-lang="en">Rendering intent</span></b><br><span data-lang="zh">当源色域大于目标色域时，告诉 CMM 应该裁切、压缩还是保持相对关系。</span><span data-lang="en">When the source gamut is larger than the target, it tells the CMM whether to clip, compress, or preserve relative relationships.</span></li>
             </ul>
           </div>
           <div class="card">
-            <span class="tag" style="background:var(--cyan)">谁在用 Profile</span>
+            <span class="tag" style="background:var(--cyan)"><span data-lang="zh">谁在用 Profile</span><span data-lang="en">Who uses the profile</span></span>
             <ul class="detail-list">
-              <li><b>图片的嵌入 Profile</b><br>解释文件里的 RGB 数字属于哪个源空间。它描述的是图片，不是屏幕。</li>
-              <li><b>显示器 Profile</b><br>由系统、厂商或校色仪提供，描述这台屏幕实际的原色、白点和灰阶响应。</li>
-              <li><b>CMM</b><br>Color Management Module 负责把源 Profile、目标 Profile、渲染意图串起来，计算最终输出 RGB。</li>
-              <li><b>应用软件</b><br>浏览器、Photoshop、预览、视频软件是否调用系统色彩管理，决定链路是否完整。</li>
+              <li><b><span data-lang="zh">图片的嵌入 Profile</span><span data-lang="en">The image's embedded profile</span></b><br><span data-lang="zh">解释文件里的 RGB 数字属于哪个源空间。它描述的是图片，不是屏幕。</span><span data-lang="en">Interprets which source space the file's RGB numbers belong to. It describes the image, not the screen.</span></li>
+              <li><b><span data-lang="zh">显示器 Profile</span><span data-lang="en">The monitor profile</span></b><br><span data-lang="zh">由系统、厂商或校色仪提供，描述这台屏幕实际的原色、白点和灰阶响应。</span><span data-lang="en">Provided by the system, vendor, or a calibration probe; describes this screen's actual primaries, white point, and grayscale response.</span></li>
+              <li><b>CMM</b><br><span data-lang="zh">Color Management Module 负责把源 Profile、目标 Profile、渲染意图串起来，计算最终输出 RGB。</span><span data-lang="en">The Color Management Module ties the source profile, target profile, and rendering intent together to compute the final output RGB.</span></li>
+              <li><b><span data-lang="zh">应用软件</span><span data-lang="en">The application</span></b><br><span data-lang="zh">浏览器、Photoshop、预览、视频软件是否调用系统色彩管理，决定链路是否完整。</span><span data-lang="en">Whether the browser, Photoshop, Preview, or a video app calls the system's color management decides whether the pipeline is complete.</span></li>
             </ul>
           </div>
         </div>
 
         <div class="flow">
-          <div class="flow-step"><b>1. 图片 RGB</b><p>文件里的 R/G/B 数值。它们还不是“绝对颜色”。</p></div>
-          <div class="flow-step"><b>2. 源 Profile</b><p>把 RGB 解释成源空间中的真实颜色。</p></div>
-          <div class="flow-step"><b>3. PCS</b><p>进入 Profile Connection Space，通常是 D50 适配下的 CIE XYZ 或 Lab。</p></div>
-          <div class="flow-step"><b>4. 目标 Profile</b><p>显示器、打印机或导出目标空间告诉系统它能表达什么。</p></div>
-          <div class="flow-step"><b>5. 输出 RGB</b><p>CMM 计算出目标设备需要的通道值，屏幕才真正发光。</p></div>
+          <div class="flow-step"><b><span data-lang="zh">1. 图片 RGB</span><span data-lang="en">1. Image RGB</span></b><p><span data-lang="zh">文件里的 R/G/B 数值。它们还不是"绝对颜色"。</span><span data-lang="en">The R/G/B values in the file. They aren't an "absolute color" yet.</span></p></div>
+          <div class="flow-step"><b><span data-lang="zh">2. 源 Profile</span><span data-lang="en">2. Source profile</span></b><p><span data-lang="zh">把 RGB 解释成源空间中的真实颜色。</span><span data-lang="en">Interprets the RGB into a real color in the source space.</span></p></div>
+          <div class="flow-step"><b>3. PCS</b><p><span data-lang="zh">进入 Profile Connection Space，通常是 D50 适配下的 CIE XYZ 或 Lab。</span><span data-lang="en">Enters the Profile Connection Space, usually CIE XYZ or Lab under D50 adaptation.</span></p></div>
+          <div class="flow-step"><b><span data-lang="zh">4. 目标 Profile</span><span data-lang="en">4. Target profile</span></b><p><span data-lang="zh">显示器、打印机或导出目标空间告诉系统它能表达什么。</span><span data-lang="en">The monitor, printer, or export target space tells the system what it can express.</span></p></div>
+          <div class="flow-step"><b><span data-lang="zh">5. 输出 RGB</span><span data-lang="en">5. Output RGB</span></b><p><span data-lang="zh">CMM 计算出目标设备需要的通道值，屏幕才真正发光。</span><span data-lang="en">The CMM computes the channel values the target device needs, and only then does the screen actually light up.</span></p></div>
         </div>
 
         <div class="grid-2" style="margin-top:16px">
           <div class="card">
-            <h3>为什么需要 PCS？</h3>
-            <p>如果每个设备都直接给另一个设备写转换表，N 个设备之间需要大量两两转换。ICC 用 PCS 做中间语言：源 Profile 负责“RGB → PCS”，目标 Profile 负责“PCS → 设备 RGB”。这样一张 P3 图片、一台 sRGB 显示器、一台打印机都能通过同一个连接空间协作。</p>
-            <div class="result">可以把 PCS 理解成“颜色中转站”：它不关心设备怎么发光，只关心目标颜色在 CIE 标准观察者下是什么。</div>
+            <h3><span data-lang="zh">为什么需要 PCS？</span><span data-lang="en">Why is a PCS needed?</span></h3>
+            <p><span data-lang="zh">如果每个设备都直接给另一个设备写转换表，N 个设备之间需要大量两两转换。ICC 用 PCS 做中间语言：源 Profile 负责"RGB → PCS"，目标 Profile 负责"PCS → 设备 RGB"。这样一张 P3 图片、一台 sRGB 显示器、一台打印机都能通过同一个连接空间协作。</span><span data-lang="en">If every device wrote a conversion table straight to every other device, N devices would need a huge number of pairwise conversions. ICC uses the PCS as an intermediate language: the source profile handles "RGB → PCS", the target profile handles "PCS → device RGB". This way a P3 image, an sRGB monitor, and a printer can all cooperate through one connection space.</span></p>
+            <div class="result"><span data-lang="zh">可以把 PCS 理解成"颜色中转站"：它不关心设备怎么发光，只关心目标颜色在 CIE 标准观察者下是什么。</span><span data-lang="en">Think of the PCS as a "color transit hub": it doesn't care how a device emits light, only what the target color is under the CIE standard observer.</span></div>
           </div>
           <div class="card">
-            <h3>缺失或错误 Profile 会发生什么？</h3>
-            <p>缺失 Profile 时，很多现代软件会把图片当作 sRGB；但旧软件、部分转码链路或未色彩管理的环境可能不这样处理。错误 Profile 更危险：RGB 数字没变，但解释规则换了，画面会整体偏艳、偏灰或偏色。</p>
-            <div class="result">这也是为什么“看起来变色”常常不是调色问题，而是解释规则在某一环断了。</div>
+            <h3><span data-lang="zh">缺失或错误 Profile 会发生什么？</span><span data-lang="en">What happens with a missing or wrong profile?</span></h3>
+            <p><span data-lang="zh">缺失 Profile 时，很多现代软件会把图片当作 sRGB；但旧软件、部分转码链路或未色彩管理的环境可能不这样处理。错误 Profile 更危险：RGB 数字没变，但解释规则换了，画面会整体偏艳、偏灰或偏色。</span><span data-lang="en">With a missing profile, many modern apps assume sRGB; but older software, some transcoding pipelines, or non-color-managed environments may not. A wrong profile is more dangerous: the RGB numbers don't change, but the interpretation rule does, so the whole image skews saturated, grey, or off-hue.</span></p>
+            <div class="result"><span data-lang="zh">这也是为什么"看起来变色"常常不是调色问题，而是解释规则在某一环断了。</span><span data-lang="en">This is why "it looks like the color changed" is often not a grading problem but a break in the interpretation rule somewhere along the chain.</span></div>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px">
-          <h3>渲染意图：超出目标色域时怎么办</h3>
-          <p>当源颜色超出目标设备能力时，CMM 需要决定如何处理。ICC 规范定义了多种渲染意图，实际软件会根据图像类型和 Profile 支持情况选择。</p>
+          <h3><span data-lang="zh">渲染意图：超出目标色域时怎么办</span><span data-lang="en">Rendering intent: what to do when colors exceed the target gamut</span></h3>
+          <p><span data-lang="zh">当源颜色超出目标设备能力时，CMM 需要决定如何处理。ICC 规范定义了多种渲染意图，实际软件会根据图像类型和 Profile 支持情况选择。</span><span data-lang="en">When source colors exceed the target device's capability, the CMM must decide how to handle them. The ICC spec defines several rendering intents, and software picks based on image type and profile support.</span></p>
           <div style="overflow-x:auto">
             <table class="mini-table">
-              <thead><tr><th>渲染意图</th><th>适合场景</th><th>直观理解</th></tr></thead>
+              <thead><tr><th><span data-lang="zh">渲染意图</span><span data-lang="en">Rendering intent</span></th><th><span data-lang="zh">适合场景</span><span data-lang="en">Best for</span></th><th><span data-lang="zh">直观理解</span><span data-lang="en">In plain terms</span></th></tr></thead>
               <tbody>
-                <tr><td>Perceptual 感知</td><td>照片、复杂图像</td><td>把整体色域压进目标空间，尽量保持颜色之间的关系。</td></tr>
-                <tr><td>Relative Colorimetric 相对色度</td><td>网页、屏幕交付、精确颜色</td><td>目标空间能显示的颜色尽量不动，超出的颜色裁到边界，白点按目标适配。</td></tr>
-                <tr><td>Absolute Colorimetric 绝对色度</td><td>打样、模拟纸白</td><td>连源白点也尽量模拟出来，常用于印刷软打样。</td></tr>
-                <tr><td>Saturation 饱和度</td><td>图表、商业图形</td><td>优先保持鲜艳，不追求照片般自然。</td></tr>
+                <tr><td><span data-lang="zh">Perceptual 感知</span><span data-lang="en">Perceptual</span></td><td><span data-lang="zh">照片、复杂图像</span><span data-lang="en">Photos, complex images</span></td><td><span data-lang="zh">把整体色域压进目标空间，尽量保持颜色之间的关系。</span><span data-lang="en">Compresses the whole gamut into the target space, keeping the relationships between colors as much as possible.</span></td></tr>
+                <tr><td><span data-lang="zh">Relative Colorimetric 相对色度</span><span data-lang="en">Relative Colorimetric</span></td><td><span data-lang="zh">网页、屏幕交付、精确颜色</span><span data-lang="en">Web, screen delivery, precise color</span></td><td><span data-lang="zh">目标空间能显示的颜色尽量不动，超出的颜色裁到边界，白点按目标适配。</span><span data-lang="en">Leaves in-gamut colors as-is, clips out-of-gamut colors to the boundary, and adapts the white point to the target.</span></td></tr>
+                <tr><td><span data-lang="zh">Absolute Colorimetric 绝对色度</span><span data-lang="en">Absolute Colorimetric</span></td><td><span data-lang="zh">打样、模拟纸白</span><span data-lang="en">Proofing, simulating paper white</span></td><td><span data-lang="zh">连源白点也尽量模拟出来，常用于印刷软打样。</span><span data-lang="en">Even simulates the source white point; common in print soft-proofing.</span></td></tr>
+                <tr><td><span data-lang="zh">Saturation 饱和度</span><span data-lang="en">Saturation</span></td><td><span data-lang="zh">图表、商业图形</span><span data-lang="en">Charts, business graphics</span></td><td><span data-lang="zh">优先保持鲜艳，不追求照片般自然。</span><span data-lang="en">Prioritizes vividness over photographic naturalness.</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -530,43 +582,43 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. Assign Profile 和 Convert Profile 是两件事</h2>
-            <p>很多颜色事故来自这里：指定 Profile 会改变 RGB 数字的解释方式；转换 Profile 会尽量保持外观，但 RGB 数字会被重算。</p>
+            <h2><span data-lang="zh">4. Assign Profile 和 Convert Profile 是两件事</span><span data-lang="en">4. Assign Profile and Convert Profile are two different things</span></h2>
+            <p><span data-lang="zh">很多颜色事故来自这里：指定 Profile 会改变 RGB 数字的解释方式；转换 Profile 会尽量保持外观，但 RGB 数字会被重算。</span><span data-lang="en">Many color accidents start here: assigning a profile changes how the RGB numbers are interpreted; converting a profile tries to preserve appearance but recomputes the RGB numbers.</span></p>
           </div>
-          <div class="note">如果你把一张 sRGB 图“指定”为 Display P3，颜色会变艳；如果你把它“转换”为 Display P3，外观应尽量保持一致，只是底层 RGB 数字改变。</div>
+          <div class="note"><span data-lang="zh">如果你把一张 sRGB 图"指定"为 Display P3，颜色会变艳；如果你把它"转换"为 Display P3，外观应尽量保持一致，只是底层 RGB 数字改变。</span><span data-lang="en">If you "assign" Display P3 to an sRGB image, the colors get more saturated; if you "convert" it to Display P3, the appearance should stay as close as possible while the underlying RGB numbers change.</span></div>
         </div>
         <div class="grid-2">
           <div class="card">
             <div class="controls">
-              <label>源空间
+              <label><span data-lang="zh">源空间</span><span data-lang="en">Source space</span>
                 <select id="assignSource">
                   <option value="srgb">sRGB</option>
                   <option value="p3">Display P3</option>
                   <option value="adobe">Adobe RGB</option>
                 </select>
               </label>
-              <label>目标空间
+              <label><span data-lang="zh">目标空间</span><span data-lang="en">Target space</span>
                 <select id="assignTarget">
                   <option value="p3">Display P3</option>
                   <option value="srgb">sRGB</option>
                   <option value="adobe">Adobe RGB</option>
                 </select>
               </label>
-              <button id="assignMode" class="active" data-mode="assign" aria-pressed="true">指定 Profile</button>
-              <button id="convertMode" data-mode="convert" aria-pressed="false">转换 Profile</button>
+              <button id="assignMode" class="active" data-mode="assign" aria-pressed="true"><span data-lang="zh">指定 Profile</span><span data-lang="en">Assign Profile</span></button>
+              <button id="convertMode" data-mode="convert" aria-pressed="false"><span data-lang="zh">转换 Profile</span><span data-lang="en">Convert Profile</span></button>
             </div>
             <div class="swatch-row">
-              <div class="swatch" id="beforeSwatch"><b>原始解释</b></div>
-              <div class="swatch" id="afterSwatch"><b>处理后</b></div>
+              <div class="swatch" id="beforeSwatch"><b data-lang="zh">原始解释</b><b data-lang="en">Original</b></div>
+              <div class="swatch" id="afterSwatch"><b data-lang="zh">处理后</b><b data-lang="en">After</b></div>
             </div>
             <div class="result" id="assignReadout"></div>
           </div>
           <div class="card">
-            <h3>怎么判断你该用哪个？</h3>
+            <h3><span data-lang="zh">怎么判断你该用哪个？</span><span data-lang="en">How to tell which one to use?</span></h3>
             <div class="checklist">
-              <div class="check-item"><div><b>颜色看起来错了</b><br><span class="mini">通常先检查是否“指定”了错误 Profile。</span></div></div>
-              <div class="check-item"><div><b>要交付到另一个空间</b><br><span class="mini">例如 P3 图交付网页 sRGB，应该转换 Profile。</span></div></div>
-              <div class="check-item"><div><b>不要随手丢弃 Profile</b><br><span class="mini">文件小一点，但接收方只能猜你的 RGB。</span></div></div>
+              <div class="check-item"><div><b><span data-lang="zh">颜色看起来错了</span><span data-lang="en">The colors look wrong</span></b><br><span class="mini"><span data-lang="zh">通常先检查是否"指定"了错误 Profile。</span><span data-lang="en">Usually first check whether a wrong profile was "assigned".</span></span></div></div>
+              <div class="check-item"><div><b><span data-lang="zh">要交付到另一个空间</span><span data-lang="en">Delivering to another space</span></b><br><span class="mini"><span data-lang="zh">例如 P3 图交付网页 sRGB，应该转换 Profile。</span><span data-lang="en">e.g. delivering a P3 image to web sRGB — you should convert the profile.</span></span></div></div>
+              <div class="check-item"><div><b><span data-lang="zh">不要随手丢弃 Profile</span><span data-lang="en">Don't casually drop the profile</span></b><br><span class="mini"><span data-lang="zh">文件小一点，但接收方只能猜你的 RGB。</span><span data-lang="en">The file gets a bit smaller, but the recipient can only guess your RGB.</span></span></div></div>
             </div>
           </div>
         </div>
@@ -577,26 +629,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. Web 图片为什么容易出问题</h2>
-            <p>Web 长期默认 sRGB。现代浏览器和设备开始支持 Display P3、CSS Color 4 和广色域图片，但图片、CSS 色值、Canvas、视频的处理路径并不完全一样。</p>
+            <h2><span data-lang="zh">5. Web 图片为什么容易出问题</span><span data-lang="en">5. Why web images so easily go wrong</span></h2>
+            <p><span data-lang="zh">Web 长期默认 sRGB。现代浏览器和设备开始支持 Display P3、CSS Color 4 和广色域图片，但图片、CSS 色值、Canvas、视频的处理路径并不完全一样。</span><span data-lang="en">The web defaulted to sRGB for a long time. Modern browsers and devices now support Display P3, CSS Color 4, and wide-gamut images — but images, CSS color values, Canvas, and video don't all go through exactly the same path.</span></p>
           </div>
           <div class="note" id="gamutNote">正在检测当前浏览器的色域能力。</div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <h3>同样写“红”，含义可能不同</h3>
+            <h3><span data-lang="zh">同样写"红"，含义可能不同</span><span data-lang="en">The same "red" can mean different things</span></h3>
             <div class="swatch-row">
-              <div class="swatch" style="background: rgb(255 0 0)"><b>CSS #ff0000</b><span>sRGB 红</span></div>
-              <div class="swatch" style="background: color(display-p3 1 0 0)"><b>color(display-p3 1 0 0)</b><span>P3 红</span></div>
+              <div class="swatch" style="background: rgb(255 0 0)"><b>CSS #ff0000</b><span><span data-lang="zh">sRGB 红</span><span data-lang="en">sRGB red</span></span></div>
+              <div class="swatch" style="background: color(display-p3 1 0 0)"><b>color(display-p3 1 0 0)</b><span><span data-lang="zh">P3 红</span><span data-lang="en">P3 red</span></span></div>
             </div>
-            <p class="mini" style="margin-top:10px">如果当前设备或浏览器不支持 P3，两块可能看起来接近或被映射回 sRGB。</p>
+            <p class="mini" style="margin-top:10px"><span data-lang="zh">如果当前设备或浏览器不支持 P3，两块可能看起来接近或被映射回 sRGB。</span><span data-lang="en">If the current device or browser doesn't support P3, the two blocks may look similar or get mapped back to sRGB.</span></p>
           </div>
           <div class="card">
-            <h3>Web 链路的实用规则</h3>
+            <h3><span data-lang="zh">Web 链路的实用规则</span><span data-lang="en">Practical rules for the web pipeline</span></h3>
             <div class="checklist">
-              <div class="check-item"><div>普通网页图片：导出 sRGB，并嵌入 Profile。</div></div>
-              <div class="check-item"><div>广色域图片：导出 Display P3，并确认目标平台保留 Profile。</div></div>
-              <div class="check-item"><div>不要把未管理的 P3 屏幕当作“颜色更准”。它只可能更艳。</div></div>
+              <div class="check-item"><div><span data-lang="zh">普通网页图片：导出 sRGB，并嵌入 Profile。</span><span data-lang="en">Ordinary web images: export sRGB and embed the profile.</span></div></div>
+              <div class="check-item"><div><span data-lang="zh">广色域图片：导出 Display P3，并确认目标平台保留 Profile。</span><span data-lang="en">Wide-gamut images: export Display P3 and confirm the target platform keeps the profile.</span></div></div>
+              <div class="check-item"><div><span data-lang="zh">不要把未管理的 P3 屏幕当作"颜色更准"。它只可能更艳。</span><span data-lang="en">Don't treat an unmanaged P3 screen as "more accurate". It can only be more saturated.</span></div></div>
             </div>
           </div>
         </div>
@@ -607,22 +659,22 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>6. 按用途选择导出策略</h2>
-            <p>色彩管理不是“永远用最大的色域”。正确策略取决于用途、接收方、软件链路和是否能保留 Profile。</p>
+            <h2><span data-lang="zh">6. 按用途选择导出策略</span><span data-lang="en">6. Choose an export strategy by use case</span></h2>
+            <p><span data-lang="zh">色彩管理不是"永远用最大的色域"。正确策略取决于用途、接收方、软件链路和是否能保留 Profile。</span><span data-lang="en">Color management isn't "always use the biggest gamut". The right strategy depends on the use case, the recipient, the software chain, and whether the profile is preserved.</span></p>
           </div>
-          <div class="note">最稳妥的原则：编辑可以用大空间，交付必须按目标链路收窄并嵌入 Profile。</div>
+          <div class="note"><span data-lang="zh">最稳妥的原则：编辑可以用大空间，交付必须按目标链路收窄并嵌入 Profile。</span><span data-lang="en">The safest principle: edit in a large space, but for delivery narrow down to the target chain and embed the profile.</span></div>
         </div>
         <div style="overflow-x:auto">
           <table class="table">
             <thead>
-              <tr><th>用途</th><th>推荐空间</th><th>关键动作</th><th>风险</th></tr>
+              <tr><th><span data-lang="zh">用途</span><span data-lang="en">Use case</span></th><th><span data-lang="zh">推荐空间</span><span data-lang="en">Recommended space</span></th><th><span data-lang="zh">关键动作</span><span data-lang="en">Key action</span></th><th><span data-lang="zh">风险</span><span data-lang="en">Risk</span></th></tr>
             </thead>
             <tbody>
-              <tr><td>普通网页 / 社交</td><td>sRGB</td><td>转换到 sRGB，嵌入 ICC</td><td>平台可能重压缩，但兼容性最好</td></tr>
-              <tr><td>Apple 生态广色域展示</td><td>Display P3</td><td>保留 P3 Profile，测试 Safari / Chrome</td><td>非 P3 设备会映射或裁切</td></tr>
-              <tr><td>摄影后期母版</td><td>Adobe RGB / ProPhoto RGB</td><td>大空间编辑，最终按用途转换</td><td>直接发给普通用户容易偏色</td></tr>
-              <tr><td>印刷协作</td><td>按印厂 ICC / CMYK</td><td>使用印厂指定 Profile 和软打样</td><td>自己乱转 CMYK 可能损失更大</td></tr>
-              <tr><td>HDR / 视频截图</td><td>按视频链路</td><td>区分 SDR 图片、HDR 图片和视频帧</td><td>浏览器、系统和格式支持差异大</td></tr>
+              <tr><td><span data-lang="zh">普通网页 / 社交</span><span data-lang="en">Ordinary web / social</span></td><td>sRGB</td><td><span data-lang="zh">转换到 sRGB，嵌入 ICC</span><span data-lang="en">Convert to sRGB, embed the ICC</span></td><td><span data-lang="zh">平台可能重压缩，但兼容性最好</span><span data-lang="en">Platforms may recompress, but compatibility is best</span></td></tr>
+              <tr><td><span data-lang="zh">Apple 生态广色域展示</span><span data-lang="en">Wide-gamut display in Apple's ecosystem</span></td><td>Display P3</td><td><span data-lang="zh">保留 P3 Profile，测试 Safari / Chrome</span><span data-lang="en">Keep the P3 profile, test Safari / Chrome</span></td><td><span data-lang="zh">非 P3 设备会映射或裁切</span><span data-lang="en">Non-P3 devices map or clip it</span></td></tr>
+              <tr><td><span data-lang="zh">摄影后期母版</span><span data-lang="en">Photo master for post</span></td><td>Adobe RGB / ProPhoto RGB</td><td><span data-lang="zh">大空间编辑，最终按用途转换</span><span data-lang="en">Edit in a large space, convert by use case at the end</span></td><td><span data-lang="zh">直接发给普通用户容易偏色</span><span data-lang="en">Sending it straight to ordinary users easily shifts color</span></td></tr>
+              <tr><td><span data-lang="zh">印刷协作</span><span data-lang="en">Print collaboration</span></td><td><span data-lang="zh">按印厂 ICC / CMYK</span><span data-lang="en">Per the printer's ICC / CMYK</span></td><td><span data-lang="zh">使用印厂指定 Profile 和软打样</span><span data-lang="en">Use the printer's specified profile and soft-proofing</span></td><td><span data-lang="zh">自己乱转 CMYK 可能损失更大</span><span data-lang="en">Converting to CMYK yourself can lose even more</span></td></tr>
+              <tr><td><span data-lang="zh">HDR / 视频截图</span><span data-lang="en">HDR / video stills</span></td><td><span data-lang="zh">按视频链路</span><span data-lang="en">Per the video pipeline</span></td><td><span data-lang="zh">区分 SDR 图片、HDR 图片和视频帧</span><span data-lang="en">Distinguish SDR images, HDR images, and video frames</span></td><td><span data-lang="zh">浏览器、系统和格式支持差异大</span><span data-lang="en">Browser, system, and format support vary widely</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -633,45 +685,62 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>7. 外部工具：纯色图片生成器</h2>
-            <p>做色彩管理测试时，纯色色块很有用：你可以生成一张指定 RGB 的图片，再测试不同软件、浏览器和平台是否保留 Profile、是否发生过饱和或裁切。</p>
+            <h2><span data-lang="zh">7. 外部工具：纯色图片生成器</span><span data-lang="en">7. External tool: solid-color image generator</span></h2>
+            <p><span data-lang="zh">做色彩管理测试时，纯色色块很有用：你可以生成一张指定 RGB 的图片，再测试不同软件、浏览器和平台是否保留 Profile、是否发生过饱和或裁切。</span><span data-lang="en">Solid color blocks are handy for color-management testing: generate an image with a specific RGB, then test whether different apps, browsers, and platforms keep the profile and whether oversaturation or clipping occurs.</span></p>
           </div>
-          <div class="note">本页不内嵌生成器。需要生成纯色测试图的用户，可以去工具仓库下载使用。</div>
+          <div class="note"><span data-lang="zh">本页不内嵌生成器。需要生成纯色测试图的用户，可以去工具仓库下载使用。</span><span data-lang="en">This page doesn't embed the generator. If you need to generate solid-color test images, grab it from the tool repository.</span></div>
         </div>
         <div class="card">
-          <span class="tag" style="background:var(--cyan)">GitHub 工具</span>
+          <span class="tag" style="background:var(--cyan)"><span data-lang="zh">GitHub 工具</span><span data-lang="en">GitHub tool</span></span>
           <h3>Solid Color Image Generator</h3>
-          <p>MeeeetRain 的纯色图片生成工具，可用于制作颜色测试图、导出纯色色块，并配合本章的 Profile / Web 色彩管理实验。</p>
-          <a class="button-link primary" href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer">打开 GitHub 仓库</a>
+          <p><span data-lang="zh">MeeeetRain 的纯色图片生成工具，可用于制作颜色测试图、导出纯色色块，并配合本章的 Profile / Web 色彩管理实验。</span><span data-lang="en">MeeeetRain's solid-color image generator — make color test charts, export solid blocks, and pair it with this chapter's profile / web color-management experiments.</span></p>
+          <a class="button-link primary" href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer"><span data-lang="zh">打开 GitHub 仓库</span><span data-lang="en">Open the GitHub repo</span></a>
         </div>
       </div>
     </section>
 
     <section id="sources">
       <div class="wrap">
-        <h2>资料来源</h2>
+        <h2><span data-lang="zh">资料来源</span><span data-lang="en">Sources</span></h2>
         <div class="grid-2">
           <ul class="sources">
-            <li><a href="https://www.color.org/" target="_blank" rel="noreferrer">International Color Consortium</a>：ICC 色彩管理组织。</li>
-            <li><a href="https://www.color.org/specification/ICC.1-2022-05.pdf" target="_blank" rel="noreferrer">ICC.1:2022 Profile Specification</a>：ICC Profile 架构与 PCS 概念。</li>
-            <li><a href="https://www.color.org/faqs.xalter" target="_blank" rel="noreferrer">ICC Frequently Asked Questions</a>：Profile、CMM、渲染意图等基础说明。</li>
-            <li><a href="https://www.w3.org/TR/css-color-4/" target="_blank" rel="noreferrer">W3C CSS Color Module Level 4</a>：Web 色彩空间、Display P3、Lab/LCH 等 CSS 表达。</li>
+            <li><a href="https://www.color.org/" target="_blank" rel="noreferrer">International Color Consortium</a><span data-lang="zh">：ICC 色彩管理组织。</span><span data-lang="en"> — the ICC color-management organization.</span></li>
+            <li><a href="https://www.color.org/specification/ICC.1-2022-05.pdf" target="_blank" rel="noreferrer">ICC.1:2022 Profile Specification</a><span data-lang="zh">：ICC Profile 架构与 PCS 概念。</span><span data-lang="en"> — ICC profile architecture and the PCS concept.</span></li>
+            <li><a href="https://www.color.org/faqs.xalter" target="_blank" rel="noreferrer">ICC Frequently Asked Questions</a><span data-lang="zh">：Profile、CMM、渲染意图等基础说明。</span><span data-lang="en"> — basics of profiles, CMM, rendering intents, etc.</span></li>
+            <li><a href="https://www.w3.org/TR/css-color-4/" target="_blank" rel="noreferrer">W3C CSS Color Module Level 4</a><span data-lang="zh">：Web 色彩空间、Display P3、Lab/LCH 等 CSS 表达。</span><span data-lang="en"> — web color spaces, Display P3, Lab/LCH and other CSS notations.</span></li>
           </ul>
           <ul class="sources">
-            <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/color-gamut" target="_blank" rel="noreferrer">MDN @media color-gamut</a>：浏览器色域能力检测。</li>
-            <li><a href="https://developer.chrome.com/docs/css-ui/access-colors-spaces" target="_blank" rel="noreferrer">Chrome Developers: Access more colors and new spaces</a>：现代浏览器广色域支持。</li>
-            <li><a href="https://support.apple.com/guide/colorsync-utility/welcome/mac" target="_blank" rel="noreferrer">Apple ColorSync Utility User Guide</a>：macOS 色彩管理与 Profile 工具。</li>
-            <li><a href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer">Solid Color Image Generator</a>：纯色图片生成工具仓库。</li>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/color-gamut" target="_blank" rel="noreferrer">MDN @media color-gamut</a><span data-lang="zh">：浏览器色域能力检测。</span><span data-lang="en"> — detecting the browser's gamut capability.</span></li>
+            <li><a href="https://developer.chrome.com/docs/css-ui/access-colors-spaces" target="_blank" rel="noreferrer">Chrome Developers: Access more colors and new spaces</a><span data-lang="zh">：现代浏览器广色域支持。</span><span data-lang="en"> — wide-gamut support in modern browsers.</span></li>
+            <li><a href="https://support.apple.com/guide/colorsync-utility/welcome/mac" target="_blank" rel="noreferrer">Apple ColorSync Utility User Guide</a><span data-lang="zh">：macOS 色彩管理与 Profile 工具。</span><span data-lang="en"> — macOS color management and profile tools.</span></li>
+            <li><a href="https://github.com/MeeeetRain/Solid-Color-Image-Generator" target="_blank" rel="noreferrer">Solid Color Image Generator</a><span data-lang="zh">：纯色图片生成工具仓库。</span><span data-lang="en"> — the solid-color image generator repository.</span></li>
           </ul>
         </div>
       </div>
     </section>
   </main>
 
+  <footer style="text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)">
+    <p style="margin:0"><span data-lang="zh">影像色彩与显示技术指南 · <a href="index.html" style="color:var(--cyan)">返回首页</a></span><span data-lang="en">Imaging Color &amp; Display Guide · <a href="index.html" style="color:var(--cyan)">Back to home</a></span></p>
+  </footer>
+
   <script>
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+    // ===== Language =====
+    let LANG = (function () { try { return localStorage.getItem("guideLang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; } })();
+    const T = (zh, en) => (LANG === "en" ? en : zh);
+    document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+    const PAGE_TITLE = {
+      zh: "图片色彩管理到底在管什么 | 影像色彩与显示技术指南",
+      en: "What image color management actually manages | Imaging Color & Display Guide"
+    };
+    const PAGE_DESC = {
+      zh: "理解图片色彩管理：ICC Profile、sRGB、Display P3、Assign/Convert、Web 图片颜色链路与导出建议。",
+      en: "Understanding image color management: ICC profiles, sRGB, Display P3, Assign/Convert, the web color pipeline, and export advice."
+    };
 
     const spaces = {
       srgb: {
@@ -949,9 +1018,12 @@
       $("#managedSwatch").style.background = key === "p3" ? p3Css(rgb) : rgbCss(srgb);
       $("#srgbSwatch").style.background = rgbCss(rgb);
       $("#managedSwatch").innerHTML = `<b>${spaces[key].label}</b><span>RGB(${rgb.join(", ")})</span>`;
-      $("#srgbSwatch").innerHTML = `<b>sRGB 猜测</b><span>RGB(${rgb.join(", ")})</span>`;
+      $("#srgbSwatch").innerHTML = `<b>${T("sRGB 猜测", "sRGB guess")}</b><span>RGB(${rgb.join(", ")})</span>`;
       const xy = xyzToXy(xyz);
-      $("#rgbReadout").innerHTML = `当前数值：RGB(${rgb.join(", ")}) · 按 ${spaces[key].label} 解释 → xy(${xy[0].toFixed(4)}, ${xy[1].toFixed(4)}) · 显示预览已裁切到当前浏览器可显示范围。`;
+      $("#rgbReadout").innerHTML = T(
+        `当前数值：RGB(${rgb.join(", ")}) · 按 ${spaces[key].label} 解释 → xy(${xy[0].toFixed(4)}, ${xy[1].toFixed(4)}) · 显示预览已裁切到当前浏览器可显示范围。`,
+        `Current values: RGB(${rgb.join(", ")}) · interpreted as ${spaces[key].label} → xy(${xy[0].toFixed(4)}, ${xy[1].toFixed(4)}) · the on-screen preview is clipped to your browser's displayable range.`
+      );
       drawCie();
     }
 
@@ -965,19 +1037,26 @@
       const afterXYZ = assignMode === "assign" ? rgbToXYZ(rgb, target) : sourceXYZ;
       $("#beforeSwatch").style.background = rgbCss(xyzToRgb(sourceXYZ, "srgb"));
       $("#afterSwatch").style.background = rgbCss(xyzToRgb(afterXYZ, "srgb"));
-      $("#beforeSwatch").innerHTML = `<b>原始</b><span>${spaces[source].label} · RGB(${rgb.join(", ")})</span>`;
-      $("#afterSwatch").innerHTML = `<b>${assignMode === "assign" ? "指定" : "转换"}</b><span>${spaces[target].label} · RGB(${afterRgb.join(", ")})</span>`;
+      $("#beforeSwatch").innerHTML = `<b>${T("原始", "Original")}</b><span>${spaces[source].label} · RGB(${rgb.join(", ")})</span>`;
+      $("#afterSwatch").innerHTML = `<b>${assignMode === "assign" ? T("指定", "Assign") : T("转换", "Convert")}</b><span>${spaces[target].label} · RGB(${afterRgb.join(", ")})</span>`;
       $("#assignReadout").innerHTML = assignMode === "assign"
-        ? `指定 Profile：RGB 数字保持 ${rgb.join(", ")}，但解释方式从 ${spaces[source].label} 改成 ${spaces[target].label}，外观会变化。`
-        : `转换 Profile：尽量保持原始外观，RGB 数字重算为 ${afterRgb.join(", ")}。`;
+        ? T(`指定 Profile：RGB 数字保持 ${rgb.join(", ")}，但解释方式从 ${spaces[source].label} 改成 ${spaces[target].label}，外观会变化。`,
+            `Assign Profile: the RGB numbers stay ${rgb.join(", ")}, but the interpretation changes from ${spaces[source].label} to ${spaces[target].label}, so the appearance changes.`)
+        : T(`转换 Profile：尽量保持原始外观，RGB 数字重算为 ${afterRgb.join(", ")}。`,
+            `Convert Profile: keeps the original appearance as much as possible; the RGB numbers are recomputed to ${afterRgb.join(", ")}.`);
     }
 
     function updateGamutNote() {
       const supportsP3 = matchMedia("(color-gamut: p3)").matches;
       const supportsRec2020 = matchMedia("(color-gamut: rec2020)").matches;
       $("#gamutNote").innerHTML = supportsRec2020
-        ? "当前浏览器报告支持 Rec.2020 级别色域；仍需确认具体显示器和系统色彩管理。"
-        : (supportsP3 ? "当前浏览器报告支持 Display P3 色域，适合测试广色域 CSS 与图片。" : "当前浏览器没有报告 P3 色域，广色域示例可能会被映射到 sRGB。");
+        ? T("当前浏览器报告支持 Rec.2020 级别色域；仍需确认具体显示器和系统色彩管理。",
+            "This browser reports Rec.2020-level gamut support; you still need to confirm the actual monitor and system color management.")
+        : (supportsP3
+            ? T("当前浏览器报告支持 Display P3 色域，适合测试广色域 CSS 与图片。",
+                "This browser reports Display P3 gamut support — good for testing wide-gamut CSS and images.")
+            : T("当前浏览器没有报告 P3 色域，广色域示例可能会被映射到 sRGB。",
+                "This browser doesn't report P3 gamut, so wide-gamut examples may be mapped to sRGB."));
     }
 
     function updateProgress() {
@@ -988,6 +1067,18 @@
         const link = $(`#navLinks a[href="#${sec.id}"]`);
         if (link) link.classList.toggle("active", sec.offsetTop <= pos && sec.offsetTop + sec.offsetHeight > pos);
       });
+    }
+
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_TITLE[LANG];
+      const m = document.querySelector('meta[name="description"]');
+      if (m) m.setAttribute("content", PAGE_DESC[LANG]);
+      updateRgbDemo();
+      updateAssignDemo();
+      updateGamutNote();
+      try { localStorage.setItem("guideLang", LANG); } catch (e) {}
     }
 
     $$("#rgbR,#rgbG,#rgbB,#rgbSpace").forEach(el => el.addEventListener("input", updateRgbDemo));
@@ -1008,6 +1099,7 @@
       $("#assignMode").setAttribute("aria-pressed", "false");
       updateAssignDemo();
     });
+    $$(".lang-toggle .seg").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.set)));
     addEventListener("scroll", updateProgress, { passive: true });
     addEventListener("resize", () => { updateRgbDemo(); updateAssignDemo(); });
     updateRgbDemo();

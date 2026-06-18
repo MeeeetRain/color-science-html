@@ -56,6 +56,12 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      white-space: nowrap;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
     .nav-links {
       display: flex;
@@ -67,11 +73,44 @@
       color: var(--muted);
       font-size: 14px;
       transition: all .2s;
+      white-space: nowrap;
     }
     .nav-links a:hover {
       color: var(--ink);
       background: rgba(255,255,255,.06);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #071014;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
 
     main {
       max-width: 1100px;
@@ -247,12 +286,18 @@
 <body>
   <header>
     <nav class="nav">
-      <a href="index.html" class="logo">色彩与显示指南</a>
-      <div class="nav-links">
-        <a href="index.html#daily-picks">每日精选</a>
-        <a href="hdr-color-science.html">SDR→HDR</a>
-        <a href="log-gamma.html">Log拍摄</a>
-        <a href="image-color-management.html">图片色彩管理</a>
+      <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="index.html#daily-picks"><span data-lang="zh">每日精选</span><span data-lang="en">Daily Picks</span></a>
+          <a href="hdr-color-science.html">SDR→HDR</a>
+          <a href="log-gamma.html"><span data-lang="zh">Log拍摄</span><span data-lang="en">Log capture</span></a>
+          <a href="image-color-management.html"><span data-lang="zh">图片色彩管理</span><span data-lang="en">Image color</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -261,12 +306,13 @@
     <section class="page-head">
       <div>
         <div class="eyebrow">Daily Picks Archive</div>
-        <h1>每日推荐归档</h1>
+        <h1><span data-lang="zh">每日推荐归档</span><span data-lang="en">Daily Picks Archive</span></h1>
         <p class="intro">
-          这里保存每天首页出现过的两条推荐，方便回头查找 HDR 制作、色彩科学、色彩管理和影像工作流相关的科普文章、深度讨论与案例。
+          <span data-lang="zh">这里保存每天首页出现过的两条推荐，方便回头查找 HDR 制作、色彩科学、色彩管理和影像工作流相关的科普文章、深度讨论与案例。</span>
+          <span data-lang="en">This keeps the two picks that appeared on the homepage each day, so you can look back for explainer articles, deep discussions, and cases on HDR production, color science, color management, and imaging workflows.</span>
         </p>
       </div>
-      <a class="back-link" href="index.html#daily-picks">返回今日精选 →</a>
+      <a class="back-link" href="index.html#daily-picks"><span data-lang="zh">返回今日精选 →</span><span data-lang="en">Back to today's picks →</span></a>
     </section>
 
     <!-- DAILY_PICKS_ARCHIVE_START -->
@@ -275,20 +321,35 @@
   </main>
 
   <footer>
-    <p>影像色彩与显示技术指南 · 每日推荐归档</p>
+    <p><span data-lang="zh">影像色彩与显示技术指南 · 每日推荐归档</span><span data-lang="en">Imaging Color &amp; Display Guide · Daily Picks Archive</span></p>
     <!-- CONTRIBUTORS_START -->
     <div class="contributors" aria-label="贡献者名单">
-      <p class="contributors-title">贡献者</p>
+      <p class="contributors-title"><span data-lang="zh">贡献者</span><span data-lang="en">Contributors</span></p>
       <div class="contributors-list">
-        <span class="contributor-pill">User <small>8 次提交</small></span>
-        <a class="contributor-pill" href="https://github.com/MeeeetRain" target="_blank" rel="noreferrer">MeeeetRain <small>2 次提交</small></a>
+        <span class="contributor-pill">User <small><span data-lang="zh">8 次提交</span><span data-lang="en">8 commits</span></small></span>
+        <a class="contributor-pill" href="https://github.com/MeeeetRain" target="_blank" rel="noreferrer">MeeeetRain <small><span data-lang="zh">2 次提交</span><span data-lang="en">2 commits</span></small></a>
       </div>
-      <p class="contributors-note">按 GitHub 默认分支提交者记录更新</p>
+      <p class="contributors-note"><span data-lang="zh">按 GitHub 默认分支提交者记录更新</span><span data-lang="en">Updated from the default branch's committer records</span></p>
     </div>
     <!-- CONTRIBUTORS_END -->
   </footer>
   <script>
     const archiveRoot = document.querySelector("#daily-picks-archive");
+
+    // ===== Language =====
+    let LANG = (function () { try { return localStorage.getItem("guideLang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; } })();
+    const T = (zh, en) => (LANG === "en" ? en : zh);
+    document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+    const PAGE_TITLE = {
+      zh: "每日推荐归档 | 影像色彩与显示技术指南",
+      en: "Daily Picks Archive | Imaging Color & Display Guide"
+    };
+    const PAGE_DESC = {
+      zh: "HDR 制作、色彩科学、色彩管理和影像工作流相关的每日精选文章与讨论归档",
+      en: "An archive of daily picks — articles and discussions on HDR production, color science, color management, and imaging workflows."
+    };
+    let archiveDays = null;
+    let archiveFailed = false;
 
     function escapeHtml(value) {
       return String(value || "").replace(/[&<>"']/g, char => ({
@@ -309,22 +370,43 @@
           </div>
           <h3 class="pick-title">${escapeHtml(pick.title)}</h3>
           <p class="pick-desc">${escapeHtml(pick.description)}</p>
-          <span class="pick-link">打开链接 →</span>
+          <span class="pick-link">${T("打开链接 →", "Open link →")}</span>
         </a>
       `;
     }
 
     function renderArchiveEntry(day) {
       const picks = Array.isArray(day.picks) ? day.picks.slice(0, 2) : [];
+      const count = T(`${picks.length} 条推荐`, `${picks.length} pick${picks.length === 1 ? "" : "s"}`);
       return `
         <section class="archive-entry" data-date="${escapeHtml(day.date)}">
           <div class="archive-date">
             <h2>${escapeHtml(day.date)}</h2>
-            <span>${picks.length} 条推荐</span>
+            <span>${count}</span>
           </div>
           <div class="pick-grid">${picks.map(renderPickCard).join("")}</div>
         </section>
       `;
+    }
+
+    function renderArchive() {
+      if (archiveFailed) {
+        archiveRoot.innerHTML = `<p class="archive-status">${T("每日推荐归档暂时无法加载，请稍后再试。", "The daily picks archive is temporarily unavailable. Please try again later.")}</p>`;
+        return;
+      }
+      if (archiveDays) {
+        archiveRoot.innerHTML = archiveDays.map(renderArchiveEntry).join("");
+      }
+    }
+
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_TITLE[LANG];
+      const m = document.querySelector('meta[name="description"]');
+      if (m) m.setAttribute("content", PAGE_DESC[LANG]);
+      renderArchive();
+      try { localStorage.setItem("guideLang", LANG); } catch (e) {}
     }
 
     async function loadDailyPicksArchive() {
@@ -334,12 +416,16 @@
         const data = await response.json();
         const days = Array.isArray(data.days) ? data.days : [];
         if (!days.length) throw new Error("daily picks archive empty");
-        archiveRoot.innerHTML = days.map(renderArchiveEntry).join("");
+        archiveDays = days;
+        archiveFailed = false;
       } catch (error) {
-        archiveRoot.innerHTML = '<p class="archive-status">每日推荐归档暂时无法加载，请稍后再试。</p>';
+        archiveFailed = true;
       }
+      renderArchive();
     }
 
+    document.querySelectorAll(".lang-toggle .seg").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.set)));
+    document.title = PAGE_TITLE[LANG];
     loadDailyPicksArchive();
   </script>
 </body>

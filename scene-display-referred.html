@@ -68,10 +68,12 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    .brand { font-weight: 780; }
-    .links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brand { font-weight: 780; flex: none; white-space: nowrap; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; justify-content: flex-end; }
+    .links { display: flex; gap: 6px; flex: 0 1 auto; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .links::-webkit-scrollbar { display: none; }
     .links a {
       padding: 7px 12px;
       border-radius: 999px;
@@ -83,6 +85,41 @@
       color: var(--ink);
       background: rgba(255,255,255,.08);
     }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      flex: none;
+    }
+    .lang-toggle .seg {
+      font: inherit;
+      font-size: 13px;
+      font-weight: 720;
+      line-height: 1;
+      padding: 7px 13px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      min-height: 0;
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle .seg:hover { color: var(--ink); }
+    html[lang^="zh"] .lang-toggle .seg[data-set="zh"],
+    html[lang="en"] .lang-toggle .seg[data-set="en"] {
+      background: var(--cyan);
+      color: #0a1014;
+      font-weight: 780;
+    }
+
+    /* Bilingual visibility */
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+
     main { overflow: hidden; }
     section {
       padding: 72px 20px;
@@ -117,10 +154,10 @@
       margin-bottom: 12px;
     }
     h1 {
-      max-width: 13ch;
+      max-width: 16ch;
       margin: 0 0 20px;
-      font-size: clamp(42px, 7vw, 84px);
-      line-height: .98;
+      font-size: clamp(40px, 6.4vw, 76px);
+      line-height: 1.02;
       letter-spacing: 0;
     }
     h2 {
@@ -132,7 +169,7 @@
     h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.22; }
     p { margin: 0 0 14px; color: var(--muted); }
     .lead {
-      max-width: 780px;
+      max-width: 820px;
       color: #e9eef7;
       font-size: clamp(18px, 2vw, 22px);
     }
@@ -271,6 +308,7 @@
       border-color: transparent;
       font-weight: 780;
     }
+    .lang-toggle .seg[aria-pressed] { color: inherit; }
     input[type="range"] {
       accent-color: var(--cyan);
       min-width: 240px;
@@ -370,6 +408,14 @@
       color: var(--soft);
       font-size: 13px;
     }
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--soft);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--cyan); }
     @media (max-width: 920px) {
       .section-head, .grid-2, .grid-3, .grid-4, .workflows, .source-list { grid-template-columns: 1fr; }
       .pipeline { grid-template-columns: 1fr; }
@@ -380,7 +426,7 @@
     @media (max-width: 560px) {
       section { padding: 54px 16px; }
       .hero { min-height: 66vh; }
-      h1 { font-size: 42px; }
+      h1 { font-size: 40px; }
       .canvas-box { height: 320px; }
       input[type="range"] { min-width: 100%; }
     }
@@ -390,15 +436,21 @@
   <div class="progress" id="progress"></div>
   <header>
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="index.html">← 色彩与显示指南</a>
-      <div class="links" id="navLinks">
-        <a href="#model">核心模型</a>
-        <a href="#states">三种状态</a>
-        <a href="#pipeline">链路</a>
-        <a href="#transform">Output</a>
-        <a href="#workflow">Resolve</a>
-        <a href="#myths">误区</a>
-        <a href="#sources">来源</a>
+      <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
+      <div class="nav-right">
+        <div class="links" id="navLinks">
+          <a href="#model"><span data-lang="zh">核心模型</span><span data-lang="en">Core model</span></a>
+          <a href="#states"><span data-lang="zh">三种状态</span><span data-lang="en">Three states</span></a>
+          <a href="#pipeline"><span data-lang="zh">链路</span><span data-lang="en">Pipeline</span></a>
+          <a href="#transform">Output</a>
+          <a href="#workflow">Resolve</a>
+          <a href="#myths"><span data-lang="zh">误区</span><span data-lang="en">Myths</span></a>
+          <a href="#sources"><span data-lang="zh">来源</span><span data-lang="en">Sources</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language / 语言">
+          <button type="button" class="seg" data-set="zh">中</button>
+          <button type="button" class="seg" data-set="en">EN</button>
+        </div>
       </div>
     </nav>
   </header>
@@ -407,8 +459,11 @@
     <section class="hero" id="top">
       <div class="wrap">
         <div class="eyebrow">Scene-referred / Display-referred</div>
-        <h1>调色到底是在改场景，还是改屏幕？</h1>
-        <p class="lead">这两个词不只是色彩管理术语。它们决定了你调曝光时是在移动“场景里的光”，还是在修改“某台屏幕上的成片外观”。理解这一点，Log、ACES、DaVinci Wide Gamut、Rec.709 和 HDR 输出可以被放进同一条工作链路中分析。</p>
+        <h1><span data-lang="zh">调色到底是在改场景，还是改屏幕？</span><span data-lang="en">When you grade, are you changing the scene or the screen?</span></h1>
+        <p class="lead">
+          <span data-lang="zh">这两个词不只是色彩管理术语。它们决定了你调曝光时是在移动"场景里的光"，还是在修改"某台屏幕上的成片外观"。理解这一点，Log、ACES、DaVinci Wide Gamut、Rec.709 和 HDR 输出可以被放进同一条工作链路中分析。</span>
+          <span data-lang="en">These two terms aren't just color-management jargon. They decide whether, when you adjust exposure, you're moving "the light in the scene" or editing "how the final picture looks on one particular screen". Once this clicks, Log, ACES, DaVinci Wide Gamut, Rec.709, and HDR output all fit into one pipeline you can reason about.</span>
+        </p>
       </div>
     </section>
 
@@ -416,31 +471,37 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>1. 先把问题换一种问法</h2>
-            <p>不要先问“这个素材是什么色彩空间”。更好的问题是：这个图像现在处在什么状态？它的数字参照的是现场光，还是目标显示器？同一个 <code>0.5</code>，在不同状态下含义完全不同。</p>
+            <h2><span data-lang="zh">1. 先把问题换一种问法</span><span data-lang="en">1. First, ask the question differently</span></h2>
+            <p>
+              <span data-lang="zh">不要先问"这个素材是什么色彩空间"。更好的问题是：这个图像现在处在什么状态？它的数字参照的是现场光，还是目标显示器？同一个 <code>0.5</code>，在不同状态下含义完全不同。</span>
+              <span data-lang="en">Don't start by asking "what color space is this footage". A better question is: what state is this image in right now? Do its numbers refer to the light on set, or to the target display? The same <code>0.5</code> means completely different things in different states.</span>
+            </p>
           </div>
-          <div class="note">核心句：Scene-referred 描述场景光；Display-referred 描述屏幕光。中间的 Output Transform 是把场景“渲染”为屏幕画面的翻译器。</div>
+          <div class="note">
+            <span data-lang="zh">核心句：Scene-referred 描述场景光；Display-referred 描述屏幕光。中间的 Output Transform 是把场景"渲染"为屏幕画面的翻译器。</span>
+            <span data-lang="en">Key sentence: scene-referred describes scene light; display-referred describes screen light. The Output Transform in between is the translator that "renders" the scene into a screen picture.</span>
+          </div>
         </div>
 
         <div class="state-grid">
           <div class="state-card scene">
             <span class="tag">Scene-referred</span>
-            <h3>参照拍摄现场或虚拟场景</h3>
-            <p>它保留“比 18% 灰高几档”“灯比墙亮多少倍”这类曝光关系。RAW、Linear EXR、ACES、LogC、S-Log3、V-Log 都属于这个大思路，只是有的线性，有的是 Log 编码。</p>
+            <h3><span data-lang="zh">参照拍摄现场或虚拟场景</span><span data-lang="en">Referenced to the set or a virtual scene</span></h3>
+            <p><span data-lang="zh">它保留"比 18% 灰高几档""灯比墙亮多少倍"这类曝光关系。RAW、Linear EXR、ACES、LogC、S-Log3、V-Log 都属于这个大思路，只是有的线性，有的是 Log 编码。</span><span data-lang="en">It preserves exposure relationships like "how many stops above 18% grey" or "how many times brighter the lamp is than the wall". RAW, Linear EXR, ACES, LogC, S-Log3, and V-Log all follow this idea — some linear, some Log-encoded.</span></p>
           </div>
           <div class="state-arrow">→</div>
           <div class="state-card display">
             <span class="tag gold">Display-referred</span>
-            <h3>参照目标显示器最终发光</h3>
-            <p>它已经为 Rec.709 100 nit、P3 影院、sRGB 网页或 PQ HDR 1000 nit 这类目标做过渲染。此时数字更接近“屏幕应该怎么亮”，而不是“现场原来多亮”。</p>
+            <h3><span data-lang="zh">参照目标显示器最终发光</span><span data-lang="en">Referenced to the target display's final light</span></h3>
+            <p><span data-lang="zh">它已经为 Rec.709 100 nit、P3 影院、sRGB 网页或 PQ HDR 1000 nit 这类目标做过渲染。此时数字更接近"屏幕应该怎么亮"，而不是"现场原来多亮"。</span><span data-lang="en">It has already been rendered for a target like Rec.709 100 nit, P3 cinema, sRGB web, or PQ HDR 1000 nit. Here the numbers are closer to "how the screen should glow" than "how bright the scene originally was".</span></p>
           </div>
         </div>
 
         <div class="grid-4" style="margin-top:16px">
-          <div class="card"><span class="tag">输入</span><div class="metric">IDT / CST</div><p>告诉软件素材原本怎样编码：S-Log3/S-Gamut3.Cine、LogC4/AWG4、BRAW Gen 5 等。</p></div>
-          <div class="card"><span class="tag">工作</span><div class="metric">Wide Gamut</div><p>把素材放进统一的宽色域工作空间，例如 ACEScct 或 DaVinci Wide Gamut Intermediate。这里不是显示端，不使用 BT.1886、PQ 这类 EOTF；它使用的是工作空间自己的编码/传递函数，最后再由 Output Transform 转到目标显示 EOTF。</p></div>
-          <div class="card"><span class="tag gold">渲染</span><div class="metric">View</div><p>通过 tone mapping、gamut mapping、色貌调整，把场景状态变成可看的显示状态。</p></div>
-          <div class="card"><span class="tag rose">输出</span><div class="metric">Delivery</div><p>编码成 Rec.709、sRGB、P3、PQ HDR 或 HLG。这个版本通常已经是 display-referred。</p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">输入</span><span data-lang="en">Input</span></span><div class="metric">IDT / CST</div><p><span data-lang="zh">告诉软件素材原本怎样编码：S-Log3/S-Gamut3.Cine、LogC4/AWG4、BRAW Gen 5 等。</span><span data-lang="en">Tells the software how the footage was originally encoded: S-Log3/S-Gamut3.Cine, LogC4/AWG4, BRAW Gen 5, etc.</span></p></div>
+          <div class="card"><span class="tag"><span data-lang="zh">工作</span><span data-lang="en">Working</span></span><div class="metric">Wide Gamut</div><p><span data-lang="zh">把素材放进统一的宽色域工作空间，例如 ACEScct 或 DaVinci Wide Gamut Intermediate。这里不是显示端，不使用 BT.1886、PQ 这类 EOTF；它使用的是工作空间自己的编码/传递函数，最后再由 Output Transform 转到目标显示 EOTF。</span><span data-lang="en">Puts footage into one unified wide-gamut working space, like ACEScct or DaVinci Wide Gamut Intermediate. This isn't the display side, so it doesn't use display EOTFs like BT.1886 or PQ; it uses the working space's own encoding/transfer function, and the Output Transform later converts to the target display EOTF.</span></p></div>
+          <div class="card"><span class="tag gold"><span data-lang="zh">渲染</span><span data-lang="en">Render</span></span><div class="metric">View</div><p><span data-lang="zh">通过 tone mapping、gamut mapping、色貌调整，把场景状态变成可看的显示状态。</span><span data-lang="en">Through tone mapping, gamut mapping, and color-appearance adjustments, turns the scene state into a viewable display state.</span></p></div>
+          <div class="card"><span class="tag rose"><span data-lang="zh">输出</span><span data-lang="en">Output</span></span><div class="metric">Delivery</div><p><span data-lang="zh">编码成 Rec.709、sRGB、P3、PQ HDR 或 HLG。这个版本通常已经是 display-referred。</span><span data-lang="en">Encodes to Rec.709, sRGB, P3, PQ HDR, or HLG. This version is usually already display-referred.</span></p></div>
         </div>
       </div>
     </section>
@@ -449,43 +510,43 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>2. 三种图像状态，不要混成两个词</h2>
-            <p>“Scene-referred vs Display-referred”最容易误解的地方，是把 scene-referred 当成 scene-linear。实际上 Log 也是 scene-referred，只是它不是线性光。</p>
+            <h2><span data-lang="zh">2. 三种图像状态，不要混成两个词</span><span data-lang="en">2. Three image states — don't collapse them into two terms</span></h2>
+            <p><span data-lang="zh">"Scene-referred vs Display-referred"最容易误解的地方，是把 scene-referred 当成 scene-linear。实际上 Log 也是 scene-referred，只是它不是线性光。</span><span data-lang="en">The easiest misunderstanding of "scene-referred vs display-referred" is treating scene-referred as scene-linear. In fact Log is also scene-referred — it just isn't linear light.</span></p>
           </div>
-          <div class="note">判断方法：问这个值能不能直接当作目标屏幕亮度看。不能直接看、还需要 View/Output Transform 的，通常还在 scene-referred 一侧。</div>
+          <div class="note"><span data-lang="zh">判断方法：问这个值能不能直接当作目标屏幕亮度看。不能直接看、还需要 View/Output Transform 的，通常还在 scene-referred 一侧。</span><span data-lang="en">A test: ask whether the value can be read directly as target-screen brightness. If it can't, and still needs a View/Output Transform, it's usually still on the scene-referred side.</span></div>
         </div>
 
         <div class="grid-3">
           <div class="card">
             <span class="tag">Scene-linear</span>
-            <h3>线性场景光</h3>
-            <p>数值和场景光强成正比。<code>2.0</code> 真的是 <code>1.0</code> 的两倍光。常见于 Linear EXR、ACES2065-1、ACEScg、CG 渲染与合成。</p>
-            <p class="mini">优势：物理运算直觉清晰。风险：动态范围大，需要浮点或高位深。</p>
+            <h3><span data-lang="zh">线性场景光</span><span data-lang="en">Linear scene light</span></h3>
+            <p><span data-lang="zh">数值和场景光强成正比。<code>2.0</code> 真的是 <code>1.0</code> 的两倍光。常见于 Linear EXR、ACES2065-1、ACEScg、CG 渲染与合成。</span><span data-lang="en">Values are proportional to scene light intensity. <code>2.0</code> really is twice the light of <code>1.0</code>. Common in Linear EXR, ACES2065-1, ACEScg, and CG rendering/compositing.</span></p>
+            <p class="mini"><span data-lang="zh">优势：物理运算直觉清晰。风险：动态范围大，需要浮点或高位深。</span><span data-lang="en">Strength: physically intuitive math. Risk: large dynamic range, needs float or high bit depth.</span></p>
           </div>
           <div class="card">
             <span class="tag">Scene-referred Log</span>
-            <h3>场景光的非线性编码</h3>
-            <p>LogC、S-Log3、V-Log、Log3G10 仍然参照场景曝光，但用对数曲线把高光压进有限码值。</p>
-            <p class="mini">优势：适合相机记录与调色。风险：直接看会灰，必须配对应 Gamut。</p>
+            <h3><span data-lang="zh">场景光的非线性编码</span><span data-lang="en">Non-linear encoding of scene light</span></h3>
+            <p><span data-lang="zh">LogC、S-Log3、V-Log、Log3G10 仍然参照场景曝光，但用对数曲线把高光压进有限码值。</span><span data-lang="en">LogC, S-Log3, V-Log, and Log3G10 still reference scene exposure, but use a log curve to fit highlights into limited code values.</span></p>
+            <p class="mini"><span data-lang="zh">优势：适合相机记录与调色。风险：直接看会灰，必须配对应 Gamut。</span><span data-lang="en">Strength: good for camera recording and grading. Risk: looks grey if viewed directly; must be paired with the right gamut.</span></p>
           </div>
           <div class="card">
             <span class="tag gold">Display-referred</span>
-            <h3>已经面向目标显示渲染</h3>
-            <p>Rec.709 成片、sRGB 图片、P3 交付、PQ HDR master 通常都属于这里。数字已经服务于“看起来怎样”。</p>
-            <p class="mini">优势：所见接近交付。风险：跨显示复用和二次调色空间更小。</p>
+            <h3><span data-lang="zh">已经面向目标显示渲染</span><span data-lang="en">Already rendered for the target display</span></h3>
+            <p><span data-lang="zh">Rec.709 成片、sRGB 图片、P3 交付、PQ HDR master 通常都属于这里。数字已经服务于"看起来怎样"。</span><span data-lang="en">A finished Rec.709 cut, an sRGB image, a P3 delivery, or a PQ HDR master usually belong here. The numbers already serve "how it looks".</span></p>
+            <p class="mini"><span data-lang="zh">优势：所见接近交付。风险：跨显示复用和二次调色空间更小。</span><span data-lang="en">Strength: what you see is close to the delivery. Risk: less room for cross-display reuse and re-grading.</span></p>
           </div>
         </div>
 
         <div class="table-wrap" style="margin-top:16px">
           <table>
             <thead>
-              <tr><th>问题</th><th>Scene-referred</th><th>Display-referred</th></tr>
+              <tr><th><span data-lang="zh">问题</span><span data-lang="en">Question</span></th><th>Scene-referred</th><th>Display-referred</th></tr>
             </thead>
             <tbody>
-              <tr><td><b>数字参照什么？</b></td><td>场景光、曝光关系、相对中灰</td><td>目标显示器的发光和观看条件</td></tr>
-              <tr><td><b>能否超过 1？</b></td><td>可以，尤其在线性/浮点工作空间里很常见</td><td>交付码值通常限制在目标范围内</td></tr>
-              <tr><td><b>适合做什么？</b></td><td>曝光、白平衡、镜头匹配、合成、Look、多输出</td><td>最终微调、广播交付、网页图片、单一 SDR 快速交付</td></tr>
-              <tr><td><b>典型例子</b></td><td>RAW、Linear EXR、ACEScg、ACEScct、DWG Intermediate、LogC、S-Log3、V-Log</td><td>Rec.709 Gamma 2.4、sRGB、Display P3 交付、PQ HDR master</td></tr>
+              <tr><td><b><span data-lang="zh">数字参照什么？</span><span data-lang="en">What do the numbers refer to?</span></b></td><td><span data-lang="zh">场景光、曝光关系、相对中灰</span><span data-lang="en">Scene light, exposure relationships, relative mid-grey</span></td><td><span data-lang="zh">目标显示器的发光和观看条件</span><span data-lang="en">The target display's light output and viewing conditions</span></td></tr>
+              <tr><td><b><span data-lang="zh">能否超过 1？</span><span data-lang="en">Can it exceed 1?</span></b></td><td><span data-lang="zh">可以，尤其在线性/浮点工作空间里很常见</span><span data-lang="en">Yes — very common in linear/float working spaces</span></td><td><span data-lang="zh">交付码值通常限制在目标范围内</span><span data-lang="en">Delivery code values are usually limited to the target range</span></td></tr>
+              <tr><td><b><span data-lang="zh">适合做什么？</span><span data-lang="en">What is it good for?</span></b></td><td><span data-lang="zh">曝光、白平衡、镜头匹配、合成、Look、多输出</span><span data-lang="en">Exposure, white balance, shot matching, compositing, looks, multiple outputs</span></td><td><span data-lang="zh">最终微调、广播交付、网页图片、单一 SDR 快速交付</span><span data-lang="en">Final tweaks, broadcast delivery, web images, quick single-SDR delivery</span></td></tr>
+              <tr><td><b><span data-lang="zh">典型例子</span><span data-lang="en">Typical examples</span></b></td><td>RAW, Linear EXR, ACEScg, ACEScct, DWG Intermediate, LogC, S-Log3, V-Log</td><td><span data-lang="zh">Rec.709 Gamma 2.4、sRGB、Display P3 交付、PQ HDR master</span><span data-lang="en">Rec.709 Gamma 2.4, sRGB, Display P3 delivery, PQ HDR master</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -496,16 +557,16 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>3. 互动：一条素材在链路里换了几次身份</h2>
-            <p>点击不同工作流，看同一条素材在输入、工作空间、调色、输出变换和交付阶段的状态。真正的色彩管理不是“套 LUT”，而是明确每一步的图像状态。</p>
+            <h2><span data-lang="zh">3. 互动：一条素材在链路里换了几次身份</span><span data-lang="en">3. Interactive: how many identities one clip takes on across the pipeline</span></h2>
+            <p><span data-lang="zh">点击不同工作流，看同一条素材在输入、工作空间、调色、输出变换和交付阶段的状态。真正的色彩管理不是"套 LUT"，而是明确每一步的图像状态。</span><span data-lang="en">Click through the workflows to see one clip's state at the input, working-space, grading, output-transform, and delivery stages. Real color management isn't "slap on a LUT" — it's being clear about the image state at every step.</span></p>
           </div>
           <div class="note" id="pipelineNote">当前：Scene-referred 管线。素材先被解释到统一工作空间，再通过 Output Transform 生成 Rec.709 / HDR 等显示版本。</div>
         </div>
 
         <div class="controls" aria-label="选择工作流">
-          <button class="pipeMode active" data-mode="managed" aria-pressed="true">Scene-referred 管线</button>
-          <button class="pipeMode" data-mode="display" aria-pressed="false">Rec.709 直接调色</button>
-          <button class="pipeMode" data-mode="aces" aria-pressed="false">ACES 管线</button>
+          <button class="pipeMode active" data-mode="managed" aria-pressed="true"><span data-lang="zh">Scene-referred 管线</span><span data-lang="en">Scene-referred pipeline</span></button>
+          <button class="pipeMode" data-mode="display" aria-pressed="false"><span data-lang="zh">Rec.709 直接调色</span><span data-lang="en">Rec.709 direct grade</span></button>
+          <button class="pipeMode" data-mode="aces" aria-pressed="false"><span data-lang="zh">ACES 管线</span><span data-lang="en">ACES pipeline</span></button>
         </div>
 
         <div class="pipeline" id="pipelineSteps">
@@ -522,10 +583,10 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>4. Output Transform 不是风格 LUT</h2>
-            <p>ACES 文档把 Output Transform 描述为：把 scene-referred ACES 数据一致、可预测地转成适合特定显示设备和观看条件的输出图像。OCIO 里类似的东西叫 View Transform，ARRI 也明确说 Log C 要正确显示到 Rec.709、Rec.2020 或 P3，需要 tone-map 并转换到目标色彩空间。</p>
+            <h2><span data-lang="zh">4. Output Transform 不是风格 LUT</span><span data-lang="en">4. The Output Transform is not a creative LUT</span></h2>
+            <p><span data-lang="zh">ACES 文档把 Output Transform 描述为：把 scene-referred ACES 数据一致、可预测地转成适合特定显示设备和观看条件的输出图像。OCIO 里类似的东西叫 View Transform，ARRI 也明确说 Log C 要正确显示到 Rec.709、Rec.2020 或 P3，需要 tone-map 并转换到目标色彩空间。</span><span data-lang="en">The ACES docs describe the Output Transform as converting scene-referred ACES data, consistently and predictably, into an output image suited to a specific display device and viewing condition. The OCIO equivalent is the View Transform, and ARRI states plainly that displaying Log C correctly to Rec.709, Rec.2020, or P3 requires tone-mapping and conversion to the target color space.</span></p>
           </div>
-          <div class="note">你可以把它理解成“显示渲染器”：它决定高光怎么卷、饱和色怎么压、白点和 EOTF 怎么落到目标屏幕。</div>
+          <div class="note"><span data-lang="zh">你可以把它理解成"显示渲染器"：它决定高光怎么卷、饱和色怎么压、白点和 EOTF 怎么落到目标屏幕。</span><span data-lang="en">Think of it as a "display renderer": it decides how highlights roll off, how saturated colors are compressed, and how the white point and EOTF land on the target screen.</span></div>
         </div>
 
         <div class="card">
@@ -533,21 +594,21 @@
             <button class="targetBtn active" data-target="rec709" aria-pressed="true">Rec.709 / 100 nit</button>
             <button class="targetBtn" data-target="p3" aria-pressed="false">P3 Cinema / 48 nit</button>
             <button class="targetBtn" data-target="hdr" aria-pressed="false">PQ HDR / 1000 nit</button>
-            <label>场景范围 <input id="rangeSlider" type="range" min="8" max="18" value="14" step="1"></label>
+            <label><span data-lang="zh">场景范围</span><span data-lang="en">Scene range</span> <input id="rangeSlider" type="range" min="8" max="18" value="14" step="1"></label>
             <strong id="rangeReadout">14 stops</strong>
           </div>
           <div class="canvas-box">
-            <canvas id="toneCanvas" aria-label="Output Transform tone mapping 示意图"></canvas>
-            <div class="readout" id="toneReadout">Output Transform 示意</div>
+            <canvas id="toneCanvas" aria-label="Output Transform tone mapping diagram"></canvas>
+            <div class="readout" id="toneReadout">Output Transform</div>
           </div>
-          <p class="mini" style="margin-top:10px">此图是教学示意：真实 ACES、Resolve、ARRI 或厂商 DRT 的 tone scale 和 gamut mapping 会更复杂。这里重点展示“同一场景范围在不同显示目标下必须被重新渲染”。</p>
+          <p class="mini" style="margin-top:10px"><span data-lang="zh">此图是教学示意：真实 ACES、Resolve、ARRI 或厂商 DRT 的 tone scale 和 gamut mapping 会更复杂。这里重点展示"同一场景范围在不同显示目标下必须被重新渲染"。</span><span data-lang="en">This chart is a teaching illustration: the tone scale and gamut mapping in real ACES, Resolve, ARRI, or vendor DRTs are more complex. The point here is that "the same scene range must be re-rendered for different display targets".</span></p>
         </div>
 
         <div class="grid-4" style="margin-top:16px">
-          <div class="card"><span class="tag">Tone Scale</span><h3>高光怎么卷</h3><p>把场景里可能超过显示峰值的亮度压进 100 nit、48 nit 或 1000 nit。</p></div>
-          <div class="card"><span class="tag">Chroma</span><h3>饱和度怎么保</h3><p>好的显示渲染会避免高光颜色粗暴变白，也避免广色域颜色直接裁切。</p></div>
-          <div class="card"><span class="tag">Gamut</span><h3>色域怎么压</h3><p>工作空间可能比 P3、Rec.709 大得多，出界颜色要被映射到可显示范围。</p></div>
-          <div class="card"><span class="tag">Encoding</span><h3>最后怎么编码</h3><p>Rec.709 Gamma 2.4、sRGB、PQ、HLG 是不同的显示编码和观看假设。</p></div>
+          <div class="card"><span class="tag">Tone Scale</span><h3><span data-lang="zh">高光怎么卷</span><span data-lang="en">How highlights roll off</span></h3><p><span data-lang="zh">把场景里可能超过显示峰值的亮度压进 100 nit、48 nit 或 1000 nit。</span><span data-lang="en">Compresses scene brightness that may exceed the display peak into 100 nit, 48 nit, or 1000 nit.</span></p></div>
+          <div class="card"><span class="tag">Chroma</span><h3><span data-lang="zh">饱和度怎么保</span><span data-lang="en">How saturation is preserved</span></h3><p><span data-lang="zh">好的显示渲染会避免高光颜色粗暴变白，也避免广色域颜色直接裁切。</span><span data-lang="en">Good display rendering avoids crudely whitening highlight colors and avoids hard-clipping wide-gamut colors.</span></p></div>
+          <div class="card"><span class="tag">Gamut</span><h3><span data-lang="zh">色域怎么压</span><span data-lang="en">How gamut is compressed</span></h3><p><span data-lang="zh">工作空间可能比 P3、Rec.709 大得多，出界颜色要被映射到可显示范围。</span><span data-lang="en">The working space can be much larger than P3 or Rec.709, so out-of-gamut colors must be mapped into the displayable range.</span></p></div>
+          <div class="card"><span class="tag">Encoding</span><h3><span data-lang="zh">最后怎么编码</span><span data-lang="en">How it's finally encoded</span></h3><p><span data-lang="zh">Rec.709 Gamma 2.4、sRGB、PQ、HLG 是不同的显示编码和观看假设。</span><span data-lang="en">Rec.709 Gamma 2.4, sRGB, PQ, and HLG are different display encodings with different viewing assumptions.</span></p></div>
         </div>
       </div>
     </section>
@@ -556,39 +617,39 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>5. 在 Resolve 里怎么落地</h2>
-            <p>Resolve 里最重要的是把三件事分开：输入素材怎么解释、调色发生在哪个工作空间、最后输出到哪种显示。你可以用项目级 RCM，也可以用节点级 CST，但逻辑是同一套。</p>
+            <h2><span data-lang="zh">5. 在 Resolve 里怎么落地</span><span data-lang="en">5. How it plays out in Resolve</span></h2>
+            <p><span data-lang="zh">Resolve 里最重要的是把三件事分开：输入素材怎么解释、调色发生在哪个工作空间、最后输出到哪种显示。你可以用项目级 RCM，也可以用节点级 CST，但逻辑是同一套。</span><span data-lang="en">The key in Resolve is to separate three things: how input footage is interpreted, which working space grading happens in, and which display it finally outputs to. You can use project-level RCM or node-level CSTs, but the logic is the same.</span></p>
           </div>
-          <div class="note">Display-referred 并不低级。目标就是快速 Rec.709 交付时，它反而更直接。Scene-referred 的优势在于多机位、多输出和更稳定的高光/色域处理。</div>
+          <div class="note"><span data-lang="zh">Display-referred 并不低级。目标就是快速 Rec.709 交付时，它反而更直接。Scene-referred 的优势在于多机位、多输出和更稳定的高光/色域处理。</span><span data-lang="en">Display-referred isn't inferior. When the goal is a quick Rec.709 delivery, it's actually more direct. Scene-referred shines for multi-camera, multi-output work and more stable highlight/gamut handling.</span></div>
         </div>
 
         <div class="workflows">
           <div class="card">
-            <span class="tag">Scene-referred 做法</span>
+            <span class="tag"><span data-lang="zh">Scene-referred 做法</span><span data-lang="en">Scene-referred approach</span></span>
             <h3>S-Log3 → DWG Intermediate → Output</h3>
             <div class="recipe">
-              <div><b>Input：</b>S-Log3 / S-Gamut3.Cine</div>
+              <div><b>Input：</b><span data-lang="zh">S-Log3 / S-Gamut3.Cine</span><span data-lang="en">S-Log3 / S-Gamut3.Cine</span></div>
               <div><b>Timeline：</b>DaVinci Wide Gamut Intermediate</div>
-              <div><b>Grade：</b>曝光、白平衡、镜头匹配、Look 在宽色域中间空间完成</div>
-              <div><b>Output：</b>Rec.709、P3 或 PQ HDR，由 Output Transform 生成</div>
+              <div><b>Grade：</b><span data-lang="zh">曝光、白平衡、镜头匹配、Look 在宽色域中间空间完成</span><span data-lang="en">exposure, white balance, shot matching, and looks done in the wide-gamut intermediate space</span></div>
+              <div><b>Output：</b><span data-lang="zh">Rec.709、P3 或 PQ HDR，由 Output Transform 生成</span><span data-lang="en">Rec.709, P3, or PQ HDR, produced by the Output Transform</span></div>
             </div>
           </div>
           <div class="card">
-            <span class="tag gold">Display-referred 做法</span>
-            <h3>S-Log3 → Rec.709 LUT → Rec.709 调色</h3>
+            <span class="tag gold"><span data-lang="zh">Display-referred 做法</span><span data-lang="en">Display-referred approach</span></span>
+            <h3>S-Log3 → Rec.709 LUT → Rec.709 <span data-lang="zh">调色</span><span data-lang="en">grade</span></h3>
             <div class="recipe">
-              <div><b>Input：</b>S-Log3 先通过官方 LUT / CST 变成 Rec.709</div>
+              <div><b>Input：</b><span data-lang="zh">S-Log3 先通过官方 LUT / CST 变成 Rec.709</span><span data-lang="en">S-Log3 first converted to Rec.709 via the official LUT / CST</span></div>
               <div><b>Timeline：</b>Rec.709 Gamma 2.4</div>
-              <div><b>Grade：</b>所有调整都围绕 SDR 显示外观</div>
-              <div><b>Output：</b>直接 Rec.709 交付，速度快但跨 HDR/P3 复用较差</div>
+              <div><b>Grade：</b><span data-lang="zh">所有调整都围绕 SDR 显示外观</span><span data-lang="en">all adjustments revolve around the SDR display look</span></div>
+              <div><b>Output：</b><span data-lang="zh">直接 Rec.709 交付，速度快但跨 HDR/P3 复用较差</span><span data-lang="en">direct Rec.709 delivery — fast, but reuses poorly across HDR/P3</span></div>
             </div>
           </div>
         </div>
 
         <div class="card" style="margin-top:16px">
-          <span class="tag">ACES 的等价说法</span>
-          <h3>IDT → ACES 工作空间 → LMT / Grade → Output Transform</h3>
-          <p>ACES 的核心是把不同相机和 CG 输入统一到 scene-referred ACES 编码，再通过 Output Transform 输出到特定显示设备。旧文档里常见 RRT + ODT，新 ACES 文档更倾向把整体称为 Output Transform。</p>
+          <span class="tag"><span data-lang="zh">ACES 的等价说法</span><span data-lang="en">The ACES equivalent</span></span>
+          <h3>IDT → ACES <span data-lang="zh">工作空间</span><span data-lang="en">working space</span> → LMT / Grade → Output Transform</h3>
+          <p><span data-lang="zh">ACES 的核心是把不同相机和 CG 输入统一到 scene-referred ACES 编码，再通过 Output Transform 输出到特定显示设备。旧文档里常见 RRT + ODT，新 ACES 文档更倾向把整体称为 Output Transform。</span><span data-lang="en">The core of ACES is unifying different camera and CG inputs into a scene-referred ACES encoding, then outputting to a specific display via the Output Transform. Older docs often show RRT + ODT; newer ACES docs prefer to call the whole thing the Output Transform.</span></p>
         </div>
       </div>
     </section>
@@ -597,18 +658,18 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>6. 最常见的误区</h2>
-            <p>这几个误区会直接导致调色链路错位：把 Log 当滤镜、把 LUT 当色彩管理、把 Rec.709 当成错误、把 PQ HDR 当成 scene-referred。</p>
+            <h2><span data-lang="zh">6. 最常见的误区</span><span data-lang="en">6. The most common myths</span></h2>
+            <p><span data-lang="zh">这几个误区会直接导致调色链路错位：把 Log 当滤镜、把 LUT 当色彩管理、把 Rec.709 当成错误、把 PQ HDR 当成 scene-referred。</span><span data-lang="en">These myths directly throw the grading pipeline out of alignment: treating Log as a filter, a LUT as color management, Rec.709 as a mistake, or PQ HDR as scene-referred.</span></p>
           </div>
-          <div class="note">判断任何素材或节点时都问一句：它现在是在描述场景，还是在描述某个显示器上的外观？</div>
+          <div class="note"><span data-lang="zh">判断任何素材或节点时都问一句：它现在是在描述场景，还是在描述某个显示器上的外观？</span><span data-lang="en">For any clip or node, ask one question: is it describing the scene right now, or the look on some particular display?</span></div>
         </div>
 
         <div class="myths">
-          <div class="myth"><b>误区：Log 是灰色滤镜。</b><span>正解：Log 是 scene-referred 的非线性编码。灰只是它未经过显示渲染时的样子。</span></div>
-          <div class="myth"><b>误区：Scene-referred 一定更高级。</b><span>正解：它适合复杂制作和多输出。快速 SDR 项目用 display-referred 完全合理。</span></div>
-          <div class="myth"><b>误区：套 LUT 就等于色彩管理。</b><span>正解：LUT 可能是技术转换，也可能带创意风格。必须知道它在链路里承担什么角色。</span></div>
-          <div class="myth"><b>误区：Rec.709 调色一定错。</b><span>正解：如果目标就是 Rec.709，它是合理的 display-referred 工作流，只是未来再转 HDR/P3 的空间较小。</span></div>
-          <div class="myth"><b>误区：PQ HDR 就是 scene-referred。</b><span>正解：PQ 码值对应绝对显示亮度，PQ HDR master 通常已经是 display-referred。</span></div>
+          <div class="myth"><b><span data-lang="zh">误区：Log 是灰色滤镜。</span><span data-lang="en">Myth: Log is a grey filter.</span></b><span><span data-lang="zh">正解：Log 是 scene-referred 的非线性编码。灰只是它未经过显示渲染时的样子。</span><span data-lang="en">Reality: Log is a non-linear scene-referred encoding. The greyness is just how it looks before display rendering.</span></span></div>
+          <div class="myth"><b><span data-lang="zh">误区：Scene-referred 一定更高级。</span><span data-lang="en">Myth: scene-referred is always more advanced.</span></b><span><span data-lang="zh">正解：它适合复杂制作和多输出。快速 SDR 项目用 display-referred 完全合理。</span><span data-lang="en">Reality: it suits complex productions and multiple outputs. For a quick SDR project, display-referred is perfectly reasonable.</span></span></div>
+          <div class="myth"><b><span data-lang="zh">误区：套 LUT 就等于色彩管理。</span><span data-lang="en">Myth: applying a LUT equals color management.</span></b><span><span data-lang="zh">正解：LUT 可能是技术转换，也可能带创意风格。必须知道它在链路里承担什么角色。</span><span data-lang="en">Reality: a LUT may be a technical conversion or carry a creative look. You must know what role it plays in the pipeline.</span></span></div>
+          <div class="myth"><b><span data-lang="zh">误区：Rec.709 调色一定错。</span><span data-lang="en">Myth: grading in Rec.709 is always wrong.</span></b><span><span data-lang="zh">正解：如果目标就是 Rec.709，它是合理的 display-referred 工作流，只是未来再转 HDR/P3 的空间较小。</span><span data-lang="en">Reality: if Rec.709 is the target, it's a reasonable display-referred workflow — there's just less room to later move to HDR/P3.</span></span></div>
+          <div class="myth"><b><span data-lang="zh">误区：PQ HDR 就是 scene-referred。</span><span data-lang="en">Myth: PQ HDR is scene-referred.</span></b><span><span data-lang="zh">正解：PQ 码值对应绝对显示亮度，PQ HDR master 通常已经是 display-referred。</span><span data-lang="en">Reality: PQ code values map to absolute display luminance; a PQ HDR master is usually already display-referred.</span></span></div>
         </div>
       </div>
     </section>
@@ -617,22 +678,26 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>资料来源</h2>
-            <p>这一章的重点来自 ACES、OpenColorIO、ARRI、Blackmagic 和 HDR 标准文档对 scene/display、Output Transform、View Transform 和 Log 显示转换的定义。</p>
+            <h2><span data-lang="zh">资料来源</span><span data-lang="en">Sources</span></h2>
+            <p><span data-lang="zh">这一章的重点来自 ACES、OpenColorIO、ARRI、Blackmagic 和 HDR 标准文档对 scene/display、Output Transform、View Transform 和 Log 显示转换的定义。</span><span data-lang="en">This chapter draws mainly on how ACES, OpenColorIO, ARRI, Blackmagic, and HDR standards define scene/display, the Output Transform, the View Transform, and Log-to-display conversion.</span></p>
           </div>
-          <div class="note">后续如果做更深入的交互，可以单独补 ACES 2 Output Transform、Resolve DRT、ARRI LUT/Display Transform 的数学实现。</div>
+          <div class="note"><span data-lang="zh">后续如果做更深入的交互，可以单独补 ACES 2 Output Transform、Resolve DRT、ARRI LUT/Display Transform 的数学实现。</span><span data-lang="en">For deeper interactivity later, the math of the ACES 2 Output Transform, the Resolve DRT, and the ARRI LUT/Display Transform could be added separately.</span></div>
         </div>
         <div class="source-list">
-          <a href="https://docs.acescentral.com/system-components/output-transforms/" target="_blank" rel="noreferrer">ACES Output Transforms<span>Output Transform 把 scene-referred ACES 数据转为特定显示设备和观看条件下的输出图像。</span></a>
-          <a href="https://docs.acescentral.com/encodings/overview/" target="_blank" rel="noreferrer">ACES Encodings Overview<span>ACES2065-1、ACEScg、ACEScct 等 scene-referred 编码与用途。</span></a>
-          <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html" target="_blank" rel="noreferrer">OpenColorIO Displays & Views<span>View Transform 可在 scene-referred reference 与 display-referred reference 之间转换。</span></a>
-          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C Image Science<span>Log C 是 scene-based encoding，显示到 Rec.709、Rec.2020 或 P3 需要 tone mapping 和目标色彩空间转换。</span></a>
-          <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span>Resolve 宽色域中间工作空间和色彩管理设计。</span></a>
-          <a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noreferrer">ITU-R BT.2100<span>PQ、HLG、HDR-TV 图像参数和显示链路相关定义。</span></a>
+          <a href="https://docs.acescentral.com/system-components/output-transforms/" target="_blank" rel="noreferrer">ACES Output Transforms<span><span data-lang="zh">Output Transform 把 scene-referred ACES 数据转为特定显示设备和观看条件下的输出图像。</span><span data-lang="en">The Output Transform converts scene-referred ACES data into an output image for a specific display device and viewing condition.</span></span></a>
+          <a href="https://docs.acescentral.com/encodings/overview/" target="_blank" rel="noreferrer">ACES Encodings Overview<span><span data-lang="zh">ACES2065-1、ACEScg、ACEScct 等 scene-referred 编码与用途。</span><span data-lang="en">Scene-referred encodings like ACES2065-1, ACEScg, and ACEScct, and their uses.</span></span></a>
+          <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/displays_views.html" target="_blank" rel="noreferrer">OpenColorIO Displays &amp; Views<span><span data-lang="zh">View Transform 可在 scene-referred reference 与 display-referred reference 之间转换。</span><span data-lang="en">The View Transform converts between the scene-referred and display-referred references.</span></span></a>
+          <a href="https://www.arri.com/en/learn-help/learn-help-camera-system/image-science/log-c" target="_blank" rel="noreferrer">ARRI Log C Image Science<span><span data-lang="zh">Log C 是 scene-based encoding，显示到 Rec.709、Rec.2020 或 P3 需要 tone mapping 和目标色彩空间转换。</span><span data-lang="en">Log C is a scene-based encoding; displaying to Rec.709, Rec.2020, or P3 requires tone mapping and conversion to the target color space.</span></span></a>
+          <a href="https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf" target="_blank" rel="noreferrer">DaVinci Wide Gamut Intermediate<span><span data-lang="zh">Resolve 宽色域中间工作空间和色彩管理设计。</span><span data-lang="en">Resolve's wide-gamut intermediate working space and color-management design.</span></span></a>
+          <a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noreferrer">ITU-R BT.2100<span><span data-lang="zh">PQ、HLG、HDR-TV 图像参数和显示链路相关定义。</span><span data-lang="en">PQ, HLG, HDR-TV image parameters and related display-pipeline definitions.</span></span></a>
         </div>
       </div>
     </section>
   </main>
+
+  <footer>
+    <p><span data-lang="zh">影像色彩与显示技术指南 · <a href="index.html">返回首页</a></span><span data-lang="en">Imaging Color &amp; Display Guide · <a href="index.html">Back to home</a></span></p>
+  </footer>
 
   <script>
     const $ = s => document.querySelector(s);
@@ -640,7 +705,21 @@
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
     const lerp = (a, b, t) => a + (b - a) * t;
 
+    // ===== Language =====
+    let LANG = (function () { try { return localStorage.getItem("guideLang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; } })();
+    const T = (zh, en) => (LANG === "en" ? en : zh);
+    document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+    const PAGE_TITLE = {
+      zh: "Scene-referred vs Display-referred | 影像色彩与显示技术指南",
+      en: "Scene-referred vs Display-referred | Imaging Color & Display Guide"
+    };
+    const PAGE_DESC = {
+      zh: "理解 Scene-referred 与 Display-referred：同一份素材在色彩管理链路中什么时候描述场景光，什么时候描述屏幕光。",
+      en: "Understanding scene-referred vs display-referred: when the numbers in your footage describe scene light and when they describe screen light, across the color-managed pipeline."
+    };
+
     let target = "rec709";
+    let pipeMode = "managed";
 
     function updateProgress() {
       const max = document.documentElement.scrollHeight - innerHeight;
@@ -657,37 +736,40 @@
         managed: {
           active: [0, 1, 2, 3, 4],
           weak: [],
-          note: "当前：Scene-referred 管线。素材先被解释到统一工作空间，再通过 Output Transform 生成 Rec.709 / HDR 等显示版本。",
+          note: T("当前：Scene-referred 管线。素材先被解释到统一工作空间，再通过 Output Transform 生成 Rec.709 / HDR 等显示版本。",
+                  "Currently: scene-referred pipeline. Footage is first interpreted into one unified working space, then the Output Transform produces display versions like Rec.709 / HDR."),
           steps: [
-            ["Input", "读取 S-Log3 / LogC / RAW，指定正确 Input Gamma + Input Gamut。"],
-            ["Working Space", "进入 DWG Intermediate、ACEScct 或其他 scene-referred 宽色域工作空间。"],
-            ["Grade / Look", "曝光、白平衡、镜头匹配、Look 开发主要发生在这里。"],
-            ["View / Output", "DRT / Output Transform 把场景状态渲染到目标显示。"],
-            ["Delivery", "生成 Rec.709、P3、PQ HDR、HLG 等 display-referred 版本。"]
+            ["Input", T("读取 S-Log3 / LogC / RAW，指定正确 Input Gamma + Input Gamut。", "Read S-Log3 / LogC / RAW and set the correct Input Gamma + Input Gamut.")],
+            ["Working Space", T("进入 DWG Intermediate、ACEScct 或其他 scene-referred 宽色域工作空间。", "Enter DWG Intermediate, ACEScct, or another scene-referred wide-gamut working space.")],
+            ["Grade / Look", T("曝光、白平衡、镜头匹配、Look 开发主要发生在这里。", "Exposure, white balance, shot matching, and look development mostly happen here.")],
+            ["View / Output", T("DRT / Output Transform 把场景状态渲染到目标显示。", "The DRT / Output Transform renders the scene state to the target display.")],
+            ["Delivery", T("生成 Rec.709、P3、PQ HDR、HLG 等 display-referred 版本。", "Produces display-referred versions like Rec.709, P3, PQ HDR, HLG.")]
           ]
         },
         display: {
           active: [0, 2, 4],
           weak: [1, 3],
-          note: "当前：Rec.709 直接调色。素材很早就被转成显示参照，后续调整都围绕 SDR 屏幕外观。",
+          note: T("当前：Rec.709 直接调色。素材很早就被转成显示参照，后续调整都围绕 SDR 屏幕外观。",
+                  "Currently: Rec.709 direct grade. Footage is converted to display-referred early, and all later adjustments revolve around the SDR screen look."),
           steps: [
-            ["Input", "Log 素材先经过官方 LUT / CST，直接转成 Rec.709。"],
-            ["Working Space", "弱化步骤：没有独立的宽色域中间空间，时间线通常就是 Rec.709。"],
-            ["Grade / Look", "调色器看到和调整的是 SDR 显示外观。"],
-            ["View / Output", "弱化步骤：输出变换已经很早发生，后面主要是微调。"],
-            ["Delivery", "快速交付 Rec.709 很合适，但再做 HDR/P3 版本弹性较小。"]
+            ["Input", T("Log 素材先经过官方 LUT / CST，直接转成 Rec.709。", "Log footage first passes through the official LUT / CST, converting straight to Rec.709.")],
+            ["Working Space", T("弱化步骤：没有独立的宽色域中间空间，时间线通常就是 Rec.709。", "Weakened step: no separate wide-gamut intermediate; the timeline is usually Rec.709 itself.")],
+            ["Grade / Look", T("调色器看到和调整的是 SDR 显示外观。", "The colorist sees and adjusts the SDR display look.")],
+            ["View / Output", T("弱化步骤：输出变换已经很早发生，后面主要是微调。", "Weakened step: the output transform already happened early; what's left is mostly fine-tuning.")],
+            ["Delivery", T("快速交付 Rec.709 很合适，但再做 HDR/P3 版本弹性较小。", "Great for a quick Rec.709 delivery, but less flexible for making HDR/P3 versions later.")]
           ]
         },
         aces: {
           active: [0, 1, 2, 3, 4],
           weak: [],
-          note: "当前：ACES 管线。IDT 把不同输入转为 ACES scene-referred 编码，Output Transform 负责显示渲染。",
+          note: T("当前：ACES 管线。IDT 把不同输入转为 ACES scene-referred 编码，Output Transform 负责显示渲染。",
+                  "Currently: ACES pipeline. The IDT converts different inputs into the ACES scene-referred encoding, and the Output Transform handles display rendering."),
           steps: [
-            ["IDT", "Input Device Transform 把相机或 CG 输入解释到 ACES。"],
-            ["ACEScct / ACEScg", "调色常用 ACEScct，CG / 合成常用 ACEScg。"],
-            ["LMT / Grade", "Look Modification Transform 或调色节点改变创作意图。"],
-            ["Output Transform", "ACES 输出变换把 scene-linear 数据渲染到目标显示。"],
-            ["Display", "Rec.709、P3、HDR 等 output-referred 图像。"]
+            ["IDT", T("Input Device Transform 把相机或 CG 输入解释到 ACES。", "The Input Device Transform interprets camera or CG input into ACES.")],
+            ["ACEScct / ACEScg", T("调色常用 ACEScct，CG / 合成常用 ACEScg。", "ACEScct is common for grading; ACEScg for CG / compositing.")],
+            ["LMT / Grade", T("Look Modification Transform 或调色节点改变创作意图。", "A Look Modification Transform or grading nodes change creative intent.")],
+            ["Output Transform", T("ACES 输出变换把 scene-linear 数据渲染到目标显示。", "The ACES Output Transform renders scene-linear data to the target display.")],
+            ["Display", T("Rec.709、P3、HDR 等 output-referred 图像。", "Output-referred images like Rec.709, P3, HDR.")]
           ]
         }
       }[mode];
@@ -702,7 +784,7 @@
         if (content.weak.includes(i)) {
           const badge = document.createElement("em");
           badge.className = "step-state";
-          badge.textContent = "弱化 / 合并";
+          badge.textContent = T("弱化 / 合并", "Weakened / merged");
           step.prepend(badge);
         }
       });
@@ -775,7 +857,7 @@
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = "#dbe7f7";
-      ctx.fillText("18% 灰", xOf(0) + 8, pad.t + 18);
+      ctx.fillText(T("18% 灰", "18% grey"), xOf(0) + 8, pad.t + 18);
 
       ctx.beginPath();
       for (let i = 0; i <= 360; i++) {
@@ -808,11 +890,11 @@
       ctx.setLineDash([]);
 
       ctx.fillStyle = "#dbe7f7";
-      ctx.fillText("横轴：相对 18% 灰曝光档位 / stop", w - 238, h - 9);
+      ctx.fillText(T("横轴：相对 18% 灰曝光档位 / stop", "X axis: exposure relative to 18% grey / stops"), w - 252, h - 9);
       ctx.save();
       ctx.translate(18, pad.t + plotH / 2 + 62);
       ctx.rotate(-Math.PI / 2);
-      ctx.fillText("显示归一化信号 / 教学示意", 0, 0);
+      ctx.fillText(T("显示归一化信号 / 教学示意", "Display normalized signal / illustrative"), 0, 0);
       ctx.restore();
 
       ctx.fillStyle = meta.color;
@@ -821,17 +903,32 @@
       ctx.fillText("Scene contrast before display rendering", pad.l + 12, pad.t + 38);
 
       $("#rangeReadout").textContent = `${$("#rangeSlider").value} stops`;
-      $("#toneReadout").innerHTML = `${meta.label}<br>峰值 ${meta.peak} nit · 参考灰约 ${meta.grey} nit<br>曲线展示 tone scale 如何把场景范围压进目标显示`;
+      $("#toneReadout").innerHTML = T(
+        `${meta.label}<br>峰值 ${meta.peak} nit · 参考灰约 ${meta.grey} nit<br>曲线展示 tone scale 如何把场景范围压进目标显示`,
+        `${meta.label}<br>Peak ${meta.peak} nit · ref grey ≈ ${meta.grey} nit<br>The curve shows how the tone scale compresses scene range into the target display`
+      );
+    }
+
+    function applyLang(lang) {
+      LANG = lang === "en" ? "en" : "zh";
+      document.documentElement.lang = LANG === "en" ? "en" : "zh-CN";
+      document.title = PAGE_TITLE[LANG];
+      const m = document.querySelector('meta[name="description"]');
+      if (m) m.setAttribute("content", PAGE_DESC[LANG]);
+      updatePipeline(pipeMode);
+      drawToneChart();
+      try { localStorage.setItem("guideLang", LANG); } catch (e) {}
     }
 
     $$(".pipeMode").forEach(btn => {
       btn.addEventListener("click", () => {
+        pipeMode = btn.dataset.mode;
         $$(".pipeMode").forEach(item => {
           const active = item === btn;
           item.classList.toggle("active", active);
           item.setAttribute("aria-pressed", active ? "true" : "false");
         });
-        updatePipeline(btn.dataset.mode);
+        updatePipeline(pipeMode);
       });
     });
 
@@ -851,9 +948,10 @@
     addEventListener("resize", drawToneChart);
     addEventListener("scroll", updateProgress, { passive: true });
 
+    $$(".lang-toggle .seg").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.set)));
+
     setTimeout(() => {
-      updatePipeline("managed");
-      drawToneChart();
+      applyLang(LANG);
       updateProgress();
     }, 80);
   </script>
