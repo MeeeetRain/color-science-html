@@ -154,7 +154,7 @@ node --check /tmp/page.js
 - 优先选择科普文章、深度技术文章、教程、案例复盘、有价值的社区讨论。
 - 不优先推荐纯规范、参数表、标准 PDF 或只适合查参数的页面。
 - 中英双语版本下，推荐为 `tag` / `tagEn`、`source` / `sourceEn`、`title` / `titleEn`、`description` / `descriptionEn` 成对维护；页面也兼容 `zh` / `en` 对象写法，但不要在同一条数据里混用太多风格。
-- `description` 用中文说明为什么值得读，不复制原文长段落；`descriptionEn` 需表达同一推荐理由，而不是只做字面直译。
+- `description` 直接写推荐原因，不要用“这篇值得读”“这条讨论值得读”这类起手式，也不要复制原文长段落；`descriptionEn` 需表达同一推荐理由，而不是只做字面直译。
 - `tag` / `tagEn` 优先使用“科普 / Explainer”“文章 / Article”“讨论 / Discussion”“教程 / Tutorial”“案例 / Case”等短标签。
 - 尽量不要连续多天重复同一个链接。
 
