@@ -315,6 +315,41 @@
         <ul class="clean" data-lang="en"><li><b>Exposure normalization:</b> remove LTX's global exposure drift using the median midtone ratio, retaining only semantic enhancement.</li><li><b>Luminance-domain ceiling:</b> cap output nits rather than gain ratio. This preserves genuine sources in dark regions while keeping highlights away from clipping and <b>eliminating highlight color shifts</b>.</li><li><b>Shadow-noise protection:</b> suppress gain in dark regions by default while allowing genuine bright sources through, avoiding amplified SDR noise.</li></ul>
       </div>
     </div>
+
+    <h3><span data-lang="zh">再细一层：增益到底怎么被"约束"</span><span data-lang="en">One level deeper: how the gain is constrained</span></h3>
+    <div class="formula">
+      <div class="eq"><span data-lang="zh"><span class="op">输出亮度天花板</span> = min( <span class="ltx">LTX 目标亮度</span>, <b>4.5</b> ) <span class="op">≈ 914&nbsp;nit</span></span><span data-lang="en"><span class="op">output ceiling</span> = min( <span class="ltx">LTX target luminance</span>, <b>4.5</b> ) <span class="op">≈ 914&nbsp;nit</span></span></div>
+      <div class="eq" style="margin-top:6px"><span data-lang="zh">增益上限 = 输出亮度天花板 <span class="op">÷</span> <span class="sdr">SDR 亮度</span> <span class="op">（暗处自动放大、亮处自动收敛）</span></span><span data-lang="en">gain ceiling = output ceiling <span class="op">÷</span> <span class="sdr">SDR luminance</span> <span class="op">(auto-amplifies in shadow, converges in highlight)</span></span></div>
+      <div class="note"><span data-lang="zh">关键在于：封顶定在"输出 nits"而不是"增益倍数"——既不把暗处的真实光源压成小倍数，又让高光<b>不撞 per-channel 钳位</b>（这正是高光偏色的根因）。暗部另设 keep 门控：默认压住噪点，<b>够亮的 LTX 目标可越权放行</b>，所以暗背景里的真实灯不会被一并压死。</span><span data-lang="en">The key: the ceiling is defined in <b>output nits</b>, not in gain ratio—so a genuine source sitting in shadow is not pinned to a tiny multiplier, while highlights stay <b>off the per-channel clamp</b> (the exact cause of hue shift). A separate keep gate suppresses shadow noise by default but <b>lets a bright enough LTX target override it</b>, so a real lamp embedded in a dark background is not crushed along with the noise.</span></div>
+    </div>
+  </section>
+
+  <!-- 深入 · 工程化 -->
+  <section class="section" id="engineering">
+    <div class="kicker"><span data-lang="zh">深入 · 工程化</span><span data-lang="en">Deep dive · Engineering</span></div>
+    <h2><span data-lang="zh">从一帧，到能上线的整片流水线</span><span data-lang="en">From one frame to a shippable full-length pipeline</span></h2>
+    <p class="lead"><span data-lang="zh">把"能出一帧"做成"能稳定出整片、还能直接上线"，中间有几处关键工程——都守着同一条底线：<b>只动亮度、不碰原片</b>。</span><span data-lang="en">Turning "one good frame" into "a stable full clip you can ship" takes a few key pieces of engineering—all holding the same line: <b>touch only luminance, never the original pixels</b>.</span></p>
+
+    <h3><span data-lang="zh">分段接缝匹配：消除 LTX 拼接处的亮度跳变</span><span data-lang="en">Segment seam matching: removing brightness jumps at LTX joints</span></h3>
+    <p><span data-lang="zh">LTX 对长视频是<b>分段独立生成</b>的——即使同一镜头被按长度切开，相邻两段的<b>全局曝光也不一样</b>，拼起来会在接缝处出现一道可见的亮度跳变。做法：在拼好的 EXR 序列上给每段乘一个<b>全局尺度</b>，让"上段尾帧"与"下段首帧"的亮度连续（累积匹配），再按帧数加权归一化、消掉整体漂移——<b>只补接缝，不改段内 HDR 层次</b>。修正发生在 <b>EXR 源头</b>，所以"LTX 直接"和"gainmap"两条交付路径同时受益。</span><span data-lang="en">LTX generates long videos <b>segment by segment, independently</b>. Even when a single shot is split by length, adjacent segments receive <b>different global exposure</b>, leaving a visible brightness jump at the joint. The fix multiplies each segment by a <b>global scale</b> so the last frame of one segment matches the first frame of the next (cumulative matching), then normalizes by a frame-weighted mean to remove overall drift—<b>mending only the seam, never the in-segment HDR gradation</b>. Because it happens at the <b>EXR source</b>, both the Direct-LTX and gain-map paths benefit.</span></p>
+    <ul class="clean" data-lang="zh">
+      <li>用整帧<b>亮度中位数</b>做匹配量：对尺度严格等变、反映可见的中间调，不会被 PQ 压暗、肉眼看不见的阴影差带偏；</li>
+      <li>只取接缝处<b>确切相邻的两帧</b>，不用窗口中位——避开段内非边界漂移，防过修；</li>
+      <li>单接缝与最终段尺度都有<b>温和钳位</b>（约 0.6–1.6 / 0.8–1.25），坏边界不至于压垮中间调与高光。</li>
+    </ul>
+    <ul class="clean" data-lang="en">
+      <li>Match on the <b>median luminance</b> of the whole frame: strictly scale-equivariant and tied to visible midtones, so it is not dragged by PQ-crushed, imperceptible shadow differences.</li>
+      <li>Compare only the <b>two frames actually adjacent at the seam</b>, not a windowed median—avoiding in-segment drift and over-correction.</li>
+      <li>Both per-seam and final segment scales are <b>gently clamped</b> (about 0.6–1.6 / 0.8–1.25) so a bad boundary cannot crush midtones or highlights.</li>
+    </ul>
+
+    <h3><span data-lang="zh">多格式交付：视频与图片各取所需</span><span data-lang="en">Multi-format delivery: the right container for video and stills</span></h3>
+    <div class="grid">
+      <div class="card"><h4><span data-lang="zh">视频</span><span data-lang="en">Video</span></h4><p><span data-lang="zh"><b>HDR10 / HEVC mp4</b>（hvc1 标签，QuickTime 友好）；可选每帧 <b>HDR JXL</b> 序列（Rec.2020 PQ）用于逐帧抠图。</span><span data-lang="en"><b>HDR10 / HEVC mp4</b> (hvc1 tag, QuickTime-friendly), plus an optional per-frame <b>HDR JXL</b> sequence (Rec.2020 PQ) for frame extraction.</span></p></div>
+      <div class="card"><h4><span data-lang="zh">图片</span><span data-lang="en">Stills</span></h4><p><span data-lang="zh"><b>UltraHDR JPG</b>：直接拿我们的 SDR base + 增益图写成手机式 gainmap 图——本方案<b>天然就是 UltraHDR 的形态</b>；另出 <b>HDR AVIF</b>（Rec.2020 PQ，Chrome / Safari 内联显示）。</span><span data-lang="en"><b>UltraHDR JPG</b>: our SDR base plus the gain map, written directly as a phone-style gain-map image—this approach is <b>natively UltraHDR</b>—plus an <b>HDR AVIF</b> (Rec.2020 PQ, inline in Chrome / Safari).</span></p></div>
+      <div class="card"><h4><span data-lang="zh">几何对齐</span><span data-lang="en">Geometry</span></h4><p><span data-lang="zh">增益图按 LTX 实际喂入的<b>缩放模式</b>（拉伸 / 适配 / 裁切）反向还原，再升采样贴回原片，保证逐像素对位。</span><span data-lang="en">The gain map reverses whichever <b>resize mode</b> (stretch / fit / crop) was fed to LTX, then upsamples back onto the source for pixel-accurate registration.</span></p></div>
+    </div>
+    <div class="callout"><span data-lang="zh">两条路径（LTX 直接 / gainmap）<b>共用同一个 HDR10 编码器</b>；整套外面再包一层 web 队列服务，在多卡服务器上从 SDR 一路跑到成片。</span><span data-lang="en">Both paths (Direct LTX / gain map) <b>share one HDR10 encoder</b>; the whole thing is wrapped in a web queue service that runs from SDR to finished clip on a multi-GPU server.</span></div>
   </section>
 
   <!-- 04 演示 -->
@@ -379,7 +414,7 @@
 
   <footer>
     <p><span data-lang="zh">LTX Gainmap · SDR→HDR 新一代思路 ｜ <a href="sdr-hdr-itm-system.html">← 区域识别版系统</a> ｜ <a href="index.html">返回色彩与显示指南</a></span><span data-lang="en">LTX Gain Map · A New SDR→HDR Approach ｜ <a href="sdr-hdr-itm-system.html">← Region-based system</a> ｜ <a href="index.html">Back to the Color &amp; Display Guide</a></span></p>
-    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · FFmpeg / libx265 · libjxl<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span><span data-lang="en">Stack: LTX HDR (EXR) · Python · OpenCV (OpenEXR) · guided filtering · FFmpeg / libx265 · libjxl<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span></p>
+    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · 分段接缝匹配 · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span><span data-lang="en">Stack: LTX HDR (EXR) · Python · OpenCV (OpenEXR) · guided filtering · segment seam matching · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span></p>
   </footer>
 
   <script>

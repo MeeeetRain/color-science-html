@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>一张 HDR 照片怎么变成 HDR 视频 | 影像色彩与显示技术指南</title>
-  <meta name="description" content="复盘 HDR Relay 转换引擎从想法到落地的完整过程：手机 HDR 照片里的增益图原理、C++ 引擎的模块设计、增益图合并算法，以及根据导出结果反复修正的几个关键算法 bug。">
+  <title>HDR Gain Map 图片的处理流程 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="第一人称复盘 HDR gain map 图片的处理流程：HDR 如何编码进增益图、从照片还原到线性 HDR 的处理流程、增益图合并算法、输入解析、三通道颜色恢复，以及根据导出结果反复修正的几个关键算法 bug。">
   <style>
     :root {
       color-scheme: dark;
@@ -590,15 +590,16 @@
       <a class="brand" href="index.html"><span data-lang="zh">← 色彩与显示指南</span><span data-lang="en">← Color &amp; Display Guide</span></a>
       <div class="nav-right">
         <div class="links" id="navLinks">
-          <a href="#idea"><span data-lang="zh">起点</span><span data-lang="en">Origin</span></a>
-          <a href="#design"><span data-lang="zh">架构</span><span data-lang="en">Architecture</span></a>
+          <a href="#idea"><span data-lang="zh">背景</span><span data-lang="en">Background</span></a>
+          <a href="#principle"><span data-lang="zh">原理</span><span data-lang="en">Principle</span></a>
+          <a href="#design"><span data-lang="zh">流程</span><span data-lang="en">Pipeline</span></a>
           <a href="#core"><span data-lang="zh">核心算法</span><span data-lang="en">Core</span></a>
           <a href="#parse"><span data-lang="zh">解析输入</span><span data-lang="en">Parsing</span></a>
           <a href="#rgbgain"><span data-lang="zh">三通道</span><span data-lang="en">RGB</span></a>
-          <a href="#optimize"><span data-lang="zh">看结果调算法</span><span data-lang="en">Debug by Output</span></a>
-          <a href="#video"><span data-lang="zh">转成视频</span><span data-lang="en">To Video</span></a>
-          <a href="#evolve"><span data-lang="zh">形态进化</span><span data-lang="en">Evolution</span></a>
-          <a href="#method"><span data-lang="zh">方法论</span><span data-lang="en">Method</span></a>
+          <a href="#optimize"><span data-lang="zh">结果验证</span><span data-lang="en">Results</span></a>
+          <a href="#video"><span data-lang="zh">视频应用</span><span data-lang="en">Video</span></a>
+          <a href="#evolve"><span data-lang="zh">工程落地</span><span data-lang="en">Deploy</span></a>
+          <a href="#method"><span data-lang="zh">小结</span><span data-lang="en">Takeaways</span></a>
           <a href="#sources"><span data-lang="zh">参考</span><span data-lang="en">References</span></a>
         </div>
         <div class="lang-toggle" role="group" aria-label="Language / 语言">
@@ -612,8 +613,9 @@
   <main>
     <section class="hero" id="top">
       <div class="wrap">
-        <div class="eyebrow"><span data-lang="zh">Making of · 工程复盘</span><span data-lang="en">Making of · Engineering Retrospective</span></div>
-        <h1><span data-lang="zh">一张 HDR 照片<br>怎么变成一段 HDR 视频</span><span data-lang="en">How a HDR Photo<br>Becomes a HDR Video</span></h1>
+        <div class="eyebrow"><span data-lang="zh">HDR Gain Map · 图片处理流程</span><span data-lang="en">HDR Gain Map · Image Processing Pipeline</span></div>
+        <h1><span data-lang="zh">HDR Gain Map 图片<br>是怎么被还原与处理的</span><span data-lang="en">How a HDR Gain-Map Photo<br>Gets Reconstructed and Processed</span></h1>
+        <p class="lead"><span data-lang="zh">这是一篇第一人称的工程复盘：从"手机 HDR 照片为什么在很多设备上点不亮"这个矛盾出发，先讲清 HDR 到底怎么藏进 gain map，再把整条处理流程、核心合并算法、输入解析、三通道颜色恢复，以及那些靠"导出结果不对劲"才被发现的算法 bug，一步步展开。</span><span data-lang="en">A first-person engineering retrospective: starting from the contradiction of "why a phone's HDR photo can't light up on so many devices," it first makes clear exactly how HDR is encoded into a gain map, then works step by step through the whole processing pipeline, the core merge algorithm, input parsing, three-channel color recovery, and the algorithm bugs that only surfaced because "the exported result looked wrong."</span></p>
       </div>
     </section>
 
@@ -621,16 +623,16 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag"><span data-lang="zh">起点</span><span data-lang="en">Origin</span></span>
-            <h2><span data-lang="zh">想法是从一个矛盾开始的</span><span data-lang="en">The idea started from a contradiction</span></h2>
+            <span class="phase-tag"><span data-lang="zh">背景与动机</span><span data-lang="en">Background</span></span>
+            <h2><span data-lang="zh">目标：提高 HDR gain map 图片的兼容性，实现多格式交付</span><span data-lang="en">Goal: improve HDR gain-map photo compatibility and enable multi-format delivery</span></h2>
             <p>
-              <span data-lang="zh">矛盾是这样的：手机拍的 HDR 照片，在手机屏上高光透亮、明暗层次都在；可一想搬到客厅那台 HDR 电视的大屏上看，就尴尬了——电视明明播 HDR 视频（HDR10）毫无压力，却偏偏认不出这种带增益图的 HDR 照片，要么当成普通 SDR 图显示、HDR 效果当场全丢，要么干脆打不开。<b>设备有 HDR 显示的本事，却因为「照片」这个格式用不上。</b></span>
-              <span data-lang="en">Here's the contradiction: an HDR photo shot on a phone looks great on the phone screen — bright highlights, full tonal range. But move it to the big HDR TV in the living room and it gets awkward. The TV plays HDR video (HDR10) without any trouble, yet it can't recognize this gain-map HDR photo — either showing it as an ordinary SDR image with the HDR effect lost entirely, or failing to open it at all. <b>The device has HDR display capability but can't use it, all because of the "photo" format.</b></span>
+              <span data-lang="zh">这个项目要解决的，是 HDR gain map 图片的<b>兼容性</b>问题：同一张照片，能不能被还原成真实 HDR，再按目标设备的需要交付成多种格式——电视认得的 HDR 视频、静态 HDR 图等，让原本只在手机上能发挥的 HDR 在更多设备上都用得上。动机来自一个很具体的矛盾：手机拍的 HDR 照片在手机屏上高光透亮、层次都在，可搬到客厅那台 HDR 电视上就尴尬了——电视播 HDR 视频（HDR10）毫无压力，却偏偏认不出这种带增益图的 HDR 照片，要么当成普通 SDR 图显示、HDR 效果当场全丢，要么干脆打不开。<b>设备有 HDR 显示的本事，却因为「照片」这个格式用不上。</b></span>
+              <span data-lang="en">What this project tackles is the <b>compatibility</b> of HDR gain-map photos: can one photo be reconstructed into real HDR and then delivered in whatever format the target device needs — a HDR video the TV recognizes, a static HDR image, and so on — so that HDR which only worked on the phone becomes usable across more devices. The motivation came from a very concrete contradiction: an HDR photo shot on a phone looks great on the phone screen (bright highlights, full tonal range), but move it to the living-room HDR TV and it gets awkward — the TV plays HDR video (HDR10) without any trouble, yet can't recognize this gain-map HDR photo, either showing it as an ordinary SDR image with the HDR effect lost entirely, or failing to open it at all. <b>The device has HDR display capability but can't use it, all because of the "photo" format.</b></span>
             </p>
           </div>
           <div class="note">
-            <span data-lang="zh">一句话目标：既然电视早就能正常解码 HDR <b>视频</b>，那就把 HDR <b>照片</b>还原成真实 HDR 亮度、再编码成电视认得的 HDR 视频（H.265 / HDR10）——把原本只能在手机上发挥的 HDR，搬上电视大屏。</span>
-            <span data-lang="en">The goal in one sentence: since the TV already decodes HDR <b>video</b> just fine, restore the HDR <b>photo</b> to real HDR luminance and re-encode it into a HDR video the TV recognizes (H.265 / HDR10) — bringing HDR that only worked on the phone onto the big screen.</span>
+            <span data-lang="zh">一句话目标：把 HDR gain map 照片还原成真实 HDR 亮度，再按需<b>交付成多种格式</b>——电视认得的 HDR 视频（H.265 / HDR10）、静态 HDR 图等，用兼容性最好的容器把同一份 HDR 送到不同设备上。</span>
+            <span data-lang="en">The goal in one sentence: restore the HDR gain-map photo to real HDR luminance, then <b>deliver it in multiple formats</b> as needed — a HDR video the TV recognizes (H.265 / HDR10), a static HDR image, and so on — using whichever container is most compatible to get the same HDR onto different devices.</span>
           </div>
         </div>
         <div class="grid-3">
@@ -651,12 +653,49 @@
             </p>
           </div>
           <div class="card">
-            <div class="kicker"><span data-lang="zh">方案</span><span data-lang="en">Approach</span></div>
-            <h4><span data-lang="zh">HDR 视频兼容性最好</span><span data-lang="en">HDR video has the best compatibility</span></h4>
+            <div class="kicker"><span data-lang="zh">交付策略</span><span data-lang="en">Delivery strategy</span></div>
+            <h4><span data-lang="zh">按设备选最兼容的格式</span><span data-lang="en">Pick the most compatible format per device</span></h4>
             <p>
-              <span data-lang="zh">静态 HDR 格式（JXL）电视基本不认，但 H.265 HDR10 的 MOV 在电视、QuickTime、剪辑软件里都能直接放。把一张 HDR 照片做成静止 HDR 视频，就能直接用上电视本来就支持的 HDR 视频解码。</span>
-              <span data-lang="en">Static HDR formats (JXL) are mostly unrecognized by TVs, but an H.265 HDR10 MOV plays directly on TVs, in QuickTime, and in editing software. Turning a HDR photo into a still HDR video reuses the HDR video decoding the TV already supports.</span>
+              <span data-lang="zh">还原出真实 HDR 后，可以落地成静态 HDR 图（JXL）或 HDR 视频等多种格式。静态格式电视基本不认，但 H.265 HDR10 的 MOV 在电视、QuickTime、剪辑软件里都能直接放——所以"做成静止 HDR 视频"是兼容性最好的一条交付路径。</span>
+              <span data-lang="en">Once real HDR is reconstructed, it can land as a static HDR image (JXL), a HDR video, and more. TVs mostly don't recognize static formats, but an H.265 HDR10 MOV plays directly on TVs, in QuickTime, and in editing software — so "make a still HDR video" is the most compatible delivery route.</span>
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="principle">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="phase-tag"><span data-lang="zh">原理</span><span data-lang="en">Principle</span></span>
+            <h2><span data-lang="zh">先搞清楚：HDR 到底藏在 gain map 的哪一层</span><span data-lang="en">First: where exactly the HDR hides in a gain map</span></h2>
+            <p>
+              <span data-lang="zh">动手写任何代码之前，我得先把编码模型弄明白：一张所谓的"HDR 照片"其实不是一张 HDR 图，而是<b>一张 SDR base 图 + 一张增益图（gain map）</b>。base 负责在普通屏幕上兜底显示，gain map 逐像素记录"这里还要往上提多少"。后面整条还原流程，都建立在这个双层模型上。</span>
+              <span data-lang="en">Before writing any code, I had to pin down the encoding model: a so-called "HDR photo" isn't one HDR image but <b>one SDR base image + one gain map</b>. The base provides a fallback on ordinary screens; the gain map records, per pixel, "how much further to lift here." The whole reconstruction below is built on this two-layer model.</span>
+            </p>
+          </div>
+          <div class="note">
+            <span data-lang="zh">关键直觉：gain map 存的是<b>以 2 为底的对数提亮量（stop）</b>，不是直接的亮度。所以还原是<b>指数关系</b>——<code>HDR = base × 2<sup>gain</sup></code>。这一点决定了后面所有强度、插值、曝光补偿都得在 log 域里做。</span>
+            <span data-lang="en">Key intuition: the gain map stores a <b>base-2 log boost amount (in stops)</b>, not luminance directly. So reconstruction is an <b>exponential</b> — <code>HDR = base × 2<sup>gain</sup></code>. This is why everything later — strength, interpolation, exposure compensation — has to happen in the log domain.</span>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="kicker"><span data-lang="zh">双层结构</span><span data-lang="en">Two layers</span></div>
+            <h4><span data-lang="zh">base 兜底，gain map 恢复</span><span data-lang="en">Base for fallback, gain map for recovery</span></h4>
+            <p><span data-lang="zh">SDR base 是普通屏幕直接能看的部分，高光被参考白封顶；gain map 是一张（或三张）灰度图，记录每个像素被压掉的高光要补回多少。没有 gain map，就只剩一张普通 SDR 图。</span><span data-lang="en">The SDR base is what an ordinary screen shows directly, with highlights capped at reference white; the gain map is one (or three) grayscale images recording how much clipped highlight to restore per pixel. Without it, you're left with an ordinary SDR image.</span></p>
+          </div>
+          <div class="card">
+            <div class="kicker"><span data-lang="zh">编码格式</span><span data-lang="en">Encoding formats</span></div>
+            <h4><span data-lang="zh">tmap / hdrgm / ISO 21496</span><span data-lang="en">tmap / hdrgm / ISO 21496</span></h4>
+            <p><span data-lang="zh">HEIC 里是 Apple 的 <code>tmap</code> 辅助图，UltraHDR JPEG 里是 Adobe/Google 的 <code>hdrgm:</code> 命名空间，新规范统一到 ISO 21496。封装各不相同，但本质都是"逐像素的 log2 提亮量"。</span><span data-lang="en">In HEIC it's Apple's <code>tmap</code> auxiliary image; in UltraHDR JPEG it's Adobe/Google's <code>hdrgm:</code> namespace; newer specs converge on ISO 21496. The packaging differs, but the essence is always "a per-pixel log2 boost amount."</span></p>
+          </div>
+          <div class="card">
+            <div class="kicker"><span data-lang="zh">关键元数据</span><span data-lang="en">Key metadata</span></div>
+            <h4><span data-lang="zh">gamma · capacity · offset</span><span data-lang="en">gamma · capacity · offset</span></h4>
+            <p><span data-lang="zh">gain map 像素是 0–1 的归一化数，要靠元数据才能还原成真实 stop：<code>gamma</code> 校正像素值，<code>hdrCapacityMin/Max</code> 给出提亮量的上下界，<code>offset</code> 处理黑位。缺一个，提亮量就错。</span><span data-lang="en">Gain-map pixels are normalized 0–1 values; only the metadata turns them into real stops: <code>gamma</code> corrects the pixel value, <code>hdrCapacityMin/Max</code> set the lower and upper bounds of the boost, and <code>offset</code> handles the black point. Miss one and the boost is wrong.</span></p>
           </div>
         </div>
       </div>
@@ -666,11 +705,11 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag"><span data-lang="zh">架构</span><span data-lang="en">Architecture</span></span>
-            <h2><span data-lang="zh">把流程拆成五个能单独测的模块</span><span data-lang="en">Splitting the pipeline into five independently testable modules</span></h2>
+            <span class="phase-tag"><span data-lang="zh">处理流程</span><span data-lang="en">Pipeline</span></span>
+            <h2><span data-lang="zh">整条处理流程：从一张照片到线性 HDR</span><span data-lang="en">The whole pipeline: from one photo to linear HDR</span></h2>
             <p>
-              <span data-lang="zh">核心是一个 C++ 引擎 <code>hdr2jxl</code>，外面套一层 Flask + WKWebView 的本地界面。引擎按「一件事一个文件」拆开，每个环节都能单独喂数据、单独验证，避免一条长函数从头错到尾。</span>
-              <span data-lang="en">At the core is a C++ engine <code>hdr2jxl</code>, wrapped in a local Flask + WKWebView interface. The engine is split "one job per file", so every stage can be fed data and verified on its own — avoiding one long function that goes wrong from start to finish.</span>
+              <span data-lang="zh">明确了编码模型，处理流程就能按"一件事一个文件"拆成几个阶段：读取解码 → 增益合并 → PQ 编码 → 落地，每个阶段都能单独喂数据、单独验证，避免一条长函数从头错到尾。我把它实现成一个 C++ 内核 <code>hdr2jxl</code>。</span>
+              <span data-lang="en">With the encoding model clear, the pipeline splits into stages, "one job per file": read/decode → gain merge → PQ encode → output, each stage able to be fed data and verified on its own, avoiding one long function that goes wrong end to end. I implemented it as a C++ core, <code>hdr2jxl</code>.</span>
             </p>
           </div>
         </div>
@@ -1004,19 +1043,13 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag"><span data-lang="zh">转成视频</span><span data-lang="en">To Video</span></span>
-            <h2><span data-lang="zh">静态图怎么变成 HDR10 视频</span><span data-lang="en">How a still image becomes a HDR10 video</span></h2>
+            <span class="phase-tag"><span data-lang="zh">下游应用 · 视频</span><span data-lang="en">Application · Video</span></span>
+            <h2><span data-lang="zh">一个落地应用：把还原好的 HDR 合成视频</span><span data-lang="en">One application: composite the reconstructed HDR into video</span></h2>
             <p>
-              <span data-lang="zh">没有自己写 H.265 编码器，而是复用已经算好的线性 HDR：先落一张临时 JXL，再用 ffmpeg 把这张图「循环」成一段静止视频，并打上完整的 HDR10 颜色标签。</span>
-              <span data-lang="en">Rather than writing a H.265 encoder, it reuses the already-computed linear HDR: first drop a temporary JXL, then use ffmpeg to "loop" that image into a still video, stamped with full HDR10 color tags.</span>
+              <span data-lang="zh">还原出线性 HDR 之后，能落地成很多形式。我最初的需求是"在电视上看"，所以做了最实用的一种：复用算好的线性 HDR，先落一张临时 JXL，再用 ffmpeg <code>-loop 1</code> 循环成静止 H.265 main10（<code>p010le</code>）视频，打满 HDR10 颜色三件套（<code>bt2020</code> + <code>smpte2084</code> + <code>bt2020_ncl</code>），硬件编码失败就回退 <code>libx265</code>。视频只是众多输出之一，这里点到为止。</span>
+              <span data-lang="en">Once linear HDR is reconstructed, it can land in many forms. My original need was "watch it on the TV," so I built the most practical one: reuse the computed linear HDR, drop a temporary JXL, then use ffmpeg <code>-loop 1</code> to loop it into a still H.265 main10 (<code>p010le</code>) video, stamped with the HDR10 color trio (<code>bt2020</code> + <code>smpte2084</code> + <code>bt2020_ncl</code>), falling back to <code>libx265</code> if hardware encoding fails. Video is just one of many outputs, so I'll keep it brief.</span>
             </p>
           </div>
-        </div>
-        <div class="steps">
-          <div class="step"><span class="n">1</span><div><h4><span data-lang="zh">先出一张临时 HDR 图</span><span data-lang="en">First produce a temporary HDR image</span></h4><p><span data-lang="zh">用和静态导出完全相同的 JXL 写出逻辑生成临时文件，保证视频和图片的亮度处理一字不差。</span><span data-lang="en">Generate the temp file with exactly the same JXL write logic as the static export, ensuring video and image luminance handling are identical to the letter.</span></p></div></div>
-          <div class="step"><span class="n">2</span><div><h4><span data-lang="zh">ffmpeg 循环成视频</span><span data-lang="en">ffmpeg loops it into video</span></h4><p><span data-lang="zh"><code>-loop 1</code> 把单帧重复成指定时长和帧率，编成 H.265 main10，像素格式 <code>p010le</code>。</span><span data-lang="en"><code>-loop 1</code> repeats the single frame to the chosen duration and frame rate, encoding H.265 main10, pixel format <code>p010le</code>.</span></p></div></div>
-          <div class="step"><span class="n">3</span><div><h4><span data-lang="zh">打满 HDR10 颜色三件套</span><span data-lang="en">Stamp the full HDR10 color trio</span></h4><p><span data-lang="zh"><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code>，少一个播放器就不认 HDR。</span><span data-lang="en"><code>color_primaries bt2020</code> + <code>color_trc smpte2084</code> + <code>colorspace bt2020_ncl</code> — miss one and the player won't recognize HDR.</span></p></div></div>
-          <div class="step"><span class="n">4</span><div><h4><span data-lang="zh">硬件优先，软件兜底</span><span data-lang="en">Hardware first, software fallback</span></h4><p><span data-lang="zh">先试 Apple <code>hevc_videotoolbox</code> 硬件编码；失败就自动回退到 <code>libx265</code> 软件编码，慢但稳。</span><span data-lang="en">Try Apple <code>hevc_videotoolbox</code> hardware encoding first; on failure, automatically fall back to <code>libx265</code> software encoding — slower but reliable.</span></p></div></div>
         </div>
 
         <h3 style="margin:30px 0 0"><span data-lang="zh">拆开看：HDR 其实是两层叠出来的</span><span data-lang="en">Taken apart: HDR is really two layers stacked</span></h3>
@@ -1048,16 +1081,12 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag"><span data-lang="zh">形态进化</span><span data-lang="en">Form Evolution</span></span>
+            <span class="phase-tag"><span data-lang="zh">工程落地</span><span data-lang="en">Deployment</span></span>
             <h2><span data-lang="zh">三种形态，同一个内核</span><span data-lang="en">Three forms, one core</span></h2>
             <p>
-              <span data-lang="zh">引擎 <code>hdr2jxl</code> 写好之后，能力就固定了。真正变化的是外层的交互方式——从命令行到网页再到 Mac App，每一层都只解决一个问题：<b>上一层，谁还用不了</b>。内核一行没改，受众却一级一级扩大。</span>
-              <span data-lang="en">Once the engine <code>hdr2jxl</code> was written, its capability was fixed. What actually changed was the outer interaction — from command line to web page to Mac App, each layer solving just one problem: <b>who still couldn't use the previous layer</b>. The core didn't change a single line, yet the audience widened step by step.</span>
+              <span data-lang="zh">内核写好后能力就固定了，剩下的工程工作只是换交互层、不重写内核：从命令行到网页再到 Mac App，每一跳只解决"上一层谁还用不了"，受众一级级扩大。简单记录如下。</span>
+              <span data-lang="en">Once the core was written its capability was fixed; the remaining engineering only swapped the interaction layer without rewriting the core: from command line to web to Mac App, each jump solving only "who still couldn't use the previous layer," widening the audience step by step. Briefly:</span>
             </p>
-          </div>
-          <div class="note">
-            <span data-lang="zh">设计思路很克制：<b>不重写内核，只换交互层</b>。Web 把「命令」翻译成「界面」，App 把「环境依赖」收进「双击」。每一跳都是纯收益，没有为了好用牺牲引擎能力。</span>
-            <span data-lang="en">The design is restrained: <b>don't rewrite the core, only swap the interaction layer</b>. The Web translates "commands" into a "UI"; the App folds "environment dependencies" into a "double-click". Each jump is pure gain, with no engine capability sacrificed for usability.</span>
           </div>
         </div>
 
@@ -1088,43 +1117,9 @@ ffmpeg -loop 1 -i tmp.jxl \
           </div>
         </div>
 
-        <h3 style="margin:30px 0 0"><span data-lang="zh">关键的一跳：命令行 → 网页，易用性提升在哪</span><span data-lang="en">The key jump: command line → web, where usability improves</span></h3>
-        <p style="margin-top:10px">
-          <span data-lang="zh">这一跳收益最大。同样的转换能力，交互方式换了，「能用」的人一下子从「会终端的少数」变成「会浏览器的所有人」。具体提升可以拆成五个维度：</span>
-          <span data-lang="en">This jump pays off most. The same conversion capability, a different interaction, and the people who "can use it" jump from "the few who know the terminal" to "everyone who knows a browser". The improvement breaks down into five dimensions:</span>
-        </p>
-        <div class="gb-grid">
-          <div class="gb bad">
-            <h4><span data-lang="zh">命令行的摩擦</span><span data-lang="en">The friction of the command line</span></h4>
-            <ul>
-              <li><span data-lang="zh">参数靠记：<code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code> 一长串</span><span data-lang="en">Memorize flags: a long string like <code>-g 0.8 -e 0 -w 203 -v -d 5 -f 30</code></span></li>
-              <li><span data-lang="zh">输入靠手打完整文件路径，错一个字符就失败</span><span data-lang="en">Type the full file path by hand; one wrong character fails</span></li>
-              <li><span data-lang="zh">转换前看不到这张图是不是 HDR、增益图在不在</span><span data-lang="en">Before converting, you can't see whether the image is HDR or whether the gain map is there</span></li>
-              <li><span data-lang="zh">调一次参数就重跑一次，还得另开看图器看效果</span><span data-lang="en">Each parameter change means a full rerun, plus opening a separate viewer to check</span></li>
-              <li><span data-lang="zh">成功还是失败，只能从一屏终端日志里找</span><span data-lang="en">Success or failure can only be found in a screen of terminal logs</span></li>
-            </ul>
-          </div>
-          <div class="gb good">
-            <h4><span data-lang="zh">网页消除了它</span><span data-lang="en">The web removes it</span></h4>
-            <ul>
-              <li><span data-lang="zh">滑块 + 按钮，参数自带范围约束，填不出非法值</span><span data-lang="en">Sliders + buttons, parameters come with range constraints, no illegal values possible</span></li>
-              <li><span data-lang="zh">拖拽上传，文件名和路径自动带过去</span><span data-lang="en">Drag-and-drop upload, file name and path carried over automatically</span></li>
-              <li><span data-lang="zh">上传即解析：相机、ISO、HDR 格式、增益图容量一目了然</span><span data-lang="en">Parse on upload: camera, ISO, HDR format, gain-map capacity at a glance</span></li>
-              <li><span data-lang="zh">实时预览 + 原图／成品左右对比，所见即所得</span><span data-lang="en">Live preview + side-by-side original/result comparison, WYSIWYG</span></li>
-              <li><span data-lang="zh">进度条反馈 + 一键下载到本地，不用盯日志</span><span data-lang="en">Progress-bar feedback + one-click download, no log-watching</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="steps">
-          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「命令」变成「界面」</span><span data-lang="en">Turn "commands" into a "UI"</span></h4><p><span data-lang="zh">CLI 的每个 flag 在网页里都对应一个控件：<code>-g</code> 变增益滑块、<code>-w</code> 变 203/100 nits 切换、<code>-v -d -f</code> 变视频时长帧率输入。用户不再需要知道参数叫什么，只需要知道自己想要什么效果。</span><span data-lang="en">Every CLI flag maps to a control on the web: <code>-g</code> becomes a gain slider, <code>-w</code> becomes a 203/100 nits toggle, <code>-v -d -f</code> become video duration / frame-rate inputs. Users no longer need to know what a flag is called, only what effect they want.</span></p></div></div>
-          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「盲转」变成「先看后转」</span><span data-lang="en">Turn "blind conversion" into "look before converting"</span></h4><p><span data-lang="zh">命令行是把文件丢进去碰运气；网页在上传瞬间就解析 EXIF 和 HDR 元数据并显示出来，用户在转换前就知道这张图有没有增益图、是哪家的 HDR 格式，再决定参数。</span><span data-lang="en">The command line throws the file in and hopes for the best; the web parses EXIF and HDR metadata the instant you upload and displays it, so before converting you already know whether the image has a gain map and which vendor's HDR format it is, then decide the parameters.</span></p></div></div>
-          <div class="step"><span class="n">→</span><div><h4><span data-lang="zh">把「重跑」变成「实时反馈」</span><span data-lang="en">Turn "rerun" into "live feedback"</span></h4><p><span data-lang="zh">调参从「改命令 → 回车 → 等 → 另开软件看 → 不满意再来」压缩成「拖滑块 → 预览里直接看到原图和成品的差别」。反馈回路从几十秒缩短到几乎即时。</span><span data-lang="en">Tuning compresses from "edit command → Enter → wait → open another app to look → not satisfied, repeat" to "drag a slider → see the difference between original and result right in the preview". The feedback loop shrinks from tens of seconds to nearly instant.</span></p></div></div>
-        </div>
-
         <div class="note" style="margin-top:18px">
-          <span data-lang="zh">最后这一步交给 App：网页虽好，仍要 <code>./start_webui.sh</code>、装 Python 和 Homebrew、再手动打开浏览器。Mac App 这一层把这些<b>环境依赖也一并消灭</b>——双击图标，独立窗口直接弹出，对完全不懂技术的人也成立。</span>
-          <span data-lang="en">The last step goes to the App: as good as the web is, it still needs <code>./start_webui.sh</code>, Python and Homebrew installed, then manually opening a browser. The Mac App layer <b>eliminates these environment dependencies too</b> — double-click the icon and a standalone window pops up directly, working even for the completely non-technical.</span>
+          <span data-lang="zh">收益最大的一跳是<b>命令行 → 网页</b>：同一套转换能力，交互从"会背 <code>-g -e -w</code> 参数的少数人"变成"会用浏览器的所有人"，而且上传即解析、拖滑块即预览，把盲转和重跑都消掉了。这部分属于工程实现，和 gain map 处理本身关系不大，就不展开了。</span>
+          <span data-lang="en">The most valuable jump is <b>command line → web</b>: the same conversion capability, with interaction going from "the few who can memorize <code>-g -e -w</code> flags" to "everyone who can use a browser" — plus parse-on-upload and slider-driven preview that kill blind conversion and reruns. This is engineering plumbing, only loosely related to gain-map processing itself, so I'll leave it there.</span>
         </div>
       </div>
     </section>
@@ -1133,7 +1128,7 @@ ffmpeg -loop 1 -i tmp.jxl \
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="phase-tag"><span data-lang="zh">方法论</span><span data-lang="en">Method</span></span>
+            <span class="phase-tag"><span data-lang="zh">小结</span><span data-lang="en">Takeaways</span></span>
             <h2><span data-lang="zh">这个项目教会的三件事</span><span data-lang="en">Three things this project taught</span></h2>
             <p>
               <span data-lang="zh">把整个过程压缩成三句话，换个图像处理项目也能套用。</span>
@@ -1216,12 +1211,12 @@ ffmpeg -loop 1 -i tmp.jxl \
     (function () {
       const KEY = "guideLang";
       const TITLE = {
-        zh: "一张 HDR 照片怎么变成 HDR 视频 | 影像色彩与显示技术指南",
-        en: "How a HDR Photo Becomes a HDR Video | Imaging Color & Display Guide"
+        zh: "HDR Gain Map 图片的处理流程 | 影像色彩与显示技术指南",
+        en: "Processing a HDR Gain-Map Photo | Imaging Color & Display Guide"
       };
       const DESC = {
-        zh: "复盘 HDR Relay 转换引擎从想法到落地的完整过程：手机 HDR 照片里的增益图原理、C++ 引擎的模块设计、增益图合并算法，以及根据导出结果反复修正的几个关键算法 bug。",
-        en: "A retrospective of the HDR Relay conversion engine from idea to shipping: the gain-map principle inside phone HDR photos, the C++ engine's module design, the gain-map merge algorithm, and the key algorithm bugs found and fixed by inspecting the exported results."
+        zh: "第一人称复盘 HDR gain map 图片的处理流程：HDR 如何编码进增益图、从照片还原到线性 HDR 的处理流程、增益图合并算法、输入解析、三通道颜色恢复，以及根据导出结果反复修正的几个关键算法 bug。",
+        en: "A first-person retrospective on processing a HDR gain-map photo: how HDR is encoded into a gain map, the pipeline from photo to linear HDR, the gain-map merge algorithm, input parsing, three-channel color recovery, and the key algorithm bugs found by inspecting the exported results."
       };
       const meta = document.querySelector('meta[name="description"]');
       function apply(lang) {
