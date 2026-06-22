@@ -1,6 +1,31 @@
 {
-  "updated": "2026-06-19",
+  "updated": "2026-06-22",
   "days": [
+    {
+      "date": "2026-06-22",
+      "picks": [
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
+          "title": "Web Sharp Pro v7: Sharing HDR photos made easier",
+          "description": "它正好把站内最近更新的 `HDR-Relay` 章节继续往“真正交付给别人”那一步推进：不是只解释 gain map 怎么还原，而是把网页嵌入、浏览器兼容、文件体积、回退 SDR 和在线查看体验放到同一条发布链路里讲。最值得读的是作者如何把 HDR 图片的技术细节转成一套面向实际发布的判断框架，让人更容易建立“做出 HDR 文件”和“让不同设备稳定看到 HDR”之间隔着哪些环节的直觉。",
+          "descriptionEn": "This is a strong continuation of the site's recently updated `HDR-Relay` chapter into the actual delivery stage: not just how a gain map is reconstructed, but how web embedding, browser compatibility, file size, SDR fallback, and online viewing experience all fit into one publishing chain. The most useful part is how the author turns HDR image technical details into a practical decision framework for publishing, making it much easier to see which workflow steps sit between \"making an HDR file\" and \"having different devices reliably show it as HDR.\"",
+          "url": "https://gregbenzphotography.com/hdr-photos/web-sharp-pro-v7-sharing-hdr-photos/"
+        },
+        {
+          "tag": "案例",
+          "tagEn": "Case study",
+          "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
+          "title": "A photographer's review of the Apple Studio Display XDR",
+          "description": "站内最近几章一直在把“参考白”“HDR headroom”和“同色异谱”往显示端现实问题上落，这篇长文正好把几条线接起来：参考模式为什么重要，HDR 屏不是越亮越完事，苹果的 XDR 亮度管理如何影响观感，以及同一目标白点在不同显示技术上为什么仍可能出现主观差异。它的价值不在产品种草，而在让读者看到现代 HDR 监看里“亮度能力、白点感知、使用场景和工作流选择”其实是绑在一起讨论的。",
+          "descriptionEn": "Several of the site's recent chapters have been pushing reference white, HDR headroom, and metamerism toward real display-side decisions, and this long review ties those threads together well: why reference modes matter, why HDR isn't solved by brightness alone, how Apple's XDR luminance management affects perception, and why the same target white can still look subjectively different across display technologies. Its value is not product promotion, but showing that in modern HDR monitoring, luminance capability, white-point perception, use case, and workflow choice all have to be discussed together.",
+          "url": "https://gregbenzphotography.com/hdr-photos/a-photographers-review-of-the-apple-studio-display-xdr/"
+        }
+      ]
+    },
     {
       "date": "2026-06-19",
       "picks": [

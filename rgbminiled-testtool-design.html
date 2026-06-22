@@ -263,17 +263,18 @@
       <li>色彩 / 色域数学（selftest 通过，含 CIEDE2000 对 Sharma 34 对参考）</li>
       <li>分析算法：色域体积 / Gamut Rings / 覆盖率、R_cross、PSF FWHM、棋盘逐格污染、color-in-context</li>
       <li>WebUI 工作流：设备连接 / 准备 / 执行 / 结果 / 历史 / 导出</li>
-      <li>驱动框架：sim、<b>FileMeter（读软件导出文件，可跑）</b>、Murideo dry-run（出命令序列）、全屏 HDMI（SDR 可跑 + HDR Canvas 框架）</li>
+      <li>测量仪：<b style="color:var(--g)">CA-410 ✅ 真机已通</b>（KM USB 串口协议 v1.08，本机读到真实 Lv/x/y）、FileMeter（读导出文件）、sim</li>
+      <li>出图驱动：Murideo dry-run（出命令序列）、全屏 HDMI（SDR 可跑 + HDR Canvas 框架）、sim</li>
       <li>报告 HTML / CSV 导出、历史持久化</li>
     </ul>
   </div>
   <div class="card r">
     <h3 style="color:var(--r)">❌ 未做 / 待验证（关键缺口）</h3>
     <ul>
-      <li><b>零真机实测</b> —— 没连过真电视、没用任何仪器测过一次；本文所有数字均来自合成模型</li>
-      <li><b>图卡未真正上过机</b> —— 尚未经 Murideo / 播放器送进真电视显示并测量</li>
+      <li><b>未做完整真机测量活动</b> —— CA-410 已能真机点测，但尚未在真电视上按企标做成套测量/标定；本文示意数字仍来自合成模型，未做真机数据采集与比对</li>
+      <li><b>图卡未真正上过机</b> —— 尚未经 Murideo / 播放器 / 全屏HDMI 送进真电视显示并系统测量</li>
       <li><b>Murideo 真控未联调</b> —— WebSocket 命令 ID 全是 <code>TODO</code>（<code>murideo_proto.py</code>），待官方协议文档；仅验证过 dry-run 出序列</li>
-      <li><b>仪器 SDK 未接</b> —— CA-410 / CS-2000 / CXC-2600 三个 driver 是桩（<code>NotImplementedError</code>），待装厂商 SDK 填 connect / measure</li>
+      <li><b>CS-2000 / CXC-2600 未接</b> —— 两个 driver 仍是桩（<code>NotImplementedError</code>）；CA-410 已实现（USB 串口协议）</li>
       <li><b>HDR Canvas 输出未验证</b> —— rec2100-pq 在真 Windows HDR + CS-2000 下能否打到目标 nits、DWM 有无额外 tone-map，未测</li>
       <li><b>合格判定（PASS / FAIL）体系未做</b> —— 阈值全是占位（半径 8 / 15 %W、棋盘 0.004 / 0.01、PSF 3 / 6 %W、收缩率 40 / 60 %），需按<b>企标</b>重定 + 做成可配置 + 结果页 go / no-go 汇总</li>
       <li><b>二维配准未做</b> —— 真机 CXC 采集与图卡像素的物理配准（四角标记 / 单点同步）未实测；<code>_fit_meta</code> 仅按比例缩放</li>
