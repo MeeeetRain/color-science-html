@@ -14,7 +14,7 @@ const ALLOWED_DOMAIN = process.env.ALLOWED_DOMAIN || 'skyworth.com';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',').map((s) => s.trim()).filter(Boolean);
 const JWT_SECRET = process.env.JWT_SECRET || '';
-const TOKEN_TTL_DAYS = parseInt(process.env.TOKEN_TTL_DAYS || '7', 10);
+const TOKEN_TTL_DAYS = parseInt(process.env.TOKEN_TTL_DAYS || '3650', 10); // 默认 10 年≈一次登录长期保留
 const AGENTLY_BIN = process.env.AGENTLY_BIN || 'agently-cli';
 const DEV = process.env.ENVIRONMENT === 'dev';
 
