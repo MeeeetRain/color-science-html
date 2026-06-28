@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- 登录守卫:无有效登录态会跳转到 login.html -->
+<script src="assets/auth/auth-config.js"></script>
+<script src="assets/auth/auth-guard.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>色度上变换 + 亮度对标 · 一次 SDR→HDR 算法复盘</title>
+<meta name="description" content="在 LTX gainmap 流水线之上做色度上变换和亮度调优的一次实证复盘：用专业 HDR 母版当基准，设计自研 F_APC 自适应色度算法，构建 2 亮度 × 3 色度全片矩阵，所有变体可追溯。">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#07080d; --panel:#111620; --panel-2:#172131;
+    --ink:#f4f7fb; --muted:#a7b0bf; --soft:#758195;
+    --line:rgba(255,255,255,.12);
+    --cyan:#34dff2; --lime:#b7f05b; --gold:#ffd166; --rose:#ff4d6d; --violet:#a78bfa; --blue:#60a5fa;
+    --good:#5ad19a; --bad:#ff6b6b;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);
+    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow-x:clip}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:rgba(52,223,242,.3)}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-3;
+    background:
+      radial-gradient(circle at 12% 10%,rgba(52,223,242,.13),transparent 28%),
+      radial-gradient(circle at 85% 6%,rgba(255,77,109,.11),transparent 30%),
+      radial-gradient(circle at 60% 92%,rgba(183,240,91,.09),transparent 34%),
+      linear-gradient(180deg,#07080d,#0b1019 48%,#07080d)}
+
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.09);
+    background:rgba(8,10,16,.96)}
+  .nav{max-width:1100px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+  .logo{font-size:18px;font-weight:800;background:linear-gradient(100deg,var(--cyan),var(--lime));
+    -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+  .nav-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .nav-links a{padding:7px 12px;border-radius:999px;color:var(--muted);font-size:13px;transition:.2s}
+  .nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+  .nav-links a.cur{color:var(--ink);background:rgba(52,223,242,.16)}
+  .nav-right{display:flex;align-items:center;gap:12px;min-width:0}
+  .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.04);flex:none}
+  .lang-toggle .seg{font:inherit;font-size:13px;font-weight:720;line-height:1;padding:7px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+  .lang-toggle .seg:hover{color:var(--ink)}
+  html[lang^="zh"] .lang-toggle .seg[data-set="zh"],html[lang="en"] .lang-toggle .seg[data-set="en"]{background:var(--cyan);color:#071014}
+  html[lang^="zh"] [data-lang="en"]{display:none}
+  html[lang="en"] [data-lang="zh"]{display:none}
+
+  .hero{position:relative;padding:130px 22px 60px;overflow:hidden;isolation:isolate}
+  .hero-bg{position:absolute;inset:0;z-index:-2;overflow:hidden}
+  .spectrum-band{position:absolute;left:50%;top:48%;width:min(1400px,138vw);height:360px;
+    transform:translate(-50%,-50%) rotate(-7deg);border-radius:999px;
+    background:linear-gradient(90deg,rgba(67,56,202,0) 0%,rgba(37,99,235,.6) 14%,rgba(6,182,212,.78) 30%,
+      rgba(34,197,94,.72) 46%,rgba(234,179,8,.78) 62%,rgba(249,115,22,.74) 78%,rgba(244,63,94,.0) 100%);
+    filter:blur(40px) saturate(1.2);opacity:.55}
+  .grid-field{position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+    background-size:58px 58px;mask-image:radial-gradient(circle at 50% 40%,black,transparent 70%)}
+  .hero-inner{max-width:1100px;margin:0 auto}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold);font-size:13px;font-weight:820;
+    letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+  h1{font-size:clamp(34px,6vw,62px);line-height:1.08;letter-spacing:-.03em;margin-bottom:20px;max-width:940px;text-wrap:balance}
+  .h-accent{background:linear-gradient(100deg,var(--cyan),var(--lime),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-desc{max-width:760px;color:#d3dce8;font-size:clamp(16px,1.7vw,19px);line-height:1.8;margin-bottom:26px}
+  .hero-desc b{color:#fff}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+  .backlink{display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;font-size:13.5px;color:var(--cyan);
+    border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:rgba(52,223,242,.05)}
+
+  .section{max-width:1100px;margin:0 auto;padding:58px 22px;border-top:1px solid rgba(255,255,255,.07)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase;margin-bottom:10px}
+  h2{font-size:clamp(26px,3.6vw,38px);line-height:1.1;margin-bottom:10px;letter-spacing:-.02em}
+  h3{font-size:19px;margin:30px 0 8px;font-weight:760}
+  p{color:#cfd4e0}
+  .lead{color:var(--muted);max-width:780px}
+  b,strong{color:#fff}
+
+  .pipe{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0}
+  .pstep{flex:1 1 160px;min-width:160px;border:1px solid var(--line);border-radius:10px;padding:13px 15px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .pstep .n{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+  .pstep .t{font-weight:720;font-size:14px;margin-top:4px}
+  .pstep .d{font-size:12px;color:var(--soft);margin-top:4px;line-height:1.5}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:24px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));transition:.22s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(52,223,242,.35)}
+  .card h4{font-size:15px;margin-bottom:6px}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.65}
+  .card .ico{font-size:20px;display:block;margin-bottom:8px}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-family:var(--mono);font-size:12px}
+  .good{color:var(--good)} .bad{color:var(--bad)} .mid{color:var(--gold)}
+  .col-pick{background:linear-gradient(180deg,rgba(52,223,242,.10),transparent)}
+  .num{font-family:var(--mono);font-size:13px}
+
+  code{font-family:var(--mono);font-size:.86em;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  pre{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:16px 18px;overflow:auto;color:#dbe4f2;margin:18px 0}
+  pre .k{color:var(--cyan)} pre .c{color:var(--soft)} pre .s{color:var(--lime)}
+
+  .callout{border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 18px;margin:20px 0;
+    background:linear-gradient(180deg,rgba(52,223,242,.06),transparent)}
+  .callout.gold{border-left-color:var(--gold);background:linear-gradient(180deg,rgba(255,209,102,.06),transparent)}
+  .callout.violet{border-left-color:var(--violet);background:linear-gradient(180deg,rgba(167,139,250,.07),transparent)}
+  .callout.bad{border-left-color:var(--bad);background:linear-gradient(180deg,rgba(255,107,107,.06),transparent)}
+
+  .formula{border:1px solid var(--line);border-radius:12px;padding:22px;margin:24px 0;
+    background:linear-gradient(180deg,rgba(52,223,242,.06),rgba(255,255,255,.02));text-align:center}
+  .formula .eq{font-family:var(--mono);font-size:clamp(14px,1.9vw,17px);line-height:2;color:#eaf0fb}
+  .formula .eq .hi{color:var(--cyan)} .formula .eq .lo{color:var(--lime)} .formula .eq .op{color:var(--soft)}
+  .formula .note{font-size:13px;color:var(--soft);margin-top:10px}
+
+  .montage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:20px 0}
+  .montage{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:rgba(0,0,0,.4)}
+  .montage img{display:block;width:100%;height:auto}
+  .montage .cap{padding:10px 14px;font-size:12.5px;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--line)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:680px){.two{grid-template-columns:1fr}.nav-links{display:none}table{display:block;overflow-x:auto}}
+
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);padding:36px 22px;font-size:13.5px}
+  footer a{color:var(--cyan)}
+</style>
+</head>
+<body>
+  <header class="topbar"><nav class="nav">
+    <a href="index.html" class="logo"><span data-lang="zh">色彩与显示指南</span><span data-lang="en">Color &amp; Display Guide</span></a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="index.html#chapters"><span data-lang="zh">技术章节</span><span data-lang="en">Chapters</span></a>
+        <a href="ltx-gainmap-itm.html"><span data-lang="zh">LTX Gainmap</span><span data-lang="en">LTX Gain Map</span></a>
+        <a href="sdr-hdr-chroma-luminance-tuning.html" class="cur"><span data-lang="zh">色度+亮度调优</span><span data-lang="en">Chroma + Lum tuning</span></a>
+      </div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="seg" type="button" data-set="zh">中</button><button class="seg" type="button" data-set="en">EN</button>
+      </div>
+    </div>
+  </nav></header>
+
+  <main>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+    <div class="hero-inner">
+      <a class="backlink" href="ltx-gainmap-itm.html"><span data-lang="zh">← 上一篇 · LTX Gainmap SDR→HDR</span><span data-lang="en">← Previous · LTX Gain Map SDR→HDR</span></a>
+      <div class="eyebrow"><span data-lang="zh">SDR → HDR · 色度上变换 + 亮度对标</span><span data-lang="en">SDR → HDR · Chroma boost + Luminance calibration</span></div>
+      <h1><span data-lang="zh">在 <span class="h-accent">LTX gainmap</span> 之上：<br>把色度和亮度也对齐到专业母版</span><span data-lang="en">Beyond <span class="h-accent">LTX gain map</span>:<br>aligning chroma and luminance to a professional HDR master</span></h1>
+      <p class="hero-desc"><span data-lang="zh">LTX gainmap 把"哪里该亮"做对了，但它只解了 <b>亮度</b> 的一半问题——<b>色度还在 SDR 的饱和度里</b>，整体亮度也<b>偏离了专业调色的意图</b>。这篇复盘记录两件事：① 设计了一套<b>自研自适应色度上变换（F_APC）</b>，在 7 路竞赛里拿到与全局法 B 相当的鲜艳，但更安全；② 把<b>同片专业 HDR 母版</b>当 ground truth，量化我们的 luma gainmap 过亮多少，并把<b>亮度档校准</b>到母版水平。最后把两个轴排成 <b>2 亮度 × 3 色度全片矩阵</b>，所有算法版本化保留、可追溯。</span><span data-lang="en">LTX gain map solved "where to brighten", but only half of the brightness story—<b>chroma is still stuck at SDR saturation</b>, and the overall luminance <b>drifts away from the colorist's intent</b>. This retrospective covers two things: ① an <b>in-house adaptive chroma boost (F_APC)</b> that matched the global B path in a 7-way contest with stronger safety guarantees; ② using the <b>professional HDR master of the same film</b> as ground truth, quantifying how much the luma gain map overshoots, and recalibrating the luminance tier. Both axes were then run as a <b>2-luminance × 3-chroma full-film matrix</b>, with every algorithm version preserved and traceable.</span></p>
+      <div class="chips">
+        <span class="chip"><span data-lang="zh">ICtCp · 感知色度空间</span><span data-lang="en">ICtCp · perceptual chroma space</span></span>
+        <span class="chip"><span data-lang="zh">逐像素自适应 · 5 个安全门控</span><span data-lang="en">Per-pixel adaptive · 5 safety gates</span></span>
+        <span class="chip"><span data-lang="zh">对专业母版去亮度饱和度对齐</span><span data-lang="en">Lum-normalized chroma aligned to master</span></span>
+        <span class="chip"><span data-lang="zh">全片 25h GPU · 6 变体</span><span data-lang="en">Full-film 25h GPU · 6 variants</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 目标 -->
+  <section class="section" id="goal">
+    <div class="kicker"><span data-lang="zh">01 · 目标</span><span data-lang="en">01 · Goal</span></div>
+    <h2><span data-lang="zh">这一章要解决什么</span><span data-lang="en">What this chapter sets out to solve</span></h2>
+    <p class="lead"><span data-lang="zh">前一篇的 <a href="ltx-gainmap-itm.html" style="color:var(--cyan)">LTX gainmap</a> 把 SDR 的<b>亮度</b>提到 HDR，但仔细看输出，两个问题留在了桌面上：</span><span data-lang="en">The previous <a href="ltx-gainmap-itm.html" style="color:var(--cyan)">LTX gain map</a> piece lifted the <b>luminance</b> of SDR into HDR, but a closer look at the result leaves two things on the table:</span></p>
+    <div class="grid">
+      <div class="card"><span class="ico">🎨</span><h4><span data-lang="zh">色度从未被增强</span><span data-lang="en">Chroma was never boosted</span></h4><p><span data-lang="zh">现有管线 <code>_convert_gamut</code> 只是 <b>容器映射</b> Rec.709→BT.2020：色度坐标不变、在更宽的色域里反而显得更"淡"。luma gain 对 RGB 按比例乘<b>保色相、保相对饱和度</b>——所以色度没动。HDR 给了宽色域，但<b>"可用却完全没用"</b>。</span><span data-lang="en">In the current pipeline, <code>_convert_gamut</code> is just a <b>container remap</b> from Rec.709 to BT.2020: the chromaticity coordinates do not change, so colors look <b>flatter</b> inside the wider gamut. The luma gain multiplies RGB proportionally, <b>preserving hue and relative saturation</b>—chroma never moves. HDR offers a wide gamut, but it is <b>available yet unused</b>.</span></p></div>
+      <div class="card"><span class="ico">💡</span><h4><span data-lang="zh">整体亮度偏离母版</span><span data-lang="en">Overall luminance drifts from the master</span></h4><p><span data-lang="zh">同片有专业 HDR 调色母版（UHD / PQ 1000nits / BT.2020）。把母版当 ground truth 一比，我们的输出<b>系统性过亮</b>——尤其室外。"亮就是好"是错觉，<b>调色师把高光留出空间</b>才是真意图。</span><span data-lang="en">A professional HDR master of the same film exists (UHD / PQ 1000nits / BT.2020). Comparing our output to that ground truth shows a <b>systematic overshoot</b>—especially outdoors. "Brighter is better" is an illusion; the colorist's actual intent is <b>leaving headroom in the highlights</b>.</span></p></div>
+      <div class="card"><span class="ico">📐</span><h4><span data-lang="zh">两个轴要分开调，再组合</span><span data-lang="en">Two axes, tuned independently, then combined</span></h4><p><span data-lang="zh">色度和亮度是<b>独立的两件事</b>。最终要给出"<b>亮度档 × 色度档</b>"的矩阵——让选型者横向比亮度、纵向比色度，每个算法版本化保留、可追溯。</span><span data-lang="en">Chroma and luminance are <b>two independent dials</b>. The deliverable is a <b>luminance tier × chroma method</b> matrix, letting the decision-maker compare luminance horizontally and chroma vertically, with every algorithm versioned and traceable.</span></p></div>
+    </div>
+    <div class="callout gold"><span data-lang="zh"><b>一句话目标：</b>在不破坏 LTX gainmap 的"保 SDR 真实细节、不引入幻觉"哲学前提下，<b>补上色度</b>、<b>校准亮度</b>，并给出一组可被周一审片直接选型的全片版本。</span><span data-lang="en"><b>One-line goal:</b> without breaking the LTX gain map philosophy of "preserve SDR detail, do not invent texture", <b>add chroma boost</b> and <b>recalibrate luminance</b>, and produce a set of full-film variants ready for Monday's review.</span></div>
+  </section>
+
+  <!-- 02 原理 -->
+  <section class="section" id="principles">
+    <div class="kicker"><span data-lang="zh">02 · 原理</span><span data-lang="en">02 · Principles</span></div>
+    <h2><span data-lang="zh">在动手之前要清楚的几件事</span><span data-lang="en">A few things to be clear about before touching code</span></h2>
+
+    <h3><span data-lang="zh">色度的"正确"空间：ICtCp</span><span data-lang="en">The right space for chroma: ICtCp</span></h3>
+    <p><span data-lang="zh">提色度不能直接在 RGB 上乘——会同时改亮度，且色相会漂。HDR/WCG 的标准选择是 <b>ICtCp</b>（Dolby 设计，BT.2100/BT.2124）：三轴中 <b>I 是亮度（PQ 编码的 LMS 加权）</b>，<b>Ct/Cp 是色度</b>。<b>只在 Ct/Cp 上做乘法，亮度近不变、色相近线性</b>——这是它比 Oklab 在 HDR 域更稳的关键。</span><span data-lang="en">You cannot boost chroma directly in RGB—it changes luminance and shifts hue. The standard HDR/WCG choice is <b>ICtCp</b> (Dolby, BT.2100 / BT.2124): the three axes are <b>I (luminance, PQ-encoded LMS weighted sum)</b> and <b>Ct/Cp (chroma)</b>. Multiplying only Ct/Cp keeps luminance nearly fixed and hue nearly linear—this is why it is more stable than Oklab in the HDR domain.</span></p>
+
+    <h3><span data-lang="zh">Hunt 效应：越亮越要更艳</span><span data-lang="en">The Hunt effect: brighter wants more chroma</span></h3>
+    <p><span data-lang="zh">人眼感知里，物体越亮，看着越鲜艳——这是 <b>Hunt 效应</b>。SDR→HDR 把整体提亮后，<b>如果不同步提色度，画面就会"亮但发灰、发淡"</b>。这是"该提色度"的感知学依据，不是审美偏好。</span><span data-lang="en">Perceptually, brighter objects look more colorful—this is the <b>Hunt effect</b>. After lifting SDR luminance into HDR, <b>chroma must follow, or the image looks "bright but desaturated"</b>. The chroma push is rooted in vision science, not aesthetic preference.</span></p>
+
+    <h3><span data-lang="zh">PQ 是绝对亮度坐标</span><span data-lang="en">PQ is an absolute luminance coordinate</span></h3>
+    <p><span data-lang="zh">SDR 的"白"是相对的（参考白≈100 nit），HDR PQ（ST 2084）<b>把每个码值钉在绝对 nit 上</b>：码 0.508 ≈ 100 nit，0.580 ≈ 203 nit（BT.2408 漫反射白），1.0 = 10000 nit。对比我们和母版的"亮"，<b>必须落到绝对 nit</b>——否则不同曝光算法的码值没有可比性。</span><span data-lang="en">In SDR, "white" is relative (≈100 nit reference). In HDR PQ (ST 2084), every code value is pinned to an absolute nit: 0.508 ≈ 100 nit, 0.580 ≈ 203 nit (BT.2408 diffuse white), 1.0 = 10000 nit. Any "is it too bright?" comparison <b>must drop to absolute nits</b>—otherwise code values from different exposure choices are not comparable.</span></p>
+
+    <h3><span data-lang="zh">色域余量：物理可推的边界</span><span data-lang="en">Gamut headroom: the physical boundary of how far you can push</span></h3>
+    <p><span data-lang="zh">每个像素在 BT.2020 三角内都有"剩余距离"——再推一点饱和度就会撞色域边、被截断、色相漂掉。<b>逐像素算这个余量</b>，按余量分配推幅，是"<b>永不截断 + 零色相漂移</b>"的物理保证。这条是自研算法的核心新颖点。</span><span data-lang="en">Each pixel has a remaining distance inside the BT.2020 triangle—push saturation further and it hits the gamut boundary, gets clipped, and shifts hue. Computing this <b>per-pixel headroom</b> and allocating the boost by remaining room is the physical guarantee of "no clipping + zero hue drift", and is the core novelty of the in-house algorithm.</span></p>
+  </section>
+
+  <!-- 03 方法 - 色度 -->
+  <section class="section" id="chroma-methods">
+    <div class="kicker"><span data-lang="zh">03 · 方法 · 色度</span><span data-lang="en">03 · Method · Chroma</span></div>
+    <h2><span data-lang="zh">把"提多少饱和度"做成一场竞赛</span><span data-lang="en">Turning "how much saturation" into a contest</span></h2>
+    <p class="lead"><span data-lang="zh">不预设答案——把候选路线列齐，在同一段素材上跑客观指标，再用人眼复核。共 7 条路：基线、LTX 当色度先知、ICtCp / Oklab 全局乘、Hunt 亮度耦合、色域径向拉伸、<b>自研 F_APC</b>。</span><span data-lang="en">No baked-in answer. Line up every candidate, run them all on the same clip with objective metrics, then verify by eye. Seven paths in total: baseline, LTX as chroma oracle, global ICtCp / Oklab, Hunt luma coupling, gamut radial stretch, and the in-house <b>F_APC</b>.</span></p>
+    <table>
+      <tr><th><span data-lang="zh">编号</span><span data-lang="en">ID</span></th><th><span data-lang="zh">路线</span><span data-lang="en">Route</span></th><th><span data-lang="zh">核心思想</span><span data-lang="en">Core idea</span></th></tr>
+      <tr><td>0</td><td>baseline</td><td><span data-lang="zh">不动色度</span><span data-lang="en">leave chroma untouched</span></td></tr>
+      <tr><td>A</td><td>LTX 色度先知</td><td><span data-lang="zh">仿 luma gainmap，从 LTX EXR 提色度增益</span><span data-lang="en">mirror the luma gain map idea, extract chroma gain from the LTX EXR</span></td></tr>
+      <tr><td>B</td><td>ICtCp 全局</td><td><span data-lang="zh">ICtCp 域 <code>Ct/Cp ×= factor</code>，全局一刀切</span><span data-lang="en">in ICtCp, <code>Ct/Cp ×= factor</code> globally</span></td></tr>
+      <tr><td>C</td><td>Oklab 全局</td><td><span data-lang="zh">同 B 但换 Oklab 域作对照</span><span data-lang="en">same as B but in Oklab, as a control</span></td></tr>
+      <tr><td>D</td><td>Hunt 亮度耦合</td><td><span data-lang="zh">按输出亮度档位决定提多少色度</span><span data-lang="en">scale chroma boost by output luminance</span></td></tr>
+      <tr><td>E</td><td>色域径向拉伸</td><td><span data-lang="zh">朝色域边界径向推</span><span data-lang="en">radial push toward the gamut boundary</span></td></tr>
+      <tr class="col-pick"><td><b>F</b></td><td><b>F_APC（自研）</b></td><td><span data-lang="zh"><b>逐像素自适应</b>：用 5 个 ≤1 的乘性门控决定每个像素该提多少</span><span data-lang="en"><b>per-pixel adaptive</b>: five multiplicative gates, each ≤1, decide how much to push at each pixel</span></td></tr>
+    </table>
+
+    <h3><span data-lang="zh">自研 F_APC（Adaptive Perceptual Chroma）的设计</span><span data-lang="en">Designing F_APC (Adaptive Perceptual Chroma)</span></h3>
+    <p><span data-lang="zh">固定 factor 的方法（如 B）对所有像素一视同仁，要"既敢推暗场、又不推爆人脸/已饱和处"是做不到的——单一全局值必须按最坏场景保守设。F_APC 换一个方向：<b>每个像素自己决定该提多少</b>。</span><span data-lang="en">A fixed-factor method (like B) treats every pixel the same and cannot simultaneously push dark scenes hard yet hold back on faces or already-saturated areas—a single global value must be set conservatively for the worst case. F_APC turns this around: <b>each pixel decides its own boost</b>.</span></p>
+    <div class="formula">
+      <div class="eq"><span class="hi">s(x)</span> = 1 + d<sub>max</sub> · <span class="hi">W<sub>hero</sub></span> · <span class="hi">W<sub>hunt</sub></span> · <span class="hi">W<sub>gamut</sub></span> · <span class="hi">W<sub>hl</sub></span> · <span class="hi">W<sub>skin</sub></span></div>
+      <div class="eq"><span class="op">Ct'/Cp' = Ct/Cp · s(x)</span></div>
+      <div class="note"><span data-lang="zh">每个 W ∈ [0,1]。乘积 ≤1 → 增量 ≤ d<sub>max</sub>。所有约束<b>叠加</b>，越多约束触发，提幅越小——这正是"安全的鲜艳"。</span><span data-lang="en">Each W ∈ [0,1]. Their product is ≤1, so the increment is ≤ d<sub>max</sub>. Constraints stack: the more conditions activate, the gentler the push—this is the "safe brightness" idea.</span></div>
+    </div>
+    <div class="grid">
+      <div class="card"><span class="ico">🎯</span><h4>W<sub>hero</sub> <span data-lang="zh">· 主角色</span><span data-lang="en">· hero color</span></h4><p><span data-lang="zh">Rayleigh 钟形门控：在<b>中等饱和度</b>（c₀≈0.12）处取最大，避开近灰噪点和已饱和处。</span><span data-lang="en">Rayleigh-shaped gate peaking at <b>mid saturation</b> (c₀≈0.12), avoiding near-neutral noise and already-saturated pixels.</span></p></div>
+      <div class="card"><span class="ico">☀️</span><h4>W<sub>hunt</sub> <span data-lang="zh">· 亮度耦合</span><span data-lang="en">· Hunt coupling</span></h4><p><span data-lang="zh">输出亮度 0→1，权重从 0.5 升到 1.0（暗部留 50% 底，中高调全量）。<b>把推力集中到亮处</b>。</span><span data-lang="en">As luminance goes 0→1, weight rises from 0.5 to 1.0 (50% floor in shadows, full weight in midtones and highlights). <b>Push concentrates where it counts.</b></span></p></div>
+      <div class="card"><span class="ico">📐</span><h4>W<sub>gamut</sub> <span data-lang="zh">· 色域余量（新颖项）</span><span data-lang="en">· gamut headroom (novel)</span></h4><p><span data-lang="zh">逐像素算"再放大多少才贴色域边"，按余量分配推力。这是<b>不截断、不漂色相</b>的物理保证。</span><span data-lang="en">Per-pixel: how much can this color scale before hitting the gamut boundary. Allocate boost by remaining room. This is the <b>physical guarantee of no clipping and zero hue drift</b>.</span></p></div>
+      <div class="card"><span class="ico">🌅</span><h4>W<sub>hl</sub> <span data-lang="zh">· 高光 rolloff</span><span data-lang="en">· highlight rolloff</span></h4><p><span data-lang="zh">接近峰值亮度时减弱推力，<b>防霓虹化、防截断</b>。</span><span data-lang="en">Soften the push near peak luminance, <b>preventing neon edges and clipping</b>.</span></p></div>
+      <div class="card"><span class="ico">🙂</span><h4>W<sub>skin</sub> <span data-lang="zh">· 护肤</span><span data-lang="en">· skin protection</span></h4><p><span data-lang="zh">ICtCp 肤色扇区（中心 1.866 rad，<b>用真人脸像素实测定的</b>，不是猜的）软抑制提幅。</span><span data-lang="en">A soft cap in the ICtCp skin sector (center 1.866 rad, <b>measured from real face pixels</b>, not guessed).</span></p></div>
+    </div>
+    <div class="callout violet"><span data-lang="zh"><b>设计哲学：</b>F_APC 不是堆砌特性，而是把"所有已知安全约束都列出来、相乘"。<b>消融实验</b>（§05）会逐项证明：去掉任一门控，对应类型的伪影立刻冒出来——所以每个部件都不可删。</span><span data-lang="en"><b>Design philosophy:</b> F_APC is not a feature pile-up—it lists every known safety constraint and multiplies them. The <b>ablation study</b> in §05 proves each gate is load-bearing: remove any one, the corresponding artifact appears.</span></div>
+  </section>
+
+  <!-- 04 方法 - 亮度 -->
+  <section class="section" id="luma-methods">
+    <div class="kicker"><span data-lang="zh">04 · 方法 · 亮度</span><span data-lang="en">04 · Method · Luminance</span></div>
+    <h2><span data-lang="zh">用专业母版当 ground truth 校准亮度</span><span data-lang="en">Calibrate luminance against the professional master as ground truth</span></h2>
+    <p class="lead"><span data-lang="zh">"我们过亮"是肉眼直觉，要变成可调的旋钮，得先把它<b>量化</b>。专业 HDR 母版（UHD / PQ / 1000nits / Rec.2020，与 SDR 帧对齐已核验）正是缺失的 ground truth。</span><span data-lang="en">"We are too bright" is a gut call. To translate it into a tunable knob, it has to be <b>quantified</b>. The professional HDR master (UHD / PQ / 1000 nits / Rec.2020, frame-aligned with the SDR source) is exactly the missing ground truth.</span></p>
+
+    <h3><span data-lang="zh">指标：绝对 nit，p50/p90/p99</span><span data-lang="en">Metric: absolute nits at p50 / p90 / p99</span></h3>
+    <p><span data-lang="zh">两路视频都按 PQ→线性→BT.2020 亮度（kr,kg,kb=0.2627,0.6780,0.0593）算<b>绝对 nit</b>，再取分位数：p50 看暗部 / 漫反射白，p90 看亮部走向，p99 看高光峰值，max 看截断。挑了室外越野车扬尘镜头（t=384s，clip 见 §06）做测量样本，这正是"我们过亮"最容易暴露的内容。</span><span data-lang="en">Both videos go PQ → linear → BT.2020 luminance (kr,kg,kb = 0.2627, 0.6780, 0.0593) for <b>absolute nits</b>, then aggregate by percentile: p50 for shadows / diffuse white, p90 for the bright trend, p99 for highlight peaks, max for clipping. We picked the outdoor SUV-and-dust shot at t = 384s as the measurement sample—the kind of content where overshoot is most visible.</span></p>
+
+    <table>
+      <tr><th><span data-lang="zh">变体</span><span data-lang="en">Variant</span></th><th>nits<sub>mean</sub></th><th>nits<sub>50</sub></th><th>nits<sub>90</sub></th><th>nits<sub>99</sub></th><th>nits<sub>max</sub></th><th>&gt;203nit %</th></tr>
+      <tr><td><span data-lang="zh">母版 ✦</span><span data-lang="en">Master ✦</span></td><td class="num good">77</td><td class="num">27</td><td class="num good">252</td><td class="num good">371</td><td class="num">857</td><td class="num">14%</td></tr>
+      <tr><td>L0 (0.9 / 4.5)<br><span class="num" style="color:var(--soft)">strength / max-output-luma</span></td><td class="num bad">199<br>(2.6×)</td><td class="num mid">43</td><td class="num bad">884<br>(3.5×)</td><td class="num bad">890</td><td class="num">988</td><td class="num bad">26%</td></tr>
+      <tr><td>L1a (0.8 / 3.0)</td><td class="num mid">155</td><td class="num mid">43</td><td class="num mid">592</td><td class="num mid">594</td><td class="num">676</td><td class="num mid">26%</td></tr>
+      <tr><td>L1b (0.7 / 2.4)</td><td class="num mid">134</td><td class="num mid">43</td><td class="num mid">474</td><td class="num">476</td><td class="num">548</td><td class="num">25%</td></tr>
+      <tr class="col-pick"><td><b>L1 (0.6 / 1.6) ← <span data-lang="zh">采用</span><span data-lang="en">adopted</span></b></td><td class="num good">105<br>(1.36×)</td><td class="num">42</td><td class="num good">317<br>(1.26×)</td><td class="num good">319</td><td class="num good">383</td><td class="num">25%</td></tr>
+    </table>
+
+    <div class="callout bad"><span data-lang="zh"><b>实测确证用户直觉：</b>现有 L0 档（strength=0.9, max-output-luma=4.5）室外亮部 884 nit，是母版 252 nit 的 <b>3.5 倍</b>；均值也是 <b>2.6×</b>。"亮就是好"是错的，<b>母版的克制才是专业意图</b>。</span><span data-lang="en"><b>The measurement confirms the user's instinct:</b> the current L0 tier (strength = 0.9, max-output-luma = 4.5) lifts outdoor highlights to 884 nit, <b>3.5×</b> the master's 252 nit; the mean is also <b>2.6×</b>. "Brighter is better" is wrong—the master's restraint is the professional intent.</span></div>
+
+    <p><span data-lang="zh">扫了 3 个 L1 候选，<b>L1 = 0.6 / 1.6</b> 把高光从 884 nit 压到 317 nit（≈母版），均值降到 1.36×，<b>视觉无崩坏</b>（阴影完整、扬尘自然，详见 §06 montage）。亮度档定：</span><span data-lang="en">Three L1 candidates were swept. <b>L1 = 0.6 / 1.6</b> brings the highlights from 884 nit down to 317 nit (close to the master), with mean overshoot reduced to 1.36×, and <b>no visible breakage</b> (shadows intact, dust naturally rendered—see montage in §06). The two tiers are fixed as:</span></p>
+    <div class="two">
+      <div class="card"><h4>L0 (<span data-lang="zh">现状档</span><span data-lang="en">current tier</span>) · 0.9 / 4.5</h4><p><span data-lang="zh">保留"亮就是 HDR"的早期管线，作为<b>过亮基线</b>。需要更激进 HDR 感的素材可用。</span><span data-lang="en">Keeps the early "HDR means bright" pipeline as the <b>overshoot baseline</b>. Usable for content that wants a more aggressive HDR feel.</span></p></div>
+      <div class="card col-pick"><h4>L1 (<span data-lang="zh">贴母版档</span><span data-lang="en">master-fit tier</span>) · 0.6 / 1.6 ✦</h4><p><span data-lang="zh"><b>对齐专业调色意图</b>。室外亮部≈母版，电影感更稳。是默认建议的生产档。</span><span data-lang="en"><b>Aligned with the colorist's intent.</b> Outdoor highlights match the master; the look is more cinematic. The recommended production default.</span></p></div>
+    </div>
+  </section>
+
+  <!-- 05 实现 -->
+  <section class="section" id="impl">
+    <div class="kicker"><span data-lang="zh">05 · 实现</span><span data-lang="en">05 · Implementation</span></div>
+    <h2><span data-lang="zh">注入点、流水线、矩阵模式</span><span data-lang="en">Injection point, pipeline, matrix mode</span></h2>
+
+    <h3><span data-lang="zh">色度注入点：BT.2020 线性域，gamut 后、PQ 前</span><span data-lang="en">Where to inject chroma: BT.2020 linear, after gamut, before PQ</span></h3>
+    <p><span data-lang="zh">现有 <code>linear_to_hdr10_yuv420p10le</code> = sRGB linear → BT.2020 linear → grade → PQ → YUV。色度增强必须在 <b>BT.2020 线性域</b>注入（ICtCp 的输入正是这里），加了 <code>rec2020_linear_to_hdr10_yuv420p10le</code> 把后半段独立暴露，<b>逐位与原路径等价</b>。</span><span data-lang="en">The existing <code>linear_to_hdr10_yuv420p10le</code> goes sRGB linear → BT.2020 linear → grade → PQ → YUV. Chroma boost has to enter in the <b>BT.2020 linear</b> stage (the canonical ICtCp input). A new <code>rec2020_linear_to_hdr10_yuv420p10le</code> exposes the second half of that path, <b>bit-equivalent to the original</b> when no chroma method is applied.</span></p>
+
+    <h3><span data-lang="zh">接入生产：<code>--chroma-methods off,F_apc,B</code></span><span data-lang="en">Production hook: <code>--chroma-methods off,F_apc,B</code></span></h3>
+    <p><span data-lang="zh">给 <code>src/ltx_exr_gainmap_tool.py</code> 加一个开关：一次增益计算 → rec2020 基底 → 对每个选中的色度方法各自编码。<b>off 路径与原基线逐位等价</b>，这是必须的——否则基线就漂了。</span><span data-lang="en">A single switch added to <code>src/ltx_exr_gainmap_tool.py</code>: one gain pass → rec2020 base → encode each requested chroma method independently. <b>The off path is bit-equivalent to the existing baseline</b>, which is mandatory—otherwise the baseline itself drifts.</span></p>
+<pre><span class="c"># 三档色度,off 与生产基线逐位等价</span>
+<span class="k">_CHROMA_FUNCS</span> = {
+  <span class="s">"off"</span>:   <span class="k">lambda</span> rec: rec,
+  <span class="s">"F_apc"</span>: <span class="k">lambda</span> rec: <span class="k">path_apc</span>(rec, dmax=1.0),    <span class="c"># 自研逐像素</span>
+  <span class="s">"B"</span>:     <span class="k">lambda</span> rec: <span class="k">path_ictcp</span>(rec, factor=1.3),<span class="c"># 拐点(详见 §06)</span>
+}</pre>
+
+    <h3><span data-lang="zh">流水线 · 矩阵模式 · 算完即删 EXR</span><span data-lang="en">Pipeline · matrix mode · delete EXR as we go</span></h3>
+    <p><span data-lang="zh">全片 LTX EXR 约 125 GB，<b>磁盘放不下</b>。所以 <code>h20_pipeline_runner.py</code> 是按镜头消费即删：GPU 池产 LTX 子段，每个镜头一旦凑齐子段就交给 CPU 池做 gainmap + 色度，然后<b>立即删该镜头的 EXR</b>。在它上面加矩阵模式：</span><span data-lang="en">A full-film LTX EXR run is about 125 GB, which <b>does not fit on disk</b>. So <code>h20_pipeline_runner.py</code> consumes per shot and deletes immediately: the GPU pool produces LTX sub-segments; once a shot is complete its sub-segments are handed to the CPU pool for gain map + chroma, then <b>the EXR for that shot is removed</b>. Matrix mode sits on top:</span></p>
+<pre>venv/bin/python h20_pipeline_runner.py \
+  --input data/input/&lt;sdr&gt;.mp4 --run-name ff_matrix \
+  --output output/fullfilm_matrix/fullfilm \
+  --width 1536 --height 864 --segment-frames 81 \
+  --ports 8188,8189,8190,8191 \
+  <span class="k">--lum-variants</span> L0:0.9:4.5,L1:0.6:1.6 \  <span class="c"># 2 亮度档</span>
+  <span class="k">--matrix-chroma</span> off,F_apc,B            <span class="c"># 3 色度档</span></pre>
+    <div class="callout"><span data-lang="zh">关键设计:<b>每镜头共用同一份 LTX EXR</b>(GPU 产出最贵的环节)，<b>变体之间只在 CPU 上各跑一遍 gainmap</b>。所以"6 个全片"的真正成本 ≈ <b>一次全片 LTX</b>。</span><span data-lang="en">Key design: <b>the LTX EXR is shared across variants</b> within each shot (the expensive GPU step is run once), and <b>each variant only re-runs gain map + chroma on the CPU</b>. The true cost of "6 full films" is therefore essentially <b>one full-film LTX pass</b>.</span></div>
+
+    <h3><span data-lang="zh">消融实验:每个门控都不可删</span><span data-lang="en">Ablation: every gate is load-bearing</span></h3>
+    <p><span data-lang="zh">逐个把 F_APC 的 5 个门控置 1,看 full→no_X 揭示该项原本在抑制什么(对 baseline 提升,clip1 室内 / clip2 暗夜):</span><span data-lang="en">Turn off each gate one at a time and read what artifact appears (relative gains over baseline, on clip1 indoor / clip2 dark-night):</span></p>
+    <table>
+      <tr><th><span data-lang="zh">变体</span><span data-lang="en">Variant</span></th><th><span data-lang="zh">均值色度 ↑</span><span data-lang="en">mean chroma ↑</span></th><th>p99 ↑</th><th><span data-lang="zh">肤色 ↑</span><span data-lang="en">skin ↑</span></th><th><span data-lang="zh">色相°</span><span data-lang="en">hue°</span></th><th><span data-lang="zh">截断 %</span><span data-lang="en">clip %</span></th></tr>
+      <tr class="col-pick"><td><b>full · F_APC</b></td><td class="num good">+19 / +30</td><td class="num good">+12 / +33</td><td class="num good">+15 / +17</td><td class="num good">.07 / .00</td><td class="num good">.041 / .000</td></tr>
+      <tr><td>no_hero</td><td class="num">+26 / +43</td><td class="num">+15 / +34</td><td class="num">+21 / +23</td><td class="num">.11 / .00</td><td class="num">.052 / .000</td></tr>
+      <tr><td>no_hunt</td><td class="num">+35 / +58</td><td class="num">+19 / +61</td><td class="num bad">+30 / +34</td><td class="num bad">.39 / .02</td><td class="num">.055 / .000</td></tr>
+      <tr><td>no_gamut</td><td class="num">+33 / +33</td><td class="num bad">+35 / +40</td><td class="num">+24 / +20</td><td class="num bad">.72 / .04</td><td class="num">.048 / .000</td></tr>
+      <tr><td>no_hl</td><td class="num">+19 / +30</td><td class="num">+12 / +33</td><td class="num">+15 / +18</td><td class="num">.07 / .00</td><td class="num bad">.048 / .000</td></tr>
+      <tr><td>no_skin</td><td class="num">+21 / +32</td><td class="num">+14 / +40</td><td class="num bad">+24 / +35</td><td class="num">.07 / .00</td><td class="num">.041 / .000</td></tr>
+    </table>
+    <p><span data-lang="zh">读法:<b>full 是所有变体里最克制的</b>,因为 5 个 ≤1 门控相乘约束叠加。<b>去掉任一项都涨饱和度,但同时冒出对应类型伪影</b>:去 gamut → 色相漂移 0.07°→0.72°;去 hunt → 暗部和肤色被同步推爆;去 skin → 肤色 +17%→+35% 翻倍;去 hero → 近灰区噪声被无差别推;去 hl → 高光截断略升。证明 F_APC 不是堆砌,每个部件都各司其职、<b>不可删</b>。</span><span data-lang="en">How to read this: <b>full is the most restrained of all variants</b>, because the five ≤1 gates compose multiplicatively. <b>Disabling any of them raises saturation but introduces the corresponding artifact:</b> drop W<sub>gamut</sub> and hue drift jumps from 0.07° to 0.72°; drop W<sub>hunt</sub> and shadows / skin get pushed indiscriminately; drop W<sub>skin</sub> and skin saturation almost doubles (+17 → +35%); drop W<sub>hero</sub> and near-neutral noise gets boosted; drop W<sub>hl</sub> and highlight clipping nudges up. F_APC is not a feature pile-up—each gate is <b>load-bearing</b>.</span></p>
+  </section>
+
+  <!-- 06 结果验证 -->
+  <section class="section" id="results">
+    <div class="kicker"><span data-lang="zh">06 · 结果验证</span><span data-lang="en">06 · Results</span></div>
+    <h2><span data-lang="zh">对母版的去亮度对标 + 全片矩阵</span><span data-lang="en">Luminance-normalized chroma alignment to the master · full-film matrix</span></h2>
+
+    <h3><span data-lang="zh">客观指标(对母版)</span><span data-lang="en">Objective metrics vs master</span></h3>
+    <p><span data-lang="zh"><b>注意亮度混淆:</b>我们的输出比母版亮 18~22%(I 值高),而 ICtCp 色度会随亮度涨——必须用<b>去亮度饱和度 sat = chroma / I</b>来比,才公平。</span><span data-lang="en"><b>Beware the brightness confound:</b> our outputs are 18–22% brighter than the master (I value), and ICtCp chroma scales with luminance—so the fair comparison uses <b>luminance-normalized saturation sat = chroma / I</b>.</span></p>
+    <table>
+      <tr><th><span data-lang="zh">占 GT %</span><span data-lang="en">% of GT</span></th><th>baseline (off)</th><th>D Hunt</th><th class="col-pick"><b>F_APC</b></th><th>B ICtCp</th><th><span data-lang="zh">母版</span><span data-lang="en">Master</span></th></tr>
+      <tr><td><b>sat</b> clip1 <span class="num" style="color:var(--soft)">室内 / indoor</span></td><td class="num bad">88%</td><td class="num mid">96%</td><td class="num col-pick good">102%</td><td class="num">106%</td><td class="num">100%</td></tr>
+      <tr><td><b>sat</b> clip2 <span class="num" style="color:var(--soft)">暗夜 / dark</span></td><td class="num bad">90%</td><td class="num mid">99%</td><td class="num col-pick good">114%</td><td class="num">112%</td><td class="num">100%</td></tr>
+      <tr><td>p99 chroma clip1</td><td class="num bad">80%</td><td class="num mid">92%</td><td class="num col-pick">88%</td><td class="num good">99%</td><td class="num">100%</td></tr>
+      <tr><td>p99 chroma clip2</td><td class="num bad">88%</td><td class="num">97%</td><td class="num col-pick good">115%</td><td class="num">109%</td><td class="num">100%</td></tr>
+    </table>
+    <div class="callout gold"><span data-lang="zh"><b>三个被外部数据背书的结论:</b><br>① <b>项目前提被证实</b>:luma-only 的 baseline 比专业调色<b>欠饱和 10~12%</b>。色度上变换不是无中生有,而是补回母版水平。<br>② <b>F_APC 最贴专业调色意图</b>(102~114%),B 略超(106~112%),D 略欠(96~99%)。<br>③ 各方法都把肤色推得比母版略高,<b>提色度时护肤是真问题</b>——F_APC/B 在人脸场可再收紧,母版肤色更克制。</span><span data-lang="en"><b>Three conclusions validated by external data:</b><br>① <b>The project premise is confirmed:</b> the luma-only baseline is <b>10–12% undersaturated</b> versus the colorist's intent. Chroma upconversion is not inventing color; it is restoring the master's level.<br>② <b>F_APC tracks the master closest</b> (102–114%); B overshoots slightly (106–112%); D undershoots slightly (96–99%).<br>③ Every method pushes skin slightly above the master's level. <b>Skin protection is a real concern when boosting chroma</b>—F_APC and B can still be tightened on faces; the master is more restrained.</span></div>
+
+    <h3><span data-lang="zh">A 路 LTX 当色度先知 · 为什么无效</span><span data-lang="en">Path A · why "LTX as chroma oracle" fails</span></h3>
+    <p><span data-lang="zh">A 路仿 luma gainmap 的思路,试图从 LTX EXR 抽出色度增益。实测同像素对比(20 帧抽样,Oklab 域,对"有色像素"统计):</span><span data-lang="en">Path A mirrors the luma gain map idea, trying to extract chroma gain from the LTX EXR. Same-pixel comparison (20 frames sampled, Oklab, restricted to "colored" pixels):</span></p>
+    <ul style="margin:14px 0 14px 22px;color:#cfd4e0;font-size:14.5px;line-height:1.85">
+      <li><span data-lang="zh"><b>仅 32% 像素</b> LTX 比 SDR 更艳;<b>c_ltx / c_sdr 中位 0.85~0.91</b> → LTX 普遍比 SDR <b>欠饱和</b>。</span><span data-lang="en"><b>Only 32% of pixels</b> have LTX more saturated than SDR; <b>median c_ltx/c_sdr is 0.85–0.91</b>—LTX is generally <b>less</b> saturated.</span></li>
+      <li><span data-lang="zh"><b>LTX vs SDR 色相分歧均值 ~20°</b>(p90 38~53°)。即便方向上可参考也会幻想错色。</span><span data-lang="en"><b>LTX vs SDR hue divergence averages ~20°</b> (p90 38–53°). Even directionally, it would push toward the wrong colors.</span></li>
+    </ul>
+    <div class="callout bad"><span data-lang="zh"><b>客观证据指向:LTX 是亮度 oracle,不是色度 oracle。</b>色度提升必须基于 SDR 自身的色彩走规则法(B / D / F_APC),不能从 LTX 提取色度信息。这也解释了"为什么 A 几乎无效"。</span><span data-lang="en"><b>The measurements point to one conclusion: LTX is a luminance oracle, not a chroma oracle.</b> Chroma upconversion must operate on SDR's own colors via rule-based methods (B / D / F_APC); chroma information cannot be extracted from LTX. This also explains why path A barely moves the needle.</span></div>
+
+    <h3><span data-lang="zh">全片 2 × 3 矩阵 · 关键时间码并排</span><span data-lang="en">Full-film 2 × 3 matrix · side-by-side at key timecodes</span></h3>
+    <p><span data-lang="zh">最终交付:<b>2 亮度档 × 3 色度档 = 6 个全片 HDR10</b>(1536 × 864,fp32,~5min/段 LTX × 374 段,总跑 25 小时)。每张 montage 顶行=母版,中行=L0(现状亮度),底行=L1(贴母版亮度)。映射:固定 Reinhard@200nit,所有图块同一映射,<b>让亮度差异看得见</b>。</span><span data-lang="en">Deliverable: <b>2 luminance tiers × 3 chroma methods = 6 full-film HDR10 outputs</b> (1536 × 864, fp32, ~5 min/segment LTX × 374 segments, 25 hours total). Each montage row: top = master, middle = L0 (current luminance), bottom = L1 (master-fit). Tonemap: fixed Reinhard @ 200 nit—same mapping for every tile, so the brightness gap remains visible.</span></p>
+
+    <div class="montage-grid">
+      <div class="montage">
+        <img src="assets/chroma-luminance/montage_0140s.png" alt="montage at t=140s (indoor bar / face)">
+        <div class="cap">t = 140s · <span data-lang="zh">室内酒吧 / 人脸</span><span data-lang="en">indoor bar / face</span></div>
+      </div>
+      <div class="montage">
+        <img src="assets/chroma-luminance/montage_0240s.png" alt="montage at t=240s (drone / sky)">
+        <div class="cap">t = 240s · <span data-lang="zh">无人机 / 天空</span><span data-lang="en">drone / sky</span></div>
+      </div>
+      <div class="montage">
+        <img src="assets/chroma-luminance/montage_0384s.png" alt="montage at t=384s (outdoor SUV / dust)">
+        <div class="cap">t = 384s · <span data-lang="zh">室外越野车 / 扬尘(亮度差异最明显)</span><span data-lang="en">outdoor SUV / dust — biggest luminance gap</span></div>
+      </div>
+      <div class="montage">
+        <img src="assets/chroma-luminance/montage_0715s.png" alt="montage at t=715s (medical monitor)">
+        <div class="cap">t = 715s · <span data-lang="zh">医疗监视器(高对比 UI)</span><span data-lang="en">medical monitor — high-contrast UI</span></div>
+      </div>
+    </div>
+
+    <div class="callout"><span data-lang="zh"><b>怎么读 montage:</b>① 横向比同一行的 3 个色度档(off / F_apc / B),感受色彩饱和度差异;② 纵向比 L0 vs L1,感受亮度差异——尤其 384s 室外段,L0 扬尘的高光<b>明显刺亮</b>,L1 自然柔和、接近母版。最终选型仍以 HDR 屏肉眼为准,这里的 montage 只是定位用。</span><span data-lang="en"><b>Reading the montages:</b> ① compare the three chroma methods (off / F_apc / B) horizontally within a row to feel the saturation change; ② compare L0 vs L1 vertically to feel the luminance gap—especially at 384s, where L0's dust highlights are <b>visibly hot</b> while L1 is naturally soft and close to the master. The final pick should still be made on an HDR display; the montage is a locator.</span></div>
+  </section>
+
+  <!-- 07 工程落地 -->
+  <section class="section" id="apply">
+    <div class="kicker"><span data-lang="zh">07 · 工程落地</span><span data-lang="en">07 · Productionization</span></div>
+    <h2><span data-lang="zh">怎么接入生产</span><span data-lang="en">How this lands in production</span></h2>
+    <p class="lead"><span data-lang="zh">"6 个全片"是选型工具,不是产品形态。选定算法后接入生产的方式:</span><span data-lang="en">The "6 full films" are a selection tool, not a product. Once an algorithm is chosen, this is how it lands in production:</span></p>
+    <div class="pipe">
+      <div class="pstep"><div class="n">01</div><div class="t"><span data-lang="zh">网页 / 批处理加「色度增强」开关</span><span data-lang="en">Add a "chroma boost" switch to the web / batch UI</span></div><div class="d"><span data-lang="zh">默认<b>关</b>(=off,保守);可选 F_APC(推荐) / B(更艳)。</span><span data-lang="en">Default <b>off</b> (conservative); options F_APC (recommended) or B (more vivid).</span></div></div>
+      <div class="pstep"><div class="n">02</div><div class="t"><span data-lang="zh">「亮度档」二选一</span><span data-lang="en">Pick a luminance tier</span></div><div class="d"><span data-lang="zh">L0(现状/激进)或 L1(贴母版/电影感)。L1 推荐为默认。</span><span data-lang="en">L0 (current / aggressive) or L1 (master-fit / cinematic). L1 is the recommended default.</span></div></div>
+      <div class="pstep"><div class="n">03</div><div class="t"><span data-lang="zh">片尾不增益开关</span><span data-lang="en">No-gain tail switch</span></div><div class="d"><span data-lang="zh">复用已有的 <code>--gain-off-from</code>。片尾字幕保持 SDR 亮度,不被推成 HDR 高光。</span><span data-lang="en">Reuse the existing <code>--gain-off-from</code>. Tail credits stay at SDR brightness instead of becoming HDR highlights.</span></div></div>
+      <div class="pstep"><div class="n">04</div><div class="t"><span data-lang="zh">最终交付分辨率</span><span data-lang="en">Final delivery resolution</span></div><div class="d"><span data-lang="zh">本次矩阵用 1536×864 LTX 选型,选定后可升 2048×1152 或更高出终片。色度 / 亮度算法<b>分辨率无关</b>。</span><span data-lang="en">Selection used 1536×864 LTX; for the final master, upgrade to 2048×1152 or higher. Both chroma and luminance algorithms are <b>resolution-agnostic</b>.</span></div></div>
+    </div>
+
+    <h3><span data-lang="zh">可追溯的算法注册表</span><span data-lang="en">A traceable algorithm registry</span></h3>
+    <p><span data-lang="zh">每个被加入选型的算法都<b>用命名固定</b>下来(代码 / 参数 / 测试输出三位一体),不被覆盖。当周一选定一个算法后,其他保留,后续可回头复用或对照新算法。</span><span data-lang="en">Every algorithm in the selection set has a <b>frozen name</b> binding code + parameters + test output. Nothing gets overwritten. After Monday picks one, the others stay—available for later reuse or comparison against new algorithms.</span></p>
+    <table>
+      <tr><th>ID</th><th><span data-lang="zh">参数</span><span data-lang="en">Parameters</span></th><th><span data-lang="zh">代码位置</span><span data-lang="en">Code</span></th></tr>
+      <tr><td>L0 / L1</td><td><code>strength=0.9, max-output-luma=4.5</code> / <code>0.6, 1.6</code></td><td><code>exr_default_config()</code> in <code>src/ltx_gainmap.py</code></td></tr>
+      <tr><td>off</td><td><span data-lang="zh">无色度操作</span><span data-lang="en">no chroma op</span></td><td><span data-lang="zh">直通生产基线</span><span data-lang="en">passthrough = production baseline</span></td></tr>
+      <tr class="col-pick"><td><b>F_apc</b></td><td><code>dmax=1.0, skin=True, SKIN_PROTECT=0.25</code></td><td><code>path_apc()</code> in <code>src/color/chroma_upconv.py</code></td></tr>
+      <tr><td>B</td><td><code>factor=1.3</code> (<span data-lang="zh">扫描得到的过饱和拐点</span><span data-lang="en">measured oversaturation knee</span>)</td><td><code>path_ictcp()</code> in <code>src/color/chroma_upconv.py</code></td></tr>
+    </table>
+  </section>
+
+  <!-- 08 小结 -->
+  <section class="section" id="summary">
+    <div class="kicker"><span data-lang="zh">08 · 小结</span><span data-lang="en">08 · Takeaways</span></div>
+    <h2><span data-lang="zh">这两天的实验教会的三件事</span><span data-lang="en">Three lessons from these two days</span></h2>
+    <div class="grid">
+      <div class="card"><span class="ico">📏</span><h4><span data-lang="zh">没有 ground truth 别瞎调</span><span data-lang="en">Do not tune without ground truth</span></h4><p><span data-lang="zh">"我们过亮"是肉眼直觉,直到拿到母版才<b>变成 3.5×</b>这种可调旋钮。专业母版+绝对 nit 让"调多少"从直觉降级到工程数。</span><span data-lang="en">"We are too bright" is a hunch—until the master turns it into a measurable <b>3.5×</b>. A professional reference plus absolute nits demotes "how much" from gut feel to engineering.</span></p></div>
+      <div class="card"><span class="ico">🛡️</span><h4><span data-lang="zh">"安全的鲜艳"是工程问题</span><span data-lang="en">"Safe vivid" is an engineering problem</span></h4><p><span data-lang="zh">F_APC 的逐像素门控乘积写法,让每个安全约束(护肤 / 防截断 / 保色相 / 聚焦主角色)<b>都可独立证明</b>。消融实验是对"每个部件都有用"的硬支撑。</span><span data-lang="en">F_APC's product-of-gates form makes every safety constraint (skin / clipping / hue / hero-color focus) <b>independently provable</b>. The ablation is hard evidence that every component pulls weight.</span></p></div>
+      <div class="card"><span class="ico">🗂️</span><h4><span data-lang="zh">选型不是替换 · 而是版本化</span><span data-lang="en">Selection is versioning, not replacement</span></h4><p><span data-lang="zh">把 2 亮度 × 3 色度都跑全,每条都用命名固定。审片决定的是<b>默认档</b>,不是<b>唯一档</b>。这套做法也适合后面再加 AI 路(HDRTVNet++ / GM-Diffusion)对比。</span><span data-lang="en">Run all 2 × 3 combinations and pin every one by name. Review picks the <b>default tier</b>, not the <b>only one</b>. The same setup is ready for adding future AI variants (HDRTVNet++, GM-Diffusion) into the same matrix.</span></p></div>
+    </div>
+    <div class="callout violet"><span data-lang="zh"><b>方法论:</b>先把问题量化(母版当 ground truth + 绝对 nit + 去亮度饱和度),把候选放在同一根标尺下;再把工程改动控制在<b>"开关 + 矩阵"</b>这种<b>最小改动 + 最大对比</b>的形态。结论可争,过程可复。</span><span data-lang="en"><b>Methodology:</b> first quantify the problem (master as ground truth + absolute nits + luminance-normalized saturation), placing every candidate on the same scale; then keep engineering changes shaped as a <b>switch + matrix</b>—minimal change, maximal comparison. Conclusions can be disputed; the process is reproducible.</span></div>
+  </section>
+
+  <!-- 09 参考 -->
+  <section class="section" id="refs">
+    <div class="kicker"><span data-lang="zh">09 · 资料来源</span><span data-lang="en">09 · References</span></div>
+    <h2><span data-lang="zh">参考与延伸</span><span data-lang="en">References &amp; further reading</span></h2>
+    <ul style="margin:14px 0 0 22px;color:#cfd4e0;font-size:14.5px;line-height:2">
+      <li><a href="https://www.itu.int/rec/R-REC-BT.2100" target="_blank" rel="noopener">ITU-R BT.2100</a> — HDR-TV image parameter values for production and international programme exchange</li>
+      <li><a href="https://www.itu.int/rec/R-REC-BT.2124" target="_blank" rel="noopener">ITU-R BT.2124</a> — Objective metric for the assessment of the potential visibility of colour differences in television (ΔE<sub>ITP</sub>)</li>
+      <li><a href="https://www.itu.int/rec/R-REC-BT.2408" target="_blank" rel="noopener">ITU-R BT.2408</a> — Guidance for operational practices in HDR television production (diffuse white at 203 nits)</li>
+      <li><a href="https://professional.dolby.com/siteassets/pdfs/ictcp_dolbywhitepaper_v071.pdf" target="_blank" rel="noopener">Dolby ICtCp white paper</a> — Hue-linear chroma space for HDR/WCG</li>
+      <li><a href="https://www.smpte.org/standards" target="_blank" rel="noopener">SMPTE ST 2084 (PQ)</a> — Perceptual Quantizer EOTF</li>
+      <li><a href="https://bottosson.github.io/posts/oklab/" target="_blank" rel="noopener">Björn Ottosson · Oklab</a> — Perceptual color space, used as the C path control</li>
+      <li><a href="https://arxiv.org/abs/2309.04084" target="_blank" rel="noopener">HDRTVNet++ (arXiv 2309.04084)</a> — Reference end-to-end CNN SDR→HDR (planned as F_AI path, see next iteration)</li>
+      <li><span data-lang="zh">项目内文档:<code>CHROMA_RESEARCH.md</code> · §6.4 最终结论 · §6.5 对母版对标 · §6.2.5 F_APC 消融</span><span data-lang="en">In-project doc: <code>CHROMA_RESEARCH.md</code> · §6.4 final conclusion · §6.5 master alignment · §6.2.5 F_APC ablation</span></li>
+    </ul>
+    <p style="margin-top:18px;font-size:13px;color:var(--soft)"><span data-lang="zh">所有指标基于 2 个测试镜头(室内人脸 + 暗夜)+ 1 个室外样段,抽样 20 帧/镜头,聚合统计。最终选型仍以 HDR 屏肉眼为准。</span><span data-lang="en">All metrics come from 2 test shots (indoor face + dark night) plus 1 outdoor sample, 20 sampled frames per shot, aggregated. Final selection is still made by eye on an HDR display.</span></p>
+  </section>
+  </main>
+
+  <footer>
+    <p><span data-lang="zh">色度上变换 + 亮度对标 · 一次 SDR→HDR 算法复盘 ｜ <a href="ltx-gainmap-itm.html">← LTX Gainmap</a> ｜ <a href="index.html">返回色彩与显示指南</a></span><span data-lang="en">Chroma boost + Luminance calibration · An SDR→HDR retrospective ｜ <a href="ltx-gainmap-itm.html">← LTX Gain Map</a> ｜ <a href="index.html">Back to the Color &amp; Display Guide</a></span></p>
+    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">色彩科学:ITU-R BT.2020 / BT.2100 / BT.2124 / BT.2408 · SMPTE ST 2084 (PQ) · Dolby ICtCp · Oklab<br>技术栈:Python · NumPy · ICtCp 编码 · BT.2020 色域余量算法 · LTX HDR (EXR) · FFmpeg / libx265 · 4×H20 GPU</span><span data-lang="en">Color science: ITU-R BT.2020 / BT.2100 / BT.2124 / BT.2408 · SMPTE ST 2084 (PQ) · Dolby ICtCp · Oklab<br>Stack: Python · NumPy · ICtCp coding · BT.2020 gamut headroom · LTX HDR (EXR) · FFmpeg / libx265 · 4×H20 GPU</span></p>
+  </footer>
+
+  <script>
+    (function(){
+      var KEY = 'chroma-lum-tuning.lang';
+      var TITLE = {
+        zh: '色度上变换 + 亮度对标 · 一次 SDR→HDR 算法复盘',
+        en: 'Chroma boost + Luminance calibration · An SDR→HDR retrospective'
+      };
+      var DESC = {
+        zh: "在 LTX gainmap 流水线之上做色度上变换和亮度调优的一次实证复盘:用专业 HDR 母版当基准,设计自研 F_APC 自适应色度算法,构建 2 亮度 × 3 色度全片矩阵,所有变体可追溯。",
+        en: "A retrospective on chroma boost and luminance calibration on top of the LTX gain map pipeline: use a professional HDR master as ground truth, design an in-house adaptive F_APC, and produce a 2-luminance × 3-chroma full-film matrix with every variant traceable."
+      };
+      var meta = document.querySelector('meta[name="description"]');
+      function apply(lang){
+        var selected = lang === 'en' ? 'en' : 'zh';
+        document.documentElement.lang = selected === 'en' ? 'en' : 'zh-CN';
+        document.title = TITLE[selected];
+        if(meta) meta.setAttribute('content', DESC[selected]);
+        try{ localStorage.setItem(KEY, selected); }catch(e){}
+      }
+      var saved = 'zh';
+      try{ saved = localStorage.getItem(KEY) || 'zh'; }catch(e){}
+      apply(saved);
+      document.querySelectorAll('.lang-toggle .seg').forEach(function(button){
+        button.addEventListener('click', function(){ apply(button.dataset.set); });
+      });
+    })();
+  </script>
+</body>
+</html>

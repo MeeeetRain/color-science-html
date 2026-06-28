@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · 影像色彩与显示技术指南</title>
+  <meta name="description" content="使用公司邮箱验证码登录。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07080d; --panel: #111620; --panel-2: #172131;
+      --ink: #f4f7fb; --muted: #a7b0bf; --soft: #758195;
+      --line: rgba(255,255,255,.12);
+      --cyan: #34dff2; --lime: #b7f05b; --gold: #ffd166; --rose: #ff4d6d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; background: var(--bg); color: var(--ink);
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(52,223,242,.16), transparent 30%),
+        radial-gradient(circle at 84% 10%, rgba(255,77,109,.12), transparent 32%),
+        radial-gradient(circle at 60% 90%, rgba(183,240,91,.10), transparent 36%),
+        linear-gradient(180deg, #07080d 0%, #0b1019 48%, #07080d 100%);
+    }
+    html[lang^="zh"] [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+
+    .card {
+      width: 100%; max-width: 412px; background: rgba(17,22,32,.86);
+      border: 1px solid var(--line); border-radius: 18px; padding: 34px 30px 30px;
+      backdrop-filter: blur(16px); box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    }
+    .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .logo {
+      font-size: 17px; font-weight: 800;
+      background: linear-gradient(100deg, var(--cyan), var(--lime));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lang-toggle {
+      border: 1px solid var(--line); background: transparent; color: var(--muted);
+      border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+    }
+    .lang-toggle:hover { color: var(--ink); border-color: rgba(255,255,255,.3); }
+    h1 { font-size: 22px; letter-spacing: .01em; margin-bottom: 6px; }
+    .sub { color: var(--soft); font-size: 13.5px; margin-bottom: 24px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 7px 2px; }
+    .field { margin-bottom: 16px; }
+    input {
+      width: 100%; background: var(--panel-2); border: 1px solid var(--line);
+      color: var(--ink); border-radius: 11px; padding: 13px 14px; font-size: 15px;
+      outline: none; transition: border-color .15s;
+    }
+    input:focus { border-color: var(--cyan); }
+    input::placeholder { color: #5c6677; }
+    #code { letter-spacing: 6px; font-size: 19px; text-align: center; font-weight: 700; }
+    .row { display: flex; gap: 10px; }
+    .row input { flex: 1; }
+    button.primary {
+      width: 100%; margin-top: 6px; border: none; cursor: pointer;
+      background: linear-gradient(100deg, var(--cyan), var(--lime)); color: #04121a;
+      font-weight: 800; font-size: 15px; border-radius: 11px; padding: 13px;
+      transition: filter .15s, opacity .15s;
+    }
+    button.primary:hover { filter: brightness(1.06); }
+    button.primary:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+    button.ghost {
+      white-space: nowrap; border: 1px solid var(--line); background: var(--panel-2);
+      color: var(--ink); border-radius: 11px; padding: 0 16px; font-size: 13.5px; cursor: pointer;
+    }
+    button.ghost:disabled { opacity: .45; cursor: not-allowed; }
+    .step2 { display: none; }
+    .step2.show { display: block; }
+    .msg { min-height: 20px; font-size: 13px; margin: 4px 2px 0; }
+    .msg.err { color: var(--rose); }
+    .msg.ok { color: var(--lime); }
+    .hint { color: var(--soft); font-size: 12.5px; margin-top: 18px; text-align: center; }
+    .hint a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="top">
+      <span class="logo">影像色彩与显示技术指南</span>
+      <button class="lang-toggle" id="langToggle" type="button">EN</button>
+    </div>
+
+    <h1><span data-lang="zh">登录后继续</span><span data-lang="en">Sign in to continue</span></h1>
+    <p class="sub">
+      <span data-lang="zh">使用 <b>@skyworth.com</b> 公司邮箱接收验证码登录。</span>
+      <span data-lang="en">Use your <b>@skyworth.com</b> company email to receive a one-time code.</span>
+    </p>
+
+    <!-- 第一步:邮箱 -->
+    <div class="field">
+      <label>
+        <span data-lang="zh">公司邮箱</span><span data-lang="en">Company email</span>
+      </label>
+      <div class="row">
+        <input id="email" type="email" inputmode="email" autocomplete="email"
+               placeholder="you@skyworth.com" />
+        <button class="ghost" id="sendBtn" type="button">
+          <span data-lang="zh">发送验证码</span><span data-lang="en">Send code</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第二步:验证码 -->
+    <div class="field step2" id="step2">
+      <label>
+        <span data-lang="zh">6 位验证码</span><span data-lang="en">6-digit code</span>
+      </label>
+      <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" placeholder="••••••" />
+    </div>
+
+    <div class="msg" id="msg"></div>
+
+    <button class="primary" id="verifyBtn" type="button" disabled>
+      <span data-lang="zh">验证并登录</span><span data-lang="en">Verify &amp; sign in</span>
+    </button>
+
+    <p class="hint">
+      <a href="index.html">
+        <span data-lang="zh">← 返回首页</span><span data-lang="en">← Back to home</span>
+      </a>
+    </p>
+  </main>
+
+  <script src="assets/auth/auth-config.js"></script>
+  <script>
+    (function () {
+      var cfg = window.AUTH_CONFIG || {};
+      var API = cfg.AUTH_API_BASE || '';
+      var TOKEN_KEY = cfg.TOKEN_KEY || 'siteAuthToken';
+
+      var emailEl = document.getElementById('email');
+      var codeEl = document.getElementById('code');
+      var sendBtn = document.getElementById('sendBtn');
+      var verifyBtn = document.getElementById('verifyBtn');
+      var step2 = document.getElementById('step2');
+      var msg = document.getElementById('msg');
+      var langToggle = document.getElementById('langToggle');
+
+      // ---- 语言(与全站共享 guideLang)----
+      function isEN() { return (localStorage.getItem('guideLang') || 'zh') === 'en'; }
+      function applyLang() {
+        var en = isEN();
+        document.documentElement.lang = en ? 'en' : 'zh-CN';
+        langToggle.textContent = en ? '中' : 'EN';
+      }
+      langToggle.addEventListener('click', function () {
+        localStorage.setItem('guideLang', isEN() ? 'zh' : 'en');
+        applyLang();
+        showMsg('', '');
+      });
+      applyLang();
+
+      function T(zh, en) { return isEN() ? en : zh; }
+      function showMsg(text, cls) { msg.textContent = text; msg.className = 'msg' + (cls ? ' ' + cls : ''); }
+
+      // ---- 安全的跳转目标 ----
+      function safeNext() {
+        var n = new URLSearchParams(location.search).get('next');
+        if (!n) { try { n = sessionStorage.getItem('postLoginNext'); } catch (e) {} }
+        try { sessionStorage.removeItem('postLoginNext'); } catch (e) {}
+        if (!n) return 'index.html';
+        try { n = decodeURIComponent(n); } catch (e) {}
+        if (/^https?:/i.test(n) || n.indexOf('//') === 0 || n.indexOf('..') >= 0) return 'index.html';
+        return n;
+      }
+
+      // 已登录则直接跳走
+      try {
+        if (localStorage.getItem(TOKEN_KEY)) location.replace(safeNext());
+      } catch (e) {}
+
+      function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+      // ---- 发码 + 倒计时 ----
+      var timer = null;
+      function startCooldown(sec) {
+        var left = sec;
+        sendBtn.disabled = true;
+        function tick() {
+          sendBtn.textContent = left + 's';
+          if (left <= 0) {
+            clearInterval(timer);
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = T('重新发送', 'Resend');
+            return;
+          }
+          left--;
+        }
+        tick();
+        timer = setInterval(tick, 1000);
+      }
+
+      sendBtn.addEventListener('click', function () {
+        var email = emailEl.value.trim().toLowerCase();
+        if (!validEmail(email)) { showMsg(T('请输入有效邮箱', 'Enter a valid email'), 'err'); return; }
+        showMsg(T('发送中…', 'Sending…'), '');
+        sendBtn.disabled = true;
+        fetch(API + '/api/send-code', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (!res.ok) {
+              sendBtn.disabled = false;
+              showMsg(res.d.error || T('发送失败', 'Failed to send'), 'err');
+              return;
+            }
+            step2.classList.add('show');
+            verifyBtn.disabled = false;
+            codeEl.focus();
+            var devNote = res.d.devCode ? T('(dev 验证码 ', '(dev code ') + res.d.devCode + ')' : '';
+            showMsg(T('验证码已发送,请查收邮箱 ', 'Code sent — check your inbox ') + devNote, 'ok');
+            startCooldown(res.d.cooldown || 60);
+          })
+          .catch(function () {
+            sendBtn.disabled = false;
+            showMsg(T('网络错误,请稍后再试', 'Network error, try again'), 'err');
+          });
+      });
+
+      // ---- 校验 ----
+      function doVerify() {
+        var email = emailEl.value.trim().toLowerCase();
+        var code = codeEl.value.trim();
+        if (!/^\d{6}$/.test(code)) { showMsg(T('请输入 6 位验证码', 'Enter the 6-digit code'), 'err'); return; }
+        verifyBtn.disabled = true;
+        showMsg(T('验证中…', 'Verifying…'), '');
+        fetch(API + '/api/verify-code', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, code: code })
+        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (!res.ok || !res.d.token) {
+              verifyBtn.disabled = false;
+              showMsg(res.d.error || T('验证失败', 'Verification failed'), 'err');
+              return;
+            }
+            try { localStorage.setItem(TOKEN_KEY, res.d.token); } catch (e) {}
+            showMsg(T('登录成功,正在跳转…', 'Signed in, redirecting…'), 'ok');
+            location.replace(safeNext());
+          })
+          .catch(function () {
+            verifyBtn.disabled = false;
+            showMsg(T('网络错误,请稍后再试', 'Network error, try again'), 'err');
+          });
+      }
+      verifyBtn.addEventListener('click', doVerify);
+      codeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doVerify(); });
+      emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendBtn.click(); });
+    })();
+  </script>
+</body>
+</html>

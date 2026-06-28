@@ -2,6 +2,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<!-- 登录守卫:无有效登录态会跳转到 login.html -->
+<script src="assets/auth/auth-config.js"></script>
+<script src="assets/auth/auth-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LTX Gainmap · 让 AI 当测光表的 SDR→HDR</title>
 <meta name="description" content="SDR 上变换 HDR 的新一代思路：用 LTX HDR 模型的 EXR 输出当'哪里该亮'的增益图（gainmap），只把增益作用在原始 SDR 像素上——既有 AI 的判断力，又不虚构画面细节。与区域识别、LTX 直接输出三方对比。">
