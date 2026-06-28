@@ -10,3 +10,8 @@ Thumbs.db
 
 # Git
 *.orig
+
+# Node / Cloudflare Worker
+node_modules/
+.dev.vars
+.wrangler/
