@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GainmapVideo 播放器：自适应 HDR 上原生 EDR | 影像色彩与显示技术指南</title>
-  <meta name="description" content="第一人称复盘：为 GainmapVideo（向后兼容的视频版 gain map 格式）做播放器的过程——自研原生 Metal/AVFoundation 实时自适应播放器与 IINA 插件转码方案的对比，CAMetalLayer EDR 显示链路，重建数学，以及『EDR 不亮的真正根因是屏幕亮度/headroom 而不是软件 bug』这个反直觉教训。">
+  <title>GainmapVideo：视频版 gain map 格式、播放器与专利方向 | 影像色彩与显示技术指南</title>
+  <meta name="description" content="第一人称复盘 GainmapVideo——一个向后兼容的视频版 gain map 格式：格式结构、重建数学、原生 Metal 实时自适应播放器与 IINA 插件转码方案、CAMetalLayer EDR 显示链路、现有标准与专利格局，以及可申报的专利方向。">
   <style>
     :root{
       color-scheme: dark;
@@ -25,14 +25,20 @@
       color:var(--ink);
       font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
     }
-    a{color:inherit;text-decoration:none}
+    a{color:var(--cyan);text-decoration:none}
+    a:hover{text-decoration:underline}
     header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);
       background:rgba(16,18,23,.86);backdrop-filter:blur(16px)}
     .nav{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;
       justify-content:space-between;align-items:center;gap:12px}
-    .brand{font-weight:780;white-space:nowrap}
+    .brand{font-weight:780;white-space:nowrap;color:var(--ink)}
+    .links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+    .links::-webkit-scrollbar{display:none}
+    .links a{padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12.5px;
+      white-space:nowrap}
+    .links a:hover{color:var(--ink);background:rgba(255,255,255,.08);text-decoration:none}
     .lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;
-      overflow:hidden;background:rgba(255,255,255,.04)}
+      overflow:hidden;background:rgba(255,255,255,.04);flex:none}
     .lang-toggle .seg{font:inherit;font-size:13px;font-weight:720;line-height:1;
       padding:7px 13px;border:0;background:transparent;color:var(--muted);cursor:pointer}
     .lang-toggle .seg:hover{color:var(--ink)}
@@ -42,34 +48,40 @@
     html[lang="en"] [data-lang="zh"]{display:none}
 
     main{overflow:hidden}
-    section{padding:52px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+    section{padding:48px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
     .wrap{max-width:1080px;margin:0 auto}
-    .hero{min-height:42vh;display:grid;align-items:center}
+    .hero{min-height:40vh;display:grid;align-items:center}
     .eyebrow{font-size:13px;font-weight:740;letter-spacing:.14em;text-transform:uppercase;
       color:var(--cyan);margin-bottom:14px}
-    h1{font-size:clamp(28px,4.6vw,48px);line-height:1.12;font-weight:820;letter-spacing:-.01em}
-    h2{font-size:clamp(21px,2.8vw,30px);font-weight:780;margin-bottom:18px;letter-spacing:-.01em}
+    h1{font-size:clamp(28px,4.6vw,48px);line-height:1.12;font-weight:820;letter-spacing:-.01em;color:var(--ink)}
+    h2{font-size:clamp(21px,2.8vw,30px);font-weight:780;margin-bottom:8px;letter-spacing:-.01em;color:var(--ink)}
+    h2 .num{color:var(--cyan);font-variant-numeric:tabular-nums;margin-right:10px}
     h3{font-size:17px;font-weight:740;margin:22px 0 8px;color:var(--ink)}
     p{color:var(--muted);margin:10px 0}
     .lead{font-size:clamp(16px,1.9vw,19px);color:var(--ink);max-width:64ch}
+    .sub{color:var(--soft);font-size:14px;margin-bottom:18px}
     strong{color:var(--ink);font-weight:720}
+    em{color:var(--gold);font-style:normal}
     code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;
       background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;color:var(--lime)}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:22px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:22px}
     .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
     .card h3{margin-top:0}
     .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;
-      border:1px solid var(--line);color:var(--soft);margin-right:6px}
+      border:1px solid var(--line);color:var(--soft);margin:3px 4px 0 0}
     .pill-cyan{color:var(--cyan);border-color:rgba(70,217,232,.4)}
     .pill-lime{color:var(--lime);border-color:rgba(169,229,95,.4)}
     .pill-gold{color:var(--gold);border-color:rgba(255,209,102,.4)}
+    .pill-rose{color:var(--rose);border-color:rgba(255,107,122,.4)}
+    .pill-violet{color:var(--violet);border-color:rgba(154,140,255,.4)}
     table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14.5px}
-    th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+    th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
     th{color:var(--soft);font-weight:680;font-size:13px;letter-spacing:.02em}
     td strong{color:var(--ink)}
     .formula{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
       padding:16px 18px;margin:16px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-      font-size:14px;color:var(--ink);overflow-x:auto;line-height:1.9}
+      font-size:13.5px;color:var(--ink);overflow-x:auto;line-height:1.95}
+    .formula .c{color:var(--soft)}
     .callout{background:linear-gradient(180deg,rgba(255,107,122,.10),rgba(255,107,122,.03));
       border:1px solid rgba(255,107,122,.35);border-left:3px solid var(--rose);
       border-radius:var(--radius);padding:20px 22px;margin:22px 0}
@@ -77,10 +89,30 @@
     .callout.good{background:linear-gradient(180deg,rgba(169,229,95,.10),rgba(169,229,95,.03));
       border-color:rgba(169,229,95,.35);border-left-color:var(--lime)}
     .callout.good h3{color:var(--lime)}
+    .callout.note{background:linear-gradient(180deg,rgba(255,209,102,.09),rgba(255,209,102,.03));
+      border-color:rgba(255,209,102,.35);border-left-color:var(--gold)}
+    .callout.note h3{color:var(--gold)}
     ul{margin:10px 0 10px 22px;color:var(--muted)}
     li{margin:6px 0}
     .muted{color:var(--soft);font-size:13.5px}
+    /* patent item block */
+    .pat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+      padding:20px 22px;margin:16px 0;position:relative}
+    .pat .ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+    .pat .pid{font-family:ui-monospace,Menlo,monospace;font-weight:800;color:var(--violet);font-size:15px}
+    .pat .pttl{font-weight:760;color:var(--ink);font-size:16px}
+    .pat .ptype{font-size:12px;color:var(--soft)}
+    .pat dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin-top:10px;font-size:14px}
+    .pat dt{color:var(--soft);font-weight:680;white-space:nowrap}
+    .pat dd{color:var(--muted)}
+    .strength{font-weight:740}
+    .s-strong{color:var(--lime)} .s-mid{color:var(--gold)} .s-weak{color:var(--rose)}
+    .diagram{margin:22px 0}
+    .diagram svg{width:100%;height:auto;display:block;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--panel)}
     footer{padding:40px 20px;text-align:center;color:var(--soft);font-size:13px}
+    .disc{font-size:12.5px;color:var(--soft);border:1px dashed var(--line);border-radius:var(--radius);
+      padding:14px 16px;margin-top:22px;line-height:1.6}
   </style>
 </head>
 <body>
@@ -90,6 +122,15 @@
         <span data-lang="zh">← 色彩与显示指南</span>
         <span data-lang="en">← Color &amp; Display Guide</span>
       </a>
+      <div class="links" aria-label="目录">
+        <a href="#why"><span data-lang="zh">动机</span><span data-lang="en">Why</span></a>
+        <a href="#format"><span data-lang="zh">格式</span><span data-lang="en">Format</span></a>
+        <a href="#math"><span data-lang="zh">重建</span><span data-lang="en">Math</span></a>
+        <a href="#players"><span data-lang="zh">播放器</span><span data-lang="en">Players</span></a>
+        <a href="#landscape"><span data-lang="zh">专利格局</span><span data-lang="en">Landscape</span></a>
+        <a href="#patents"><span data-lang="zh">可申报项</span><span data-lang="en">Filings</span></a>
+        <a href="#lesson"><span data-lang="zh">教训</span><span data-lang="en">Lesson</span></a>
+      </div>
       <div class="lang-toggle" role="group" aria-label="language">
         <button class="seg" data-set="zh" onclick="setLang('zh')">中文</button>
         <button class="seg" data-set="en" onclick="setLang('en')">EN</button>
@@ -100,174 +141,358 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <div class="eyebrow">GAINMAPVIDEO · PLAYER</div>
+        <div class="eyebrow">GAINMAPVIDEO · FORMAT · PLAYER · IP</div>
         <h1>
-          <span data-lang="zh">给视频版 gain map 做一个<br>能真正点亮 EDR 的播放器</span>
-          <span data-lang="en">Building a player for video gain maps<br>that actually lights up EDR</span>
+          <span data-lang="zh">视频版 gain map：一个向后兼容的<br>自适应 HDR 格式，和它的专利空间</span>
+          <span data-lang="en">A video gain map: a backward-compatible<br>adaptive-HDR format, and its patent space</span>
         </h1>
         <p class="lead" style="margin-top:18px">
-          <span data-lang="zh">这是一篇第一人称的复盘：我们做了一个向后兼容的「视频版 gain map」格式 GainmapVideo，然后为它做播放器。过程里走了两条路——自研原生 Metal 实时播放器，和 IINA 插件转码方案——并在最后撞上一个反直觉的教训：让 HDR「不亮」的，其实根本不是代码。</span>
-          <span data-lang="en">A first-person retrospective. We built GainmapVideo — a backward-compatible "video gain map" format — and then built players for it. Two roads: a native real-time Metal player, and an IINA transcode plugin. Along the way we hit a counter-intuitive lesson: what kept HDR from "lighting up" was not the code at all.</span>
+          <span data-lang="zh">gain map 让一张普通 SDR 画面额外带一层「增益」，由显示器按自身 HDR 余量自适应地提亮。这套在<strong>静态图</strong>上已经标准化（ISO 21496-1），但<strong>视频</strong>至今没有等价方案。GainmapVideo 把它带到视频：定义格式、做出两个播放器，并在过程里梳理出可申报的专利方向。本文是第一人称的完整复盘。</span>
+          <span data-lang="en">A gain map adds an "amplification" layer to an ordinary SDR picture, brightened adaptively by the display to its own HDR headroom. This is standardized for <strong>still images</strong> (ISO 21496-1) but there is still no equivalent for <strong>video</strong>. GainmapVideo brings it to video: a format, two players, and — along the way — a set of patentable directions. This is the full first-person retrospective.</span>
         </p>
       </div>
     </section>
 
-    <section>
+    <!-- WHY -->
+    <section id="why">
       <div class="wrap">
-        <h2><span data-lang="zh">为什么要做「视频版」gain map</span><span data-lang="en">Why a <em>video</em> gain map</span></h2>
+        <h2><span class="num">01</span><span data-lang="zh">为什么要做「视频版」gain map</span><span data-lang="en">Why a <em>video</em> gain map</span></h2>
+        <p class="sub"><span data-lang="zh">一个文件，SDR 设备照常播，HDR 设备按余量提亮。</span><span data-lang="en">One file: SDR devices play it as-is, HDR devices brighten it to their headroom.</span></p>
         <p>
-          <span data-lang="zh">gain map 的思路是：底层存一张普通 SDR 画面,额外再带一张「增益图」,告诉显示器在有 HDR 余量时每个像素该提亮多少。SDR 播放器无视增益图照常显示,HDR 播放器则按显示器当前能力重建出 HDR。这套做法在<strong>静态图</strong>上已经标准化(ISO 21496-1:2025,Apple Adaptive HDR / Google Ultra HDR / Adobe 都收敛到它),但<strong>视频</strong>至今没有等价标准。GainmapVideo 填的就是这个空。</span>
-          <span data-lang="en">A gain map stores an ordinary SDR picture plus a "gain" image that tells the display how much to brighten each pixel when HDR headroom is available. SDR players ignore the gain map; HDR players reconstruct HDR scaled to the display's current capability. This is standardized for <strong>still images</strong> (ISO 21496-1:2025 — Apple Adaptive HDR, Google Ultra HDR, Adobe all converge on it), but there is still no equivalent for <strong>video</strong>. GainmapVideo fills that gap.</span>
+          <span data-lang="zh">gain map 的核心：底层是一张标准 SDR 画面，旁边带一张「增益图」，告诉显示器在有 HDR 余量时每个像素该提亮多少。SDR 播放器无视增益图、照常显示；HDR 播放器按显示器<strong>当前</strong>能力把 SDR 重建成 HDR。和 Dolby Vision / HDR10+ 那种「参数化重映射元数据」不同，gain map 是<strong>逐像素</strong>的，空间信息直接编码在那层图里。</span>
+          <span data-lang="en">The idea: a standard SDR picture plus a "gain" image that says how much to brighten each pixel when HDR headroom exists. SDR players ignore the gain map; HDR players reconstruct SDR into HDR scaled to the display's <strong>current</strong> capability. Unlike the parametric remapping metadata of Dolby Vision / HDR10+, a gain map is <strong>per-pixel</strong> — the spatial information lives in that image layer.</span>
         </p>
         <div class="grid">
           <div class="card">
             <h3><span data-lang="zh">向后兼容</span><span data-lang="en">Backward compatible</span></h3>
-            <p class="muted"><span data-lang="zh">底层就是标准 SDR 视频。QuickTime / VLC / 浏览器 &lt;video&gt; 当普通片子放,完全无感。</span><span data-lang="en">The base is a standard SDR video. QuickTime / VLC / browser &lt;video&gt; play it as an ordinary clip, none the wiser.</span></p>
+            <p class="muted"><span data-lang="zh">底层就是标准 SDR 视频。QuickTime / VLC / 浏览器 &lt;video&gt; 当普通片子放，毫无感知。</span><span data-lang="en">The base is a standard SDR video. QuickTime / VLC / browser &lt;video&gt; play it as an ordinary clip, none the wiser.</span></p>
           </div>
           <div class="card">
             <h3><span data-lang="zh">自适应显示</span><span data-lang="en">Display-adaptive</span></h3>
-            <p class="muted"><span data-lang="zh">同一个文件:屏幕能亮多少就给多少 HDR,余量小就少提、没余量就退回 SDR。</span><span data-lang="en">One file: as much HDR as the screen can show — less boost on small headroom, pure SDR when there is none.</span></p>
+            <p class="muted"><span data-lang="zh">同一个文件：屏幕能亮多少给多少，余量小少提、没余量退回 SDR。不像固定的 HDR10 主显示元数据烘死一档。</span><span data-lang="en">One file: as much HDR as the screen allows — less boost on small headroom, pure SDR when there is none. Not baked to one level like fixed HDR10 mastering metadata.</span></p>
           </div>
           <div class="card">
-            <h3><span data-lang="zh">两种封装</span><span data-lang="en">Two profiles</span></h3>
-            <p class="muted"><span data-lang="zh">Profile A 三件套(<code>.sdr.mp4</code>+<code>.gain.mp4</code>+<code>.meta.json</code>);Profile B 单文件 <code>.gv.mp4</code>,两条视频轨 + 一个 ISOBMFF <code>uuid</code> box 装元数据。</span><span data-lang="en">Profile A is a sidecar triple; Profile B is a single <code>.gv.mp4</code> with two video tracks + an ISOBMFF <code>uuid</code> box holding the metadata.</span></p>
+            <h3><span data-lang="zh">逐像素，不是参数</span><span data-lang="en">Per-pixel, not parametric</span></h3>
+            <p class="muted"><span data-lang="zh">高光分布写在增益层里，比单条全局 tone curve 更贴合画面。</span><span data-lang="en">Highlight distribution is in the gain layer — closer to the image than a single global tone curve.</span></p>
           </div>
         </div>
       </div>
     </section>
 
-    <section>
+    <!-- FORMAT -->
+    <section id="format">
       <div class="wrap">
-        <h2><span data-lang="zh">重建数学</span><span data-lang="en">The reconstruction math</span></h2>
+        <h2><span class="num">02</span><span data-lang="zh">格式结构</span><span data-lang="en">Format structure</span></h2>
+        <p class="sub"><span data-lang="zh">两种封装：三件套（Profile A）和单文件（Profile B）。单文件才是有价值的形态。</span><span data-lang="en">Two profiles: a sidecar triple (A) and a single file (B). The single file is the one that matters.</span></p>
         <p>
-          <span data-lang="zh">每个像素:先把 SDR 解到线性,再用增益码值算出对数增益,按一个随显示器余量变化的 <strong>weight</strong> 施加提亮。weight 把「显示器现在有多少 HDR 余量」映射到 0~1,这就是自适应的核心。</span>
-          <span data-lang="en">Per pixel: linearize the SDR, derive a log gain from the gain code value, and apply it scaled by a <strong>weight</strong> that depends on the display's headroom. The weight maps "how much HDR headroom the display has right now" to 0..1 — that is the adaptation.</span>
+          <span data-lang="zh"><strong>Profile A</strong> 是三件套：<code>.sdr.mp4</code> + <code>.gain.mp4</code> + <code>.meta.json</code>，便于调试。<strong>Profile B</strong> 是单个 <code>.gv.mp4</code>：一条标准 ISOBMFF 文件里，track 0 是 SDR base（默认轨），track 1 是 gain map（非默认，<code>handler_name = GainmapVideo:gainmap</code>），再加一个顶层 <code>uuid</code> box（UUID <code>47c8f1ff-…-b2c0</code>）装 JSON 元数据。关键性质：<strong>不认识这个格式的 SDR 播放器只会看到并播放 track 0，一个文件就能分发。</strong></span>
+          <span data-lang="en"><strong>Profile A</strong> is a sidecar triple (<code>.sdr.mp4</code> + <code>.gain.mp4</code> + <code>.meta.json</code>), handy for debugging. <strong>Profile B</strong> is a single <code>.gv.mp4</code>: one standard ISOBMFF file with track 0 = SDR base (default), track 1 = gain map (non-default, <code>handler_name = GainmapVideo:gainmap</code>), plus a top-level <code>uuid</code> box (UUID <code>47c8f1ff-…-b2c0</code>) carrying JSON metadata. The key property: <strong>an SDR player that doesn't know the format sees and plays only track 0 — one file is enough to distribute.</strong></span>
         </p>
-        <div class="formula">
-g_log = GainMapMin + pow(gCode, Gamma) · (GainMapMax − GainMapMin)<br>
-weight = clamp( (log2(displayHeadroom) − HDRCapacityMin) / (HDRCapacityMax − HDRCapacityMin), 0, 1 )<br>
-hdr&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weight)</sup> − OffsetHDR
+
+        <div class="diagram" aria-label="single-file structure">
+          <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace,Menlo,monospace">
+            <style>
+              .bx{fill:#202632;stroke:rgba(255,255,255,.18)}
+              .lbl{fill:#f4f6fb;font-size:13px;font-weight:700}
+              .sm{fill:#8994a6;font-size:11px}
+              .ax{fill:#46d9e8;font-size:11px;font-weight:700}
+            </style>
+            <text x="16" y="24" class="ax">clip.gv.mp4  ·  one standard .mp4 (ISOBMFF)</text>
+            <rect class="bx" x="16" y="38" width="120" height="54" rx="5"/>
+            <text x="28" y="60" class="lbl">ftyp / moov</text>
+            <text x="28" y="78" class="sm">两条视频轨 tracks</text>
+
+            <rect class="bx" x="148" y="38" width="250" height="54" rx="5" stroke="rgba(169,229,95,.5)"/>
+            <text x="160" y="58" class="lbl">trak 0 — SDR base</text>
+            <text x="160" y="76" class="sm">default · H.264/HEVC · 普通播放器只播这条</text>
+
+            <rect class="bx" x="410" y="38" width="294" height="54" rx="5" stroke="rgba(154,140,255,.5)"/>
+            <text x="422" y="58" class="lbl">trak 1 — gain map</text>
+            <text x="422" y="76" class="sm">non-default · handler "GainmapVideo:gainmap"</text>
+
+            <rect class="bx" x="16" y="104" width="688" height="44" rx="5"/>
+            <text x="28" y="124" class="lbl">mdat</text>
+            <text x="70" y="124" class="sm">— 两轨交织的编码帧数据 interleaved coded frames</text>
+            <text x="28" y="140" class="sm">单文件版用 sample 表真正裁切，避免随机寻址卡顿</text>
+
+            <rect class="bx" x="16" y="160" width="688" height="58" rx="5" stroke="rgba(70,217,232,.55)"/>
+            <text x="28" y="182" class="ax">uuid box  47c8f1ff-8a8b-4f71-9b0a-9d4f47b4b2c0</text>
+            <text x="28" y="202" class="sm">JSON: GainMapMin/Max · Gamma · OffsetSDR/HDR · HDRCapacityMin/Max · reference_white_nits</text>
+            <text x="28" y="216" class="sm">gain-aware 播放器读它来重建 HDR；SDR 播放器忽略未知 uuid box</text>
+
+            <text x="16" y="240" class="sm">向后兼容：未知格式的播放器 → 只渲染 trak 0（SDR）。  GainmapVideo-aware → trak0 + trak1 + uuid → 重建 HDR。</text>
+          </svg>
         </div>
+
+        <h3><span data-lang="zh">元数据字段（ISO 21496-1 对齐）</span><span data-lang="en">Metadata fields (ISO 21496-1 aligned)</span></h3>
         <p class="muted">
-          <span data-lang="zh">原生播放器把 <code>displayHeadroom</code> 取成<strong>每一帧实时</strong>的 EDR 余量,所以你调一下屏幕亮度,高光的强度立刻跟着变。这跟我们在浏览器里验证过的 WebGL 重建是逐字一致的公式。</span>
-          <span data-lang="en">The native player reads <code>displayHeadroom</code> as the <strong>live, per-frame</strong> EDR headroom, so nudging screen brightness changes highlight intensity instantly. It is the exact same formula we validated earlier in the WebGL reconstruction.</span>
+          <span data-lang="zh"><code>GainMapMin / GainMapMax</code>（对数增益的下/上限）、<code>Gamma</code>（码值非线性）、<code>OffsetSDR / OffsetHDR</code>（避免除零的小偏置）、<code>HDRCapacityMin / HDRCapacityMax</code>（内容假定的显示余量范围，<code>HDRCapacityMax = log2(峰值/参考白)</code>）、<code>reference_white_nits</code>（SDR 漫反射白对应的绝对亮度，把「SDR-in-HDR 该多亮」锚定下来）。</span>
+          <span data-lang="en"><code>GainMapMin / GainMapMax</code> (log-gain bounds), <code>Gamma</code> (code-value non-linearity), <code>OffsetSDR / OffsetHDR</code> (small offsets avoiding divide-by-zero), <code>HDRCapacityMin / HDRCapacityMax</code> (the headroom range the content assumes, <code>HDRCapacityMax = log2(peak/refwhite)</code>), and <code>reference_white_nits</code> (the absolute luminance of SDR diffuse white — anchors "how bright SDR-in-HDR should be").</span>
         </p>
       </div>
     </section>
 
-    <section>
+    <!-- MATH -->
+    <section id="math">
       <div class="wrap">
-        <h2><span data-lang="zh">两个播放器</span><span data-lang="en">Two players</span></h2>
+        <h2><span class="num">03</span><span data-lang="zh">编码与重建数学</span><span data-lang="en">Encoding &amp; reconstruction math</span></h2>
         <p>
-          <span data-lang="zh">浏览器路线一直被 EDR 输出折磨(Chrome 要实验开关、Safari 各版本行为不一、float16 backbuffer 不可靠)。于是我们换两条更干净的路。</span>
-          <span data-lang="en">The browser route kept fighting EDR output (Chrome needs an experimental flag, Safari varies by version, float16 backbuffers are unreliable). So we took two cleaner roads.</span>
+          <span data-lang="zh"><strong>编码</strong>（授权时）：对每个像素，由 HDR 与 SDR 的比值取对数得到增益，归一化到 <code>[GainMapMin, GainMapMax]</code>，再以 <code>Gamma</code> 非线性写成码值存进 gain 轨。<strong>重建</strong>（播放时）：反过来，并乘上一个随显示器余量变化的 <code>weight</code>。</span>
+          <span data-lang="en"><strong>Encoding</strong> (authoring): per pixel, take the log of HDR/SDR ratio to get gain, normalize into <code>[GainMapMin, GainMapMax]</code>, then write a code value with the <code>Gamma</code> non-linearity into the gain track. <strong>Reconstruction</strong> (playback): the inverse, scaled by a <code>weight</code> that depends on the display's headroom.</span>
+        </p>
+        <div class="formula">
+<span class="c"># 重建 / reconstruction</span><br>
+g_log&nbsp;&nbsp;= GainMapMin + pow(gCode, Gamma) · (GainMapMax − GainMapMin)<br>
+weight = clamp( (log2(displayHeadroom) − HDRCapacityMin) / (HDRCapacityMax − HDRCapacityMin), 0, 1 )<br>
+hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weight)</sup> − OffsetHDR
+        </div>
+        <p class="muted">
+          <span data-lang="zh"><strong>weight 是自适应的灵魂</strong>：它把「显示器现在有多少 HDR 余量」映射到 0~1。余量为 1×（log2=0）→ weight 趋 0 → 退回 SDR；余量足够大 → weight=1 → 满 HDR。原生播放器把 <code>displayHeadroom</code> 取成<strong>每一帧实时</strong>的系统 EDR 余量，所以调一下屏幕亮度，高光强度立刻跟着变。这套公式在我们的 WebGL 重建、Python CLI、Metal shader 三处<strong>逐字一致</strong>——单一数学来源，规避了实现间漂移。</span>
+          <span data-lang="en"><strong>The weight is the heart of the adaptation</strong>: it maps "how much HDR headroom the display has now" to 0..1. Headroom 1× (log2=0) → weight→0 → fall back to SDR; large enough headroom → weight=1 → full HDR. The native player reads <code>displayHeadroom</code> as the <strong>live, per-frame</strong> system EDR headroom, so nudging brightness changes highlight intensity instantly. This formula is <strong>identical, verbatim</strong> across our WebGL, Python CLI and Metal shader — one source of math, no drift.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- PLAYERS -->
+    <section id="players">
+      <div class="wrap">
+        <h2><span class="num">04</span><span data-lang="zh">两个播放器</span><span data-lang="en">Two players</span></h2>
+        <p>
+          <span data-lang="zh">浏览器路线一直被 EDR 输出折磨（Chrome 要实验开关、Safari 各版本不一、float16 backbuffer 不可靠）。于是换两条更干净的原生路：自研 Metal 播放器，和 IINA 插件。</span>
+          <span data-lang="en">The browser route kept fighting EDR output (Chrome needs an experimental flag, Safari varies by version, float16 backbuffers are unreliable). So we took two cleaner native roads: a Metal player and an IINA plugin.</span>
         </p>
         <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th><span data-lang="zh">自研原生播放器</span><span data-lang="en">Native player</span></th>
-              <th><span data-lang="zh">IINA 插件</span><span data-lang="en">IINA plugin</span></th>
-            </tr>
-          </thead>
+          <thead><tr><th></th>
+            <th><span data-lang="zh">自研原生播放器</span><span data-lang="en">Native player</span></th>
+            <th><span data-lang="zh">IINA 插件</span><span data-lang="en">IINA plugin</span></th></tr></thead>
           <tbody>
-            <tr>
-              <td class="muted"><span data-lang="zh">技术栈</span><span data-lang="en">Stack</span></td>
+            <tr><td class="muted"><span data-lang="zh">技术栈</span><span data-lang="en">Stack</span></td>
               <td>AVFoundation + Metal + CAMetalLayer</td>
-              <td><span data-lang="zh">IINA 插件 JS + mpv + gvtools 转码</span><span data-lang="en">IINA JS plugin + mpv + gvtools transcode</span></td>
-            </tr>
-            <tr>
-              <td class="muted"><span data-lang="zh">渲染</span><span data-lang="en">Rendering</span></td>
-              <td><span data-lang="zh"><strong>真·实时</strong>:双轨硬解 → fragment shader 逐像素重建 → EDR</span><span data-lang="en"><strong>True real-time</strong>: dual-track decode → per-pixel shader → EDR</span></td>
-              <td><span data-lang="zh">先转成标准 HDR10 PQ 文件,再交给 mpv 播</span><span data-lang="en">Transcode to a standard HDR10 PQ file, then mpv plays it</span></td>
-            </tr>
-            <tr>
-              <td class="muted"><span data-lang="zh">自适应</span><span data-lang="en">Adaptation</span></td>
+              <td><span data-lang="zh">IINA 插件 JS + mpv + gvtools 转码</span><span data-lang="en">IINA JS plugin + mpv + gvtools transcode</span></td></tr>
+            <tr><td class="muted"><span data-lang="zh">渲染</span><span data-lang="en">Rendering</span></td>
+              <td><span data-lang="zh"><strong>真·实时</strong>：双轨硬解 → fragment shader 逐像素重建 → EDR</span><span data-lang="en"><strong>True real-time</strong>: dual-track decode → per-pixel shader → EDR</span></td>
+              <td><span data-lang="zh">先转成标准 HDR10 PQ 文件，再交给 mpv 播</span><span data-lang="en">Transcode to a standard HDR10 PQ file, then mpv plays it</span></td></tr>
+            <tr><td class="muted"><span data-lang="zh">自适应</span><span data-lang="en">Adaptation</span></td>
               <td><span data-lang="zh"><strong>每帧</strong>按实时 headroom 重算 weight</span><span data-lang="en"><strong>Per-frame</strong> weight from live headroom</span></td>
-              <td><span data-lang="zh">转码时固定一档(烘死)</span><span data-lang="en">Baked once at transcode time</span></td>
-            </tr>
-            <tr>
-              <td class="muted"><span data-lang="zh">首开</span><span data-lang="en">First open</span></td>
-              <td><span data-lang="zh">即时</span><span data-lang="en">Instant</span></td>
-              <td><span data-lang="zh">需等转码(缓存后秒开)</span><span data-lang="en">Waits for transcode (then cached)</span></td>
-            </tr>
-            <tr>
-              <td class="muted"><span data-lang="zh">定位</span><span data-lang="en">Role</span></td>
-              <td><span data-lang="zh">『我们自己的播放器』的终态</span><span data-lang="en">The real product</span></td>
-              <td><span data-lang="zh">双击就能在常用播放器里看 HDR</span><span data-lang="en">HDR in a player you already use</span></td>
-            </tr>
+              <td><span data-lang="zh">转码时固定一档（烘死）</span><span data-lang="en">Baked once at transcode time</span></td></tr>
+            <tr><td class="muted"><span data-lang="zh">首开 / 定位</span><span data-lang="en">First open / role</span></td>
+              <td><span data-lang="zh">即时；『我们自己的播放器』的终态</span><span data-lang="en">Instant; the real product</span></td>
+              <td><span data-lang="zh">需等转码（缓存后秒开）；双击即看</span><span data-lang="en">Waits for transcode (then cached); double-click to watch</span></td></tr>
           </tbody>
         </table>
         <p class="muted" style="margin-top:18px">
-          <span data-lang="zh">为什么 IINA 走转码而不是实时?因为 mpv 的自定义 shader 只能作用在<strong>单路</strong>视频上,没法把第二路实时解码的 gain 轨当成逐帧更新的纹理喂进去;能塞两路的 <code>--lavfi-complex</code> 又做不了我们这种逐像素浮点合成。于是用「mpv 的强项(EDR 输出)绕开它的弱项(双路输入)」——代价是转码。</span>
-          <span data-lang="en">Why does IINA transcode instead of rendering live? mpv's custom shaders operate on a <strong>single</strong> video; there is no clean way to feed a second, live-decoded gain track as a per-frame texture, and the <code>--lavfi-complex</code> path that does take two inputs can't do our per-pixel float compositing. So we lean on mpv's strength (EDR output) and route around its weakness (dual input) — at the cost of a transcode.</span>
+          <span data-lang="zh">为什么 IINA 走转码而不是实时？mpv 的自定义 shader 只能作用在<strong>单路</strong>视频上，没法把第二路实时解码的 gain 轨当成逐帧纹理喂进去；能塞两路的 <code>--lavfi-complex</code> 又做不了逐像素浮点合成。于是用「mpv 的强项（EDR 输出）绕开它的弱项（双路输入）」——代价是转码。原生播放器没有这个限制，直接双轨进 shader。</span>
+          <span data-lang="en">Why does IINA transcode? mpv's custom shaders operate on a <strong>single</strong> video; there is no clean way to feed a second live-decoded gain track as a per-frame texture, and the <code>--lavfi-complex</code> path that takes two inputs can't do per-pixel float compositing. So we lean on mpv's strength (EDR output) and route around its weakness (dual input) — at the cost of a transcode. The native player has no such limit and feeds both tracks straight into the shader.</span>
+        </p>
+        <h3><span data-lang="zh">EDR 显示链路</span><span data-lang="en">The EDR display path</span></h3>
+        <p class="muted">
+          <span data-lang="zh">原生播放器的输出端是关键：一个 <code>CAMetalLayer</code>，开 <code>wantsExtendedDynamicRangeContent</code>，色彩空间 <strong>extendedLinearSRGB</strong>，像素格式 <strong>rgba16Float</strong>。在这个 layer 上 1.0 = SDR 白、&gt;1.0 用显示器 EDR 余量。片源是 BT.709/sRGB，shader 直出线性 sRGB，与 layer 色域<strong>逐位对齐、零转换</strong>。</span>
+          <span data-lang="en">The output side is the crux: a <code>CAMetalLayer</code> with <code>wantsExtendedDynamicRangeContent</code> on, colorspace <strong>extendedLinearSRGB</strong>, format <strong>rgba16Float</strong>. On this layer 1.0 = SDR white and &gt;1.0 uses EDR headroom. The source is BT.709/sRGB and the shader outputs linear sRGB — matching the layer's gamut <strong>exactly, no conversion</strong>.</span>
         </p>
       </div>
     </section>
 
-    <section>
+    <!-- LANDSCAPE -->
+    <section id="landscape">
       <div class="wrap">
-        <h2><span data-lang="zh">EDR 显示链路</span><span data-lang="en">The EDR display path</span></h2>
-        <p>
-          <span data-lang="zh">原生播放器的输出端是关键。我们用一个 <code>CAMetalLayer</code>,打开 <code>wantsExtendedDynamicRangeContent</code>,色彩空间设为 <strong>extendedLinearSRGB</strong>,像素格式 <strong>rgba16Float</strong>。在这个 layer 上:1.0 = SDR 白,&gt;1.0 就用显示器的 EDR 余量。我们的片源是 BT.709/sRGB,shader 直接输出线性 sRGB,与 layer 的色域<strong>逐位对齐、零转换</strong>。mpv 走的也是同一类 Metal → macOS EDR 管线,所以两个播放器在「输出端」都靠谱。</span>
-          <span data-lang="en">The native player's output side is the crux. We use a <code>CAMetalLayer</code> with <code>wantsExtendedDynamicRangeContent</code> on, colorspace <strong>extendedLinearSRGB</strong>, pixel format <strong>rgba16Float</strong>. On this layer 1.0 = SDR white and &gt;1.0 uses the display's EDR headroom. Our source is BT.709/sRGB and the shader outputs linear sRGB, so it matches the layer's gamut <strong>exactly, no conversion</strong>. mpv uses the same class of Metal → macOS EDR pipeline, so both players are solid on the output side.</span>
+        <h2><span class="num">05</span><span data-lang="zh">现有标准与专利格局</span><span data-lang="en">Standards &amp; patent landscape</span></h2>
+        <p class="sub"><span data-lang="zh">先看清边界——已经被标准/专利占住的地方，决定了我们能申什么。</span><span data-lang="en">Know the boundaries first — what is already standardized or claimed decides what we can file.</span></p>
+        <table>
+          <thead><tr>
+            <th><span data-lang="zh">现有方案</span><span data-lang="en">Prior art</span></th>
+            <th><span data-lang="zh">是什么</span><span data-lang="en">What it is</span></th>
+            <th><span data-lang="zh">与我们的边界</span><span data-lang="en">Boundary vs us</span></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>ISO 21496-1</strong><br><span class="muted">Apple Adaptive HDR / Google Ultra HDR / Adobe</span></td>
+              <td><span data-lang="zh">逐像素 gain map 的<strong>静态图</strong>标准，向后兼容 + 单文件 + 按余量 tone-map。</span><span data-lang="en">The per-pixel gain-map standard for <strong>still images</strong> — backward-compatible, single-file, headroom tone-mapping.</span></td>
+              <td><span data-lang="zh">只管图片，<strong>没有视频</strong>。我们复用其数学（RAND 性质），把它扩到视频时序与容器。</span><span data-lang="en">Images only, <strong>no video</strong>. We reuse its math and extend to video timing + container.</span></td>
+            </tr>
+            <tr>
+              <td><strong>SMPTE ST 2094-50</strong><br><span class="muted">Google · Apple · NBCUniversal</span></td>
+              <td><span data-lang="zh">用<strong>自适应元数据</strong>动态管理显示余量的视频方案。</span><span data-lang="en">A video scheme using <strong>adaptive metadata</strong> to dynamically manage display headroom.</span></td>
+              <td><span data-lang="zh"><strong>最接近的视频侧 prior art</strong>，偏「参数化元数据」。我们的差异是<strong>逐像素 gain 轨 + 运行时系统 headroom 闭环</strong>，须重点规避。</span><span data-lang="en"><strong>The closest video prior art</strong>, metadata-oriented. Our difference is a <strong>per-pixel gain track + runtime system-headroom loop</strong>; design around carefully.</span></td>
+            </tr>
+            <tr>
+              <td><strong>Philips US10728560B2</strong><br><span class="muted">"Encoding and decoding HDR videos"</span></td>
+              <td><span data-lang="zh">视频 gain：取每像素 <strong>max(R'G'B')</strong> 算增益，<strong>下采样到色度分辨率</strong>，在 luma/色度域施加。</span><span data-lang="en">Video gain from per-pixel <strong>max(R'G'B')</strong>, <strong>downscaled to chroma resolution</strong>, applied in the luma/chroma domain.</span></td>
+              <td><span data-lang="zh">我们用<strong>亮度 Y</strong> 派生、放进<strong>独立 gain 视频轨 + 顶层 box</strong>，不是嵌在色度域/SEI。须避开其「luma+subsampled chroma 增益」权要。</span><span data-lang="en">We derive from <strong>luminance Y</strong> in a <strong>separate gain video track + top-level box</strong>, not embedded in the chroma domain/SEI. Avoid its "luma + subsampled chroma gain" claims.</span></td>
+            </tr>
+            <tr>
+              <td><strong>SL-HDR1 (ETSI TS 103 433-1)</strong><br><span class="muted">Dolby Vision · HDR10+</span></td>
+              <td><span data-lang="zh"><strong>参数化</strong>元数据：单层 SDR + 一组 tone-mapping 参数重建 HDR。</span><span data-lang="en"><strong>Parametric</strong> metadata: single-layer SDR + a set of tone-mapping parameters to reconstruct HDR.</span></td>
+              <td><span data-lang="zh">非逐像素第二轨。我们是<strong>逐像素增益层</strong>，本质不同。</span><span data-lang="en">Not a per-pixel second track. We are a <strong>per-pixel gain layer</strong> — fundamentally different.</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="muted" style="margin-top:14px">
+          <span data-lang="zh">学术侧也有 prior art：Gamma Maps（非线性 gain map）、Gain-MLP、GMODiff（用扩散先验细化 gain map）等——主要影响「ML 生成/细化 gain map」类权要的新颖性。</span>
+          <span data-lang="en">Academic prior art too: Gamma Maps (non-linear gain maps), Gain-MLP, GMODiff (diffusion-prior gain-map refinement) — mainly affecting novelty of "ML-generated/refined gain map" claims.</span>
         </p>
       </div>
     </section>
 
-    <section>
+    <!-- PATENTS -->
+    <section id="patents">
       <div class="wrap">
-        <h2><span data-lang="zh">那个反直觉的教训</span><span data-lang="en">The counter-intuitive lesson</span></h2>
+        <h2><span class="num">06</span><span data-lang="zh">可申报的专利项</span><span data-lang="en">Candidate patent filings</span></h2>
+        <p class="sub"><span data-lang="zh">下列为候选方向，按「新颖点 vs 上面 prior art」「权利要求类型」「强弱」整理。强弱是工程判断，非法律结论。</span><span data-lang="en">Candidate directions below, organized by novelty vs the prior art above, claim type, and strength. Strength is an engineering estimate, not a legal conclusion.</span></p>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P1</span><span class="pttl"><span data-lang="zh">向后兼容的单文件视频 gain-map 容器</span><span data-lang="en">Backward-compatible single-file video gain-map container</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">一个标准 ISOBMFF <code>.mp4</code> 同时是合法 SDR 视频（默认轨）+ 一条<strong>独立可解码的 gain 视频轨</strong>（非默认）+ 顶层 <code>uuid</code> box 元数据；遗留播放器只播 base，gain-aware 播放器重建 HDR。</span><span data-lang="en">One standard ISOBMFF <code>.mp4</code> that is simultaneously a valid SDR video (default track) + a <strong>separately decodable gain video track</strong> (non-default) + a top-level <code>uuid</code> metadata box; legacy players play the base, gain-aware players reconstruct HDR.</span></dd>
+            <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
+            <dd><span data-lang="zh">Philips 把增益嵌在 luma/色度域 + SEI；SL-HDR 是参数化；ISO 21496-1 只管图片。这里是「<strong>独立轨 + 顶层 box + 单文件向后兼容</strong>」的容器/数据结构组合。</span><span data-lang="en">Philips embeds gain in luma/chroma + SEI; SL-HDR is parametric; ISO 21496-1 is image-only. Here it is the container/data-structure combination "<strong>separate track + top-level box + single-file backward-compatibility</strong>."</span></dd>
+            <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
+            <dd><span data-lang="zh">数据结构 / 存储介质 + 解析（demux）方法</span><span data-lang="en">Data structure / medium + parsing (demux) method</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中–强</span> · <span class="muted"><span data-lang="zh">组合新颖性好，避开 Philips 的「enhancement layer in chroma」即可。</span><span data-lang="en">Good combinatorial novelty; just avoid Philips' "enhancement layer in chroma."</span></span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P2</span><span class="pttl"><span data-lang="zh">运行时显示 headroom 驱动的逐帧自适应重建</span><span data-lang="en">Runtime display-headroom-driven per-frame adaptive reconstruction</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">播放时<strong>每帧查询显示器当前 EDR 余量</strong>（随屏幕亮度/热降频实时变化），据此重算 gain 施加 weight → GPU 重建 → EDR 表面。强调「<strong>运行时、动态、闭环</strong>」，而非内容侧固定元数据。</span><span data-lang="en">At playback, <strong>query the display's current EDR headroom every frame</strong> (varying live with brightness/thermal), recompute the gain-apply weight, GPU-reconstruct, present to an EDR surface. Emphasis on a <strong>runtime, dynamic, closed loop</strong>, not fixed content-side metadata.</span></dd>
+            <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
+            <dd><span data-lang="zh">ST 2094-50 也做自适应余量管理，是最强 prior art；差异化点在「<strong>逐像素 gain map + 实时查询系统 headroom + 逐帧 GPU 重建</strong>」的具体闭环与实现。须做 FTO 细查。</span><span data-lang="en">ST 2094-50 also does adaptive headroom management — the strongest prior art; differentiate on the specific closed loop "<strong>per-pixel gain map + live system-headroom query + per-frame GPU reconstruction</strong>." Needs a careful FTO search.</span></dd>
+            <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
+            <dd><span data-lang="zh">方法 + 系统（播放器/装置）</span><span data-lang="en">Method + system (player/apparatus)</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中</span> · <span class="muted"><span data-lang="zh">价值最高但 prior art 也最近，靠实现细节与组合取胜。</span><span data-lang="en">Highest value but closest prior art; win on implementation detail + combination.</span></span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P3</span><span class="pttl"><span data-lang="zh">参考白 + headroom 锚定的 SDR-in-HDR 亮度语义</span><span data-lang="en">Reference-white + headroom anchoring of SDR-in-HDR brightness</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">用信令的 <code>reference_white_nits</code> 把 SDR 漫反射白锚定到 HDR 容器里的<strong>绝对亮度</strong>，并以 <code>HDRCapacityMax = log2(峰值/参考白)</code> 驱动自适应 weight——系统性解决「SDR-in-HDR 中灰/暗部偏亮」。这正呼应我们实测发现的「参考白 203 vs 120」问题。</span><span data-lang="en">Use a signaled <code>reference_white_nits</code> to anchor SDR diffuse white to an <strong>absolute luminance</strong> inside the HDR container, and drive the adaptive weight via <code>HDRCapacityMax = log2(peak/refwhite)</code> — systematically fixing "SDR-in-HDR mid/shadow over-brightness." This echoes our measured "reference white 203 vs 120" finding.</span></dd>
+            <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
+            <dd><span data-lang="zh">方法（信令 + 重建）</span><span data-lang="en">Method (signaling + reconstruction)</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中</span> · <span class="muted"><span data-lang="zh">语义 + 自适应组合较独特，建议与 P1/P2 捆绑成主权要。</span><span data-lang="en">Distinctive semantics + adaptation; bundle with P1/P2 as an independent claim.</span></span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P4</span><span class="pttl"><span data-lang="zh">视频 gain map 的时变元数据信令与插值</span><span data-lang="en">Time-varying gain-map metadata signaling &amp; interpolation</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">把静态图的单组 gain 元数据扩展为<strong>逐帧/逐场景时变参数块</strong>，在轨道/box 内信令，并在解码端按时间插值——让 gain map 参数随镜头变化。</span><span data-lang="en">Extend the single still-image metadata set to a <strong>per-frame / per-scene time-varying parameter block</strong>, signaled in the track/box and interpolated over time at the decoder — letting gain-map parameters track shots.</span></dd>
+            <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
+            <dd><span data-lang="zh">Dolby Vision/HDR10+ 有动态元数据但走参数化 tone-map；这里是「<strong>gain-map 参数</strong>的时变信令 + 插值」。</span><span data-lang="en">Dolby Vision/HDR10+ have dynamic metadata but parametric tone-mapping; here it is time-varying signaling + interpolation of <strong>gain-map parameters</strong>.</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中</span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P5</span><span class="pttl"><span data-lang="zh">分辨率解耦的 gain 轨 + 重建端上采样</span><span data-lang="en">Resolution-decoupled gain track + reconstruction-side upsampling</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">gain 轨可<strong>独立任意低分辨率</strong>存储（省码率），重建时上采样回 base 分辨率，并与向后兼容单文件容器结合。</span><span data-lang="en">Store the gain track at an <strong>independent, arbitrary lower resolution</strong> (bandwidth saving) and upsample to base resolution at reconstruction, combined with the backward-compatible single-file container.</span></dd>
+            <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
+            <dd><span data-lang="zh">Philips 也下采样（但绑定到色度分辨率 + 色度域）；我们是「<strong>独立轨、任意比例、容器层面</strong>」，须规避其下采样权要。</span><span data-lang="en">Philips downsamples too (but tied to chroma resolution + chroma domain); ours is "<strong>separate track, arbitrary ratio, container-level</strong>" — design around its downscaling claims.</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-weak">弱–中</span> · <span class="muted"><span data-lang="zh">单独偏弱，宜作从属权要。</span><span data-lang="en">Weak alone; better as a dependent claim.</span></span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P6</span><span class="pttl"><span data-lang="zh">从 SDR+HDR 对自动派生视频 gain map 的授权流水线</span><span data-lang="en">Authoring pipeline: deriving a video gain map from an SDR+HDR pair</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">逐帧由 SDR/HDR 对计算亮度增益、log2 编码到码值（含 Gamma）、自动定 <code>GainMapMin/Max</code> 与 auto-CLL 扫描，封装为单文件 <code>.gv.mp4</code> 的<strong>端到端授权方法</strong>。</span><span data-lang="en">An <strong>end-to-end authoring method</strong>: per-frame luminance gain from an SDR/HDR pair, log2 code-value encoding (with Gamma), automatic <code>GainMapMin/Max</code> selection + auto-CLL scan, packaged into a single-file <code>.gv.mp4</code>.</span></dd>
+            <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
+            <dd><span data-lang="zh">方法（编码/授权）</span><span data-lang="en">Method (encoding/authoring)</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中</span> · <span class="muted"><span data-lang="zh">ISO 覆盖图像授权；视频时序 + 具体参数派生有空间。</span><span data-lang="en">ISO covers image authoring; video timing + specific derivation leaves room.</span></span></dd>
+          </dl>
+        </div>
+
+        <div class="pat">
+          <div class="ph"><span class="pid">P7</span><span class="pttl"><span data-lang="zh">双轨同步 GPU 重建到 EDR 表面的播放器架构</span><span data-lang="en">Dual-track-synchronized GPU reconstruction to an EDR surface</span></span></div>
+          <dl>
+            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
+            <dd><span data-lang="zh">用<strong>单一解复用时基</strong>解两条 presentation-aligned 视频轨 → 零拷贝纹理 → fragment shader 逐像素重建 → 扩展动态范围显示表面（<code>extendedLinearSRGB / rgba16Float</code>），weight 由系统 headroom 驱动。</span><span data-lang="en">Decode two presentation-aligned video tracks on a <strong>single demux timebase</strong> → zero-copy textures → per-pixel shader reconstruction → an extended-dynamic-range display surface (<code>extendedLinearSRGB / rgba16Float</code>), weight driven by system headroom.</span></dd>
+            <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
+            <dd><span data-lang="zh">系统/装置（P2 的装置形态）</span><span data-lang="en">System/apparatus (the device form of P2)</span></dd>
+            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
+            <dd><span class="strength s-mid">中</span></dd>
+          </dl>
+        </div>
+
+        <div class="callout note">
+          <h3><span data-lang="zh">申报策略建议</span><span data-lang="en">Filing strategy</span></h3>
+          <ul>
+            <li><span data-lang="zh"><strong>组合成强主权要</strong>：单点（如「亮度 vs max」「下采样」）单独都偏弱；把 <strong>P1 + P2 + P3</strong>（向后兼容单文件容器 + 运行时 headroom 自适应 + 参考白锚定）组成一项独立权要，最难被规避。</span><span data-lang="en"><strong>Combine into a strong independent claim</strong>: single points (e.g. "luminance vs max," "downsampling") are weak alone; bundle <strong>P1 + P2 + P3</strong> (backward-compatible single-file container + runtime-headroom adaptation + reference-white anchoring) into one independent claim — hardest to design around.</span></li>
+            <li><span data-lang="zh"><strong>先递交临时申请（provisional）占坑</strong>，再用 12 个月完善权要与实施例。</span><span data-lang="en"><strong>File a provisional first</strong> to secure priority, then use the 12-month window to refine claims and embodiments.</span></li>
+            <li><span data-lang="zh"><strong>必做 FTO / 新颖性检索</strong>，重点盯 Philips US10728560B2、SMPTE ST 2094-50、ISO 21496-1、SL-HDR、Dolby Vision/HDR10+，以及 Apple/Google 的视频 gain map 在审申请。</span><span data-lang="en"><strong>Do an FTO / novelty search</strong>, focusing on Philips US10728560B2, SMPTE ST 2094-50, ISO 21496-1, SL-HDR, Dolby Vision/HDR10+, and any pending Apple/Google video-gain-map applications.</span></li>
+            <li><span data-lang="zh"><strong>权要措辞避坑</strong>：不要写成「single-layer parametric」或「gain in subsampled chroma / SEI」，否则落入 SL-HDR / Philips 范围。强调「独立 gain 视频轨 + 运行时系统余量」。</span><span data-lang="en"><strong>Word claims to avoid traps</strong>: don't phrase as "single-layer parametric" or "gain in subsampled chroma / SEI," which fall into SL-HDR / Philips. Emphasize "separate gain video track + runtime system headroom."</span></li>
+          </ul>
+        </div>
+
+        <div class="disc">
+          <span data-lang="zh">⚠️ 免责声明：以上为基于公开资料的工程性梳理，<strong>非法律意见</strong>。专利可申报性需由执业专利代理人结合正式的新颖性/FTO 检索判断；强弱评估为主观工程判断，不代表授权前景。</span>
+          <span data-lang="en">⚠️ Disclaimer: the above is an engineering analysis from public sources, <strong>not legal advice</strong>. Patentability must be assessed by a licensed patent attorney with a formal novelty/FTO search; strength estimates are subjective engineering judgments, not predictions of grant.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LESSON -->
+    <section id="lesson">
+      <div class="wrap">
+        <h2><span class="num">07</span><span data-lang="zh">那个反直觉的教训</span><span data-lang="en">The counter-intuitive lesson</span></h2>
         <div class="callout">
-          <h3><span data-lang="zh">⚠️ 让 HDR「不亮」的不是 bug,是屏幕亮度</span><span data-lang="en">⚠️ What kept HDR dark wasn't a bug — it was screen brightness</span></h3>
+          <h3><span data-lang="zh">⚠️ 让 HDR「不亮」的不是 bug，是屏幕亮度</span><span data-lang="en">⚠️ What kept HDR dark wasn't a bug — it was screen brightness</span></h3>
           <p>
-            <span data-lang="zh">我们排查了很久「为什么不进 HDR」:浏览器、IINA、原生播放器轮流试,改 probe、改 colorspace、改 shader……结果真正的根因是:<strong>macOS 在高亮度下根本不给 SDR 白以上的余量</strong>。系统报告的 <code>maximumExtendedDynamicRangeColorComponentValue</code> 在高亮度时坍缩到 1.0——任何 app 都没有空间把 HDR「亮出来」。渲染一直是对的,只是无处可亮。</span>
-            <span data-lang="en">We spent a long time on "why won't it enter HDR" — cycling through browser, IINA, native player, tweaking the probe, the colorspace, the shader… The actual root cause: <strong>at high brightness macOS reserves no headroom above SDR white</strong>. The system's <code>maximumExtendedDynamicRangeColorComponentValue</code> collapses to 1.0 — no app has room to show HDR. The rendering was correct all along; there was simply nowhere to be bright.</span>
+            <span data-lang="zh">我们排查了很久「为什么不进 HDR」：浏览器、IINA、原生播放器轮流试，改 probe、改 colorspace、改 shader……结果真正的根因是：<strong>macOS 在高亮度下根本不给 SDR 白以上的余量</strong>。系统报告的 <code>maximumExtendedDynamicRangeColorComponentValue</code> 在高亮度时坍缩到 1.0——任何 app 都没有空间把 HDR「亮出来」。渲染一直是对的，只是无处可亮。</span>
+            <span data-lang="en">We spent a long time on "why won't it enter HDR" — cycling through browser, IINA, native player, tweaking the probe, colorspace, shader… The actual root cause: <strong>at high brightness macOS reserves no headroom above SDR white</strong>. The reported <code>maximumExtendedDynamicRangeColorComponentValue</code> collapses to 1.0 — no app has room to show HDR. The rendering was correct all along; there was simply nowhere to be bright.</span>
           </p>
         </div>
         <div class="callout good">
-          <h3><span data-lang="zh">✅ 调低亮度,余量就回来了</span><span data-lang="en">✅ Lower brightness, and the headroom returns</span></h3>
+          <h3><span data-lang="zh">✅ 调低亮度，余量就回来了</span><span data-lang="en">✅ Lower brightness, and the headroom returns</span></h3>
           <p>
-            <span data-lang="zh">把屏幕亮度调低,<code>current</code> 余量立刻从 1.0× 往上爬(我们见过 6×,潜在 16×),weight 随之从 0 涨到 1,画面里的高光肉眼可见地亮过 SDR 白。<strong>排查 EDR 不亮,先调低亮度看余量,别急着怀疑代码。</strong></span>
-            <span data-lang="en">Lower the brightness and the <code>current</code> headroom climbs from 1.0× (we saw 6×, potential 16×); the weight rises 0 → 1 and highlights visibly exceed SDR white. <strong>When EDR won't light up, lower brightness and check the headroom before suspecting the code.</strong></span>
+            <span data-lang="zh">把屏幕亮度调低，<code>current</code> 余量立刻从 1.0× 往上爬（我们见过 6×，潜在 16×），weight 随之从 0 涨到 1，画面里的高光肉眼可见地亮过 SDR 白。<strong>排查 EDR 不亮，先调低亮度看余量，别急着怀疑代码。</strong>这也正是 gain map「自适应」的本意：余量是会变的量。</span>
+            <span data-lang="en">Lower the brightness and the <code>current</code> headroom climbs from 1.0× (we saw 6×, potential 16×); the weight rises 0 → 1 and highlights visibly exceed SDR white. <strong>When EDR won't light up, lower brightness and check headroom before suspecting the code.</strong> Which is exactly what gain-map "adaptation" is for: headroom is a variable.</span>
           </p>
         </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="wrap">
-        <h2><span data-lang="zh">硬件编码,以及一个意外发现</span><span data-lang="en">Hardware encoding, and a surprise</span></h2>
+        <h3><span data-lang="zh">硬件编码，以及一个意外发现</span><span data-lang="en">Hardware encoding, and a surprise</span></h3>
         <p>
-          <span data-lang="zh">IINA 路线最初用软件 x265 编 HDR10,首开慢。我们给 gvtools 加了 Apple Silicon 硬件 HEVC(<code>hevc_videotoolbox</code>)选项。但实测发现:<strong>转码慢的瓶颈不是编码器,而是 Python/numpy 做 gain 重建那一步</strong>。一段 30s 1080p:软件 ~100s,换硬编也只到 ~80s——硬编只省下编码那部分。这反过来印证了:要真正实时,只能靠原生播放器在 GPU 上逐帧重建,转码方案本质是「转一次、缓存住」的权宜之计。</span>
-          <span data-lang="en">The IINA route first used software x265 for HDR10, making first-open slow. We added an Apple-Silicon hardware HEVC option (<code>hevc_videotoolbox</code>) to gvtools. But measurement showed: <strong>the transcode bottleneck is not the codec — it is the Python/numpy gain reconstruction</strong>. A 30 s 1080p clip: ~100 s software, ~80 s with hardware — the hardware only shaves the encode portion. Which confirms the point: true real-time has to be the native player reconstructing per-frame on the GPU; the transcode is a "do-it-once, cache it" stopgap.</span>
+          <span data-lang="zh">IINA 路线最初用软件 x265 编 HDR10，首开慢。我们给 gvtools 加了 Apple Silicon 硬件 HEVC（<code>hevc_videotoolbox</code>）。但实测发现：<strong>转码慢的瓶颈不是编码器，而是 Python/numpy 做 gain 重建那一步</strong>。一段 30s 1080p：软件 ~100s，换硬编也只到 ~80s——硬编只省下编码那部分。这反过来印证：要真正实时，只能靠原生播放器在 GPU 上逐帧重建；转码本质是「转一次、缓存住」的权宜之计。</span>
+          <span data-lang="en">The IINA route first used software x265 for HDR10, making first-open slow. We added Apple-Silicon hardware HEVC (<code>hevc_videotoolbox</code>) to gvtools. But measurement showed: <strong>the bottleneck is not the codec — it is the Python/numpy gain reconstruction</strong>. A 30 s 1080p clip: ~100 s software, ~80 s hardware — the hardware only shaves the encode tail. Which confirms: true real-time has to be the native player reconstructing per-frame on the GPU; the transcode is a "do-it-once, cache it" stopgap.</span>
         </p>
-        <div style="margin-top:18px">
-          <span class="tag pill-cyan">Metal</span>
-          <span class="tag pill-cyan">AVFoundation</span>
-          <span class="tag pill-lime">CAMetalLayer EDR</span>
-          <span class="tag pill-lime">ISO 21496-1</span>
-          <span class="tag pill-gold">hevc_videotoolbox</span>
-          <span class="tag pill-gold">IINA plugin</span>
+        <div style="margin-top:16px">
+          <span class="tag pill-cyan">Metal</span><span class="tag pill-cyan">AVFoundation</span>
+          <span class="tag pill-lime">CAMetalLayer EDR</span><span class="tag pill-lime">ISO 21496-1</span>
+          <span class="tag pill-violet">ISOBMFF uuid box</span><span class="tag pill-gold">hevc_videotoolbox</span>
+          <span class="tag pill-gold">IINA plugin</span><span class="tag pill-rose">SMPTE ST 2094-50</span>
         </div>
       </div>
     </section>
 
-    <section>
+    <!-- STATUS -->
+    <section id="status">
       <div class="wrap">
-        <h2><span data-lang="zh">现状与后续</span><span data-lang="en">Status &amp; next</span></h2>
-        <p><span data-lang="zh">原生播放器现在能:双轨硬解播放单文件 <code>.gv.mp4</code>、空格暂停、←/→ seek、循环、按实时 headroom 自适应、稳定 24fps、并可打成可双击的 <code>.app</code>。IINA 插件能:双击任意 <code>.gv.mp4</code> 透明转 HDR10 后用 mpv 播。</span><span data-lang="en">The native player now: dual-track plays single-file <code>.gv.mp4</code>, Space to pause, ←/→ seek, loop, live-headroom adaptation, a steady 24 fps, and packages into a double-clickable <code>.app</code>. The IINA plugin: double-click any <code>.gv.mp4</code> to transparently transcode to HDR10 and play via mpv.</span></p>
+        <h2><span class="num">08</span><span data-lang="zh">现状与后续</span><span data-lang="en">Status &amp; next</span></h2>
+        <p><span data-lang="zh">原生播放器现在能：双轨硬解播放单文件 <code>.gv.mp4</code>、空格暂停、←/→ seek、循环、按实时 headroom 自适应、稳定 24fps、可打成可双击的 <code>.app</code>。IINA 插件能：双击任意 <code>.gv.mp4</code> 透明转 HDR10 后用 mpv 播。</span><span data-lang="en">The native player now: dual-track plays a single-file <code>.gv.mp4</code>, Space to pause, ←/→ seek, loop, live-headroom adaptation, a steady 24 fps, and packages into a double-clickable <code>.app</code>. The IINA plugin: double-click any <code>.gv.mp4</code> to transparently transcode to HDR10 and play via mpv.</span></p>
         <ul>
-          <li><span data-lang="zh">后续:原生播放器加音频、进度条 UI、sidecar 三件套支持;把 gvtools 打成独立二进制,免 Python 依赖。</span><span data-lang="en">Next: audio, a scrubber UI, sidecar-triple support in the native player; bundle gvtools as a standalone binary to drop the Python dependency.</span></li>
-          <li><span data-lang="zh">把重建从「逐帧 Python」搬上 GPU,让转码方案也接近实时。</span><span data-lang="en">Move reconstruction off per-frame Python onto the GPU so the transcode route approaches real-time too.</span></li>
+          <li><span data-lang="zh">播放器后续：音频、进度条 UI、宽高比 letterbox、sidecar 三件套支持；gvtools 打成独立二进制免 Python 依赖。</span><span data-lang="en">Player next: audio, a scrubber UI, aspect-ratio letterboxing, sidecar-triple support; bundle gvtools as a standalone binary to drop the Python dependency.</span></li>
+          <li><span data-lang="zh">把重建从逐帧 Python 搬上 GPU，让转码方案也接近实时。</span><span data-lang="en">Move reconstruction off per-frame Python onto the GPU so the transcode route approaches real-time too.</span></li>
+          <li><span data-lang="zh">IP：完成 FTO 检索，按上面的组合策略递交临时申请。</span><span data-lang="en">IP: complete the FTO search and file a provisional per the combination strategy above.</span></li>
         </ul>
       </div>
     </section>
   </main>
 
   <footer>
-    <span data-lang="zh">GainmapVideo · 影像色彩与显示技术指南</span>
-    <span data-lang="en">GainmapVideo · Color &amp; Display Technical Guide</span>
+    <span data-lang="zh">GainmapVideo · 影像色彩与显示技术指南 · 本页技术内容仅供研究参考，专利部分非法律意见</span>
+    <span data-lang="en">GainmapVideo · Color &amp; Display Technical Guide · For research reference; the patent section is not legal advice</span>
   </footer>
 
   <script>
