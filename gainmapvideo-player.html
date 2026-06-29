@@ -123,6 +123,7 @@
         <span data-lang="en">← Color &amp; Display Guide</span>
       </a>
       <div class="links" aria-label="目录">
+        <a href="#explainer"><span data-lang="zh">科普</span><span data-lang="en">Basics</span></a>
         <a href="#why"><span data-lang="zh">动机</span><span data-lang="en">Why</span></a>
         <a href="#format"><span data-lang="zh">格式</span><span data-lang="en">Format</span></a>
         <a href="#math"><span data-lang="zh">重建</span><span data-lang="en">Math</span></a>
@@ -147,8 +148,51 @@
           <span data-lang="en">A video gain map: a backward-compatible<br>adaptive-HDR format, and its patent space</span>
         </h1>
         <p class="lead" style="margin-top:18px">
-          <span data-lang="zh">gain map 让一张普通 SDR 画面额外带一层「增益」，由显示器按自身 HDR 余量自适应地提亮。这套在<strong>静态图</strong>上已经标准化（ISO 21496-1），但<strong>视频</strong>至今没有等价方案。GainmapVideo 把它带到视频：定义格式、做出两个播放器，并在过程里梳理出可申报的专利方向。本文是第一人称的完整复盘。</span>
-          <span data-lang="en">A gain map adds an "amplification" layer to an ordinary SDR picture, brightened adaptively by the display to its own HDR headroom. This is standardized for <strong>still images</strong> (ISO 21496-1) but there is still no equivalent for <strong>video</strong>. GainmapVideo brings it to video: a format, two players, and — along the way — a set of patentable directions. This is the full first-person retrospective.</span>
+          <span data-lang="zh">gain map 让一张普通 SDR 画面额外带一层「增益」，由显示器按自身 HDR 余量自适应地提亮。这套在<strong>静态图</strong>上已经标准化（ISO 21496-1），但<strong>视频</strong>至今没有等价方案。GainmapVideo 把它带到视频：定义格式、做出两个播放器和一个格式转换工具，并在过程里梳理出可申报的专利方向。本文是第一人称的完整复盘。</span>
+          <span data-lang="en">A gain map adds an "amplification" layer to an ordinary SDR picture, brightened adaptively by the display to its own HDR headroom. This is standardized for <strong>still images</strong> (ISO 21496-1) but there is still no equivalent for <strong>video</strong>. GainmapVideo brings it to video: a format, two players, a format converter, and — along the way — a set of patentable directions. This is the full first-person retrospective.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- PLAIN-TERMS EXPLAINER -->
+    <section id="explainer">
+      <div class="wrap">
+        <h2><span class="num">00</span><span data-lang="zh">原理科普:一分钟看懂</span><span data-lang="en">In plain terms: a one-minute primer</span></h2>
+        <p class="sub"><span data-lang="zh">不需要任何技术背景,用一个比喻就能讲清楚。</span><span data-lang="en">No technical background needed — one analogy does it.</span></p>
+
+        <div class="callout good" style="border-left-color:var(--cyan);background:linear-gradient(180deg,rgba(70,217,232,.10),rgba(70,217,232,.03));border-color:rgba(70,217,232,.35)">
+          <h3 style="color:var(--cyan)"><span data-lang="zh">🪟 比喻:一张照片 + 一张「亮度便签」</span><span data-lang="en">🪟 Analogy: a photo + a "brightness sticky-note"</span></h3>
+          <p>
+            <span data-lang="zh">想象一张普通照片,旁边贴了一张便签。<strong>照片本身在任何屏幕上都正常显示</strong>(这就是 SDR,标准画面)。便签上写着:「窗外那片阳光,如果你的屏幕够亮,就调亮 4 倍。」<strong>老屏幕看不懂便签,照常显示;新的 HDR 屏幕读懂便签,把阳光真的点亮。</strong>gain map 就是这张便签——只不过它是<strong>逐像素</strong>的,精确记录画面里每个点该额外亮多少。</span>
+            <span data-lang="en">Picture an ordinary photo with a sticky-note beside it. <strong>The photo looks right on any screen</strong> (that's SDR — the standard picture). The note says: "that sunlight out the window — if your screen can go bright, make it 4× brighter." <strong>Old screens can't read the note and just show the photo; new HDR screens read it and actually light the sun up.</strong> A gain map is that note — except it's <strong>per-pixel</strong>, recording exactly how much extra brightness each spot may have.</span>
+          </p>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3><span data-lang="zh">① 底层:普通 SDR 视频</span><span data-lang="en">① Base: an ordinary SDR video</span></h3>
+            <p class="muted"><span data-lang="zh">谁都能播——手机、旧电视、浏览器,看到的就是一段正常视频。</span><span data-lang="en">Anything plays it — phones, old TVs, browsers all just see a normal clip.</span></p>
+          </div>
+          <div class="card">
+            <h3><span data-lang="zh">② 加层:逐帧「亮度便签」</span><span data-lang="en">② Plus: a per-frame "brightness note"</span></h3>
+            <p class="muted"><span data-lang="zh">一条额外的灰度视频,逐帧记录每个像素最多能提亮多少。老播放器自动忽略它。</span><span data-lang="en">An extra grayscale track recording, frame by frame, how much each pixel may brighten. Old players just ignore it.</span></p>
+          </div>
+          <div class="card">
+            <h3><span data-lang="zh">③ 播放:按屏幕余量点亮</span><span data-lang="en">③ Playback: light up to the screen's budget</span></h3>
+            <p class="muted"><span data-lang="zh">HDR 屏读「便签」,按自己<strong>当前</strong>能亮多少,把高光提到合适的亮度。</span><span data-lang="en">An HDR screen reads the note and brightens highlights to whatever it <strong>currently</strong> can.</span></p>
+          </div>
+        </div>
+
+        <h3><span data-lang="zh">为什么叫「自适应」?</span><span data-lang="en">Why "adaptive"?</span></h3>
+        <p>
+          <span data-lang="zh">关键点:屏幕能额外亮多少,<strong>不是固定的</strong>。有意思的是——你把屏幕<strong>亮度调得越高,留给 HDR 的「余量」反而越小</strong>(这正是我们排查了很久才明白的坑:不是软件坏,是屏幕在高亮度下没空间再亮了)。gain map 的妙处在于:它不写死「亮 4 倍」,而是写「<strong>最多</strong>亮 4 倍,屏幕有多少余量就用多少」。于是<strong>同一个文件</strong>,在手机、笔记本、HDR 电视上各自发挥到极限,你调亮度它也实时跟着变。</span>
+          <span data-lang="en">The key: how much extra brightness a screen has is <strong>not fixed</strong>. Counter-intuitively, the <strong>brighter you set the screen, the less headroom is left for HDR</strong> (exactly the trap that took us a long time to see — it wasn't a software bug, the panel simply has no room to go brighter at high brightness). The trick of a gain map: it doesn't hard-code "4× brighter," it says "<strong>up to</strong> 4×, use as much headroom as the screen has." So <strong>one file</strong> performs to the limit of a phone, a laptop, or an HDR TV — and tracks your brightness slider in real time.</span>
+        </p>
+
+        <h3><span data-lang="zh">那它跟视频有什么关系?</span><span data-lang="en">And what's this got to do with video?</span></h3>
+        <p>
+          <span data-lang="zh">图片早就这么干了——iPhone 拍的 HDR 照片就是「SDR 照片 + gain 便签」。但<strong>视频</strong>一直没有公开的标准做法。GainmapVideo 把这套搬到视频:一条普通 SDR 视频(老播放器照常播)+ 一条逐帧 gain 视频 + 一小段说明,打包成<strong>一个文件</strong>。我们还为它做了播放器(把画面真正点亮)和转换工具(普通 HDR 与这个格式互转)。</span>
+          <span data-lang="en">Photos already do this — an iPhone HDR photo is just "SDR photo + gain note." But <strong>video</strong> had no open, standard way to do it. GainmapVideo brings it to video: a normal SDR video (legacy players play it as-is) + a per-frame gain video + a little metadata, packed into <strong>one file</strong>. We also built the players that actually light it up and a converter that moves ordinary HDR in and out of the format.</span>
         </p>
       </div>
     </section>
@@ -380,48 +424,26 @@ hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weig
         </div>
 
         <div class="pat">
-          <div class="ph"><span class="pid">P4</span><span class="pttl"><span data-lang="zh">视频 gain map 的时变元数据信令与插值</span><span data-lang="en">Time-varying gain-map metadata signaling &amp; interpolation</span></span></div>
+          <div class="ph"><span class="pid">P4</span><span class="pttl"><span data-lang="zh">单层 HDR ⇄ 向后兼容 gain-map 视频的双向自动转换</span><span data-lang="en">Bidirectional auto-conversion: single-layer HDR ⇄ backward-compatible gain-map video</span></span></div>
           <dl>
             <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
-            <dd><span data-lang="zh">把静态图的单组 gain 元数据扩展为<strong>逐帧/逐场景时变参数块</strong>，在轨道/box 内信令，并在解码端按时间插值——让 gain map 参数随镜头变化。</span><span data-lang="en">Extend the single still-image metadata set to a <strong>per-frame / per-scene time-varying parameter block</strong>, signaled in the track/box and interpolated over time at the decoder — letting gain-map parameters track shots.</span></dd>
+            <dd><span data-lang="zh">从<strong>单一</strong> HDR 输入自动产出向后兼容 gain-map 视频：内部先把 HDR tonemap 成 SDR 基底，再由 <strong>(tonemap 出的 SDR, 原始 HDR)</strong> 对逐帧算出亮度增益、log2 编码、自动定 <code>GainMapMin/Max</code>，封装为单文件。<strong>反向可逆</strong>:把 gain-map 视频无损重建回标准 HDR10 PQ,或直接抽出向后兼容的 SDR。整套是一个一键转换工具。</span><span data-lang="en">From a <strong>single</strong> HDR input, automatically produce a backward-compatible gain-map video: internally tone-map the HDR to an SDR base, then derive per-frame luminance gain from the <strong>(tone-mapped SDR, original HDR)</strong> pair, log2-encode, auto-pick <code>GainMapMin/Max</code>, and pack one file. <strong>Reversible</strong>: reconstruct the gain-map video back to standard HDR10 PQ, or extract the backward-compatible SDR. The whole thing is a one-click converter.</span></dd>
             <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
-            <dd><span data-lang="zh">Dolby Vision/HDR10+ 有动态元数据但走参数化 tone-map；这里是「<strong>gain-map 参数</strong>的时变信令 + 插值」。</span><span data-lang="en">Dolby Vision/HDR10+ have dynamic metadata but parametric tone-mapping; here it is time-varying signaling + interpolation of <strong>gain-map parameters</strong>.</span></dd>
-            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
-            <dd><span class="strength s-mid">中</span></dd>
-          </dl>
-        </div>
-
-        <div class="pat">
-          <div class="ph"><span class="pid">P5</span><span class="pttl"><span data-lang="zh">分辨率解耦的 gain 轨 + 重建端上采样</span><span data-lang="en">Resolution-decoupled gain track + reconstruction-side upsampling</span></span></div>
-          <dl>
-            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
-            <dd><span data-lang="zh">gain 轨可<strong>独立任意低分辨率</strong>存储（省码率），重建时上采样回 base 分辨率，并与向后兼容单文件容器结合。</span><span data-lang="en">Store the gain track at an <strong>independent, arbitrary lower resolution</strong> (bandwidth saving) and upsample to base resolution at reconstruction, combined with the backward-compatible single-file container.</span></dd>
-            <dt><span data-lang="zh">vs 现有</span><span data-lang="en">vs prior art</span></dt>
-            <dd><span data-lang="zh">Philips 也下采样（但绑定到色度分辨率 + 色度域）；我们是「<strong>独立轨、任意比例、容器层面</strong>」，须规避其下采样权要。</span><span data-lang="en">Philips downsamples too (but tied to chroma resolution + chroma domain); ours is "<strong>separate track, arbitrary ratio, container-level</strong>" — design around its downscaling claims.</span></dd>
-            <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
-            <dd><span class="strength s-weak">弱–中</span> · <span class="muted"><span data-lang="zh">单独偏弱，宜作从属权要。</span><span data-lang="en">Weak alone; better as a dependent claim.</span></span></dd>
-          </dl>
-        </div>
-
-        <div class="pat">
-          <div class="ph"><span class="pid">P6</span><span class="pttl"><span data-lang="zh">从 SDR+HDR 对自动派生视频 gain map 的授权流水线</span><span data-lang="en">Authoring pipeline: deriving a video gain map from an SDR+HDR pair</span></span></div>
-          <dl>
-            <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
-            <dd><span data-lang="zh">逐帧由 SDR/HDR 对计算亮度增益、log2 编码到码值（含 Gamma）、自动定 <code>GainMapMin/Max</code> 与 auto-CLL 扫描，封装为单文件 <code>.gv.mp4</code> 的<strong>端到端授权方法</strong>。</span><span data-lang="en">An <strong>end-to-end authoring method</strong>: per-frame luminance gain from an SDR/HDR pair, log2 code-value encoding (with Gamma), automatic <code>GainMapMin/Max</code> selection + auto-CLL scan, packaged into a single-file <code>.gv.mp4</code>.</span></dd>
+            <dd><span data-lang="zh">Philips / SL-HDR 关注编解码本身,需成对的 SDR+HDR 或参数;ISO 21496-1 只管图像授权。这里是「<strong>单层 HDR 视频 → 双层向后兼容 gain-map 视频</strong>」的自动转换方法 + 工具,SDR 基底由内部 tonemap 生成(无需外部提供),且<strong>反向无损可逆</strong>、产物对老播放器透明。</span><span data-lang="en">Philips / SL-HDR concern the codec itself and need a paired SDR+HDR or parameters; ISO 21496-1 is image authoring only. Here it is an automatic conversion method + tool, "<strong>single-layer HDR video → two-layer backward-compatible gain-map video</strong>," whose SDR base is generated by an internal tone-map (no external SDR needed), is <strong>losslessly reversible</strong>, and whose output is transparent to legacy players.</span></dd>
             <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
-            <dd><span data-lang="zh">方法（编码/授权）</span><span data-lang="en">Method (encoding/authoring)</span></dd>
+            <dd><span data-lang="zh">方法（转换/授权）+ 系统/软件</span><span data-lang="en">Method (conversion/authoring) + system/software</span></dd>
             <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
-            <dd><span class="strength s-mid">中</span> · <span class="muted"><span data-lang="zh">ISO 覆盖图像授权；视频时序 + 具体参数派生有空间。</span><span data-lang="en">ISO covers image authoring; video timing + specific derivation leaves room.</span></span></dd>
+            <dd><span class="strength s-mid">中–强</span> · <span class="muted"><span data-lang="zh">「单输入自动化 + 双向可逆 + 产物向后兼容」是有力的组合卖点,且工具化落地清晰。</span><span data-lang="en">"single input, automatic, reversible, backward-compatible output" is a strong combination, and it productizes cleanly.</span></span></dd>
           </dl>
         </div>
 
         <div class="pat">
-          <div class="ph"><span class="pid">P7</span><span class="pttl"><span data-lang="zh">双轨同步 GPU 重建到 EDR 表面的播放器架构</span><span data-lang="en">Dual-track-synchronized GPU reconstruction to an EDR surface</span></span></div>
+          <div class="ph"><span class="pid">P5</span><span class="pttl"><span data-lang="zh">双轨同步 GPU 重建到 EDR 表面的播放器架构</span><span data-lang="en">Dual-track-synchronized GPU reconstruction to an EDR surface</span></span></div>
           <dl>
             <dt><span data-lang="zh">新颖点</span><span data-lang="en">Novelty</span></dt>
-            <dd><span data-lang="zh">用<strong>单一解复用时基</strong>解两条 presentation-aligned 视频轨 → 零拷贝纹理 → fragment shader 逐像素重建 → 扩展动态范围显示表面（<code>extendedLinearSRGB / rgba16Float</code>），weight 由系统 headroom 驱动。</span><span data-lang="en">Decode two presentation-aligned video tracks on a <strong>single demux timebase</strong> → zero-copy textures → per-pixel shader reconstruction → an extended-dynamic-range display surface (<code>extendedLinearSRGB / rgba16Float</code>), weight driven by system headroom.</span></dd>
+            <dd><span data-lang="zh">用<strong>单一解复用时基</strong>解两条 presentation-aligned 视频轨 → 零拷贝纹理 → fragment shader 逐像素重建 → 扩展动态范围显示表面（<code>extendedLinearSRGB / rgba16Float</code>），weight 由系统 headroom 驱动。这是 P2 的装置/系统形态。</span><span data-lang="en">Decode two presentation-aligned video tracks on a <strong>single demux timebase</strong> → zero-copy textures → per-pixel shader reconstruction → an extended-dynamic-range display surface (<code>extendedLinearSRGB / rgba16Float</code>), weight driven by system headroom. This is the apparatus form of P2.</span></dd>
             <dt><span data-lang="zh">权要类型</span><span data-lang="en">Claim type</span></dt>
-            <dd><span data-lang="zh">系统/装置（P2 的装置形态）</span><span data-lang="en">System/apparatus (the device form of P2)</span></dd>
+            <dd><span data-lang="zh">系统/装置</span><span data-lang="en">System/apparatus</span></dd>
             <dt><span data-lang="zh">强弱</span><span data-lang="en">Strength</span></dt>
             <dd><span class="strength s-mid">中</span></dd>
           </dl>
@@ -430,7 +452,8 @@ hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weig
         <div class="callout note">
           <h3><span data-lang="zh">申报策略建议</span><span data-lang="en">Filing strategy</span></h3>
           <ul>
-            <li><span data-lang="zh"><strong>组合成强主权要</strong>：单点（如「亮度 vs max」「下采样」）单独都偏弱；把 <strong>P1 + P2 + P3</strong>（向后兼容单文件容器 + 运行时 headroom 自适应 + 参考白锚定）组成一项独立权要，最难被规避。</span><span data-lang="en"><strong>Combine into a strong independent claim</strong>: single points (e.g. "luminance vs max," "downsampling") are weak alone; bundle <strong>P1 + P2 + P3</strong> (backward-compatible single-file container + runtime-headroom adaptation + reference-white anchoring) into one independent claim — hardest to design around.</span></li>
+            <li><span data-lang="zh"><strong>组合成强主权要</strong>：把 <strong>P1 + P2 + P3</strong>（向后兼容单文件容器 + 运行时 headroom 自适应 + 参考白锚定）组成一项独立权要，最难被规避；<strong>P4（转换工具）、P5（播放器）</strong>各作独立权要承载方法/装置形态。</span><span data-lang="en"><strong>Combine into a strong independent claim</strong>: bundle <strong>P1 + P2 + P3</strong> (backward-compatible single-file container + runtime-headroom adaptation + reference-white anchoring) into one independent claim — hardest to design around; let <strong>P4 (converter)</strong> and <strong>P5 (player)</strong> each carry the method/apparatus forms.</span></li>
+            <li><span data-lang="zh"><strong>从属权要</strong>：把「亮度 Y 派生（非 max-RGB）」「gain 轨分辨率解耦 + 上采样」「逐帧/逐场景时变 gain 元数据 + 插值」作为<strong>从属权利要求</strong>挂在上面的独立权要下——单独偏弱，组合进来增厚保护、又不撑成单独条目。</span><span data-lang="en"><strong>Dependent claims</strong>: fold "luminance-Y derivation (not max-RGB)," "resolution-decoupled gain track + upsampling," and "per-frame/per-scene time-varying gain metadata + interpolation" in as <strong>dependent claims</strong> under the independents above — weak alone, but they thicken coverage without each needing its own headline.</span></li>
             <li><span data-lang="zh"><strong>先递交临时申请（provisional）占坑</strong>，再用 12 个月完善权要与实施例。</span><span data-lang="en"><strong>File a provisional first</strong> to secure priority, then use the 12-month window to refine claims and embodiments.</span></li>
             <li><span data-lang="zh"><strong>必做 FTO / 新颖性检索</strong>，重点盯 Philips US10728560B2、SMPTE ST 2094-50、ISO 21496-1、SL-HDR、Dolby Vision/HDR10+，以及 Apple/Google 的视频 gain map 在审申请。</span><span data-lang="en"><strong>Do an FTO / novelty search</strong>, focusing on Philips US10728560B2, SMPTE ST 2094-50, ISO 21496-1, SL-HDR, Dolby Vision/HDR10+, and any pending Apple/Google video-gain-map applications.</span></li>
             <li><span data-lang="zh"><strong>权要措辞避坑</strong>：不要写成「single-layer parametric」或「gain in subsampled chroma / SEI」，否则落入 SL-HDR / Philips 范围。强调「独立 gain 视频轨 + 运行时系统余量」。</span><span data-lang="en"><strong>Word claims to avoid traps</strong>: don't phrase as "single-layer parametric" or "gain in subsampled chroma / SEI," which fall into SL-HDR / Philips. Emphasize "separate gain video track + runtime system headroom."</span></li>
@@ -480,11 +503,11 @@ hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weig
     <section id="status">
       <div class="wrap">
         <h2><span class="num">08</span><span data-lang="zh">现状与后续</span><span data-lang="en">Status &amp; next</span></h2>
-        <p><span data-lang="zh">原生播放器现在能：双轨硬解播放单文件 <code>.gv.mp4</code>、空格暂停、←/→ seek、循环、按实时 headroom 自适应、稳定 24fps、可打成可双击的 <code>.app</code>。IINA 插件能：双击任意 <code>.gv.mp4</code> 透明转 HDR10 后用 mpv 播。</span><span data-lang="en">The native player now: dual-track plays a single-file <code>.gv.mp4</code>, Space to pause, ←/→ seek, loop, live-headroom adaptation, a steady 24 fps, and packages into a double-clickable <code>.app</code>. The IINA plugin: double-click any <code>.gv.mp4</code> to transparently transcode to HDR10 and play via mpv.</span></p>
+        <p><span data-lang="zh">已落地三个工具:<strong>原生播放器</strong>(双轨硬解播单文件/三件套、音频、进度条+时间、空格/←→/循环/全屏/音量、HDR/SDR/Gain 三视图、按实时 headroom 自适应、稳定 24fps、可双击 <code>.app</code>);<strong>IINA 插件</strong>(双击任意 <code>.gv.mp4</code> 透明转 HDR10);<strong>格式转换工具</strong>(普通 HDR ⇄ 本格式双向转换,拖入自动识别)。转换的逐帧编码经 LUT + 采样优化提速约 3×(逐位一致)。</span><span data-lang="en">Three tools shipped: a <strong>native player</strong> (dual-track plays single-file/sidecar, audio, scrubber + time, Space/←→/loop/fullscreen/volume, HDR/SDR/Gain views, live-headroom adaptation, steady 24 fps, double-clickable <code>.app</code>); an <strong>IINA plugin</strong> (double-click any <code>.gv.mp4</code> → transparent HDR10); and a <strong>format converter</strong> (ordinary HDR ⇄ this format, drag-in auto-detect). The converter's per-frame encode was sped up ~3× via LUT + sampling (bit-identical).</span></p>
         <ul>
-          <li><span data-lang="zh">播放器后续：音频、进度条 UI、宽高比 letterbox、sidecar 三件套支持；gvtools 打成独立二进制免 Python 依赖。</span><span data-lang="en">Player next: audio, a scrubber UI, aspect-ratio letterboxing, sidecar-triple support; bundle gvtools as a standalone binary to drop the Python dependency.</span></li>
-          <li><span data-lang="zh">把重建从逐帧 Python 搬上 GPU，让转码方案也接近实时。</span><span data-lang="en">Move reconstruction off per-frame Python onto the GPU so the transcode route approaches real-time too.</span></li>
-          <li><span data-lang="zh">IP：完成 FTO 检索，按上面的组合策略递交临时申请。</span><span data-lang="en">IP: complete the FTO search and file a provisional per the combination strategy above.</span></li>
+          <li><span data-lang="zh">转换提速:逐帧 gain 计算改多核并行(这台 10 核机器预期再 3–5×),或最终搬上 GPU。</span><span data-lang="en">Faster conversion: multi-core the per-frame gain math (≈3–5× more on a 10-core machine), or ultimately move it to the GPU.</span></li>
+          <li><span data-lang="zh">播放器后续:宽高比 letterbox、批量转换、gvtools 打成独立二进制免 Python 依赖。</span><span data-lang="en">Player/tool next: aspect-ratio letterboxing, batch conversion, bundle gvtools as a standalone binary to drop the Python dependency.</span></li>
+          <li><span data-lang="zh">IP:完成 FTO 检索,按上面的组合策略递交临时申请。</span><span data-lang="en">IP: complete the FTO search and file a provisional per the combination strategy above.</span></li>
         </ul>
       </div>
     </section>
