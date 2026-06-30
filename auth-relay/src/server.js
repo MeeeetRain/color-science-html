@@ -16,6 +16,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
 const JWT_SECRET = process.env.JWT_SECRET || '';
 const TOKEN_TTL_DAYS = parseInt(process.env.TOKEN_TTL_DAYS || '3650', 10); // 默认 10 年≈一次登录长期保留
 const AGENTLY_BIN = process.env.AGENTLY_BIN || 'agently-cli';
+const PAGE_PASSWORD = process.env.PAGE_PASSWORD || ''; // gainmapvideo-player 页的共享密码(无邮箱)
 const DEV = process.env.ENVIRONMENT === 'dev';
 
 // ---- 可调常量 ----
@@ -204,6 +205,22 @@ app.get('/api/verify-token', async (c) => {
   const payload = await verifyJWT(token);
   if (!payload) return c.json({ valid: false }, 401);
   return c.json({ valid: true, email: payload.sub, exp: payload.exp });
+});
+
+// ④ 共享密码登录(给 gainmapvideo-player 页用,不走邮箱)→ 独立 scope 的 JWT
+app.post('/api/password-login', async (c) => {
+  if (!PAGE_PASSWORD) return c.json({ error: '服务未配置页面密码(PAGE_PASSWORD)' }, 500);
+  let body;
+  try { body = await c.req.json(); } catch { return c.json({ error: '请求格式错误' }, 400); }
+  const ip = clientIp(c);
+  if (!hourlyHit(`pw:ip:${ip}`, 30)) return c.json({ error: '尝试过于频繁,请稍后再试' }, 429);
+  const pw = String(body.password || '');
+  if (pw.length !== PAGE_PASSWORD.length || pw !== PAGE_PASSWORD) {
+    return c.json({ error: '密码不正确' }, 401);
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const token = await signJWT({ sub: 'gmv', scope: 'gmv', iat: now, exp: now + TOKEN_TTL_DAYS * 86400 });
+  return c.json({ token });
 });
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {
