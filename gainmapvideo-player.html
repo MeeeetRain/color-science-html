@@ -130,6 +130,7 @@
         <a href="#players"><span data-lang="zh">播放器</span><span data-lang="en">Players</span></a>
         <a href="#landscape"><span data-lang="zh">专利格局</span><span data-lang="en">Landscape</span></a>
         <a href="#patents"><span data-lang="zh">可申报项</span><span data-lang="en">Filings</span></a>
+        <a href="#vsimage"><span data-lang="zh">专利边界</span><span data-lang="en">vs Image</span></a>
         <a href="#lesson"><span data-lang="zh">教训</span><span data-lang="en">Lesson</span></a>
       </div>
       <div class="lang-toggle" role="group" aria-label="language">
@@ -482,10 +483,84 @@ hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weig
       </div>
     </section>
 
+    <!-- BOUNDARY VS IMAGE GAIN-MAP PATENTS -->
+    <section id="vsimage">
+      <div class="wrap">
+        <h2><span class="num">07</span><span data-lang="zh">与图片 gain map 专利的边界</span><span data-lang="en">Boundary vs image gain-map patents</span></h2>
+        <p class="sub"><span data-lang="zh">把两个常被混为一谈的问题分开,才谈得清「会不会冲突」。</span><span data-lang="en">"Will it conflict" only makes sense once two often-confused questions are separated.</span></p>
+
+        <div class="callout note">
+          <h3><span data-lang="zh">两个不同的问题</span><span data-lang="en">Two different questions</span></h3>
+          <ul>
+            <li><span data-lang="zh"><strong>① 新颖性(能不能授权)</strong>:我们的权要会不会被图片 gain map 在先技术<strong>预先公开</strong>而拿不到专利?——靠「视频专属要素」取得新颖性。</span><span data-lang="en"><strong>① Novelty (can it be granted)</strong>: would image gain-map prior art <strong>anticipate</strong> our claims and bar a patent? — earned via "video-specific elements."</span></li>
+            <li><span data-lang="zh"><strong>② FTO / 自由实施(会不会侵权)</strong>:实施我们的格式会不会<strong>踩到别人</strong>(尤其 Adobe)的图片 gain map 专利?——这是独立问题,<strong>即便拿到自己的专利,也不等于免除底层授权</strong>。</span><span data-lang="en"><strong>② FTO / freedom to operate (does it infringe)</strong>: would shipping our format <strong>read on someone else's</strong> (notably Adobe's) image gain-map patents? — a separate question; <strong>owning your own patent does not exempt you from an underlying licence</strong>.</span></li>
+          </ul>
+        </div>
+
+        <h3><span data-lang="zh">图片侧的专利格局(谁手里有牌)</span><span data-lang="en">Who holds the image-side IP</span></h3>
+        <p>
+          <span data-lang="zh"><strong>Adobe 持有 gain map 的核心专利</strong>——Google 的 Ultra HDR 是<strong>向 Adobe 取得授权</strong>来用 gain map 技术的。Apple 的 Adaptive / Apple Gain Map 把 gain map 作为 <strong>HEIF 辅助图像项</strong>存储。ISO 21496-1 把数学(<code>log(HDR/SDR)</code> 比值)标准化。这些<strong>都以静态图为中心</strong>。所以真正要绕开/授权的对象,首先是 <strong>Adobe 的图片 gain map 专利族</strong>。</span>
+          <span data-lang="en"><strong>Adobe holds the core gain-map patents</strong> — Google's Ultra HDR uses the technology <strong>under licence from Adobe</strong>. Apple's Adaptive / Apple Gain Map stores the gain map as a <strong>HEIF auxiliary image item</strong>. ISO 21496-1 standardizes the math (the <code>log(HDR/SDR)</code> ratio). All of this is <strong>still-image-centric</strong>. So the thing to design around / licence is, first of all, <strong>Adobe's image gain-map family</strong>.</span>
+        </p>
+
+        <h3><span data-lang="zh">核心防火墙:视频 ≠ 图像(四道护城河)</span><span data-lang="en">The firewall: video ≠ image (four moats)</span></h3>
+        <div class="grid">
+          <div class="card"><h3><span data-lang="zh">① 客体不同</span><span data-lang="en">① Different subject</span></h3><p class="muted"><span data-lang="zh">图片权要的是「图像 / 静态画面 / HEIF 图像项」;我们权要的是「<strong>视频 / 逐帧序列 / 视频轨</strong>」——专利法上是不同客体。</span><span data-lang="en">Image claims recite "an image / still picture / HEIF image item"; ours recite "<strong>video / a per-frame sequence / a video track</strong>" — a different statutory subject.</span></p></div>
+          <div class="card"><h3><span data-lang="zh">② 容器不同</span><span data-lang="en">② Different container</span></h3><p class="muted"><span data-lang="zh">HEIF / JPEG <strong>图像项</strong>（iref/iloc）vs ISOBMFF <strong>视频轨 + uuid box</strong>。结构性区别。</span><span data-lang="en">HEIF / JPEG <strong>image items</strong> (iref/iloc) vs ISOBMFF <strong>video tracks + a uuid box</strong>. A structural difference.</span></p></div>
+          <div class="card"><h3><span data-lang="zh">③ 时序维度</span><span data-lang="en">③ Temporal dimension</span></h3><p class="muted"><span data-lang="zh">单张 gain map vs <strong>逐帧 gain map 序列</strong>(且可帧间预测压缩)——图片在先技术天然没有时间轴。</span><span data-lang="en">A single gain map vs a <strong>per-frame gain-map sequence</strong> (inter-frame-coded) — image prior art has no time axis.</span></p></div>
+          <div class="card"><h3><span data-lang="zh">④ 运行时连续自适应</span><span data-lang="en">④ Runtime continuous adaptation</span></h3><p class="muted"><span data-lang="zh">图片是<strong>一次性渲染</strong>;我们在<strong>连续播放中每帧重查</strong>显示余量并重算 weight。</span><span data-lang="en">An image is a <strong>one-shot render</strong>; we <strong>re-query headroom every frame during continuous playback</strong> and recompute the weight.</span></p></div>
+        </div>
+
+        <h3><span data-lang="zh">逐项冲突分析</span><span data-lang="en">Per-claim conflict analysis</span></h3>
+        <table>
+          <thead><tr>
+            <th><span data-lang="zh">权要</span><span data-lang="en">Claim</span></th>
+            <th><span data-lang="zh">最接近的图片在先技术</span><span data-lang="en">Closest image prior art</span></th>
+            <th><span data-lang="zh">取得新颖性的支点 / FTO 注意</span><span data-lang="en">Novelty hook / FTO note</span></th>
+          </tr></thead>
+          <tbody>
+            <tr><td><strong>P1</strong> <span class="muted"><span data-lang="zh">容器</span><span data-lang="en">container</span></span></td>
+              <td><span data-lang="zh">HEIF 主图像项 + gain map 图像项</span><span data-lang="en">HEIF primary item + gain-map item</span></td>
+              <td><span data-lang="zh">支点:ISOBMFF <strong>双视频轨 + uuid box</strong>。FTO:权要别写「图像项」。</span><span data-lang="en">Hook: ISOBMFF <strong>two video tracks + uuid box</strong>. FTO: don't claim "image item."</span></td></tr>
+            <tr><td><strong>P2</strong> <span class="muted"><span data-lang="zh">自适应</span><span data-lang="en">adaptation</span></span></td>
+              <td><span data-lang="zh">按显示余量 tone-map gain map(<strong>一次性</strong>)</span><span data-lang="en">tone-map the gain map to headroom (<strong>one-shot</strong>)</span></td>
+              <td><span data-lang="zh">支点:<strong>连续播放、逐帧重查的闭环</strong>。FTO:别泛化成「按余量调 gain」。</span><span data-lang="en">Hook: a <strong>continuous, per-frame re-queried loop</strong>. FTO: don't generalize to "scale gain by headroom."</span></td></tr>
+            <tr><td><strong>P3</strong> <span class="muted"><span data-lang="zh">参考白</span><span data-lang="en">ref white</span></span></td>
+              <td><span data-lang="zh">ISO gain map 也带 reference white</span><span data-lang="en">ISO gain maps also carry reference white</span></td>
+              <td><span data-lang="zh">支点:<strong>视频时间轴上锚定</strong> + 解决 SDR-in-HDR 偏亮。FTO:较低。</span><span data-lang="en">Hook: anchoring <strong>across a video timeline</strong> + fixing SDR-in-HDR over-brightness. FTO: lower.</span></td></tr>
+            <tr><td><strong>P4</strong> <span class="muted"><span data-lang="zh">转换</span><span data-lang="en">conversion</span></span></td>
+              <td><span data-lang="zh">Adobe 的图像 authoring(由 SDR+HDR 算 gain)</span><span data-lang="en">Adobe's image authoring (gain from SDR+HDR)</span></td>
+              <td><span data-lang="zh">支点:<strong>单层 HDR 视频→双层视频</strong>的转换 + 反向可逆。<strong>FTO 重点:别单独权要「由 SDR+HDR 算 gain map」(=Adobe 核心)。</strong></span><span data-lang="en">Hook: <strong>single-layer HDR video → two-layer video</strong> conversion + reversibility. <strong>FTO focus: do NOT separately claim "compute a gain map from SDR+HDR" (= Adobe's core).</strong></span></td></tr>
+            <tr><td><strong>P5</strong> <span class="muted"><span data-lang="zh">播放器</span><span data-lang="en">player</span></span></td>
+              <td><span data-lang="zh">(图片无视频播放器对应物)</span><span data-lang="en">(no image-side video-player counterpart)</span></td>
+              <td><span data-lang="zh">支点:<strong>双轨同步 GPU 实时</strong>装置。FTO:低。</span><span data-lang="en">Hook: a <strong>dual-track-synchronized real-time GPU</strong> apparatus. FTO: low.</span></td></tr>
+            <tr><td><strong>P6</strong> <span class="muted"><span data-lang="zh">逐通道</span><span data-lang="en">per-channel</span></span></td>
+              <td><span data-lang="zh">ISO / Apple Adaptive 的<strong>彩色(多通道)图像 gain map</strong></span><span data-lang="en">ISO / Apple Adaptive's <strong>colour (multi-channel) image gain map</strong></span></td>
+              <td><span data-lang="zh">支点:<strong>视频化 + 4:4:4 保真 + 时序</strong>。FTO:中——逐通道本身在图片已有,务必绑视频要素。</span><span data-lang="en">Hook: <strong>video + 4:4:4 fidelity + temporal</strong>. FTO: medium — per-channel already exists for images, so always bind to video elements.</span></td></tr>
+          </tbody>
+        </table>
+
+        <h3><span data-lang="zh">权要起草规则(自我约束)</span><span data-lang="en">Claim-drafting rules (self-imposed)</span></h3>
+        <div class="grid">
+          <div class="card"><h3 style="color:var(--lime)"><span data-lang="zh">✅ 应该</span><span data-lang="en">✅ Do</span></h3><p class="muted"><span data-lang="zh">独立权要必含「<strong>视频 / 逐帧 / 视频轨 / 播放时序</strong>」;数学放<strong>从属权要</strong>并引用公开的 ISO 21496-1(RAND);强调<strong>容器结构</strong>(ISOBMFF trak + uuid)与运行时闭环。</span><span data-lang="en">Every independent claim must recite "<strong>video / per-frame / video track / playback over time</strong>"; put the math in <strong>dependent</strong> claims referencing the public ISO 21496-1 (RAND); emphasize the <strong>container structure</strong> (ISOBMFF trak + uuid) and the runtime loop.</span></p></div>
+          <div class="card"><h3 style="color:var(--rose)"><span data-lang="zh">⛔ 不要</span><span data-lang="en">⛔ Don't</span></h3><p class="muted"><span data-lang="zh">别单独权要「<strong>由 SDR+HDR 算 gain map</strong>」(Adobe 核心);别写「图像 / HEIF 图像项」;别把<strong>数学本身</strong>当独立权要;别泛化到「任意 gain map」而丢掉视频限定。</span><span data-lang="en">Don't separately claim "<strong>compute a gain map from SDR+HDR</strong>" (Adobe's core); don't say "image / HEIF image item"; don't make the <strong>math itself</strong> an independent claim; don't generalize to "any gain map" and drop the video limitation.</span></p></div>
+        </div>
+
+        <div class="callout">
+          <h3><span data-lang="zh">⚠️ 诚实的残留风险</span><span data-lang="en">⚠️ The honest residual risk</span></h3>
+          <p>
+            <span data-lang="zh">核心 gain map 概念(SDR 基底 + log 增益 + 元数据)是 <strong>Adobe 的territory,且已被广泛授权</strong>(Google 就是买的许可)。法律上,一帧视频也可能被解释为「一张图像」,所以<strong>即便我们拿到视频专属专利,FTO 上仍可能需要</strong>:① 检索 Adobe 实际权要的广度(是否限定「still image」);② 必要时<strong>像 Google 那样向 Adobe 取得许可</strong>。我们的专利保护的是「<strong>视频层</strong>」(容器 + 时序 + 运行时 + 转换 + 播放器)——它让我们在视频领域有自己的筹码与交叉许可资本,<strong>但不自动免除底层 gain map 概念的授权</strong>。</span>
+            <span data-lang="en">The core gain-map concept (SDR base + log gain + metadata) is <strong>Adobe's territory and already widely licensed</strong> (Google bought a licence). Legally, a single video frame might be read as "an image," so <strong>even with video-specific patents of our own, FTO may still require</strong>: ① searching the actual breadth of Adobe's claims (are they limited to a "still image"?); ② if needed, <strong>licensing from Adobe as Google did</strong>. Our patents protect the "<strong>video layer</strong>" (container + temporal + runtime + conversion + player) — they give us our own leverage and cross-licensing capital in video, <strong>but do not automatically exempt the underlying gain-map concept from a licence</strong>.</span>
+          </p>
+        </div>
+        <p class="muted"><span data-lang="zh"><strong>行动项</strong>:正式 FTO 检索锁定 Adobe gain map 专利族 + Apple HEIF gain map 申请;请专利代理人判断其权要是否限定「静态图像」;据此决定 design-around 或授权策略。</span><span data-lang="en"><strong>Action</strong>: a formal FTO search pinning down Adobe's gain-map family + Apple's HEIF gain-map filings; have a patent attorney judge whether their claims are limited to "still images"; decide design-around vs licence accordingly.</span></p>
+      </div>
+    </section>
+
     <!-- LESSON -->
     <section id="lesson">
       <div class="wrap">
-        <h2><span class="num">07</span><span data-lang="zh">那个反直觉的教训</span><span data-lang="en">The counter-intuitive lesson</span></h2>
+        <h2><span class="num">08</span><span data-lang="zh">那个反直觉的教训</span><span data-lang="en">The counter-intuitive lesson</span></h2>
         <div class="callout">
           <h3><span data-lang="zh">⚠️ 让 HDR「不亮」的不是 bug，是屏幕亮度</span><span data-lang="en">⚠️ What kept HDR dark wasn't a bug — it was screen brightness</span></h3>
           <p>
@@ -517,7 +592,7 @@ hdr&nbsp;&nbsp;&nbsp;&nbsp;= (srgbEotf(sdr) + OffsetSDR) · 2<sup>(g_log · weig
     <!-- STATUS -->
     <section id="status">
       <div class="wrap">
-        <h2><span class="num">08</span><span data-lang="zh">现状与后续</span><span data-lang="en">Status &amp; next</span></h2>
+        <h2><span class="num">09</span><span data-lang="zh">现状与后续</span><span data-lang="en">Status &amp; next</span></h2>
         <p><span data-lang="zh">已落地三个工具:<strong>原生播放器</strong>(双轨硬解播单文件/三件套、音频、进度条+时间、空格/←→/循环/全屏/音量、HDR/SDR/Gain 三视图、按实时 headroom 自适应、稳定 24fps、可双击 <code>.app</code>);<strong>IINA 插件</strong>(双击任意 <code>.gv.mp4</code> 透明转 HDR10);<strong>格式转换工具</strong>(普通 HDR ⇄ 本格式双向转换,拖入自动识别)。转换的逐帧编码经 LUT + 采样优化提速约 3×(逐位一致)。</span><span data-lang="en">Three tools shipped: a <strong>native player</strong> (dual-track plays single-file/sidecar, audio, scrubber + time, Space/←→/loop/fullscreen/volume, HDR/SDR/Gain views, live-headroom adaptation, steady 24 fps, double-clickable <code>.app</code>); an <strong>IINA plugin</strong> (double-click any <code>.gv.mp4</code> → transparent HDR10); and a <strong>format converter</strong> (ordinary HDR ⇄ this format, drag-in auto-detect). The converter's per-frame encode was sped up ~3× via LUT + sampling (bit-identical).</span></p>
         <ul>
           <li><span data-lang="zh">转换提速:逐帧 gain 计算改多核并行(这台 10 核机器预期再 3–5×),或最终搬上 GPU。</span><span data-lang="en">Faster conversion: multi-core the per-frame gain math (≈3–5× more on a 10-core machine), or ultimately move it to the GPU.</span></li>
