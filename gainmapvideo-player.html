@@ -2,6 +2,9 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <!-- 登录守卫:本页需访问密码,无有效 token 跳 gmv-login.html -->
+  <script src="assets/auth/gmv-config.js"></script>
+  <script src="assets/auth/auth-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GainmapVideo：视频版 gain map 格式、播放器与专利方向 | 影像色彩与显示技术指南</title>
   <meta name="description" content="第一人称复盘 GainmapVideo——一个向后兼容的视频版 gain map 格式：格式结构、重建数学、原生 Metal 实时自适应播放器与 IINA 插件转码方案、CAMetalLayer EDR 显示链路、现有标准与专利格局，以及可申报的专利方向。">
