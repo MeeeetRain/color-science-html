@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dolby Vision TV 画质调参操作指南 | PQ Kit 5.2.1.2</title>
   <meta name="description" content="面向 TV 画质工程师的 Dolby Vision PQ Kit 5.2.1.2 全流程操作指南：环境搭建、信号生成、显示特性测量、PQ 配置、客观/主观验证、全局调光、消费者偏好调参。">
+  <!-- 登录守卫：无有效 token 跳 login.html -->
+  <script src="assets/auth/auth-config.js"></script>
+  <script src="assets/auth/auth-guard.js"></script>
   <style>
     :root {
       color-scheme: dark;
@@ -343,6 +346,7 @@
         <a href="#preference">消费者偏好</a>
         <a href="#troubleshoot">故障排查</a>
         <a href="#docs">文档索引</a>
+        <a href="login.html" id="authBtn" style="color:var(--cyan);font-weight:760;">登录</a>
       </nav>
     </div>
   </div>
@@ -1011,6 +1015,26 @@
   </footer>
 
   <script>
+    // 登录状态：有 token 显示"登出"，无 token 显示"登录"
+    (function () {
+      var cfg = window.AUTH_CONFIG || {};
+      var TOKEN_KEY = cfg.TOKEN_KEY || 'siteAuthToken';
+      var authBtn = document.getElementById('authBtn');
+      if (authBtn) {
+        var token = null;
+        try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+        if (token) {
+          authBtn.textContent = '登出';
+          authBtn.href = '#';
+          authBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            try { localStorage.removeItem(TOKEN_KEY); } catch (e2) {}
+            location.reload();
+          });
+        }
+      }
+    })();
+
     // 阅读进度条
     const progress = document.getElementById('progress');
     window.addEventListener('scroll', () => {
