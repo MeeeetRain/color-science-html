@@ -1,6 +1,206 @@
 {
-  "updated": "2026-06-22",
+  "updated": "2026-07-09",
   "days": [
+    {
+      "date": "2026-07-09",
+      "picks": [
+        {
+          "tag": "讨论",
+          "tagEn": "Discussion",
+          "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
+          "title": "Observer Metamerism",
+          "description": "最近的 `metamerism`、`making-of` 和 `hdr-color-science` 都在把一个很容易被误判成“校准没做好”的问题讲清楚：同样的坐标、同样的白点，在窄峰广色域显示上并不保证所有观察者都看成同一个颜色。这条 ACESCentral 帖子最值得读的地方，是它没有停在概念解释，而是直接把 observer metamerism 放进 BT.2020 激光显示的模拟里，让你看到为什么火焰、霓虹或高饱和高光会在不同人眼里偏黄、偏粉，进而影响显示白点、监看一致性和 output transform 的判断。拿它回看站内最近关于同色异谱失败和新型显示设备章节，会更容易把抽象概念连到真实制作环境。",
+          "descriptionEn": "The recent `metamerism`, `making-of`, and `hdr-color-science` chapters all unpack a problem that is too often misdiagnosed as bad calibration: identical coordinates and the same nominal white point do not guarantee identical perception across observers on narrow-band wide-gamut displays. The value of this ACESCentral post is that it moves beyond definition and directly simulates observer metamerism on a BT.2020 laser display, making it easier to see why flames, neon, or highly saturated highlights may shift toward yellow or pink for different viewers. It connects the site's recent chapters on metameric failure, display white, and new display technologies back to a real production-monitoring problem.",
+          "url": "https://community.acescentral.com/t/about-issues-and-terminology/3501/7"
+        },
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
+          "title": "The old vs new “HDR” photography",
+          "description": "最近的 `HDR-Relay`、`scene-display-referred` 和 `hdr-color-science` 一直在拆一个常见混淆：以前为了 SDR 屏幕做 tone mapping 的“老 HDR”，和今天依赖更亮显示器再配合 gain map 交付的“真 HDR”，不是同一类东西。这篇文章最值得读的地方，是它把两者差异讲得非常直观：旧流程的核心是把高动态范围压回 SDR 里，新流程的核心则是尽量保住场景里的高光亮度和颜色，再通过兼容编码让 SDR/HDR 同时成立。对理解站内最近为什么要花这么多篇幅讲 gain map、彩色高光恢复和 scene-to-display 渲染，这是一篇很好的外部续读。",
+          "descriptionEn": "The recent `HDR-Relay`, `scene-display-referred`, and `hdr-color-science` chapters keep separating one persistent confusion: the older SDR-oriented tone-mapped \"HDR\" and modern true HDR delivered through brighter displays plus gain maps are not the same thing. The value of this article is how concretely it draws that line: the old workflow is about squeezing high dynamic range back into SDR limits, while the new workflow is about preserving highlight brightness and color as much as the display allows, then using a compatible encoding so SDR and HDR viewers can both get an appropriate result. It is a strong external continuation of the site's recent focus on gain maps, colored highlight recovery, and scene-to-display rendering.",
+          "url": "https://gregbenzphotography.com/hdr-photos/the-old-vs-new-hdr-photography/"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-08",
+      "picks": [
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "Android Developers",
+          "sourceEn": "Android Developers",
+          "title": "Edit Ultra HDR images",
+          "description": "最近的 `HDR-Relay` 和 `making-of` 都在把一个很容易被忽略的现实问题讲透：HDR gain map 不是导出完就结束，后续裁切、缩放、贴图、滤镜这些编辑动作，会不会把亮度恢复关系一起带坏，决定了最终兼容性。这篇资料最值得读的地方，是它把 gain map 当成工作流里的独立对象来处理，明确区分哪些基础编辑会自动同步 gain map，哪些复杂编辑必须手动重建或修补。对理解站内最近那条“还原算法正确”和“后续交付仍然正确”之间还隔着什么，非常有帮助。",
+          "descriptionEn": "The recent `HDR-Relay` and `making-of` chapters both push on an easy-to-miss production reality: exporting an HDR gain-map image is not the end, because later crops, resizes, overlays, and filters can silently break the luminance reconstruction relationship. The value of this piece is that it treats the gain map as its own workflow object, clearly separating which basic edits keep it in sync automatically and which more complex edits require you to rebuild or patch it yourself. It is a strong continuation of the site's recent point that a correct reconstruction algorithm does not automatically guarantee a correct downstream delivery workflow.",
+          "url": "https://developer.android.com/media/grow/ultra-hdr/edit"
+        },
+        {
+          "tag": "讨论",
+          "tagEn": "Discussion",
+          "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
+          "title": "Re-Framing and Clarifying the Goals of an Output Transform",
+          "description": "站内最近的 `scene-display-referred`、`hdr-color-science` 和 7 月 6 日那条 gamut mapping 讨论，已经把“输出变换不是单纯压亮度”讲出来了；这条讨论更进一步，把高光该不该更快往白走、去饱和到底是技术约束还是创作风格、以及什么才算在有限峰值亮度下保住‘亮感’，直接摊开辩论。它最值得读的地方，不是给一个唯一答案，而是让读者看到 output transform 真正在权衡什么，这对理解站内最近关于 path-to-white、highlight chroma compression 和 display-referred 观感设计的章节尤其有延伸价值。",
+          "descriptionEn": "The recent `scene-display-referred`, `hdr-color-science`, and the July 6 gamut-mapping pick already make the point that an output transform is not just a luminance squeeze. This discussion goes one layer deeper by openly debating whether highlights should move toward white more aggressively, whether desaturation is a technical constraint or a creative choice, and what it really means to preserve a sensation of brightness on displays with limited peak luminance. Its value is not a single answer, but exposing what an output transform is actually balancing, which makes it a strong continuation of the site's recent chapters on path-to-white, highlight chroma compression, and display-referred look design.",
+          "url": "https://community.acescentral.com/t/re-framing-and-clarifying-the-goals-of-an-output-transform/4195"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-06",
+      "picks": [
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "Flanders Scientific",
+          "sourceEn": "Flanders Scientific",
+          "title": "Perceptual Color Matching Using LightSpace CMS",
+          "description": "最近的 `metamerism`、`making-of` 和 `hdr-color-science` 都在强调一个现实问题：仪器测到同一个白点，不代表不同显示技术在人眼里真的一样。这份 FSI 资料最值得读的地方，是它把 OLED、LCD、投影等设备之间的 observer metamerism 问题，落成了实际校准流程里的判断与取舍，能帮助读者理解为什么“校准正确”与“看起来一致”常常不是同一句话。读完再回头看站内关于窄峰显示、观察者差异和显示白点的章节，会更容易把抽象概念连到真实监看环境。",
+          "descriptionEn": "The recent `metamerism`, `making-of`, and `hdr-color-science` chapters all keep returning to one production reality: matching a measured white point does not guarantee that different display technologies will look the same to human observers. The value of this FSI resource is that it turns observer metamerism across OLED, LCD, and projection displays into concrete calibration decisions and tradeoffs, which helps explain why \"calibrated correctly\" and \"visually matched\" are often not the same statement. It connects the site's recent chapters on narrow-band displays, observer differences, and display white points back to an actual monitoring workflow.",
+          "url": "https://www.flandersscientific.com/tech-resources/PerceptualColorMatchingUsingLightSpaceCMS-v1-1.pdf"
+        },
+        {
+          "tag": "讨论",
+          "tagEn": "Discussion",
+          "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
+          "title": "Gamut Mapping Part 2: Getting to the Display",
+          "description": "站内最近的 `scene-display-referred`、`hdr-color-science` 和 `HDR-Relay` 都在把一个关键点讲透：从场景到显示不是简单缩亮度，而是要一起决定高光颜色、饱和度保留和 path-to-white。这条 ACESCentral 讨论的价值，在于它不只给结论，而是把业内对高亮纯色该保多少、什么时候该更快往白走、不同输出变换想保护什么观感，直接摊开讨论。它很适合作为最近章节里 output transform、chroma compression 和“彩色高光不只是更亮，还要把颜色救回来”的外部续读。",
+          "descriptionEn": "The recent `scene-display-referred`, `hdr-color-science`, and `HDR-Relay` chapters all make the same core point: going from scene to display is not just about compressing brightness, but about deciding what happens to highlight color, saturation retention, and the path to white. The value of this ACESCentral discussion is that it does not only hand over a result; it exposes the real disagreements about how much bright saturated color should be preserved, when highlights should move toward white more aggressively, and what different output transforms are trying to protect perceptually. It is a strong external continuation of the site's recent discussion of output transforms, chroma compression, and why colored highlights need more than a luminance remap.",
+          "url": "https://community.acescentral.com/t/gamut-mapping-part-2-getting-to-the-display/3506"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "picks": [
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "ACES Documentation",
+          "sourceEn": "ACES Documentation",
+          "title": "Deriviation of the ACES White Point",
+          "description": "站内最近的 `metamerism`、`scene-display-referred` 和 `hdr-color-science` 都在反复拆一个常见混淆：编码白点、创作白点和显示白点不是同一件事。这页最有价值的地方，不是再报一遍坐标，而是把 ACES 白点为什么常被口头叫成“D60”、它其实并不落在标准 daylight locus 上、以及它为什么只服务于色彩空间转换而不直接规定创作或显示白，讲得很清楚。读完以后，再回头看最近章节里关于 observer difference、白点争议和输出白限制的讨论，会更容易分清哪些是数学参考，哪些才是实际观感与交付判断。",
+          "descriptionEn": "The site's recent `metamerism`, `scene-display-referred`, and `hdr-color-science` chapters all keep separating one easy confusion: encoding white, creative white, and display white are not the same thing. The value of this page is not another coordinate dump, but how clearly it explains why the ACES white point is often loosely called \"D60,\" why it does not actually sit on the standard daylight locus, and why it exists for color-space conversion rather than directly dictating creative or display white. With that distinction in place, the site's recent discussion of observer differences, white-point debates, and output white limiting becomes much easier to reason about.",
+          "url": "https://docs.acescentral.com/white-point/"
+        },
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "ACES Documentation",
+          "sourceEn": "ACES Documentation",
+          "title": "Chroma Compression",
+          "description": "站内最近的 `scene-display-referred` 和 `hdr-color-science` 已经把“同一份 scene-referred 内容到不同显示目标一定要重新渲染”讲出来了；这一页的延伸价值，在于它把高光为什么不能简单往白里裁、为什么亮部和暗部不该用同一种饱和度处理，落成了具体的显示渲染步骤。尤其值得读的是它明确说明：高光会压得更多、纯色会比低饱和色保留得更多、阴影中反而要适度把颜色‘救回来’，这样才能让 HDR 输出既不脏也不发灰。它很适合作为最近章节里 tone mapping / gamut mapping / 输出观感那一段的技术续读。",
+          "descriptionEn": "The site's recent `scene-display-referred` and `hdr-color-science` chapters already make the point that the same scene-referred content must be re-rendered for different display targets; this page extends that by turning the idea into a concrete rendering step for why highlights should not simply be clipped toward white, and why shadows and highlights should not get the same saturation treatment. The most useful part is how explicitly it states that brighter regions get more compression, purer colors are preserved more than weakly saturated ones, and shadows may need some color brought back so HDR output does not become either dirty or washed out. It works well as a technical continuation of the site's recent tone-mapping, gamut-mapping, and display-rendering discussion.",
+          "url": "https://docs.acescentral.com/system-components/output-transforms/technical-details/chroma-compression/"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "picks": [
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "Stanford Graphics",
+          "sourceEn": "Stanford Graphics",
+          "title": "Color matching",
+          "description": "站内最近更新的 `metamerism` 和 `making-of`，都在把“颜色其实是对光谱的压缩”讲成一个能建立直觉的问题；这个斯坦福交互页面的价值就在于，它把三刺激匹配、负光和“为什么有些光谱颜色根本不能靠现有三基色正向混出来”直接做成可操作的体验。它值得读，不是因为定义更全，而是因为读者能亲手看到同色异谱、匹配函数和显示色域边界之间的关系，这比只背 XYZ 或 matching functions 更容易真正理解最近章节里的核心论点。",
+          "descriptionEn": "The site's recently updated `metamerism` and `making-of` chapters both try to turn the idea that color is a compression of spectra into something intuitive, and this Stanford interactive does that by making tristimulus matching, negative light, and the limits of three primaries directly explorable. Its value is not just broader terminology, but letting readers see the relationship between metameric matching, matching functions, and gamut boundaries with their own eyes, which is a much better continuation of the recent chapter's core argument than simply memorizing XYZ or matching-function definitions.",
+          "url": "https://graphics.stanford.edu/courses/cs178/applets/colormatching.html"
+        },
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "ACES Documentation",
+          "sourceEn": "ACES Documentation",
+          "title": "White Limiting",
+          "description": "站内最近的 `scene-display-referred`、`hdr-color-science` 和 `metamerism` 都把一个容易混淆的点反复讲到位：创作白点、设备白点和输出上限不是同一件事。这篇 ACES 文档最值得读的地方，在于它没有停在抽象“色度变了”，而是直接说明当创作白和设备白不一致时，为什么某个通道会先撞到上限、为什么高光会偏色，以及系统该如何用 white limiting 把这个问题压回可控范围。它很适合把站内关于 display-referred 输出、白点感知和高光保留的讨论继续推进到真实输出变换设计。",
+          "descriptionEn": "The site's recent `scene-display-referred`, `hdr-color-science`, and `metamerism` chapters all keep returning to one easy-to-mix-up point: creative white, device white, and output limits are not the same thing. The value of this ACES document is that it does not stop at the abstract idea of a chromaticity shift, but directly explains why one channel can hit the ceiling first when creative white and display white differ, why highlights can tint as they clip, and how white limiting keeps that behavior controlled. It is a strong continuation of the site's discussion of display-referred output, white-point perception, and highlight preservation into actual output-transform design.",
+          "url": "https://docs.acescentral.com/system-components/output-transforms/technical-details/white-limiting/"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-01",
+      "picks": [
+        {
+          "tag": "讨论",
+          "tagEn": "Discussion",
+          "source": "IMAGO",
+          "sourceEn": "IMAGO",
+          "title": "Metamerism Experts’ Day Debrief",
+          "description": "站内最近的 `making-of` 和 `metamerism` 都在把“同色异谱不是冷知识，而是后面拍摄、监看、显示问题的起点”讲清楚，这篇业内复盘正好把那条线继续往真实制作现场推进。它最值得读的地方，不是再下定义，而是把 bell pepper 实验、LED 光谱、皮肤反射、相机光谱灵敏度和片场监看连成一条因果链，让人看见为什么同一组白点或同一套色域参数，并不能自动保证人眼、相机和显示器会给出一致结果。",
+          "descriptionEn": "The site's recent `making-of` and `metamerism` chapters both work to show that metamerism is not trivia but the starting point for later capture, monitoring, and display problems, and this industry debrief pushes that line into real production practice. Its real value is not in redefining the term, but in connecting the bell-pepper experiment, LED spectra, skin reflectance, camera spectral sensitivities, and on-set monitoring into one causal chain, so readers can see why the same white point or gamut specification does not automatically guarantee agreement between the eye, the camera, and the display.",
+          "url": "https://imago.org/committees/technical/metamerism-experts-day-debrief/"
+        },
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "Chromium Blog",
+          "sourceEn": "Chromium Blog",
+          "title": "Bringing a clearer, more consistent HDR video experience to Chrome",
+          "description": "站内最近的 `HDR-Relay`、`hdr-color-science` 和 `scene-display-referred` 都在反复强调：真正麻烦的不是“会不会出 HDR”，而是参考白、headroom 和目标显示如何在播放端被重新解释。这篇新文章的价值就在于它把这些概念落成很具体的显示链路问题：SDR 与 HDR 混排时为什么会互相打架，参考白锚点为什么重要，以及显示 headroom 不够时该怎样保高光而不是把整张图一起冲白。它特别适合作为从站内 203 nit / 输出渲染讨论继续往浏览器与设备适配延伸的一读。",
+          "descriptionEn": "The site's recent `HDR-Relay`, `hdr-color-science`, and `scene-display-referred` chapters all keep stressing that the hard part is not simply \"making HDR,\" but how reference white, headroom, and the target display get reinterpreted at playback. This recent article is useful because it turns those ideas into concrete display-chain problems: why SDR and HDR can fight each other on the same screen, why a reference-white anchor matters, and how limited display headroom should preserve highlights instead of washing out the whole image. It works especially well as a continuation of the site's 203-nit and output-rendering discussion into browser and device adaptation.",
+          "url": "https://blog.google/chromium/bringing-a-clearer-more-consistent-hdr-video-experience-to-chrome/"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-26",
+      "picks": [
+        {
+          "tag": "教程",
+          "tagEn": "Tutorial",
+          "source": "ACES Documentation",
+          "sourceEn": "ACES Documentation",
+          "title": "Overview of the ACES Encodings",
+          "description": "站内最近更新的 `log-gamma` 和 `scene-display-referred` 两章，都在反复强调“Log 不是最终观感，而是中间编码”；这篇官方说明的价值就在于它把 ACES 里几种最容易混淆的编码状态一次拆开：ACES2065-1 为什么偏交换与归档、ACEScg 为什么更适合合成、ACEScct 为什么要给调色师一个更像 Log 的操作手感。它值得读，不是因为术语更全，而是因为它能把“同一条 scene-referred 链路里，不同阶段为什么需要不同编码”讲成一个清晰工作流判断。",
+          "descriptionEn": "The site's recently updated `log-gamma` and `scene-display-referred` chapters both stress that Log is not the final look but an intermediate encoding, and this official overview is valuable because it cleanly separates the ACES encodings most often confused with one another: why ACES2065-1 is for interchange and archive, why ACEScg better fits compositing, and why ACEScct gives colorists a more Log-like handling feel. Its value is not just broader terminology, but a clearer workflow judgment for why one scene-referred pipeline still needs different encodings at different stages.",
+          "url": "https://docs.acescentral.com/encodings/overview/"
+        },
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "RED Digital Cinema",
+          "sourceEn": "RED Digital Cinema",
+          "title": "IPP2 Output Transforms",
+          "description": "站内最近更新的 `HDR-Relay`、`hdr-color-science` 和 `scene-display-referred`，都在把“创作在前、显示适配在后”这条边界讲清楚；这份 RED 白皮书的价值，正好是把这件事落成一条很具体的链路：RAW 开发、调色、输出变换各管什么，SDR / HDR 输出为什么不能只靠同一层 LUT 硬套，以及高光 roll-off、色域映射和输出 gamma 为什么应该放在链路末端统一处理。它特别适合读者建立一个更稳的直觉：多格式交付时，真正该保持一致的是场景与风格判断，不是把同一显示变换生搬到所有目标上。",
+          "descriptionEn": "The site's recently updated `HDR-Relay`, `hdr-color-science`, and `scene-display-referred` chapters all work to clarify the boundary of \"create first, adapt for display later,\" and this RED paper is useful because it turns that idea into a concrete chain: what RAW development, grading, and output transforms each control, why SDR and HDR outputs cannot be forced through the same LUT, and why highlight roll-off, gamut mapping, and output gamma belong together at the end of the pipeline. It is especially good for building the intuition that in multi-format delivery, what should stay consistent is the scene and look decisions, not a single display transform copied onto every target.",
+          "url": "https://docs.red.com/915-0201/REV-A/PDF/915-0201%20Rev-A%20%20%20RED%20OPS%2C%20IPP2%20Output%20Transforms.pdf"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-23",
+      "picks": [
+        {
+          "tag": "科普",
+          "tagEn": "Explainer",
+          "source": "Datacolor",
+          "sourceEn": "Datacolor",
+          "title": "What Is Metamerism?",
+          "description": "站内最近更新的 `making-of` 和 `metamerism` 两页，都把同色异谱放成后面拍摄、后期、显示问题的起点；这篇文章的价值就在于它没有只停在定义，而是把光源、观察者和材料反射谱为什么会让“看起来一样”在换环境后失配，直接讲回打样、校色和实际判断流程。特别值得读的是它把“仪器读数接近”与“肉眼判断一致”明确分开，能帮助读者把同色异谱理解成真实工作流里的检查条件，而不是一个抽象名词。",
+          "descriptionEn": "The site's recently updated `making-of` and `metamerism` pages both treat metamerism as the starting point for later problems in capture, post, and display, and this article is useful because it goes beyond the definition to explain how illuminants, observers, and material reflectance spectra make a match fall apart when conditions change. The most valuable part is how clearly it separates \"instrument readings are close\" from \"the eye agrees,\" helping readers treat metamerism as a real workflow condition to check rather than an abstract term.",
+          "url": "https://www.datacolor.com/business-solutions/blog/what-is-metamerism/"
+        },
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "WebKit Blog",
+          "sourceEn": "WebKit Blog",
+          "title": "Improving Color on the Web",
+          "description": "站内最近更新的 `image-color-management` 章节已经把“RGB 数字不是颜色”和“网页为什么容易翻车”讲到位，这篇 WebKit 长文刚好把那条链路继续补完整：图片嵌入 Profile、浏览器怎样做颜色转换、CSS 颜色默认在什么空间里解释，以及广色域内容为什么必须显式标注与测试。它最值得读的地方，不是单讲 Display P3，而是把网页图像、CSS 颜色和浏览器色彩管理放进同一套系统里解释，特别适合建立从导出到浏览器显示的整体直觉。",
+          "descriptionEn": "The recently updated `image-color-management` chapter already explains that RGB numbers are not colors and why web images so often go wrong, and this long WebKit piece cleanly extends that chain: embedded profiles, how browsers convert color, what space CSS colors are interpreted in by default, and why wide-gamut content needs explicit tagging and testing. Its value is not just in talking about Display P3, but in putting web images, CSS colors, and browser color management into one system so readers can build a full export-to-browser intuition.",
+          "url": "https://webkit.org/blog/6682/improving-color-on-the-web/"
+        }
+      ]
+    },
     {
       "date": "2026-06-22",
       "picks": [
