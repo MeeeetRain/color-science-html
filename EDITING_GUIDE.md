@@ -106,6 +106,29 @@
 - 移动端不能横向溢出；如果必须横向滚动，要让读者看得出这是可滚动区域。
 - 页面中的模式切换要有层级关系，避免读者不知道自己正在看哪种模式。
 
+### 6.1 标题区(Hero)规范 —— 基准页:`ltx-gainmap-itm.html`
+
+**所有新页面的第一屏(标题区)一律按 `ltx-gainmap-itm.html` 的实现做**,已对齐页:
+`distill-realtime-player.html`。要素与参数如下(直接从基准页抄 CSS,不要凭记忆重写):
+
+- **结构**:`<header class="hero">` → `.hero-bg`(背景层,`aria-hidden`)→ 内容容器
+  → `backlink` 胶囊(上一篇)→ `.eyebrow` 眉题 → `<h1>` → `.hero-desc` 导语 → 数据带/chips。
+- **背景渲染** `.hero-bg` 两层:
+  - `.grid-field`:58px 网格线,`opacity:.16`,radial mask(circle at 50% 40%, 70% 淡出);
+  - `.spectrum-band`:光谱色带,`min(1400px,138vw)×360px`,`rotate(-7deg)`,
+    七段渐变(indigo→blue→cyan→green→yellow→orange→rose,两端透明),
+    `blur(40px) saturate(1.2)`,`opacity:.6`。
+- **排版**:
+  - `h1`:`clamp(34px,6vw,62px)`,`line-height 1.08`,`letter-spacing -.03em`,`text-wrap:balance`;
+    主题词用 `.h-accent` 渐变字(`linear-gradient(100deg, cyan→lime→gold)` + background-clip:text);
+  - `.eyebrow`:金色、大写、`letter-spacing .12em`,前置 34px 金线(`::before`);
+  - `.hero-desc`:`clamp(16px,1.7vw,19px)`,`line-height 1.8`,`max-width 760px`,色 `#d3dce8`;
+  - `.backlink`:圆角胶囊,青色文字,`rgba(52,223,242,.05)` 底。
+- **色板**:统一用站内 CSS 变量(`--cyan #34dff2 / --lime #b7f05b / --gold #ffd166 /
+  --rose #ff4d6d / --violet #a78bfa / --bg #07080d`),不得另起新色板。
+- 正文区同样以基准页为准:`.kicker`(青色小眉题)、`h2 clamp(26px,3.6vw,38px)`、
+  `.section` 上边框分节。
+
 ## 7. 代码规范
 
 目前项目是无构建静态站点，优先保持简单。
