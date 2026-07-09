@@ -107,8 +107,8 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 <header class="hero"><div class="wrap">
   <div class="kicker">DISTILLATION & REAL-TIME PLAYER</div>
   <h1>从每帧 40 秒到 <span class="em">9 毫秒</span>:<br>小模型蒸馏与实时 HDR 播放器</h1>
-  <p class="lead">我们把"AI 测光表"从 GPU 服务器上的大管线,蒸馏成一个 5.11M 的小模型,塞进了 Mac 的神经引擎;
-  又围绕它做了一个原生实时播放器——SDR 片源拖进去,直接以 HDR 亮度实时播放。
+  <p class="lead">我们把"AI 测光表"从 GPU 服务器上的大管线,蒸馏成一个 5.11M 的轻量模型,部署到 Mac 的神经引擎(ANE);
+  又围绕它做了一个原生实时播放器——载入 SDR 片源,即以 HDR 亮度实时播放。
   本页讲两件事:<b>小模型是怎么训练出来的</b>,以及<b>播放器是怎么设计的</b>。前半部分不需要任何 AI 背景。</p>
   <div class="numband">
     <div class="num"><div class="v">8.88 ms</div><div class="k">小模型单帧推理(M4 Max 神经引擎)</div></div>
@@ -121,26 +121,26 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 <!-- ============ PART 1 通俗版 ============ -->
 <section id="part1"><div class="wrap">
   <div class="sec-kicker">PART 1 · 给所有人</div>
-  <h2>老师傅与学徒:什么是"蒸馏"</h2>
-  <p class="note">我们已有一条效果很好的 SDR→HDR 转换管线(见<a href="ltx-gainmap-itm.html" style="color:var(--cyan)">上一篇</a>):
+  <h2>教师–学生蒸馏:方法概述</h2>
+  <p class="note">我们已有一条经过验证的 SDR→HDR 转换管线(见<a href="ltx-gainmap-itm.html" style="color:var(--cyan)">上一篇</a>):
   用视频大模型 LTX 当"测光表",算出画面每个区域该提多亮。问题是它<b style="color:var(--rose)">太慢</b>——一帧要 40 秒,只能在服务器上离线跑。
-  怎么让它实时?答案是行业里常用的一招:<b style="color:var(--lime)">知识蒸馏(distillation)</b>。</p>
+  实现实时化采用深度学习中成熟的模型压缩方法:<b style="color:var(--lime)">知识蒸馏(knowledge distillation)</b>。</p>
 
   <div class="grid2">
     <div class="card">
-      <h4>🧓 老师傅(教师管线)</h4>
+      <h4>教师模型(Teacher):LTX 增益图管线</h4>
       <ul class="pts">
         <li>LTX 视频大模型 + 全套安全护栏</li>
-        <li>准,但一帧要 <b>40 秒</b>(服务器 GPU)</li>
-        <li>它的输出:一张<b>增益图</b>——"每个区域该提多亮"的地图</li>
+        <li>精度高,但单帧耗时 <b>40 秒</b>(服务器 GPU)</li>
+        <li>输出:<b>增益图</b>——逐区域亮度提升系数构成的低频场</li>
       </ul>
     </div>
     <div class="card">
-      <h4>🧑‍🎓 学徒(蒸馏小模型)</h4>
+      <h4>学生模型(Student):轻量增益网络</h4>
       <ul class="pts">
-        <li>只有 5.11M 参数的小网络</li>
-        <li>只学一件事:看一眼画面,<b>模仿老师傅画增益图</b></li>
-        <li>一帧 <b>8.88 毫秒</b>——比老师傅快约 4600 倍</li>
+        <li>参数量仅 5.11M 的卷积网络</li>
+        <li>训练目标单一:以教师输出为监督信号,<b>从 SDR 帧直接预测增益图</b></li>
+        <li>单帧 <b>8.88 毫秒</b>,较教师管线提速约 4600 倍</li>
       </ul>
     </div>
   </div>
@@ -155,7 +155,7 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
     <path d="M175 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
     <!-- student net -->
     <rect x="235" y="48" width="180" height="114" rx="10" fill="#172131" stroke="#b7f05b" stroke-width="1.5"/>
-    <text x="325" y="86" fill="#b7f05b" font-size="15" text-anchor="middle" font-weight="700">学徒小网络</text>
+    <text x="325" y="86" fill="#b7f05b" font-size="15" text-anchor="middle" font-weight="700">学生网络</text>
     <text x="325" y="108" fill="#a7b0bf" font-size="12" text-anchor="middle">5.11M 参数</text>
     <text x="325" y="128" fill="#ffd166" font-size="13" text-anchor="middle" font-weight="700">8.88 ms / 帧</text>
     <path d="M420 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
@@ -177,13 +177,13 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
     <text x="872" y="122" fill="#a7b0bf" font-size="12" text-anchor="middle">高光亮起来</text>
     <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
   </svg>
-  <div class="cap">学徒只画"亮度地图",画面像素永远来自原片 —— <b style="color:var(--lime)">AI 不碰画面本身,所以不会画错东西(无虚构)</b>,这条底线从大管线原样继承。</div>
+  <div class="cap">学生网络仅输出增益图,画面像素恒取自原片 —— <b style="color:var(--lime)">模型不生成任何像素内容(无虚构)</b>,该性质由教师管线按构造继承。</div>
   </div>
 
-  <h3>数据工厂:老师傅自动出题、自动批改</h3>
-  <p class="note">训练一个 AI 通常最贵的是"标注数据"。我们没花一分钱人工:让老师傅管线把一部电影 + 一套公开测试集
-  批量跑一遍,自动产出 <b>2078 组「SDR 帧 → 标准答案增益图」</b>教材。学徒照着学,单次训练只要 <b>33 分钟</b>。
-  以后换任何片源,教材都能自动扩充。</p>
+  <h3>训练数据:教师管线自动标注</h3>
+  <p class="note">监督学习通常受制于标注成本。本方案无需人工标注:教师管线对一部电影与一套公开测试集批量推理,
+  自动产出 <b>2078 组「SDR 帧 → 参考增益图」</b>训练样本对;单次训练仅 <b>33 分钟</b>。
+  更换片源后,训练集可按同一流程自动扩充。</p>
 
   <h3>速度:三个数量级的跨越</h3>
   <div class="svgbox">
@@ -192,30 +192,30 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
     <!-- log scale: 41000ms -> full width; 88ms; 8.88ms -->
     <rect x="20" y="50" width="880" height="26" rx="6" fill="#ff4d6d" opacity="0.85"/>
     <text x="908" y="68" fill="#07080d" font-size="14" font-weight="800" text-anchor="end" dx="-8">41 秒</text>
-    <text x="30" y="68" fill="#07080d" font-size="13" font-weight="700">老师傅:LTX 大管线(服务器 GPU)</text>
+    <text x="30" y="68" fill="#07080d" font-size="13" font-weight="700">教师管线:LTX(服务器 GPU)</text>
     <rect x="20" y="92" width="555" height="26" rx="6" fill="#ffd166" opacity="0.9"/>
     <text x="585" y="110" fill="#ffd166" font-size="14" font-weight="700">88 ms</text>
-    <text x="30" y="110" fill="#07080d" font-size="13" font-weight="700">学徒第一代 v0(28M 参数)</text>
+    <text x="30" y="110" fill="#07080d" font-size="13" font-weight="700">学生模型 v0(28M 参数)</text>
     <rect x="20" y="134" width="435" height="26" rx="6" fill="#b7f05b"/>
     <text x="465" y="152" fill="#b7f05b" font-size="14" font-weight="800">8.88 ms ≈ 112 帧/秒</text>
-    <text x="30" y="152" fill="#07080d" font-size="13" font-weight="700">学徒第三代 v1.1(5.11M,神经引擎)</text>
+    <text x="30" y="152" fill="#07080d" font-size="13" font-weight="700">学生模型 v1.1(5.11M,神经引擎)</text>
   </svg>
   <div class="cap">对数刻度:每短一段是 10 倍提速。41 秒 → 8.88 毫秒,约 <b style="color:var(--lime)">4600 倍</b>。</div>
   </div>
 
   <div class="card accent">
-    <h4>🤯 反直觉的结果:学徒考试反而比老师傅高分</h4>
-    <p class="note" style="margin:0">在训练时<b>从没见过</b>的学术基准 HDRTV1K 上,学徒(SSIM 0.9423)反超了带 LTX 的完整老师傅系统(0.9117)。
-    为什么?老师傅每张图都要现场发挥(大模型有随机性,偶尔失手),学徒学到的是老师傅<b>千百次示范的平均手法</b>——把偶然失误平均掉了。
-    这在蒸馏领域是已知现象,但在我们的任务上被定量验证了。</p>
+    <h4>值得注意的结果:学生模型在未见基准上反超教师系统</h4>
+    <p class="note" style="margin:0">在训练<b>未见域</b>的学术基准 HDRTV1K 上,学生模型(SSIM 0.9423)超过了包含 LTX 的完整教师系统(0.9117)。
+    机制:生成式教师存在逐样本随机性,单次输出含噪;学生在大量样本上回归教师输出的<b>条件期望</b>,等效于对教师噪声做平均。
+    该现象在蒸馏文献中已有报道,本项目在增益图任务上给出了定量验证。</p>
   </div>
 </div></section>
 
 <!-- ============ PART 2 训练迭代 ============ -->
 <section id="part2"><div class="wrap">
   <div class="sec-kicker">PART 2 · 训练迭代史</div>
-  <h2>三代学徒:v0 → v1 → v1.1</h2>
-  <p class="note">每一代解决一个明确的问题。单次训练 33 分钟,所以我们可以快速试错——真正花时间的是<b>想清楚该量什么</b>。</p>
+  <h2>版本迭代:v0 → v1 → v1.1</h2>
+  <p class="note">每个版本解决一个明确的问题。单次训练 33 分钟,迭代成本低——主要成本在于<b>确定正确的评测口径</b>。</p>
 
   <div class="grid3">
     <div class="card">
@@ -239,25 +239,25 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
       <h4>v1.1 · 高光修复</h4>
       <span class="tag g">峰值比 0.60→0.863</span>
       <ul class="pts">
-        <li>问题:学徒偏保守,<b>最亮的高光不敢提满</b>(绿管、手术灯)</li>
+        <li>问题:模型对<b>最亮高光的增益预测偏保守</b>(绿管、手术灯等区域提升不足)</li>
         <li>解法:损失函数里加"峰值分位项",专盯最亮的 0.5% 像素</li>
       </ul>
     </div>
   </div>
 
   <div class="story">
-    <b>一个方法论故事(技术同事看这里):</b>v1.1 调参时,我们一度被自己定的验收规则误导——按"验证集 RMSE 必须 ≤0.11"的硬线,
+    <b>方法论记录:</b>v1.1 调参时,我们一度被自己定的验收规则误导——按"验证集 RMSE 必须 ≤0.11"的硬线,
     修好高光的那一档(w_peak=0.15)会被否决,因为它 RMSE 涨到 0.137。但把误差<b>按增益高低分桶</b>一看:涨幅几乎全在高增益桶
-    (正是我们想让它大胆的地方),低增益桶几乎不动。<b>RMSE 是被 77% 的低增益像素主导的"假裁判"</b>;
-    换真裁判(学术基准 SSIM + 专业母版亮度对标)重判,该档全线通过、当选。
+    (正是我们想让它大胆的地方),低增益桶几乎不动。<b>RMSE 由约 77% 的低增益像素主导,作为验收硬线并不代表部署质量</b>;
+    改以最终评测指标(学术基准 SSIM + 专业母版亮度对标)重新判定,该档全部通过、当选。
     教训:<b>代理指标不能当硬线,验收规则要盯部署时真正在乎的量</b>。
   </div>
 
   <table class="cmp">
     <tr><th>模型</th><th>参数量</th><th>HDRTV1K SSIM ↑</th><th>高光峰值比 ↑</th><th>单帧耗时(M4 Max)</th></tr>
     <tr><td>LTX 完整系统(教师推理链)</td><td>~2B(大模型)</td><td>0.9117</td><td>1.00(基准)</td><td class="r">~41 s(服务器 GPU)</td></tr>
-    <tr><td>学徒 v0</td><td>28M</td><td>0.9419</td><td>0.60</td><td>88 ms</td></tr>
-    <tr class="hl"><td><b>学徒 v1.1(现役)</b></td><td><b>5.11M</b></td><td class="g">0.9423</td><td class="g">0.863</td><td class="g">8.88 ms(神经引擎)</td></tr>
+    <tr><td>学生模型 v0</td><td>28M</td><td>0.9419</td><td>0.60</td><td>88 ms</td></tr>
+    <tr class="hl"><td><b>学生模型 v1.1(现役)</b></td><td><b>5.11M</b></td><td class="g">0.9423</td><td class="g">0.863</td><td class="g">8.88 ms(神经引擎)</td></tr>
     <tr><td class="small" colspan="5">教师 GT 上界 0.9507;母版亮度校准漂移 2.1%(≤5% 线)。全部数字为实测,平台已标注。</td></tr>
   </table>
 </div></section>
@@ -266,8 +266,8 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 <section id="part3"><div class="wrap">
   <div class="sec-kicker">PART 3 · 实时播放器 rt_player</div>
   <h2>播放器设计:两条流水线,一次乘法</h2>
-  <p class="note">有了 9 毫秒的学徒,还需要一个能"边播边转"的播放器。核心设计:<b>把逐像素的重活全留在 GPU,把 AI 判断放进异步支路</b>——
-  两条流水线各跑各的,最后在屏幕前汇合成一次乘法。</p>
+  <p class="note">有了 9 毫秒的学生网络,还需要一个边解码边转换的实时播放器。核心设计:<b>逐像素运算全部由 GPU 承担,网络推理置于异步支路</b>——
+  两条流水线独立推进,在输出前汇合为一次逐像素乘法。</p>
 
   <div class="svgbox">
   <svg viewBox="0 0 960 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
@@ -282,7 +282,7 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
     <!-- gain branch -->
     <rect x="285" y="42" width="400" height="80" rx="10" fill="#241a2e" stroke="#a78bfa" stroke-width="1.5"/>
     <text x="485" y="66" fill="#a78bfa" font-size="14" text-anchor="middle" font-weight="700">增益支路(异步,解码时提前算)</text>
-    <text x="485" y="88" fill="#a7b0bf" font-size="12" text-anchor="middle">GPU 下采样 512×288 → 学徒网(神经引擎 CoreML)→ 增益纹理</text>
+    <text x="485" y="88" fill="#a7b0bf" font-size="12" text-anchor="middle">GPU 下采样 512×288 → 学生网络(神经引擎 CoreML)→ 增益纹理</text>
     <text x="485" y="108" fill="#ffd166" font-size="12" text-anchor="middle" font-weight="700">结果按帧的时间戳(PTS)存入环形表</text>
     <!-- pixel branch -->
     <rect x="285" y="212" width="400" height="80" rx="10" fill="#0e2027" stroke="#34dff2" stroke-width="1.5"/>
@@ -327,7 +327,7 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
       <rect x="270" y="146" width="52" height="22" rx="4" fill="#122616" stroke="#b7f05b"/><text x="296" y="162" fill="#b7f05b" text-anchor="middle">益 N+2</text>
     </g>
     <text x="360" y="152" fill="#b7f05b" font-size="13">解码提前 5 帧算好,显示时按时间戳精确取用 → 滞后 0 帧</text>
-    <text x="150" y="205" fill="#758195" font-size="12">依据:学徒只要 9ms,而解码天然领先显示 ≥1 帧(实测 16–40ms)——预测总能赶在显示之前完成。</text>
+    <text x="150" y="205" fill="#758195" font-size="12">依据:学生网络推理约 9ms,而解码领先显示 ≥1 帧(实测 16–40ms),预测可在显示前完成。</text>
   </svg>
   </div>
 
@@ -338,11 +338,11 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
   <b>shader 里的每个常量都由脚本从 Python 源码自动生成,禁止手抄</b>——两边永远同源。</p>
 
   <div class="card accent">
-    <h4>🔧 今日战报:一个教科书级 bug 的排查</h4>
+    <h4>问题排查案例:零拷贝纹理的生命周期缺陷</h4>
     <p class="note" style="margin:0">现象:播放中画面剧烈抖动,抖动帧看起来是"画面被放大"。排查发现是<b>零拷贝纹理的生命周期</b>问题:
     解码帧的显存(IOSurface)在还在屏幕上显示时,就被解码器的缓冲池回收去写<b>未来帧</b>了——推镜头里领先几帧的未来帧,
     恰好就是当前画面的"放大版",于是抖动看起来像缩放。修复:显示路径持有像素缓冲直到 GPU 用完(双持有 + 一帧宽限)。
-    <b>教训:零拷贝的所有权边界必须显式管理;"症状像什么"往往就是根因的指纹。</b></p>
+    <b>结论:零拷贝资源的所有权边界必须显式管理;异常的具体表现形态(此处为"放大")本身即是定位根因的关键线索。</b></p>
   </div>
 
   <h3>正在收尾</h3>
@@ -361,8 +361,8 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
   <table class="cmp">
     <tr><th>维度</th><th>我们的做法</th><th>为什么这是优势</th></tr>
     <tr><td><b>无虚构保证</b></td><td>AI 只输出低频增益场,像素 = 原片 × 增益</td><td>按构造不产生新内容(chromaErr≡0),过审风险为零;蒸馏后该性质<b>原样继承</b></td></tr>
-    <tr><td><b>蒸馏目标</b></td><td>只学增益图,不学像素</td><td>输出空间低频、低维 → 5.11M 就够;学徒平均掉教师随机噪声,未见域反超</td></tr>
-    <tr><td><b>数据工厂</b></td><td>教师管线自动产标签,2078 对零人工</td><td>护栏烘进标签;换片源即扩容;33min/次的迭代速度</td></tr>
+    <tr><td><b>蒸馏目标</b></td><td>只学增益图,不学像素</td><td>输出空间低频、低维 → 5.11M 就够;学生回归教师输出的条件期望、平均掉逐样本噪声,未见域反超</td></tr>
+    <tr><td><b>训练数据生成</b></td><td>教师管线自动标注,2078 对零人工</td><td>护栏烘进标签;换片源即扩容;33min/次的迭代速度</td></tr>
     <tr><td><b>部署形态</b></td><td>CoreML/ANE fp16 静态形状,全算子神经引擎常驻</td><td>8.88ms,GPU 全留给像素链;架构从 v1 起就为 NPU 设计(静态上采样、ReLU)</td></tr>
     <tr><td><b>实时架构</b></td><td>双速率解耦 + PTS 精确配对 + 全 GPU 常驻</td><td>增益不占帧预算;错配按构造为 0(互相关实测);1080p60 零掉帧</td></tr>
     <tr><td><b>质量体系</b></td><td>golden parity(逐位)+ 学术基准 + 专业母版对标 + 频闪互相关</td><td>每次改动都有客观回归线,不靠眼睛;验收规则盯"真裁判"</td></tr>

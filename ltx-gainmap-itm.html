@@ -179,6 +179,7 @@
         <span class="chip"><span data-lang="zh">LTX HDR · EXR 线性输出</span><span data-lang="en">LTX HDR · Linear EXR output</span></span>
         <span class="chip"><span data-lang="zh">Gainmap = LTX亮度 ÷ SDR亮度</span><span data-lang="en">Gain map = LTX luminance ÷ SDR luminance</span></span>
         <span class="chip"><span data-lang="zh">原片细节零改写</span><span data-lang="en">Original detail preserved</span></span>
+        <span class="chip"><span data-lang="zh">F_APC 自适应色度增强</span><span data-lang="en">F_APC adaptive chroma</span></span>
         <span class="chip"><span data-lang="zh">4K 原生 · Rec.2020 PQ</span><span data-lang="en">Native 4K · Rec.2020 PQ</span></span>
         <span class="chip"><span data-lang="zh">免规则 · 免漏检</span><span data-lang="en">No rules · No missed detections</span></span>
       </div>
@@ -284,7 +285,7 @@
       <div class="eq" style="margin-top:6px">
         <span data-lang="zh">HDR 结果 = <span class="sdr">原始&nbsp;SDR&nbsp;的&nbsp;RGB</span> <span class="op">×</span> gainmap</span><span data-lang="en">HDR result = <span class="sdr">original&nbsp;SDR&nbsp;RGB</span> <span class="op">×</span> gain map</span>
       </div>
-      <div class="note"><span data-lang="zh">LTX 只决定"哪里、提多少"；所有真实像素 / 颜色 / 纹理都来自原片 SDR → 数学上不可能混入虚构细节。</span><span data-lang="en">LTX decides only where and how much to lift. Every real pixel, color, and texture comes from the original SDR image, so invented detail cannot enter mathematically.</span></div>
+      <div class="note"><span data-lang="zh">LTX 只决定"哪里、提多少"；所有真实像素 / 颜色 / 纹理都来自原片 SDR → 数学上不可能混入虚构细节。（颜色随后是否提饱和，是<b>独立、可关</b>的一步——见下文「色度增强」。）</span><span data-lang="en">LTX decides only where and how much to lift. Every real pixel, color, and texture comes from the original SDR image, so invented detail cannot enter mathematically. (Whether saturation is then enhanced is a <b>separate, switchable</b> step—see “Chroma enhancement” below.)</span></div>
     </div>
 
     <div class="pipe">
@@ -294,6 +295,7 @@
       <div class="pstep"><div class="n">02</div><div class="t"><span data-lang="zh">算增益图</span><span data-lang="en">Compute gain map</span></div><div class="d"><span data-lang="zh">LTX÷SDR 亮度比</span><span data-lang="en">LTX÷SDR luminance ratio</span></div></div>
       <div class="pstep"><div class="n">03</div><div class="t"><span data-lang="zh">归一·门控·平滑</span><span data-lang="en">Normalize · gate · smooth</span></div><div class="d"><span data-lang="zh">去全局曝光 / 护栏 / 引导滤波</span><span data-lang="en">remove global exposure / guardrails / guided filtering</span></div></div>
       <div class="pstep"><div class="n">04</div><div class="t"><span data-lang="zh">贴回原片</span><span data-lang="en">Apply to original</span></div><div class="d"><span data-lang="zh">增益升采样 × 4K SDR</span><span data-lang="en">upsampled gain × 4K SDR</span></div></div>
+      <div class="pstep"><div class="n">05</div><div class="t"><span data-lang="zh">色度增强</span><span data-lang="en">Chroma enhance</span></div><div class="d"><span data-lang="zh">Rec.2020 线性域 · F_APC（dmax 可调 / 可关）</span><span data-lang="en">Rec.2020 linear · F_APC (tunable dmax, optional)</span></div></div>
       <div class="pstep"><div class="n">OUT</div><div class="t">HDR10 / JXL</div><div class="d">Rec.2020 PQ</div></div>
     </div>
 
@@ -322,8 +324,51 @@
     <div class="formula">
       <div class="eq"><span data-lang="zh"><span class="op">输出亮度天花板</span> = min( <span class="ltx">LTX 目标亮度</span>, <b>4.5</b> ) <span class="op">≈ 914&nbsp;nit</span></span><span data-lang="en"><span class="op">output ceiling</span> = min( <span class="ltx">LTX target luminance</span>, <b>4.5</b> ) <span class="op">≈ 914&nbsp;nit</span></span></div>
       <div class="eq" style="margin-top:6px"><span data-lang="zh">增益上限 = 输出亮度天花板 <span class="op">÷</span> <span class="sdr">SDR 亮度</span> <span class="op">（暗处自动放大、亮处自动收敛）</span></span><span data-lang="en">gain ceiling = output ceiling <span class="op">÷</span> <span class="sdr">SDR luminance</span> <span class="op">(auto-amplifies in shadow, converges in highlight)</span></span></div>
-      <div class="note"><span data-lang="zh">关键在于：封顶定在"输出 nits"而不是"增益倍数"——既不把暗处的真实光源压成小倍数，又让高光<b>不撞 per-channel 钳位</b>（这正是高光偏色的根因）。暗部另设 keep 门控：默认压住噪点，<b>够亮的 LTX 目标可越权放行</b>，所以暗背景里的真实灯不会被一并压死。</span><span data-lang="en">The key: the ceiling is defined in <b>output nits</b>, not in gain ratio—so a genuine source sitting in shadow is not pinned to a tiny multiplier, while highlights stay <b>off the per-channel clamp</b> (the exact cause of hue shift). A separate keep gate suppresses shadow noise by default but <b>lets a bright enough LTX target override it</b>, so a real lamp embedded in a dark background is not crushed along with the noise.</span></div>
+      <div class="note"><span data-lang="zh">关键在于：封顶定在"输出 nits"而不是"增益倍数"——既不把暗处的真实光源压成小倍数，又让高光<b>不撞 per-channel 钳位</b>（这正是高光偏色的根因）。暗部另设 keep 门控：默认压住噪点，<b>够亮的 LTX 目标可越权放行</b>，所以暗背景里的真实灯不会被一并压死。示例中的 4.5 × 203 nit 是初版配置；如今上限与参考白都已参数化——网页工具默认参考白 120 nit × headroom 4.0 ≈ 480 nit 峰值，这一档是照专业 HDR 母版实测校准的（全片亮度均值 1.16× 母版、高光峰值 0.93×）。</span><span data-lang="en">The key: the ceiling is defined in <b>output nits</b>, not in gain ratio—so a genuine source sitting in shadow is not pinned to a tiny multiplier, while highlights stay <b>off the per-channel clamp</b> (the exact cause of hue shift). A separate keep gate suppresses shadow noise by default but <b>lets a bright enough LTX target override it</b>, so a real lamp embedded in a dark background is not crushed along with the noise. The 4.5 × 203 nit in the example is the original configuration; both the ceiling and the reference white are now parameters—the web tool defaults to a 120 nit reference white × 4.0 headroom ≈ 480 nit peak, a level calibrated against a professional HDR master (full-film mean luminance 1.16× the master, highlight peaks 0.93×).</span></div>
     </div>
+  </section>
+
+  <!-- 深入 · 色度增强 -->
+  <section class="section" id="chroma">
+    <div class="kicker"><span data-lang="zh">深入 · 色度增强</span><span data-lang="en">Deep dive · Chroma enhancement</span></div>
+    <h2><span data-lang="zh">亮度之后，颜色也要跟上</span><span data-lang="en">After luminance, color has to follow</span></h2>
+    <p class="lead"><span data-lang="zh">增益图<b>只动亮度</b>，是"不虚构"的根基——但也留下一个空缺：SDR 的颜色是照 Rec.709 小色域调的，原封不动放进 HDR 容器，会比专业 HDR 母版<b>素一截</b>。把我们的全片与 ASC StEM2 官方 HDR 母版逐帧对标（ICtCp 域 · 去亮度饱和），纯亮度直出的饱和度只有母版的 <b>90%</b>。为此流水线在亮度之后补了<b>独立的一步色度增强</b>：注入点在 Rec.709→Rec.2020 色域转换之后、PQ 编码之前的<b>线性域</b>——亮度 gainmap 路径一个字节不动，这一步随时可关（off 时逐位等于原直出）。</span><span data-lang="en">The gain map <b>touches only luminance</b>—the foundation of "nothing invented." But that leaves a gap: SDR color is graded within the small Rec.709 gamut, and dropped unchanged into an HDR container it looks <b>noticeably plainer</b> than a professionally graded HDR master. Benchmarking our full film frame by frame against the official ASC StEM2 HDR master (ICtCp domain, luminance-normalized saturation), the luminance-only output reaches just <b>90%</b> of the master's saturation. So the pipeline adds an <b>independent chroma-enhancement step</b>: injected in the <b>linear domain</b> after the Rec.709→Rec.2020 gamut conversion and before PQ encoding—the luminance gain-map path is untouched, and the step can be switched off (off is bit-identical to the plain output).</span></p>
+
+    <div class="formula">
+      <div class="eq"><span data-lang="zh">每像素系数 s = 1 <span class="op">+</span> <b>dmax</b> <span class="op">×</span> w，&nbsp;w = <span class="ltx">主角色</span> <span class="op">×</span> <span class="ltx">色域余量</span> <span class="op">×</span> <span class="ltx">亮度耦合</span> <span class="op">×</span> <span class="ltx">肤色保护</span> <span class="op">×</span> <span class="ltx">高光滚降</span></span><span data-lang="en">per-pixel factor s = 1 <span class="op">+</span> <b>dmax</b> <span class="op">×</span> w,&nbsp; w = <span class="ltx">hero-color</span> <span class="op">×</span> <span class="ltx">gamut headroom</span> <span class="op">×</span> <span class="ltx">luminance coupling</span> <span class="op">×</span> <span class="ltx">skin protection</span> <span class="op">×</span> <span class="ltx">highlight rolloff</span></span></div>
+      <div class="eq" style="margin-top:6px"><span data-lang="zh">ICtCp 域：(Ct, Cp) <span class="op">×</span> s，I 不变 <span class="op">—— 只提饱和 · 不换色相 · 不造新色</span></span><span data-lang="en">In ICtCp: (Ct, Cp) <span class="op">×</span> s, I unchanged <span class="op">— more saturation, same hue, no new colors</span></span></div>
+      <div class="note"><span data-lang="zh">自研 <b>F_APC</b>（Adaptive Perceptual Chroma）：五个乘性门控逐像素决定"这里还能推多少"。其中<b>色域余量</b>按"离 BT.2020 / 有效范围边界还有多远"衰减——天然<b>永不截断</b>。"不虚构"的边界也说得清：色度只沿"同色相更饱和"这一个方向缩放。</span><span data-lang="en">Our <b>F_APC</b> (Adaptive Perceptual Chroma): five multiplicative gates decide per pixel how much further to push. The <b>gamut-headroom</b> gate decays with the distance to the BT.2020 / valid-range boundary, so it <b>never clips</b>. The no-invention boundary also stays crisp: chroma is scaled along a single axis—same hue, more saturation.</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h4>off</h4><p><span data-lang="zh">不做色度增强，亮度 gainmap 后按容器映射直出。基线、逐位可复现；对标母版<b>欠饱和 ~10%</b>。</span><span data-lang="en">No chroma enhancement; encode straight after the luminance gain map. The bit-reproducible baseline—<b>about 10% under</b> the master's saturation.</span></p></div>
+      <div class="card"><h4>B · ICtCp ×1.3</h4><p><span data-lang="zh">全局提饱和一刀切（附高光滚降、护肤色）。简单可靠，但不看内容；全片实测 <b>1.15×</b> 母版，整体偏艳。</span><span data-lang="en">A global ×1.3 saturation lift (with highlight rolloff and skin protection). Simple and dependable but content-blind; measured at <b>1.15×</b> the master over the full film—uniformly too vivid.</span></p></div>
+      <div class="card"><h4>F_APC ✦</h4><p><span data-lang="zh">自适应：中饱和的"主角色"推得最多，近中性 / 已饱和的收着推；越亮越艳（Hunt 效应）、肤色少动、高光向白滚降、色域余量兜底。<b>强度由一个 dmax 旋钮统一控制。</b></span><span data-lang="en">Adaptive: mid-saturation "hero colors" get the most push while near-neutrals and already-saturated pixels get the least; brighter pixels push more (the Hunt effect), skin barely moves, highlights roll toward white, and gamut headroom backstops everything. <b>One knob—dmax—sets the strength.</b></span></p></div>
+    </div>
+
+    <h3><span data-lang="zh">校准：拿专业母版当标尺，扫出 dmax</span><span data-lang="en">Calibration: sweep dmax against a professional master</span></h3>
+    <p><span data-lang="zh">F_APC 最初按 dmax=1.0 上线，全片对标发现<b>过冲</b>：饱和度到了母版的 <b>1.17×</b>——方向对、力道大。于是在无色度基底上扫 dmax，逐档对标母版：</span><span data-lang="en">F_APC first shipped at dmax = 1.0, and the full-film benchmark showed an <b>overshoot</b>: <b>1.17×</b> the master's saturation—right direction, too much force. So we swept dmax on a chroma-free base, benchmarking each step against the master:</span></p>
+
+    <table data-lang="zh">
+      <tr><th>dmax</th><th>饱和度 / 母版</th><th>解读</th></tr>
+      <tr><td>0（关）</td><td class="mid">0.90×</td><td>纯亮度直出：欠饱和 ~10%</td></tr>
+      <tr><td class="col-pick"><b>0.4（默认 ✦）</b></td><td class="col-pick good">0.99×</td><td class="col-pick">与母版几乎重合</td></tr>
+      <tr><td>0.45</td><td class="good">1.00×</td><td>同样贴合——0.4–0.5 都在 ±1% 内</td></tr>
+      <tr><td>0.6</td><td class="mid">1.04×</td><td>开始偏艳</td></tr>
+      <tr><td>1.0（旧默认）</td><td class="bad">1.13×</td><td>明显过冲（全片编码实测 1.17×）</td></tr>
+    </table>
+    <table data-lang="en">
+      <tr><th>dmax</th><th>saturation / master</th><th>reading</th></tr>
+      <tr><td>0 (off)</td><td class="mid">0.90×</td><td>luminance-only output: ~10% under</td></tr>
+      <tr><td class="col-pick"><b>0.4 (default ✦)</b></td><td class="col-pick good">0.99×</td><td class="col-pick">virtually on top of the master</td></tr>
+      <tr><td>0.45</td><td class="good">1.00×</td><td>equally close—0.4–0.5 all within ±1%</td></tr>
+      <tr><td>0.6</td><td class="mid">1.04×</td><td>starting to over-saturate</td></tr>
+      <tr><td>1.0 (old default)</td><td class="bad">1.13×</td><td>clear overshoot (1.17× in the full-film encode)</td></tr>
+    </table>
+
+    <div class="callout gold"><span data-lang="zh"><b>结论：默认 dmax = 0.4</b>，饱和度与专业母版偏差 ~1%。网页工具把它做成滑块（0–1 · 步进 0.05），想更素或更艳随手可调。亮度这条线也是同一把尺校的（全片均值 1.16× 母版、高光峰值 0.93×）——亮度、颜色两个维度都<b>贴着专业调色走</b>。</span><span data-lang="en"><b>Conclusion: default dmax = 0.4</b>, putting saturation within ~1% of the professional master. The web tool exposes it as a slider (0–1, step 0.05) for anyone wanting plainer or more vivid. Luminance was calibrated with the same yardstick (full-film mean 1.16× the master, highlight peaks 0.93×)—both dimensions <b>track professional grading</b>.</span></div>
+
+    <div class="callout violet"><span data-lang="zh"><b>一个诚实的发现：</b>色度增强对齐的是<b>专业调色的审美</b>，不是<b>算法真值</b>。同一个 F_APC（dmax=1.0）放到 HDRTV1K 学术基准上，色差 ΔE_ITP 反而从 18.5 恶化到 21.1——那套 GT 不是艺术调色，通用提饱和冲着它就是过冲；而对专业母版恰好落进档位。<b>色度强度必须跟着目标调色走</b>——这正是把 dmax 做成可调参数、而不是写死常数的原因。</span><span data-lang="en"><b>An honest finding:</b> chroma enhancement aligns with the <b>taste of professional grading</b>, not with <b>algorithmic ground truth</b>. The same F_APC at dmax = 1.0, run on the HDRTV1K academic benchmark, actually worsens ΔE_ITP from 18.5 to 21.1—that GT is not an artistic grade, so a generic saturation lift overshoots it—while against the professional master it lands right on target. <b>Chroma strength must follow the target grade</b>—exactly why dmax is an adjustable parameter rather than a hard-coded constant.</span></div>
   </section>
 
   <!-- 深入 · 工程化 -->
@@ -439,7 +484,7 @@
 
   <footer>
     <p><span data-lang="zh">LTX Gainmap · SDR→HDR 新一代思路 ｜ <a href="sdr-hdr-itm-system.html">← 区域识别版系统</a> ｜ <a href="index.html">返回色彩与显示指南</a></span><span data-lang="en">LTX Gain Map · A New SDR→HDR Approach ｜ <a href="sdr-hdr-itm-system.html">← Region-based system</a> ｜ <a href="index.html">Back to the Color &amp; Display Guide</a></span></p>
-    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · 分段接缝匹配 · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span><span data-lang="en">Stack: LTX HDR (EXR) · Python · OpenCV (OpenEXR) · guided filtering · segment seam matching · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span></p>
+    <p style="margin-top:8px;color:var(--soft)"><span data-lang="zh">技术栈：LTX HDR (EXR) · Python · OpenCV(OpenEXR) · 引导滤波 · 分段接缝匹配 · F_APC 自适应色度增强（ICtCp） · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>色彩标准：ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span><span data-lang="en">Stack: LTX HDR (EXR) · Python · OpenCV (OpenEXR) · guided filtering · segment seam matching · F_APC adaptive chroma (ICtCp) · FFmpeg / libx265 · libjxl / libavif / UltraHDR<br>Color standards: ITU-R BT.2020 / BT.2100 / BT.2408 · SMPTE ST 2084 (PQ)</span></p>
   </footer>
 
   <script>

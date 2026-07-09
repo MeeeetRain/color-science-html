@@ -1,303 +1,731 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<!-- 登录守卫:无有效登录态会跳转到 login.html -->
-<script src="assets/auth/auth-config.js"></script>
-<script src="assets/auth/auth-guard.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RGB MiniLED 电视画质测试工具 · 设计说明</title>
-<style>
-  :root{
-    --bg:#0f1216; --panel:#171c23; --panel2:#1d2530; --line:#2a3340;
-    --tx:#e6edf3; --mut:#9aa7b4; --acc:#4ea1ff; --r:#ff5d5d; --g:#4cd07d;
-    --b:#5aa9ff; --y:#ffce54; --warn:#ffae42; --p:#c08bff;
-    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
-    --sans:-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);
-       line-height:1.65;font-size:15px}
-  .wrap{max-width:980px;margin:0 auto;padding:40px 24px 80px}
-  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
-  h1{font-size:26px;margin:0 0 6px;letter-spacing:.3px}
-  h1 .tag{font-size:12px;font-weight:600;color:var(--acc);border:1px solid var(--acc);
-          border-radius:20px;padding:2px 10px;vertical-align:middle;margin-left:10px}
-  .sub{color:var(--mut);font-size:14px;margin-top:6px}
-  h2{font-size:18px;margin:44px 0 14px;padding-left:11px;border-left:3px solid var(--acc)}
-  h3{font-size:14.5px;margin:0 0 8px;color:var(--tx)}
-  p{margin:8px 0;color:#cdd6df}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-  .card.r{border-top:3px solid var(--r)} .card.g{border-top:3px solid var(--g)}
-  .muted{color:var(--mut);font-size:13.5px}
-  ul{margin:8px 0;padding-left:20px} li{margin:4px 0;color:#cdd6df}
-  code{font-family:var(--mono);background:#0b0e12;border:1px solid var(--line);
-       border-radius:5px;padding:1px 6px;font-size:12.5px;color:#cfe3ff}
-  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
-  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}
-  td b{color:#fff}
-  .kpi{display:inline-block;background:#10261a;border:1px solid #1f5b39;color:#7ef0a8;
-       border-radius:6px;padding:1px 8px;font-family:var(--mono);font-size:12.5px}
-  .syn{display:inline-block;background:#20242b;border:1px dashed #45525f;color:#9aa7b4;
-       border-radius:6px;padding:1px 8px;font-family:var(--mono);font-size:12.5px}
-  .card.warn{border-top:3px solid var(--warn)}
-  .danger{background:#241316;border:1px solid #5a2530;border-radius:10px;padding:12px 16px;
-          color:#ffd0d0;font-size:13.5px;margin:14px 0}
-  .danger b{color:#ff8a8a}
-  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;
-        font-family:var(--mono);margin:2px 4px 2px 0}
-  .pill.cs{background:#1a2436;color:#9cc4ff;border:1px solid #2f4660}
-  .pill.ok{background:#10261a;color:#7ef0a8;border:1px solid #1f5b39}
-  .pill.todo{background:#2a1a12;color:#ffae42;border:1px solid #5a3d1a}
-  .flow{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;margin:14px 0}
-  .note{background:#1c1a12;border:1px solid #4a3d1a;border-radius:10px;padding:12px 16px;
-        color:#f0e0b6;font-size:13.5px;margin:14px 0}
-  .note b{color:var(--warn)}
-  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:16px;
-          color:var(--mut);font-size:12.5px}
-  @media(max-width:680px){.grid2,.grid3{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>RGB MiniLED 电视画质测试工具 · 测试与校准说明</title>
+  <meta name="description" content="解释 RGB MiniLED 电视画质测试工具如何测试圆环基色串色、动态色域、色彩体积、1D/3D LUT 校准，以及 CA-410、UltraStudio 4K Mini、电脑 HDMI 精准输出等设备链路。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a0f;
+      --panel: #111824;
+      --panel-2: #162233;
+      --ink: #f3f7fb;
+      --muted: #a8b4c4;
+      --soft: #75849a;
+      --line: rgba(255,255,255,.12);
+      --cyan: #32d8ee;
+      --blue: #62a8ff;
+      --green: #6ee596;
+      --yellow: #ffd166;
+      --red: #ff6363;
+      --magenta: #ce8cff;
+      --orange: #ffad5c;
+      --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #070a0f 0%, #0c121b 48%, #070a0f 100%);
+      color: var(--ink);
+      font: 15.5px/1.72 var(--sans);
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+      background: rgba(7,10,15,.76);
+      backdrop-filter: blur(18px);
+    }
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .logo {
+      font-size: 17px;
+      font-weight: 820;
+      background: linear-gradient(100deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      white-space: nowrap;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      transition: color .18s, background .18s;
+    }
+    .nav-links a:hover { color: var(--ink); background: rgba(255,255,255,.07); }
+    .wrap { width: min(1120px, 100%); margin: 0 auto; padding: 42px 22px 82px; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.03fr .97fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 26px;
+    }
+    .surface {
+      background: rgba(17,24,36,.86);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 44px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .hero-copy, .hero-visual, .band { padding: 22px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 820;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0 0 12px; font-size: 46px; line-height: 1.06; letter-spacing: 0; }
+    h2 { margin: 36px 0 13px; font-size: 24px; line-height: 1.24; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.35; }
+    p { margin: 8px 0; color: #d2dbe7; }
+    .lead { max-width: 760px; color: #dce6f2; font-size: 16.5px; }
+    .muted { color: var(--muted); font-size: 13.5px; }
+    .tiny { color: var(--soft); font-size: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .chip, .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: #cfd9e6;
+      font: 12px/1.2 var(--mono);
+      padding: 6px 10px;
+    }
+    .pill.ok { color: #9af6b9; border-color: rgba(110,229,150,.3); background: rgba(110,229,150,.09); }
+    .pill.warn { color: #ffd998; border-color: rgba(255,209,102,.34); background: rgba(255,209,102,.08); }
+    .pill.hot { color: #a9ceff; border-color: rgba(98,168,255,.35); background: rgba(98,168,255,.09); }
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 28px; }
+    .tile, .device, .step, .metric-card {
+      background: rgba(255,255,255,.045);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .tile .num { font: 760 24px/1 var(--mono); color: var(--cyan); margin-bottom: 8px; }
+    .tile p, .step span, .device p, .metric-card p { color: var(--muted); font-size: 13.3px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .step b { display: block; margin-bottom: 4px; }
+    .formula {
+      font: 12.2px/1.7 var(--mono);
+      white-space: pre-wrap;
+      color: #d8e8ff;
+      background: #080d14;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: 13px;
+      overflow: auto;
+      margin-top: 12px;
+    }
+    .note {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,209,102,.28);
+      background: rgba(255,209,102,.07);
+      color: #f3dfb4;
+      font-size: 13.5px;
+    }
+    .note b { color: var(--yellow); }
+    .danger {
+      margin: 16px 0 24px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,99,99,.32);
+      background: rgba(255,99,99,.08);
+      color: #ffd7d7;
+      font-size: 13.8px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.4px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.1); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font: 700 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0; }
+    td { color: #d4deeb; }
+    code { font-family: var(--mono); font-size: .9em; color: #cfe3ff; background: #090f16; border: 1px solid rgba(255,255,255,.1); border-radius: 5px; padding: 1px 5px; }
+    .device-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .device strong { display: block; font-size: 15.5px; margin-bottom: 5px; }
+    .device .tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+    svg { width: 100%; height: auto; display: block; }
+    .svg-title { fill: #f3f7fb; font: 700 13px var(--sans); }
+    .svg-label { fill: #c8d3e0; font: 12px var(--mono); }
+    .svg-small { fill: #8492a5; font: 10.5px var(--mono); }
+    footer { margin-top: 46px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--soft); font-size: 12.5px; }
+    @media (max-width: 860px) {
+      .hero, .two, .device-grid, .metrics { grid-template-columns: 1fr; }
+      .quick-grid, .steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .nav { align-items: flex-start; flex-direction: column; }
+      .nav-links { justify-content: flex-start; }
+      .wrap { padding: 28px 14px 62px; }
+      .hero-copy, .hero-visual, .band { padding: 16px; }
+      .quick-grid, .steps { grid-template-columns: 1fr; }
+      h1 { font-size: 32px; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
+  <header class="topbar">
+    <nav class="nav">
+      <a class="logo" href="index.html">色彩与显示指南</a>
+      <div class="nav-links">
+        <a href="index.html#chapters">章节</a>
+        <a href="#ring">圆环串色</a>
+        <a href="#dynamic">动态色域</a>
+        <a href="#volume">色彩体积</a>
+        <a href="#lut">LUT 校准</a>
+        <a href="#hdmi">电脑 HDMI</a>
+        <a href="#devices">设备链路</a>
+      </div>
+    </nav>
+  </header>
 
-<header>
-  <h1>RGB MiniLED 电视画质测试工具 <span class="tag">设计说明 v0.5</span></h1>
-  <div class="sub">面向 RGB MiniLED 背光电视的 <b>串色</b> 与 <b>动态画面色域缩小</b> 两类缺陷 ·
-       测试图卡生成 + <b>WebUI 测试台</b>（设备连接 · 准备 · 执行 · 结果）+ 测量分析 + 报告导出 ·
-       指标锚定 IDMS / CIE D50 CIELAB 色域体积 + Gamut Rings</div>
-</header>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-copy surface">
+        <div class="eyebrow">RGB MINILED TEST TOOL</div>
+        <h1>RGB MiniLED 画质测试工具如何测串色、动态色域、色彩体积与 LUT 校准</h1>
+        <p class="lead">这是一套面向 RGB MiniLED 背光电视的本地测试台。它把图卡生成、精确输出、仪器采样、算法聚合和报告导出串成闭环，用可复测的数据解释“彩色光晕”“动态色域缩小”和“校准后色彩是否收敛”。</p>
+        <div class="chips">
+          <span class="chip">圆环基色串色：同色基准 + 异色背景 + D/3D 对比</span>
+          <span class="chip">动态色域：全屏 RGB 基准 + 背景小色块 DGR</span>
+          <span class="chip">色彩体积：RGBCMYW × 多亮度层 + 黑场原点</span>
+          <span class="chip">LUT：1D 灰阶线性化 + 3D 色彩立方体</span>
+          <span class="chip">输出：Murideo / 电脑 HDMI / UltraStudio 4K Mini</span>
+        </div>
+      </div>
+      <div class="hero-visual surface">
+        <svg viewBox="0 0 560 336" role="img" aria-label="WebUI 测试闭环架构图">
+          <defs>
+            <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#8593a5"></path>
+            </marker>
+          </defs>
+          <rect x="18" y="16" width="524" height="304" rx="16" fill="#0b1119" stroke="#2b3a4b"></rect>
+          <rect x="44" y="42" width="150" height="72" rx="10" fill="#101722" stroke="#32d8ee"></rect>
+          <text x="119" y="70" text-anchor="middle" class="svg-title">WebUI / Controller</text>
+          <text x="119" y="91" text-anchor="middle" class="svg-small">plans · run · history</text>
 
-<div class="danger">
-  <b>⚠ 重要：迄今未做任何真机实测。</b>
-  整套系统目前只在<b>合成显示模型</b>上跑通——没有连过真电视，没有用 CS-2000 / CA-410 / CXC-2600 测过哪怕一次，
-  本文出现的所有数字（收缩率、色晕半径等）都是<b>仿真示意值，绝对值无意义</b>，仅用于演示管线能算出什么。
-  真实可信的结果要等接入真机后产生。完整的「没做 / 待办」清单见文末 <b>第九节</b>。
-</div>
+          <rect x="238" y="34" width="126" height="54" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+          <text x="301" y="58" text-anchor="middle" class="svg-title">card contract</text>
+          <text x="301" y="76" text-anchor="middle" class="svg-small">draw list / HDR meta</text>
 
-<h2>一、要解决什么问题</h2>
-<p class="muted">RGB MiniLED 把背光从"白光 + 彩膜"升级为独立驱动的 R/G/B 分区——色域与亮度大涨，
-但也把"亮度型 blooming"升级成了两类新缺陷：</p>
-<div class="grid2">
-  <div class="card r">
-    <h3>① 串色 / 彩色光晕 <span class="muted">Colour Crosstalk</span></h3>
-    <p class="muted">本质：<b>色度的空间光晕</b>。白点在彩色背景里发品红/发青，肤色上出现彩色镶边。</p>
-    <ul>
-      <li>背光空间分辨率 ≪ LCD 像素 → 分区背光是"折中混合色"</li>
-      <li>光学串扰（PSF 侧向漏光）→ 邻区互染</li>
-      <li>LED 发射光谱与彩膜通带失配 → 色偏</li>
-      <li>三通道局部调光反演误差</li>
-    </ul>
-  </div>
-  <div class="card g">
-    <h3>② 动态色域缩小 <span class="muted">Dynamic Gamut Shrink</span></h3>
-    <p class="muted">本质：色域随 <b>APL / 背景 / 运动</b> 收缩——静态色块漂亮、动态内容缩水。</p>
-    <ul>
-      <li>功率/热限制（ABL）→ 高 APL 下峰值彩色亮度回退</li>
-      <li>局部调光色度折中 → 复杂画面到不了满饱和</li>
-      <li>时序动态/压摆率 → 瞬态掉饱和、拖影</li>
-      <li>动态色调/色域映射（DTM）压缩</li>
-    </ul>
-  </div>
-</div>
+          <rect x="398" y="28" width="114" height="38" rx="8" fill="#0e1b17" stroke="#6ee596"></rect>
+          <text x="455" y="52" text-anchor="middle" class="svg-label">hdr-agent</text>
+          <rect x="398" y="76" width="114" height="38" rx="8" fill="#171421" stroke="#ce8cff"></rect>
+          <text x="455" y="100" text-anchor="middle" class="svg-label">decklink-agent</text>
+          <rect x="398" y="124" width="114" height="38" rx="8" fill="#20180d" stroke="#ffd166"></rect>
+          <text x="455" y="148" text-anchor="middle" class="svg-label">Murideo SEVEN</text>
 
-<h2>二、测试指标</h2>
-<div class="grid2">
-  <div>
-    <h3 style="color:var(--r)">串色指标（已全部二维化）</h3>
-    <table>
-      <tr><th>指标</th><th>定义</th></tr>
-      <tr><td><b>色串扰半径 R_cross</b></td><td>沿剖线 Δu'v' 衰减到阈值前的最远距离，按屏宽归一 %W</td></tr>
-      <tr><td><b>二维 Δu'v' 热力图</b></td><td>全场色度偏差分布（CXC-2600 直接出）</td></tr>
-      <tr><td><b>棋盘逐格污染</b></td><td>各格中心被邻色污染的 Δu'v' + 污染热力图</td></tr>
-      <tr><td><b>背光 PSF FWHM</b></td><td>R/G/B 单点点扩散半高宽（光学串扰来源）</td></tr>
-      <tr><td><b>彩色边缘 / 角落</b></td><td>异色硬边色过冲；中心染色（VESA 黑位彩色版）</td></tr>
-    </table>
-  </div>
-  <div>
-    <h3 style="color:var(--g)">动态色域指标</h3>
-    <table>
-      <tr><th>指标</th><th>定义</th></tr>
-      <tr><td><b>CIELAB-D50 色域体积</b></td><td>实测壳点(RGBCMYW+黑)凸包体积，按<b>固定</b>峰值白点归一</td></tr>
-      <tr><td><b>BT.2020 / P3 覆盖率</b></td><td>逐 L* 切片的环交覆盖</td></tr>
-      <tr><td><b>Gamut Rings</b></td><td>按 L* 切片的 a*b* 截面积分布（色域示波器）</td></tr>
-      <tr><td><b>动态色域收缩率 (KPI)</b></td><td>1 − vol(大窗/高APL) / vol(小窗/低APL)</td></tr>
-      <tr><td><b>color-in-context</b></td><td>同色块随背景 APL 升高的掉饱和</td></tr>
-    </table>
-  </div>
-</div>
-<div class="note">关键设计：色域体积按<b>固定峰值白点</b>归一（而非逐窗白点），ABL 亮度回退就真实地表现为<b>体积收缩</b>。
-  色彩数学经 selftest 校验（含 CIEDE2000 对 Sharma 34 对参考，最大误差 5e-5）。
-  <b>阈值（合格线）目前为占位，待按企标 + 真机实测重标定。</b></div>
+          <rect x="398" y="198" width="114" height="54" rx="10" fill="#101722" stroke="#62a8ff"></rect>
+          <text x="455" y="221" text-anchor="middle" class="svg-title">RGB MiniLED TV</text>
+          <text x="455" y="240" text-anchor="middle" class="svg-small">HDMI / SDI input</text>
 
-<h2>三、系统架构与数据流</h2>
-<div class="flow">
-<svg viewBox="0 0 940 372" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
-  <defs>
-    <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="#6b7a8c"/>
-    </marker>
-  </defs>
-  <!-- frontend -->
-  <rect x="20" y="16" width="900" height="56" rx="10" fill="#171c23" stroke="#4ea1ff"/>
-  <text x="470" y="40" fill="#e6edf3" font-size="14" font-weight="700" text-anchor="middle">浏览器前端 SPA（Figma 设计语言）</text>
-  <text x="470" y="58" fill="#9aa7b4" font-size="11.5" text-anchor="middle">设备连接 · ①准备 · ②执行 · ③结果 · 历史记录 · 报告导出 · 全屏HDMI窗口</text>
-  <!-- backend -->
-  <rect x="20" y="110" width="900" height="74" rx="10" fill="#171c23" stroke="#4cd07d"/>
-  <text x="470" y="130" fill="#e6edf3" font-size="13.5" font-weight="700" text-anchor="middle">本地后端（Python · stdlib http.server · 零额外依赖 · Win/Mac）</text>
-  <text x="150" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">图卡生成</text>
-  <text x="150" y="174" fill="#5b6b7c" font-size="10" text-anchor="middle">patterns/encode</text>
-  <text x="390" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">工作流引擎</text>
-  <text x="390" y="174" fill="#5b6b7c" font-size="10" text-anchor="middle">plans/run/序列器</text>
-  <text x="620" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">分析</text>
-  <text x="620" y="174" fill="#5b6b7c" font-size="10" text-anchor="middle">色域/串色/gamut</text>
-  <text x="820" y="160" fill="#9aa7b4" font-size="11" text-anchor="middle">报告·持久化</text>
-  <text x="820" y="174" fill="#5b6b7c" font-size="10" text-anchor="middle">report/history/export</text>
-  <line x1="470" y1="72" x2="470" y2="108" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="455" y1="108" x2="455" y2="74" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <text x="510" y="96" fill="#7d8b9a" font-size="10" text-anchor="middle">REST / 轮询</text>
-  <!-- output drivers -->
-  <rect x="20" y="232" width="270" height="118" rx="10" fill="#171c23" stroke="#ffae42"/>
-  <text x="155" y="254" fill="#e6edf3" font-size="12.5" font-weight="700" text-anchor="middle">图卡发生器驱动（可插拔）</text>
-  <text x="155" y="276" fill="#cfe3ff" font-size="11" text-anchor="middle">Murideo SEVEN（真 HDR10）</text>
-  <text x="155" y="294" fill="#cfe3ff" font-size="11" text-anchor="middle">全屏 HDMI（HDR Canvas / SDR）</text>
-  <text x="155" y="312" fill="#9aa7b4" font-size="11" text-anchor="middle">sim（模拟）</text>
-  <text x="155" y="334" fill="#5b6b7c" font-size="10" text-anchor="middle">运行时切换</text>
-  <!-- TV -->
-  <rect x="350" y="232" width="240" height="118" rx="10" fill="#10161c" stroke="#5aa9ff"/>
-  <text x="470" y="284" fill="#e6edf3" font-size="13" font-weight="700" text-anchor="middle">被测电视</text>
-  <text x="470" y="304" fill="#9aa7b4" font-size="11" text-anchor="middle">RGB MiniLED（HDMI）</text>
-  <!-- meter drivers -->
-  <rect x="650" y="232" width="270" height="118" rx="10" fill="#171c23" stroke="#c08bff"/>
-  <text x="785" y="254" fill="#e6edf3" font-size="12.5" font-weight="700" text-anchor="middle">测量仪驱动（可插拔）</text>
-  <text x="785" y="276" fill="#cfe3ff" font-size="11" text-anchor="middle">CS-2000 / CA-410 / CXC-2600</text>
-  <text x="785" y="294" fill="#cfe3ff" font-size="11" text-anchor="middle">FileMeter（读软件导出）</text>
-  <text x="785" y="312" fill="#9aa7b4" font-size="11" text-anchor="middle">sim（合成显示模型）</text>
-  <text x="785" y="334" fill="#5b6b7c" font-size="10" text-anchor="middle">SDK 待装 / 现可跑</text>
-  <!-- arrows backend<->drivers, drivers->TV->meter->backend -->
-  <line x1="120" y1="184" x2="120" y2="230" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="290" y1="291" x2="348" y2="291" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="590" y1="291" x2="648" y2="291" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="820" y1="230" x2="820" y2="186" stroke="#6b7a8c" stroke-width="1.6" marker-end="url(#arr)"/>
-  <text x="319" y="284" fill="#7d8b9a" font-size="10" text-anchor="middle">图卡</text>
-  <text x="619" y="284" fill="#7d8b9a" font-size="10" text-anchor="middle">测量</text>
-</svg>
-</div>
-<p class="muted">契约：每张图卡的几何/目标值/测量 ROI 只在 <b>sidecar JSON</b> 里定义一次，生成与分析共用；
-  执行序列逐卡「上屏 → 测量 → 记录」，可单卡重测、按需播放。</p>
+          <rect x="238" y="218" width="126" height="54" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+          <text x="301" y="241" text-anchor="middle" class="svg-title">Meter drivers</text>
+          <text x="301" y="259" text-anchor="middle" class="svg-small">CA-410 · CXC · File</text>
 
-<h2>四、信号链 / 出图方式</h2>
-<table>
-  <tr><th>方式</th><th>HDR 准确性</th><th>元数据控制</th><th>用途</th></tr>
-  <tr><td><b>Murideo SEVEN</b><br><span class="muted">图卡发生器</span></td>
-      <td><span class="pill ok">真 HDR10</span> PQ+BT.2020</td>
-      <td><span class="pill ok">完整</span> MaxCLL/FALL/Mastering</td>
-      <td>金标准；元数据响应测试必用。USB 传 16-bit TIFF / WebSocket 控制（命令 ID 待官方文档）</td></tr>
-  <tr><td><b>全屏 HDMI · HDR Canvas</b><br><span class="muted">PC 经 HDMI</span></td>
-      <td><span class="pill ok">PQ 像素准确</span> rec2100-pq</td>
-      <td><span class="pill todo">无</span> 系统给通用值</td>
-      <td>不用 Murideo 直测；需 Win「使用HDR」+ Chrome 实验旗标；色域/亮度/串色可用</td></tr>
-  <tr><td><b>全屏 HDMI · SDR</b><br><span class="muted">兜底</span></td>
-      <td><span class="pill todo">SDR</span></td>
-      <td><span class="pill todo">—</span></td>
-      <td>几何 / 串色空间 / blooming / SDR / 快速验证</td></tr>
-</table>
-<div class="note"><b>HDR 的硬边界：</b>PC（浏览器/视频）可输出<b>准确的 PQ 像素值</b>，但<b>无法可靠控制 HDMI 的 HDR10 动态元数据</b>
-  （Windows 不保证把 app 设的 MaxCLL/Mastering 透传到显示器）。所以"测电视对不同元数据的 tone-map 响应"仍需 Murideo。</div>
+          <rect x="44" y="206" width="150" height="78" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+          <text x="119" y="232" text-anchor="middle" class="svg-title">Analysis</text>
+          <text x="119" y="251" text-anchor="middle" class="svg-small">Δu'v' · DGR · volume</text>
+          <text x="119" y="268" text-anchor="middle" class="svg-small">LUT · HTML / CSV / JSON</text>
 
-<h2>五、WebUI 工作流</h2>
-<div class="grid3">
-  <div class="card"><h3>设备连接</h3><p class="muted">右上状态条进入。选图卡发生器（Murideo/全屏HDMI/sim）+ 测量仪驱动，运行时连接，失败保留原驱动并红字提示。</p></div>
-  <div class="card"><h3>① 准备</h3><p class="muted">填被测样机（机型/模式/峰值/调光档）+ 选测试方案（5 个：动态色域×2、串色×3）。</p></div>
-  <div class="card"><h3>② 执行</h3><p class="muted">进入即列出全部图卡；▶ 开始测量逐卡播放，进度+预览+实时读数；<b>点任一行单独重测</b>；🖥 全屏HDMI 直出电视。</p></div>
-  <div class="card"><h3>③ 结果</h3><p class="muted">自动算 KPI（粉彩判定块）+ 图表（色域曲线/Gamut Rings/热力图/PSF）+ 明细表。</p></div>
-  <div class="card"><h3>历史记录</h3><p class="muted">每次结果自动持久化；列表复看，含图表。</p></div>
-  <div class="card"><h3>报告导出</h3><p class="muted">⬇ 自包含 HTML（图表内嵌）/ ⬇ CSV（原始读数）。</p></div>
-</div>
+          <path d="M194 78 H238" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M364 61 H398" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M364 61 C384 61 380 95 398 95" fill="none" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M364 61 C384 61 380 143 398 143" fill="none" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <text x="370" y="128" class="svg-small">WS / TIFF / HDR meta</text>
+          <path d="M455 162 V198" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M455 252 C455 292 332 300 301 272" fill="none" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M238 245 H194" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M119 206 V114" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M398 176 C360 176 360 116 324 97" fill="none" stroke="#6ee596" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrow)"></path>
+          <text x="356" y="178" class="svg-small">draw-list render ack</text>
+          <text x="80" y="154" class="svg-small">next card</text>
+          <text x="374" y="292" class="svg-small">measure after ack</text>
+        </svg>
+      </div>
+    </section>
 
-<h2>六、设备映射</h2>
-<table>
-  <tr><th>设备</th><th>角色</th><th>用途</th></tr>
-  <tr><td><b>CS-2000</b><br><span class="muted">光谱辐射计</span></td><td>绝对真值基准</td>
-      <td>色域壳点、SPD 光谱、对其他设备做绝对色度标定</td></tr>
-  <tr><td><b>CA-410</b><br><span class="muted">高速点测色彩分析仪</span></td><td>动态 / 时序</td>
-      <td>多窗口色域序列、color-in-context、运动掉饱和（二阶段）</td></tr>
-  <tr><td><b>CXC-2600_V300_DF50</b><br><span class="muted">成像彩色亮度计 · Hopoo 虹谱</span></td><td>空间分布</td>
-      <td>逐像素 Lv·x,y → <b>串色 Δu'v' 热力图、PSF、棋盘逐格污染</b>（直接二维出）</td></tr>
-</table>
+    <div class="danger">
+      <b>诚实边界：</b>页面中的示例数值是算法说明用的模拟数据，不代表任何电视真机结论。实际 PASS/FAIL 阈值仍需按企标和真机样本重新标定。
+      设备状态以项目当前代码为准：CA-410 真机已通、Murideo 已连；CXC 二维相机驱动与配准流程已完成，仍待 Windows 真机验证；UltraStudio / DeckLink 输出链路已实现并可枚举/检查设备，真正出图依赖 Blackmagic Desktop Video 与 SDK 版本匹配。
+    </div>
 
-<h2>七、管线能算出哪些指标 <span style="color:var(--warn);font-size:13px">⚠ 下列数字来自合成模型，非实测，仅示意</span></h2>
-<p class="muted">说明：以下不是测试结果，而是用<b>合成显示模型</b>喂进管线后跑出的<b>示意值</b>，用来证明"指标能算、图表能出、报告能导"。
-  接真机前，这些数字没有任何工程意义。</p>
-<div class="grid2">
-  <div class="card">
-    <h3>动态色域（管线可算）</h3>
-    <p><span class="syn">收缩率 75.3% · 合成</span></p>
-    <p class="muted">合成示例：BT.2020 覆盖 73.6% → 18.3%（1%→100% 窗口）；白 951 → 402 nits。
-       产出 Gamut Rings 色域示波器、覆盖率曲线、color-in-context。</p>
-  </div>
-  <div class="card">
-    <h3>串色二维（管线可算）</h3>
-    <p><span class="syn">色晕半径 12.5%W · 合成</span> <span class="syn">棋盘污染 0.14 · 合成</span> <span class="syn">PSF 2.97%W · 合成</span></p>
-    <p class="muted">合成示例：逐卡 R_cross + Δu'v' 热力图；棋盘逐格污染 + 污染图；背光 PSF FWHM。</p>
-  </div>
-</div>
+    <div class="quick-grid">
+      <div class="tile"><div class="num">Δu'v'</div><h3>串色用色度距离量化</h3><p>把 XYZ 转到 CIE 1976 u'v'，比较同色基准、小圆 D、大圆 3D 或目标色点之间的距离。</p></div>
+      <div class="tile"><div class="num">DGR</div><h3>动态色域看面积保持率</h3><p>先测全屏 RGB 基准三角 Aref，再测背景内 RGB 小色块三角 Aj，用 Aj/Aref 判断场景下的色域收缩。</p></div>
+      <div class="tile"><div class="num">L*u*v*</div><h3>色彩体积看亮度层</h3><p>不仅看 xy 三角，而是把不同亮度下的 RGBCMY 外边界、W 白点轨迹和黑场原点组成三维色壳。</p></div>
+      <div class="tile"><div class="num">1D+3D</div><h3>校准先灰阶后颜色</h3><p>先用 1D LUT 修中性轴和 EOTF，再用 3D LUT 修色相、饱和度和通道耦合。</p></div>
+    </div>
 
-<h2>八、图卡套组与规格</h2>
-<table>
-  <tr><th>套组</th><th>张数</th><th>包含</th></tr>
-  <tr><td><b>crosstalk</b></td><td>26</td>
-      <td>彩色光晕(中性块/黑洞/异色)、色棋盘、彩色边缘、背光 PSF 点、彩色角落(VESA 黑位彩色版)</td></tr>
-  <tr><td><b>dynamic_gamut</b></td><td>58</td>
-      <td>RGBCMYW × {1,2,5,10,25,50,100}% 多窗口序列、color-in-context（异色/异 APL 背景）</td></tr>
-</table>
-<p class="muted">规格：10-bit PQ(ST 2084) · BT.2020 · 16-bit PNG（零依赖写出器）+ 8-bit sRGB 预览 + 每张 sidecar JSON。
-   配置用 <code>configs/*.yaml</code>（支持 <code>matrix</code> 笛卡尔展开）。Murideo 导出可出 16-bit TIFF + HDR10 元数据表。</p>
+    <section id="ring">
+      <div class="eyebrow">RING CROSSTALK</div>
+      <h2>圆环基色串色：用 D / 3D 尺寸对比找出背景对基色的污染</h2>
+      <div class="band surface two">
+        <div>
+          <p>圆环方案让 CA-410 对准屏幕中心。每个圈内基色先测一张“圈内=背景”的同色基准，再把背景换成 R/G/B/C/M/Y/K/W；异色背景下测小圆 D 和大圆 3D。报告不是把大圆当成绝对正确，而是同时比较 A/A 同色基准、A/B@3D 的参考偏移，以及 A/B@D 相对 3D 的额外恶化。</p>
+          <div class="steps">
+            <div class="step"><b>1. 探头大小校准</b><span>拖动圆径 D，让 CA-410 测光区完全落在圆内。</span></div>
+            <div class="step"><b>2. 同色基准</b><span>inner=outer 得到该基色的本机实测参考。</span></div>
+            <div class="step"><b>3. 异色背景矩阵</b><span>遍历 RGBCMYKW 背景，记录小圆 D 和大圆 3D。</span></div>
+            <div class="step"><b>4. 诊断输出</b><span>报告基准偏移、尺寸额外恶化、ΔE_ITP、背景方向投影和有效色域保持率。</span></div>
+          </div>
+          <div class="formula">bias_D  = distance(u'v'(A/B @ D),  u'v'(A/A baseline))
+bias_3D = distance(u'v'(A/B @ 3D), u'v'(A/A baseline))
 
-<h2>九、现状与待办（重要 · 务必先读）</h2>
-<div class="grid2">
-  <div class="card g">
-    <h3 style="color:var(--g)">✅ 已实现（代码可运行，但全部基于合成 / 模拟）</h3>
-    <ul>
-      <li>图卡生成器（10-bit PQ / BT.2020，26 + 58 张，Murideo TIFF 导出）</li>
-      <li>色彩 / 色域数学（selftest 通过，含 CIEDE2000 对 Sharma 34 对参考）</li>
-      <li>分析算法：色域体积 / Gamut Rings / 覆盖率、R_cross、PSF FWHM、棋盘逐格污染、color-in-context</li>
-      <li>WebUI 工作流：设备连接 / 准备 / 执行 / 结果 / 历史 / 导出</li>
-      <li>测量仪：<b style="color:var(--g)">CA-410 ✅ 真机已通</b>（KM USB 串口协议 v1.08，本机读到真实 Lv/x/y）、FileMeter（读导出文件）、sim</li>
-      <li>出图驱动：Murideo dry-run（出命令序列）、全屏 HDMI（SDR 可跑 + HDR Canvas 框架）、sim</li>
-      <li>报告 HTML / CSV 导出、历史持久化</li>
-    </ul>
-  </div>
-  <div class="card r">
-    <h3 style="color:var(--r)">❌ 未做 / 待验证（关键缺口）</h3>
-    <ul>
-      <li><b>未做完整真机测量活动</b> —— CA-410 已能真机点测，但尚未在真电视上按企标做成套测量/标定；本文示意数字仍来自合成模型，未做真机数据采集与比对</li>
-      <li><b>图卡未真正上过机</b> —— 尚未经 Murideo / 播放器 / 全屏HDMI 送进真电视显示并系统测量</li>
-      <li><b>Murideo 真控未联调</b> —— WebSocket 命令 ID 全是 <code>TODO</code>（<code>murideo_proto.py</code>），待官方协议文档；仅验证过 dry-run 出序列</li>
-      <li><b>CS-2000 / CXC-2600 未接</b> —— 两个 driver 仍是桩（<code>NotImplementedError</code>）；CA-410 已实现（USB 串口协议）</li>
-      <li><b>HDR Canvas 输出未验证</b> —— rec2100-pq 在真 Windows HDR + CS-2000 下能否打到目标 nits、DWM 有无额外 tone-map，未测</li>
-      <li><b>合格判定（PASS / FAIL）体系未做</b> —— 阈值全是占位（半径 8 / 15 %W、棋盘 0.004 / 0.01、PSF 3 / 6 %W、收缩率 40 / 60 %），需按<b>企标</b>重定 + 做成可配置 + 结果页 go / no-go 汇总</li>
-      <li><b>二维配准未做</b> —— 真机 CXC 采集与图卡像素的物理配准（四角标记 / 单点同步）未实测；<code>_fit_meta</code> 仅按比例缩放</li>
-      <li><b>合成模型偏简化</b> —— 棋盘 = 整格均匀混合、光晕 = 指数衰减、PSF = 高斯，均为定性占位；真机数据接入后绝对值才有意义</li>
-      <li><b>动态色域时序 / 运动未做</b> —— 运动掉饱和（pursuit / 高速跟拍）二阶段未实现</li>
-      <li><b>校准 / 标定流程未做</b> —— CS-2000 对 CA-410 / CXC-2600 的绝对色度标定系数；测量稳定等待 / 重测 / 超时未做</li>
-      <li><b>SDR 色彩管理未做</b> —— 全屏 SDR / 8-bit 宽色域卡的 ICC 嵌入未接</li>
-    </ul>
-  </div>
-</div>
-<div class="note">建议落地顺序：<b>① 接 1 台真机 + 1 台仪器</b>（先 CS-2000 点测，或 CXC-2600 二维，或先用 FileMeter 读导出）跑出
-  <b>第一份真实数据</b>、校准管线 → <b>② 按企标定 PASS / FAIL 阈值</b>（可配置）→
-  <b>③ Murideo / 仪器 SDK 真控联调</b> → <b>④ HDR Canvas 真机 + CS-2000 验证</b> → <b>⑤ 运动 / 时序二阶段</b>。
-  <span style="color:#ff8a8a">在产生真实数据之前，不要把任何数字当作样机的真实表现。</span></div>
+size_extra = bias_D - bias_3D
+pair_delta = distance(u'v'(A/B @ D), u'v'(A/B @ 3D))
 
-<footer>
-  RGBMiniLED-TV-TestTool · 设计说明 v0.5 · 更新于 2026-06-19 ·
-  代码位于 <code>/Users/macforlu/Documents/RGBMIniled-TV-TestTool</code>
-</footer>
+background_projection = project(shift_D, direction(A -> B))</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 520 330" role="img" aria-label="圆环串色物理图卡和 u'v' 向量诊断图">
+            <defs>
+              <marker id="ringArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#ffd166"></path>
+              </marker>
+            </defs>
+            <rect x="20" y="22" width="232" height="132" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="136" y="45" text-anchor="middle" class="svg-title">物理图卡序列</text>
+            <circle cx="78" cy="92" r="34" fill="#ff6363"></circle>
+            <circle cx="78" cy="92" r="12" fill="none" stroke="#f3f7fb" stroke-width="2" stroke-dasharray="4 4"></circle>
+            <text x="78" y="136" text-anchor="middle" class="svg-small">A/A 基准</text>
+            <circle cx="146" cy="92" r="34" fill="#19a9bd"></circle>
+            <circle cx="146" cy="92" r="14" fill="#ff6363"></circle>
+            <circle cx="146" cy="92" r="12" fill="none" stroke="#f3f7fb" stroke-width="2" stroke-dasharray="4 4"></circle>
+            <text x="146" y="136" text-anchor="middle" class="svg-small">A/B 小圆 D</text>
+            <circle cx="214" cy="92" r="34" fill="#19a9bd"></circle>
+            <circle cx="214" cy="92" r="32" fill="#ff6363"></circle>
+            <circle cx="214" cy="92" r="12" fill="none" stroke="#f3f7fb" stroke-width="2" stroke-dasharray="4 4"></circle>
+            <text x="214" y="136" text-anchor="middle" class="svg-small">A/B 大圆 3D</text>
 
-</div>
+            <rect x="282" y="22" width="218" height="132" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="391" y="45" text-anchor="middle" class="svg-title">CIE 1976 u'v' 诊断</text>
+            <line x1="316" y1="126" x2="472" y2="126" stroke="#75849a"></line>
+            <line x1="316" y1="126" x2="316" y2="62" stroke="#75849a"></line>
+            <text x="476" y="143" class="svg-small">u'</text>
+            <text x="300" y="63" class="svg-small">v'</text>
+            <circle cx="354" cy="104" r="5" fill="#ff6363"></circle>
+            <circle cx="398" cy="96" r="5" fill="#32d8ee"></circle>
+            <circle cx="438" cy="78" r="5" fill="#ffd166"></circle>
+            <path d="M354 104 L398 96" stroke="#32d8ee" stroke-width="2" marker-end="url(#ringArrow)"></path>
+            <path d="M354 104 L438 78" stroke="#ffd166" stroke-width="2" marker-end="url(#ringArrow)"></path>
+            <path d="M398 96 L438 78" stroke="#6ee596" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#ringArrow)"></path>
+            <text x="351" y="118" text-anchor="middle" class="svg-small">A/A 基准</text>
+            <text x="397" y="114" text-anchor="middle" class="svg-small">3D 参考</text>
+            <text x="441" y="68" text-anchor="middle" class="svg-small">D 小圆</text>
+            <text x="381" y="84" text-anchor="middle" class="svg-small" fill="#32d8ee">bias_3D</text>
+            <text x="426" y="104" text-anchor="middle" class="svg-small" fill="#ffd166">bias_D</text>
+            <text x="426" y="91" text-anchor="middle" class="svg-small" fill="#6ee596">pair_delta</text>
+
+            <rect x="20" y="184" width="480" height="104" rx="14" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="42" y="214" class="svg-title">真实聚合逻辑</text>
+            <text x="42" y="238" class="svg-small">1. 对每个圈内色 A，先保存 A/A 同色基准；黑色只做背景，不做圈内基色。</text>
+            <text x="42" y="260" class="svg-small">2. 对每个背景 B，测 A/B@D 和 A/B@3D；D 是临界小圆，3D 是尺寸参考，不是绝对真值。</text>
+            <text x="42" y="282" class="svg-small">3. 结果页同时看 bias_D、bias_3D、size_extra、背景方向投影残差、RGB 三角 DGR。</text>
+          </svg>
+          <p class="tiny">完整模式约 105 张，快速模式约 60 张。黑色可做背景；近黑圈内色度不稳定，所以不作为圈内基色。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="dynamic">
+      <div class="eyebrow">DYNAMIC GAMUT</div>
+      <h2>动态色域：用有效 RGB 三角看场景背景下的小色块掉饱和</h2>
+      <div class="band surface two">
+        <div>
+          <p>动态色域方案先全屏显示 R/G/B 三张基色卡，得到基准色域三角 Aref；再把同样 600 nit 的 R/G/B 中心小色块放进场景背景或复杂马赛克背景里测量。每个背景都会得到一组三个实测色点，连成 Aj。最终 DGRj = Aj / Aref，越接近 100% 表示该背景下的小目标色域越能保持。</p>
+          <p>标准方案使用 10 种 8-bit sRGB 场景色，代码会经 sRGB EOTF 转成 BT.2020 线性 nits，按 200 nit 背景白缩放；复杂方案在中心 1% 小色块外铺 RGBCMYW 随机马赛克，依次测 8、16、32、64 格细分度。</p>
+          <div class="steps">
+            <div class="step"><b>1. 全屏基准</b><span>base_R / base_G / base_B，patch_pct=0，整屏就是 600 nit 基色。</span></div>
+            <div class="step"><b>2. 背景生成</b><span>scene_patch 用 10 种场景色；scene_complex 用随机 RGBCMYW 马赛克。</span></div>
+            <div class="step"><b>3. 中心点测</b><span>中心 1% R/G/B 小色块，等待输出 ack 和稳定时间后 CA-410 读取 XYZ。</span></div>
+            <div class="step"><b>4. 面积判定</b><span>在 CIE 1976 u'v' 或 xy 空间算三角面积，汇总 DGR_min、DGR_worst、DGR_avg、DGR_range。</span></div>
+          </div>
+          <div class="formula">Aref = area(pt(R_full), pt(G_full), pt(B_full))
+Aj    = area(pt(R_scene_j), pt(G_scene_j), pt(B_scene_j))
+DGRj  = Aj / Aref
+
+worst_p   = argmin_j distance(pt(P_scene_j), D65)
+DGR_worst = area(worst_R, worst_G, worst_B) / Aref
+
+DGR_min   = min_j(DGRj)          // 定级
+DGR_avg   = mean_j(DGRj)
+DGR_range = max_j(DGRj) - min_j(DGRj)
+
+verdict = fail if DGR_min &lt; 0.75; warn if DGR_min &lt; 0.90</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 540 352" role="img" aria-label="动态色域 DGR 测试流程和面积计算图">
+            <defs>
+              <marker id="dynArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#8593a5"></path>
+              </marker>
+            </defs>
+            <rect x="20" y="22" width="148" height="122" rx="12" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="94" y="48" text-anchor="middle" class="svg-title">1. Aref 基准</text>
+            <line x1="48" y1="116" x2="142" y2="116" stroke="#75849a"></line>
+            <line x1="48" y1="116" x2="48" y2="62" stroke="#75849a"></line>
+            <polygon points="58,106 128,100 86,68" fill="#101722" stroke="#f3f7fb" stroke-width="1.5"></polygon>
+            <circle cx="58" cy="106" r="5" fill="#ff6363"></circle>
+            <circle cx="86" cy="68" r="5" fill="#6ee596"></circle>
+            <circle cx="128" cy="100" r="5" fill="#62a8ff"></circle>
+            <text x="94" y="134" text-anchor="middle" class="svg-small">全屏 R/G/B · 600 nit</text>
+
+            <rect x="204" y="22" width="142" height="122" rx="12" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="275" y="48" text-anchor="middle" class="svg-title">2. 背景上下文</text>
+            <g transform="translate(224 65)">
+              <rect x="0" y="0" width="20" height="20" fill="#ffd59b"></rect>
+              <rect x="23" y="0" width="20" height="20" fill="#bec0bf"></rect>
+              <rect x="46" y="0" width="20" height="20" fill="#96bee6"></rect>
+              <rect x="69" y="0" width="20" height="20" fill="#6496f0"></rect>
+              <rect x="92" y="0" width="20" height="20" fill="#64d250"></rect>
+              <rect x="0" y="24" width="20" height="20" fill="#a064b4"></rect>
+              <rect x="23" y="24" width="20" height="20" fill="#f0c850"></rect>
+              <rect x="46" y="24" width="20" height="20" fill="#50c8c8"></rect>
+              <rect x="69" y="24" width="20" height="20" fill="#dc50b4"></rect>
+              <rect x="92" y="24" width="20" height="20" fill="#ffc080"></rect>
+            </g>
+            <text x="275" y="126" text-anchor="middle" class="svg-small">10 场景色或马赛克格数</text>
+
+            <rect x="382" y="22" width="136" height="122" rx="12" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="450" y="48" text-anchor="middle" class="svg-title">3. 中心点测</text>
+            <rect x="410" y="66" width="80" height="46" fill="#446a56" stroke="#75849a"></rect>
+            <rect x="442" y="82" width="16" height="16" fill="#ff6363" stroke="#f3f7fb"></rect>
+            <circle cx="450" cy="90" r="20" fill="none" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="4 4"></circle>
+            <text x="450" y="126" text-anchor="middle" class="svg-small">1% patch · CA-410</text>
+
+            <path d="M168 83 H204" stroke="#8593a5" stroke-width="2" marker-end="url(#dynArrow)"></path>
+            <path d="M346 83 H382" stroke="#8593a5" stroke-width="2" marker-end="url(#dynArrow)"></path>
+
+            <rect x="20" y="176" width="240" height="132" rx="12" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="140" y="202" text-anchor="middle" class="svg-title">4. 面积比 DGR</text>
+            <line x1="58" y1="282" x2="218" y2="282" stroke="#75849a"></line>
+            <line x1="58" y1="282" x2="58" y2="214" stroke="#75849a"></line>
+            <polygon points="76,264 206,256 132,218" fill="none" stroke="#f3f7fb" stroke-width="2"></polygon>
+            <polygon points="96,258 184,252 136,232" fill="#32d8ee" opacity=".24" stroke="#32d8ee" stroke-width="2"></polygon>
+            <text x="186" y="236" class="svg-small">Aref = 100%</text>
+            <text x="130" y="253" class="svg-small">Aj</text>
+            <text x="140" y="300" text-anchor="middle" class="svg-small">DGRj = Aj / Aref</text>
+
+            <rect x="296" y="176" width="222" height="132" rx="12" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="407" y="202" text-anchor="middle" class="svg-title">结果页 KPI</text>
+            <rect x="328" y="252" width="36" height="20" fill="#ff6363" opacity=".78"></rect>
+            <rect x="379" y="240" width="36" height="32" fill="#ffd166" opacity=".82"></rect>
+            <rect x="430" y="228" width="36" height="44" fill="#6ee596" opacity=".82"></rect>
+            <line x1="316" y1="272" x2="484" y2="272" stroke="#75849a"></line>
+            <text x="346" y="292" text-anchor="middle" class="svg-small">min</text>
+            <text x="397" y="292" text-anchor="middle" class="svg-small">worst</text>
+            <text x="448" y="292" text-anchor="middle" class="svg-small">avg</text>
+            <text x="407" y="218" text-anchor="middle" class="svg-small">越高越好 · range 看波动</text>
+
+            <path d="M450 144 C450 166 274 152 226 190" fill="none" stroke="#8593a5" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#dynArrow)"></path>
+          </svg>
+          <p class="tiny">标准动态色域共 33 张：3 张全屏基准 + 10 个背景 × R/G/B。复杂画面共 15 张：3 张基准 + 4 个马赛克细分度 × R/G/B。</p>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric-card"><h3>模拟 DGR_min</h3><p><span class="pill warn">82.4%</span> 表示最差场景已经低于 90% 警戒线，但尚未低于 75% 失败线。</p></div>
+        <div class="metric-card"><h3>模拟 DGR_worst</h3><p><span class="pill warn">78.9%</span> 按 R/G/B 各自最靠近 D65 的最坏点重组成最小可达色域。</p></div>
+        <div class="metric-card"><h3>模拟 DGR_range</h3><p><span class="pill warn">14.6 pp</span> 说明不同场景或马赛克复杂度对小色块色域影响不一致。</p></div>
+      </div>
+    </section>
+
+    <section id="volume">
+      <div class="eyebrow">COLOUR VOLUME</div>
+      <h2>色彩体积：把“亮度 × 色度”堆成三维色壳</h2>
+      <div class="band surface two">
+        <div>
+          <p>色彩体积方案在黑底上显示中心小色块，对 R/G/B/C/M/Y/W 每个测试色测多级亮度刺激。默认 11 级从 2% 到 100% peak，并加一张黑场作为色壳原点。计算时 R/G/B/C/M/Y 形成每个亮度层的色度外边界，W 用来观察白点和亮度轨迹；最终同时给出 CIELUV 色彩体积、ICtCp 感知体积，以及相对 BT.2020 / P3-D65 / BT.709 的覆盖率。</p>
+          <div class="formula">for patch in [R,G,B,C,M,Y,W]:
+  for stim in [2,5,9,14,20,30,45,60,75,88,100] %:
+    measure XYZ(patch, peak * stim / 100)
+
+boundary_layers = RGBCMY points grouped by stim
+white_track = W points grouped by stim
+volume_luv = ConvexHull(XYZ -> CIE 1976 L*u*v* + black_origin)
+coverage = Σ intersection_area(measured_slice, reference_slice) / Σ reference_slice</div>
+        </div>
+        <div>
+          <svg viewBox="0 0 520 330" role="img" aria-label="色彩体积采样矩阵到三维色壳流程图">
+            <defs>
+              <marker id="volArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#8593a5"></path>
+              </marker>
+            </defs>
+            <rect x="20" y="22" width="150" height="230" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="95" y="48" text-anchor="middle" class="svg-title">测量采样</text>
+            <text x="95" y="68" text-anchor="middle" class="svg-small">RGBCMYW × 11 + K</text>
+            <g transform="translate(42 88)">
+              <rect x="0" y="0" width="16" height="128" fill="#ff6363" opacity=".35"></rect>
+              <rect x="18" y="0" width="16" height="128" fill="#6ee596" opacity=".35"></rect>
+              <rect x="36" y="0" width="16" height="128" fill="#62a8ff" opacity=".35"></rect>
+              <rect x="54" y="0" width="16" height="128" fill="#32d8ee" opacity=".35"></rect>
+              <rect x="72" y="0" width="16" height="128" fill="#ce8cff" opacity=".35"></rect>
+              <rect x="90" y="0" width="16" height="128" fill="#ffd166" opacity=".35"></rect>
+              <rect x="108" y="0" width="16" height="128" fill="#f3f7fb" opacity=".35"></rect>
+              <g fill="#f3f7fb" opacity=".86">
+                <circle cx="8" cy="112" r="2.5"></circle><circle cx="8" cy="96" r="2.5"></circle><circle cx="8" cy="80" r="2.5"></circle><circle cx="8" cy="64" r="2.5"></circle><circle cx="8" cy="48" r="2.5"></circle><circle cx="8" cy="32" r="2.5"></circle><circle cx="8" cy="16" r="2.5"></circle>
+                <circle cx="26" cy="112" r="2.5"></circle><circle cx="26" cy="96" r="2.5"></circle><circle cx="26" cy="80" r="2.5"></circle><circle cx="26" cy="64" r="2.5"></circle><circle cx="26" cy="48" r="2.5"></circle><circle cx="26" cy="32" r="2.5"></circle><circle cx="26" cy="16" r="2.5"></circle>
+                <circle cx="44" cy="112" r="2.5"></circle><circle cx="44" cy="96" r="2.5"></circle><circle cx="44" cy="80" r="2.5"></circle><circle cx="44" cy="64" r="2.5"></circle><circle cx="44" cy="48" r="2.5"></circle><circle cx="44" cy="32" r="2.5"></circle><circle cx="44" cy="16" r="2.5"></circle>
+                <circle cx="62" cy="112" r="2.5"></circle><circle cx="62" cy="96" r="2.5"></circle><circle cx="62" cy="80" r="2.5"></circle><circle cx="62" cy="64" r="2.5"></circle><circle cx="62" cy="48" r="2.5"></circle><circle cx="62" cy="32" r="2.5"></circle><circle cx="62" cy="16" r="2.5"></circle>
+                <circle cx="80" cy="112" r="2.5"></circle><circle cx="80" cy="96" r="2.5"></circle><circle cx="80" cy="80" r="2.5"></circle><circle cx="80" cy="64" r="2.5"></circle><circle cx="80" cy="48" r="2.5"></circle><circle cx="80" cy="32" r="2.5"></circle><circle cx="80" cy="16" r="2.5"></circle>
+                <circle cx="98" cy="112" r="2.5"></circle><circle cx="98" cy="96" r="2.5"></circle><circle cx="98" cy="80" r="2.5"></circle><circle cx="98" cy="64" r="2.5"></circle><circle cx="98" cy="48" r="2.5"></circle><circle cx="98" cy="32" r="2.5"></circle><circle cx="98" cy="16" r="2.5"></circle>
+                <circle cx="116" cy="112" r="2.5"></circle><circle cx="116" cy="96" r="2.5"></circle><circle cx="116" cy="80" r="2.5"></circle><circle cx="116" cy="64" r="2.5"></circle><circle cx="116" cy="48" r="2.5"></circle><circle cx="116" cy="32" r="2.5"></circle><circle cx="116" cy="16" r="2.5"></circle>
+              </g>
+            </g>
+            <circle cx="95" cy="234" r="5" fill="#111" stroke="#75849a"></circle>
+            <text x="95" y="238" text-anchor="middle" class="svg-small">K</text>
+
+            <path d="M170 136 H220" stroke="#8593a5" stroke-width="2" marker-end="url(#volArrow)"></path>
+            <rect x="220" y="88" width="96" height="98" rx="12" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="268" y="118" text-anchor="middle" class="svg-title">XYZ</text>
+            <text x="268" y="136" text-anchor="middle" class="svg-small">→ L*u*v*</text>
+            <text x="268" y="154" text-anchor="middle" class="svg-small">→ ICtCp</text>
+            <text x="268" y="172" text-anchor="middle" class="svg-small">+ refs</text>
+
+            <path d="M316 136 H354" stroke="#8593a5" stroke-width="2" marker-end="url(#volArrow)"></path>
+            <rect x="354" y="42" width="146" height="214" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="427" y="66" text-anchor="middle" class="svg-title">3D 色壳 / 切片</text>
+            <line x1="394" y1="220" x2="470" y2="220" stroke="#75849a"></line>
+            <line x1="394" y1="220" x2="394" y2="94" stroke="#75849a"></line>
+            <polygon points="402,204 428,190 463,203 448,216 416,216" fill="#62a8ff" opacity=".22" stroke="#62a8ff"></polygon>
+            <polygon points="396,162 428,140 470,163 449,184 409,180" fill="#6ee596" opacity=".22" stroke="#6ee596"></polygon>
+            <polygon points="390,118 428,86 478,120 452,148 406,142" fill="#ff6363" opacity=".22" stroke="#ff6363"></polygon>
+            <path d="M428 190 L428 140 L428 86" stroke="#f3f7fb" stroke-width="2" stroke-dasharray="4 4"></path>
+            <circle cx="428" cy="190" r="3.2" fill="#f3f7fb"></circle>
+            <circle cx="428" cy="140" r="3.2" fill="#f3f7fb"></circle>
+            <circle cx="428" cy="86" r="3.2" fill="#f3f7fb"></circle>
+            <text x="406" y="100" class="svg-small">高亮层</text>
+            <text x="408" y="156" class="svg-small">中亮层</text>
+            <text x="408" y="201" class="svg-small">低亮层</text>
+            <text x="427" y="238" text-anchor="middle" class="svg-small">RGBCMY 边界 · W 白点轨迹</text>
+            <text x="427" y="280" text-anchor="middle" class="svg-small">凸包体积 + reference slice coverage</text>
+          </svg>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric-card"><h3>模拟 KPI A</h3><p><span class="pill warn">CIELUV 体积 1.42M</span> 仅用于说明凸包体积如何读。</p></div>
+        <div class="metric-card"><h3>模拟 KPI B</h3><p><span class="pill warn">P3 覆盖 94.8%</span> 表示切片交集后的相对覆盖率。</p></div>
+        <div class="metric-card"><h3>模拟 KPI C</h3><p><span class="pill warn">高亮层收窄</span> 用来提示 ABL 或高亮饱和度塌陷。</p></div>
+      </div>
+    </section>
+
+    <section id="lut">
+      <div class="eyebrow">1D LUT / 3D LUT</div>
+      <h2>灰阶和色彩校准：先把中性轴拉直，再修整个色彩空间</h2>
+      <div class="band surface two">
+        <div>
+          <p>1D LUT 只测 R=G=B 的中性轴，用来修 EOTF、亮度响应和白平衡；3D LUT 再测 RGB 立方体采样点，用来修色相、饱和度、色域边界和三通道耦合。项目当前会导出 1D CSV、3D `.cube` 和完整 JSON，后续可接电视写入接口或外部视频处理链。</p>
+          <div class="steps">
+            <div class="step"><b>灰阶采样</b><span>快速 / 标准 / 工程密度可选。</span></div>
+            <div class="step"><b>目标 EOTF</b><span>支持 gamma、sRGB、PQ 等目标曲线。</span></div>
+            <div class="step"><b>RGB cube</b><span>3³ / 5³ / 7³ 稀疏立方体测色。</span></div>
+            <div class="step"><b>导出校准</b><span>输出 1D、3D 和完整测量记录。</span></div>
+          </div>
+        </div>
+        <div>
+          <svg viewBox="0 0 520 330" role="img" aria-label="1D LUT 灰阶和 3D LUT 色彩校准流程图">
+            <defs>
+              <marker id="lutArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#8593a5"></path>
+              </marker>
+            </defs>
+            <rect x="22" y="24" width="210" height="126" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="127" y="50" text-anchor="middle" class="svg-title">1D LUT · 灰阶线性化</text>
+            <line x1="52" y1="122" x2="202" y2="122" stroke="#75849a"></line>
+            <line x1="52" y1="122" x2="52" y2="66" stroke="#75849a"></line>
+            <path d="M52 122 C90 116 112 98 134 82 C158 66 178 58 202 54" fill="none" stroke="#ff6363" stroke-width="2.5"></path>
+            <path d="M52 122 L202 54" fill="none" stroke="#ffd166" stroke-width="2" stroke-dasharray="5 5"></path>
+            <text x="58" y="140" class="svg-small">code</text>
+            <text x="32" y="68" class="svg-small">Y</text>
+            <text x="126" y="95" class="svg-small">反查 measured → target</text>
+
+            <rect x="288" y="24" width="210" height="126" rx="14" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="393" y="50" text-anchor="middle" class="svg-title">3D LUT · RGB cube</text>
+            <g transform="translate(342 74)">
+              <path d="M0 52 L58 52 L86 26 L28 26 Z" fill="#101722" stroke="#75849a"></path>
+              <path d="M28 26 L86 26 L86 -22 L28 -22 Z" fill="#101722" stroke="#75849a"></path>
+              <path d="M0 52 L28 26 L28 -22 L0 4 Z" fill="#101722" stroke="#75849a"></path>
+              <circle cx="0" cy="52" r="4" fill="#111" stroke="#75849a"></circle><circle cx="58" cy="52" r="4" fill="#ff6363"></circle><circle cx="28" cy="26" r="4" fill="#6ee596"></circle>
+              <circle cx="86" cy="26" r="4" fill="#ffd166"></circle><circle cx="0" cy="4" r="4" fill="#62a8ff"></circle><circle cx="58" cy="4" r="4" fill="#ce8cff"></circle>
+              <circle cx="28" cy="-22" r="4" fill="#32d8ee"></circle><circle cx="86" cy="-22" r="4" fill="#f3f7fb"></circle>
+            </g>
+            <text x="393" y="134" text-anchor="middle" class="svg-small">测 sparse cube → 导出 17³ / 33³ / 65³ .cube</text>
+
+            <rect x="40" y="216" width="120" height="54" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="100" y="239" text-anchor="middle" class="svg-title">input RGB</text>
+            <text x="100" y="258" text-anchor="middle" class="svg-small">test patch</text>
+            <rect x="206" y="216" width="120" height="54" rx="10" fill="#101722" stroke="#ffd166"></rect>
+            <text x="266" y="239" text-anchor="middle" class="svg-title">1D first</text>
+            <text x="266" y="258" text-anchor="middle" class="svg-small">EOTF / WB</text>
+            <rect x="370" y="216" width="120" height="54" rx="10" fill="#101722" stroke="#32d8ee"></rect>
+            <text x="430" y="239" text-anchor="middle" class="svg-title">3D after</text>
+            <text x="430" y="258" text-anchor="middle" class="svg-small">hue / sat / coupling</text>
+            <path d="M160 243 H206" stroke="#8593a5" stroke-width="2" marker-end="url(#lutArrow)"></path>
+            <path d="M326 243 H370" stroke="#8593a5" stroke-width="2" marker-end="url(#lutArrow)"></path>
+            <text x="266" y="304" text-anchor="middle" class="svg-small">校准顺序必须固定：corrected = LUT3D(LUT1D(input))</text>
+          </svg>
+          <div class="formula">corrected_rgb = LUT3D( LUT1D(input_rgb) )
+error_gray = measured_Y - target_EOTF(code)
+error_color = DeltaE_ITP(measured_XYZ, target_XYZ)</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="hdmi">
+      <div class="eyebrow">PRECISE PC HDMI OUTPUT</div>
+      <h2>电脑 HDMI 精准色彩输出：不是简单网页全屏，而是原生 10-bit HDR10 输出链</h2>
+      <div class="band surface two">
+        <div>
+          <p>项目有两条电脑 HDMI 路径。浏览器 `/display` 适合快速预览和几何联调，但经过浏览器和系统合成，只能算 best-effort。更精准的路径是 `hdmi-gpu` + `hdr-agent.exe`：Python 服务只发送屏幕描述符，原生 Agent 在指定显示器上生成 10-bit PQ 帧，并写 HDR10 元数据。</p>
+          <div class="steps">
+            <div class="step"><b>绝对 nits 描述</b><span>服务端输出 bg / rects / circles，颜色为 BT.2020 绝对亮度。</span></div>
+            <div class="step"><b>PQ 逐位一致</b><span>Agent 的 PQ 常量与 `rgbtool/color.py` 对齐。</span></div>
+            <div class="step"><b>10-bit 帧缓冲</b><span>R10G10B10A2 打包，DXGI HDR 色彩空间输出。</span></div>
+            <div class="step"><b>ack 再测量</b><span>Agent POST ack 后，服务端才触发 CA-410 / CXC 读数。</span></div>
+          </div>
+          <div class="formula">python -m webui.server --murideo hdmi-gpu --meter ca410
+hdr-agent.exe --server http://127.0.0.1:8000 --output 1</div>
+          <p class="tiny">前提：Windows 目标显示器开启 HDR；GPU 输出设 RGB Full / 4:4:4 / 10-12 bpc；分辨率与缩放匹配。</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 540 330" role="img" aria-label="电脑 HDMI 原生 HDR 输出与测量同步流程图">
+            <defs>
+              <marker id="arrow2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9 Z" fill="#8593a5"></path>
+              </marker>
+            </defs>
+            <rect x="22" y="24" width="148" height="72" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="96" y="52" text-anchor="middle" class="svg-title">Controller</text>
+            <text x="96" y="73" text-anchor="middle" class="svg-small">screen_draw_current()</text>
+            <rect x="218" y="24" width="134" height="72" rx="10" fill="#101722" stroke="#32d8ee"></rect>
+            <text x="285" y="50" text-anchor="middle" class="svg-title">hdr-agent.exe</text>
+            <text x="285" y="70" text-anchor="middle" class="svg-small">poll current/draw</text>
+            <rect x="390" y="24" width="128" height="72" rx="10" fill="#101722" stroke="#6ee596"></rect>
+            <text x="454" y="50" text-anchor="middle" class="svg-title">DXGI HDR</text>
+            <text x="454" y="70" text-anchor="middle" class="svg-small">10-bit + metadata</text>
+
+            <rect x="218" y="134" width="134" height="88" rx="10" fill="#0b0f15" stroke="#2b3a4b"></rect>
+            <text x="285" y="158" text-anchor="middle" class="svg-title">native rasterize</text>
+            <text x="285" y="179" text-anchor="middle" class="svg-small">BT.2020 nits</text>
+            <text x="285" y="197" text-anchor="middle" class="svg-small">PQ encode → R10G10B10A2</text>
+            <rect x="390" y="134" width="128" height="88" rx="10" fill="#101722" stroke="#62a8ff"></rect>
+            <text x="454" y="164" text-anchor="middle" class="svg-title">HDMI display</text>
+            <text x="454" y="185" text-anchor="middle" class="svg-small">RGB Full / 4:4:4</text>
+            <text x="454" y="203" text-anchor="middle" class="svg-small">HDR on, 10-12 bpc</text>
+
+            <rect x="22" y="242" width="148" height="62" rx="10" fill="#101722" stroke="#ffd166"></rect>
+            <text x="96" y="267" text-anchor="middle" class="svg-title">measure gate</text>
+            <text x="96" y="287" text-anchor="middle" class="svg-small">wait ack + settle</text>
+            <rect x="218" y="250" width="134" height="46" rx="10" fill="#101722" stroke="#ce8cff"></rect>
+            <text x="285" y="278" text-anchor="middle" class="svg-title">CA-410 / CXC</text>
+            <rect x="390" y="250" width="128" height="46" rx="10" fill="#101722" stroke="#2b3a4b"></rect>
+            <text x="454" y="278" text-anchor="middle" class="svg-title">record XYZ</text>
+
+            <path d="M170 60 H218" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <path d="M285 96 V134" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <path d="M352 60 H390" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <path d="M352 178 H390" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <path d="M390 210 C338 236 230 232 170 273" fill="none" stroke="#6ee596" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrow2)"></path>
+            <path d="M170 273 H218" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <path d="M352 273 H390" stroke="#8593a5" stroke-width="2" marker-end="url(#arrow2)"></path>
+            <text x="314" y="235" text-anchor="middle" class="svg-small">POST /api/screen/ack seq=N</text>
+            <text x="96" y="124" text-anchor="middle" class="svg-small">draw list is geometry + absolute luminance, not pixels</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section id="devices">
+      <div class="eyebrow">DEVICE LINKS</div>
+      <h2>这个项目已经做到和预留了哪些设备连接</h2>
+      <div class="device-grid">
+        <div class="device">
+          <strong>Konica Minolta CA-410</strong>
+          <p>高速点测色度计，是圆环基色串色、色彩体积中心点、动态色域和 LUT 采样的主力。项目已实现 USB CDC 串口通讯、自动找端口、`MCH` 机内校准通道选择、CH00-CH99 扫描和设备页实时切换。它的优势是快：适合大量图卡序列、D/3D 圆环矩阵和灰阶 / cube 校准。</p>
+          <div class="tags"><span class="pill hot">重点</span><span class="pill ok">快速点测</span><span class="pill ok">通道灵活</span></div>
+        </div>
+        <div class="device">
+          <strong>Blackmagic UltraStudio 4K Mini / DeckLink</strong>
+          <p>用于原生 SDI / HDMI 输出。WebUI 选择 decklink 后由外部 Agent 轮询同一套 `current / draw / ack` 接口，把服务端图卡描述转成 10-bit RGBXLE 帧并写入 HDR metadata。重点在灵活：可切 SDI / HDMI、可选 1080p60 / 2160p30、可随每个测试方案覆盖色彩空间 / EOTF，并通过 ack 保证测量同步。当前代码已支持设备枚举和连接检查，真出图需要 Desktop Video 与 SDK 版本匹配。</p>
+          <div class="tags"><span class="pill hot">重点</span><span class="pill ok">快速换图</span><span class="pill ok">SDI / HDMI 灵活</span></div>
+        </div>
+        <div class="device">
+          <strong>Murideo SEVEN G8K</strong>
+          <p>通过 LAN WebSocket 控制 HDR、BT.2020、窗口图卡和发生器状态，是标准 HDR10 信号链的金标准。内置图卡适合灰阶 / window 类测试；彩色圆环、棋盘、光晕这类自定义图卡可走 TIFF 上传或电脑 / DeckLink 输出路径。</p>
+          <div class="tags"><span class="pill ok">真机已连</span><span class="pill hot">HDR10 发生器</span></div>
+        </div>
+        <div class="device">
+          <strong>Hopoo / EVERFINE CXC 二维成像色度计</strong>
+          <p>通过 `CXColorMeterBaseDLL` 获取整场 Lv / x / y，用于棋盘污染、彩色光晕、背光 PSF 和二维热力图。项目已做驱动代码和屏幕四角配准工作流，把屏幕 ROI 映射到相机坐标，避免相机画面偏移或旋转造成采样错位；当前仍需要在 Windows 真机环境完成验证。</p>
+          <div class="tags"><span class="pill warn">待 Win 真机验证</span><span class="pill ok">配准流程</span></div>
+        </div>
+        <div class="device">
+          <strong>CS-2000 / FileMeter / SimMeter</strong>
+          <p>CS-2000 作为光谱基准预留驱动骨架；FileMeter 用来读取第三方软件导出的 CSV / JSON / 2D numpy 数据；SimMeter 用合成显示模型跑通 UI、报告和算法，适合无硬件时演示和回归检查。</p>
+          <div class="tags"><span class="pill warn">预留 / 桥接</span><span class="pill ok">离线仿真</span></div>
+        </div>
+        <div class="device">
+          <strong>局域网 Pattern 主机</strong>
+          <p>现场可让测量机接 CA-410，另一台电脑专门驱动电视输出。测量机只把屏幕描述符推到 Pattern 主机，再等待远端 `/display`、HDR Agent 或 DeckLink Agent ack，适合仪器和输出设备分布在不同电脑上的测试间。</p>
+          <div class="tags"><span class="pill ok">双机模式</span><span class="pill hot">同一渲染契约</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="status">
+      <div class="eyebrow">STATUS</div>
+      <h2>当前状态与落地建议</h2>
+      <div class="band surface">
+        <table>
+          <tr><th>模块</th><th>状态</th><th>说明</th></tr>
+          <tr><td>WebUI 测试台</td><td><span class="pill ok">已跑通</span></td><td>准备、执行、结果、历史、导出、设备页已成体系。</td></tr>
+          <tr><td>CA-410</td><td><span class="pill ok">真机已通</span></td><td>USB 串口通讯和通道管理已实现，适合大量快速点测。</td></tr>
+          <tr><td>UltraStudio / DeckLink</td><td><span class="pill warn">链路就绪，待真出图验证</span></td><td>Agent 和设备检查已实现；需匹配 Desktop Video / SDK 后做端到端出图确认。</td></tr>
+          <tr><td>阈值与判定</td><td><span class="pill warn">待标定</span></td><td>目前阈值是占位，需要按企标和真机样本重新设定。</td></tr>
+          <tr><td>真机成套测量</td><td><span class="pill warn">待完成</span></td><td>建议优先做 CA-410 + 电脑/DeckLink 输出的一轮完整圆环、动态色域和 LUT 校准闭环。</td></tr>
+        </table>
+        <div class="note"><b>推荐落地顺序：</b>先用 CA-410 跑一轮圆环基色串色、动态色域和灰阶 / LUT 校准，确认测量同步和输出稳定；再接 UltraStudio 4K Mini 做 10-bit PQ 输出验证；随后用 CXC 做二维串色热力图，最后再把 Murideo / CS-2000 纳入标准化验证链。</div>
+      </div>
+    </section>
+
+    <footer>
+      RGBMiniLED-TV-TestTool · 测试与校准说明 · 更新于 2026-07-04 · 页面位于 HDR_Production_teach
+    </footer>
+  </main>
 </body>
 </html>
