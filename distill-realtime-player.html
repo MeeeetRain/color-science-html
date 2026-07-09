@@ -6,8 +6,8 @@
 <script src="assets/auth/auth-config.js"></script>
 <script src="assets/auth/auth-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>从 40 秒到 9 毫秒:小模型蒸馏与实时 HDR 播放器</title>
-<meta name="description" content="SDR→HDR 蒸馏小模型的训练方法与实时播放器设计:教师-学生蒸馏、增益图、CoreML/ANE、PTS 精确配对、golden parity。">
+<title>Lumora:小模型蒸馏与实时 HDR 播放器</title>
+<meta name="description" content="Lumora 实时 HDR 播放器与蒸馏小模型:教师-学生蒸馏、增益图、CoreML/ANE、PTS 精确配对、golden parity。">
 <style>
 :root {
   color-scheme: dark;
@@ -105,10 +105,10 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 </div></nav>
 
 <header class="hero"><div class="wrap">
-  <div class="kicker">DISTILLATION & REAL-TIME PLAYER</div>
-  <h1>从每帧 40 秒到 <span class="em">9 毫秒</span>:<br>小模型蒸馏与实时 HDR 播放器</h1>
+  <div class="kicker">LUMORA · DISTILLATION & REAL-TIME PLAYER</div>
+  <h1><span class="em">Lumora</span> 实时 HDR 播放器:<br>把每帧 40 秒的转换,蒸馏进 <span class="em">9 毫秒</span></h1>
   <p class="lead">我们把"AI 测光表"从 GPU 服务器上的大管线,蒸馏成一个 5.11M 的轻量模型,部署到 Mac 的神经引擎(ANE);
-  又围绕它做了一个原生实时播放器——载入 SDR 片源,即以 HDR 亮度实时播放。
+  又围绕它构建了原生实时播放器 <b>Lumora</b>——载入 SDR 片源,即以 HDR 亮度实时播放。
   本页讲两件事:<b>小模型是怎么训练出来的</b>,以及<b>播放器是怎么设计的</b>。前半部分不需要任何 AI 背景。</p>
   <div class="numband">
     <div class="num"><div class="v">8.88 ms</div><div class="k">小模型单帧推理(M4 Max 神经引擎)</div></div>
@@ -264,8 +264,8 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 
 <!-- ============ PART 3 播放器 ============ -->
 <section id="part3"><div class="wrap">
-  <div class="sec-kicker">PART 3 · 实时播放器 rt_player</div>
-  <h2>播放器设计:两条流水线,一次乘法</h2>
+  <div class="sec-kicker">PART 3 · 实时播放器 LUMORA</div>
+  <h2>Lumora 播放器设计:两条流水线,一次乘法</h2>
   <p class="note">有了 9 毫秒的学生网络,还需要一个边解码边转换的实时播放器。核心设计:<b>逐像素运算全部由 GPU 承担,网络推理置于异步支路</b>——
   两条流水线独立推进,在输出前汇合为一次逐像素乘法。</p>
 
