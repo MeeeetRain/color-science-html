@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- 登录守卫:无有效登录态会跳转到 login.html -->
+<script src="assets/auth/auth-config.js"></script>
+<script src="assets/auth/auth-guard.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从 40 秒到 9 毫秒:小模型蒸馏与实时 HDR 播放器</title>
+<meta name="description" content="SDR→HDR 蒸馏小模型的训练方法与实时播放器设计:教师-学生蒸馏、增益图、CoreML/ANE、PTS 精确配对、golden parity。">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #07080d; --panel: #111620; --panel-2: #172131;
+  --ink: #f4f7fb; --muted: #a7b0bf; --soft: #758195;
+  --line: rgba(255,255,255,.12);
+  --cyan: #34dff2; --lime: #b7f05b; --gold: #ffd166;
+  --rose: #ff4d6d; --violet: #a78bfa; --blue: #60a5fa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -3;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(52,223,242,.14), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(255,77,109,.12), transparent 30%),
+    radial-gradient(circle at 65% 88%, rgba(183,240,91,.10), transparent 34%),
+    linear-gradient(180deg, #07080d 0%, #0b1019 48%, #07080d 100%);
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+.topnav {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(7,8,13,.78); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+.topnav .in { max-width: 1080px; margin: 0 auto; padding: 12px 22px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.topnav .brand { font-weight: 700; color: var(--cyan); font-size: 14px; }
+.topnav a.lnk { font-size: 13px; color: var(--muted); }
+.topnav a.lnk:hover { color: var(--ink); }
+
+header.hero { padding: 72px 0 30px; }
+.kicker { font-size: 13px; letter-spacing: .18em; color: var(--cyan); font-weight: 700; }
+h1 { font-size: clamp(28px, 4.5vw, 44px); line-height: 1.22; margin: 12px 0 14px; }
+h1 .em { color: var(--gold); }
+.lead { color: var(--muted); max-width: 780px; font-size: 17px; }
+
+.numband { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 28px 0 8px; }
+.num {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px 18px;
+}
+.num .v { font-size: 26px; font-weight: 800; color: var(--lime); }
+.num .v.cy { color: var(--cyan); } .num .v.go { color: var(--gold); } .num .v.vi { color: var(--violet); }
+.num .k { font-size: 13px; color: var(--soft); margin-top: 2px; }
+
+section { padding: 44px 0 10px; }
+.sec-kicker { font-size: 12px; letter-spacing: .22em; color: var(--soft); font-weight: 700; }
+h2 { font-size: clamp(22px, 3vw, 30px); margin: 8px 0 10px; }
+h3 { font-size: 18px; margin: 26px 0 8px; color: var(--cyan); }
+p.note { color: var(--muted); max-width: 820px; margin-bottom: 14px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 20px 22px; margin: 16px 0;
+}
+.card.accent { border-color: rgba(255,209,102,.4); background: linear-gradient(180deg, rgba(255,209,102,.06), transparent 60%), var(--panel); }
+.card h4 { font-size: 15px; margin-bottom: 8px; color: var(--gold); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 880px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+ul.pts { margin: 8px 0 4px 20px; color: var(--muted); }
+ul.pts li { margin: 5px 0; }
+ul.pts b { color: var(--ink); }
+.tag { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); margin: 0 6px 6px 0; }
+.tag.g { color: var(--lime); border-color: rgba(183,240,91,.4); }
+.tag.r { color: var(--rose); border-color: rgba(255,77,109,.4); }
+.svgbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 14px 0; overflow-x: auto; }
+.svgbox svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.cap { font-size: 13px; color: var(--soft); text-align: center; margin-top: 8px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+table.cmp th, table.cmp td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+table.cmp th { color: var(--soft); font-weight: 600; font-size: 13px; }
+table.cmp td.g { color: var(--lime); font-weight: 700; }
+table.cmp td.r { color: var(--rose); }
+table.cmp tr.hl { background: rgba(52,223,242,.06); }
+.story {
+  border-left: 3px solid var(--violet); padding: 4px 0 4px 16px; margin: 14px 0; color: var(--muted);
+}
+.story b { color: var(--ink); }
+footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 1px solid var(--line); margin-top: 50px; }
+.small { font-size: 13px; color: var(--soft); }
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="in">
+  <span class="brand">HDR Production</span>
+  <a class="lnk" href="index.html">← 返回目录</a>
+  <a class="lnk" href="ltx-gainmap-itm.html">上一篇:LTX 增益图 ITM 算法</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="kicker">DISTILLATION & REAL-TIME PLAYER</div>
+  <h1>从每帧 40 秒到 <span class="em">9 毫秒</span>:<br>小模型蒸馏与实时 HDR 播放器</h1>
+  <p class="lead">我们把"AI 测光表"从 GPU 服务器上的大管线,蒸馏成一个 5.11M 的小模型,塞进了 Mac 的神经引擎;
+  又围绕它做了一个原生实时播放器——SDR 片源拖进去,直接以 HDR 亮度实时播放。
+  本页讲两件事:<b>小模型是怎么训练出来的</b>,以及<b>播放器是怎么设计的</b>。前半部分不需要任何 AI 背景。</p>
+  <div class="numband">
+    <div class="num"><div class="v">8.88 ms</div><div class="k">小模型单帧推理(M4 Max 神经引擎)</div></div>
+    <div class="num"><div class="v cy">0.9423</div><div class="k">HDRTV1K 学术基准 SSIM(反超大管线)</div></div>
+    <div class="num"><div class="v go">0 帧</div><div class="k">增益与画面的时间错配(实测)</div></div>
+    <div class="num"><div class="v vi">≤1 码</div><div class="k">播放器 vs 参考链逐位差(10bit)</div></div>
+  </div>
+</div></header>
+
+<!-- ============ PART 1 通俗版 ============ -->
+<section id="part1"><div class="wrap">
+  <div class="sec-kicker">PART 1 · 给所有人</div>
+  <h2>老师傅与学徒:什么是"蒸馏"</h2>
+  <p class="note">我们已有一条效果很好的 SDR→HDR 转换管线(见<a href="ltx-gainmap-itm.html" style="color:var(--cyan)">上一篇</a>):
+  用视频大模型 LTX 当"测光表",算出画面每个区域该提多亮。问题是它<b style="color:var(--rose)">太慢</b>——一帧要 40 秒,只能在服务器上离线跑。
+  怎么让它实时?答案是行业里常用的一招:<b style="color:var(--lime)">知识蒸馏(distillation)</b>。</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>🧓 老师傅(教师管线)</h4>
+      <ul class="pts">
+        <li>LTX 视频大模型 + 全套安全护栏</li>
+        <li>准,但一帧要 <b>40 秒</b>(服务器 GPU)</li>
+        <li>它的输出:一张<b>增益图</b>——"每个区域该提多亮"的地图</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>🧑‍🎓 学徒(蒸馏小模型)</h4>
+      <ul class="pts">
+        <li>只有 5.11M 参数的小网络</li>
+        <li>只学一件事:看一眼画面,<b>模仿老师傅画增益图</b></li>
+        <li>一帧 <b>8.88 毫秒</b>——比老师傅快约 4600 倍</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 240" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <!-- SDR frame -->
+    <rect x="20" y="60" width="150" height="90" rx="8" fill="#1c2738" stroke="#60a5fa"/>
+    <text x="95" y="100" fill="#f4f7fb" font-size="15" text-anchor="middle" font-weight="700">SDR 原片帧</text>
+    <text x="95" y="122" fill="#a7b0bf" font-size="12" text-anchor="middle">8bit,较暗</text>
+    <!-- arrow -->
+    <path d="M175 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
+    <!-- student net -->
+    <rect x="235" y="48" width="180" height="114" rx="10" fill="#172131" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="325" y="86" fill="#b7f05b" font-size="15" text-anchor="middle" font-weight="700">学徒小网络</text>
+    <text x="325" y="108" fill="#a7b0bf" font-size="12" text-anchor="middle">5.11M 参数</text>
+    <text x="325" y="128" fill="#ffd166" font-size="13" text-anchor="middle" font-weight="700">8.88 ms / 帧</text>
+    <path d="M420 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
+    <!-- gain map -->
+    <rect x="480" y="60" width="150" height="90" rx="8" fill="#241a2e" stroke="#a78bfa"/>
+    <text x="555" y="92" fill="#a78bfa" font-size="15" text-anchor="middle" font-weight="700">增益图</text>
+    <text x="555" y="112" fill="#a7b0bf" font-size="12" text-anchor="middle">"哪里该提多亮"</text>
+    <text x="555" y="132" fill="#a7b0bf" font-size="12" text-anchor="middle">低分辨率的亮度地图</text>
+    <path d="M635 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
+    <!-- multiply -->
+    <circle cx="720" cy="105" r="20" fill="none" stroke="#ffd166" stroke-width="2"/>
+    <text x="720" y="112" fill="#ffd166" font-size="20" text-anchor="middle" font-weight="800">×</text>
+    <path d="M720 155 v-28" stroke="#60a5fa" stroke-width="2" marker-end="url(#a1)"/>
+    <text x="720" y="180" fill="#60a5fa" font-size="12" text-anchor="middle">原片像素(一个不改)</text>
+    <path d="M745 105 h55" stroke="#758195" stroke-width="2" marker-end="url(#a1)"/>
+    <!-- HDR out -->
+    <rect x="805" y="60" width="135" height="90" rx="8" fill="#0f2418" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="872" y="100" fill="#b7f05b" font-size="15" text-anchor="middle" font-weight="700">HDR 画面</text>
+    <text x="872" y="122" fill="#a7b0bf" font-size="12" text-anchor="middle">高光亮起来</text>
+    <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
+  </svg>
+  <div class="cap">学徒只画"亮度地图",画面像素永远来自原片 —— <b style="color:var(--lime)">AI 不碰画面本身,所以不会画错东西(无虚构)</b>,这条底线从大管线原样继承。</div>
+  </div>
+
+  <h3>数据工厂:老师傅自动出题、自动批改</h3>
+  <p class="note">训练一个 AI 通常最贵的是"标注数据"。我们没花一分钱人工:让老师傅管线把一部电影 + 一套公开测试集
+  批量跑一遍,自动产出 <b>2078 组「SDR 帧 → 标准答案增益图」</b>教材。学徒照着学,单次训练只要 <b>33 分钟</b>。
+  以后换任何片源,教材都能自动扩充。</p>
+
+  <h3>速度:三个数量级的跨越</h3>
+  <div class="svgbox">
+  <svg viewBox="0 0 960 190" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <text x="20" y="30" fill="#a7b0bf" font-size="13">每帧耗时(对数刻度,越短越好)</text>
+    <!-- log scale: 41000ms -> full width; 88ms; 8.88ms -->
+    <rect x="20" y="50" width="880" height="26" rx="6" fill="#ff4d6d" opacity="0.85"/>
+    <text x="908" y="68" fill="#07080d" font-size="14" font-weight="800" text-anchor="end" dx="-8">41 秒</text>
+    <text x="30" y="68" fill="#07080d" font-size="13" font-weight="700">老师傅:LTX 大管线(服务器 GPU)</text>
+    <rect x="20" y="92" width="555" height="26" rx="6" fill="#ffd166" opacity="0.9"/>
+    <text x="585" y="110" fill="#ffd166" font-size="14" font-weight="700">88 ms</text>
+    <text x="30" y="110" fill="#07080d" font-size="13" font-weight="700">学徒第一代 v0(28M 参数)</text>
+    <rect x="20" y="134" width="435" height="26" rx="6" fill="#b7f05b"/>
+    <text x="465" y="152" fill="#b7f05b" font-size="14" font-weight="800">8.88 ms ≈ 112 帧/秒</text>
+    <text x="30" y="152" fill="#07080d" font-size="13" font-weight="700">学徒第三代 v1.1(5.11M,神经引擎)</text>
+  </svg>
+  <div class="cap">对数刻度:每短一段是 10 倍提速。41 秒 → 8.88 毫秒,约 <b style="color:var(--lime)">4600 倍</b>。</div>
+  </div>
+
+  <div class="card accent">
+    <h4>🤯 反直觉的结果:学徒考试反而比老师傅高分</h4>
+    <p class="note" style="margin:0">在训练时<b>从没见过</b>的学术基准 HDRTV1K 上,学徒(SSIM 0.9423)反超了带 LTX 的完整老师傅系统(0.9117)。
+    为什么?老师傅每张图都要现场发挥(大模型有随机性,偶尔失手),学徒学到的是老师傅<b>千百次示范的平均手法</b>——把偶然失误平均掉了。
+    这在蒸馏领域是已知现象,但在我们的任务上被定量验证了。</p>
+  </div>
+</div></section>
+
+<!-- ============ PART 2 训练迭代 ============ -->
+<section id="part2"><div class="wrap">
+  <div class="sec-kicker">PART 2 · 训练迭代史</div>
+  <h2>三代学徒:v0 → v1 → v1.1</h2>
+  <p class="note">每一代解决一个明确的问题。单次训练 33 分钟,所以我们可以快速试错——真正花时间的是<b>想清楚该量什么</b>。</p>
+
+  <div class="grid3">
+    <div class="card">
+      <h4>v0 · 证明可行</h4>
+      <span class="tag">28M 参数</span><span class="tag">88ms</span>
+      <ul class="pts">
+        <li>首训即在未见域<b>全指标反超</b>教师推理链</li>
+        <li>但太大太慢,离实时还差一个量级</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>v1 · 瘦身 + 提纯</h4>
+      <span class="tag">5.11M(↓5.5×)</span><span class="tag">8.88ms</span>
+      <ul class="pts">
+        <li>结构全面改为<b>神经引擎友好</b>(静态形状等)</li>
+        <li>修数据泄漏(按镜头分组切分训练/验证)</li>
+        <li>质量与 v0 持平——<b>瘦身零损</b></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>v1.1 · 高光修复</h4>
+      <span class="tag g">峰值比 0.60→0.863</span>
+      <ul class="pts">
+        <li>问题:学徒偏保守,<b>最亮的高光不敢提满</b>(绿管、手术灯)</li>
+        <li>解法:损失函数里加"峰值分位项",专盯最亮的 0.5% 像素</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="story">
+    <b>一个方法论故事(技术同事看这里):</b>v1.1 调参时,我们一度被自己定的验收规则误导——按"验证集 RMSE 必须 ≤0.11"的硬线,
+    修好高光的那一档(w_peak=0.15)会被否决,因为它 RMSE 涨到 0.137。但把误差<b>按增益高低分桶</b>一看:涨幅几乎全在高增益桶
+    (正是我们想让它大胆的地方),低增益桶几乎不动。<b>RMSE 是被 77% 的低增益像素主导的"假裁判"</b>;
+    换真裁判(学术基准 SSIM + 专业母版亮度对标)重判,该档全线通过、当选。
+    教训:<b>代理指标不能当硬线,验收规则要盯部署时真正在乎的量</b>。
+  </div>
+
+  <table class="cmp">
+    <tr><th>模型</th><th>参数量</th><th>HDRTV1K SSIM ↑</th><th>高光峰值比 ↑</th><th>单帧耗时(M4 Max)</th></tr>
+    <tr><td>LTX 完整系统(教师推理链)</td><td>~2B(大模型)</td><td>0.9117</td><td>1.00(基准)</td><td class="r">~41 s(服务器 GPU)</td></tr>
+    <tr><td>学徒 v0</td><td>28M</td><td>0.9419</td><td>0.60</td><td>88 ms</td></tr>
+    <tr class="hl"><td><b>学徒 v1.1(现役)</b></td><td><b>5.11M</b></td><td class="g">0.9423</td><td class="g">0.863</td><td class="g">8.88 ms(神经引擎)</td></tr>
+    <tr><td class="small" colspan="5">教师 GT 上界 0.9507;母版亮度校准漂移 2.1%(≤5% 线)。全部数字为实测,平台已标注。</td></tr>
+  </table>
+</div></section>
+
+<!-- ============ PART 3 播放器 ============ -->
+<section id="part3"><div class="wrap">
+  <div class="sec-kicker">PART 3 · 实时播放器 rt_player</div>
+  <h2>播放器设计:两条流水线,一次乘法</h2>
+  <p class="note">有了 9 毫秒的学徒,还需要一个能"边播边转"的播放器。核心设计:<b>把逐像素的重活全留在 GPU,把 AI 判断放进异步支路</b>——
+  两条流水线各跑各的,最后在屏幕前汇合成一次乘法。</p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
+    <!-- decode -->
+    <rect x="20" y="130" width="140" height="70" rx="10" fill="#172131" stroke="#60a5fa"/>
+    <text x="90" y="160" fill="#60a5fa" font-size="14" text-anchor="middle" font-weight="700">硬件解码</text>
+    <text x="90" y="182" fill="#a7b0bf" font-size="11" text-anchor="middle">VideoToolbox·零拷贝</text>
+    <!-- split -->
+    <path d="M160 150 C 220 150 220 80 280 80" stroke="#a78bfa" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+    <path d="M160 180 C 220 180 220 250 280 250" stroke="#34dff2" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+    <!-- gain branch -->
+    <rect x="285" y="42" width="400" height="80" rx="10" fill="#241a2e" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="485" y="66" fill="#a78bfa" font-size="14" text-anchor="middle" font-weight="700">增益支路(异步,解码时提前算)</text>
+    <text x="485" y="88" fill="#a7b0bf" font-size="12" text-anchor="middle">GPU 下采样 512×288 → 学徒网(神经引擎 CoreML)→ 增益纹理</text>
+    <text x="485" y="108" fill="#ffd166" font-size="12" text-anchor="middle" font-weight="700">结果按帧的时间戳(PTS)存入环形表</text>
+    <!-- pixel branch -->
+    <rect x="285" y="212" width="400" height="80" rx="10" fill="#0e2027" stroke="#34dff2" stroke-width="1.5"/>
+    <text x="485" y="236" fill="#34dff2" font-size="14" text-anchor="middle" font-weight="700">像素支路(逐帧,Metal 全链 shader)</text>
+    <text x="485" y="258" fill="#a7b0bf" font-size="12" text-anchor="middle">线性化 → ×增益 → 色域 709→2020 → F_APC 色度增强 → EDR 输出</text>
+    <text x="485" y="278" fill="#a7b0bf" font-size="12" text-anchor="middle">纯点运算,4K 也只是毫秒级</text>
+    <!-- merge -->
+    <path d="M685 82 C 745 82 745 150 800 158" stroke="#a78bfa" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+    <path d="M685 252 C 745 252 745 190 800 175" stroke="#34dff2" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+    <rect x="805" y="130" width="135" height="70" rx="10" fill="#0f2418" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="872" y="158" fill="#b7f05b" font-size="14" text-anchor="middle" font-weight="700">EDR 直显</text>
+    <text x="872" y="180" fill="#a7b0bf" font-size="11" text-anchor="middle">>1.0 即 HDR 亮度</text>
+    <text x="485" y="168" fill="#f4f7fb" font-size="13" text-anchor="middle">按 PTS 取<tspan fill="#ffd166" font-weight="700">本帧专属</tspan>增益,汇合成一次乘法</text>
+  </svg>
+  <div class="cap">全程 GPU 常驻:解码帧零拷贝进 Metal,增益支路不占帧预算,1080p60 实测零掉帧。</div>
+  </div>
+
+  <h3>关键设计 ①:PTS 精确配对——增益和画面必须"同一帧"</h3>
+  <p class="note">早期版本用"最新可用增益"策略:渲染时拿手头最新算完的增益凑合用。结果切镜头/亮度突变时,
+  增益比画面<b style="color:var(--rose)">慢 200–400 毫秒</b>,肉眼可见"亮度跟不上画面"。重构后:解码器一出帧就为它算增益、
+  按时间戳(PTS)存表;显示哪帧,就查表取哪帧的增益——<b style="color:var(--lime)">错配按构造归零</b>。频闪测试片互相关实测:滞后 0 帧。</p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 220" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <text x="20" y="28" fill="#ff4d6d" font-size="14" font-weight="700">旧:最新可用(错位)</text>
+    <g font-size="12">
+      <rect x="150" y="14" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="176" y="30" fill="#f4f7fb" text-anchor="middle">帧 N</text>
+      <rect x="210" y="14" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="236" y="30" fill="#f4f7fb" text-anchor="middle">N+1</text>
+      <rect x="270" y="14" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="296" y="30" fill="#f4f7fb" text-anchor="middle">N+2</text>
+      <rect x="150" y="46" width="52" height="22" rx="4" fill="#2e1a22" stroke="#ff4d6d"/><text x="176" y="62" fill="#ff4d6d" text-anchor="middle">益 N-3</text>
+      <rect x="210" y="46" width="52" height="22" rx="4" fill="#2e1a22" stroke="#ff4d6d"/><text x="236" y="62" fill="#ff4d6d" text-anchor="middle">益 N-2</text>
+      <rect x="270" y="46" width="52" height="22" rx="4" fill="#2e1a22" stroke="#ff4d6d"/><text x="296" y="62" fill="#ff4d6d" text-anchor="middle">益 N-1</text>
+    </g>
+    <text x="360" y="52" fill="#ff4d6d" font-size="13">增益落后 3–10 帧 → 切镜头时"亮度追画面"</text>
+    <text x="20" y="128" fill="#b7f05b" font-size="14" font-weight="700">新:PTS 配对(锁定)</text>
+    <g font-size="12">
+      <rect x="150" y="114" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="176" y="130" fill="#f4f7fb" text-anchor="middle">帧 N</text>
+      <rect x="210" y="114" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="236" y="130" fill="#f4f7fb" text-anchor="middle">N+1</text>
+      <rect x="270" y="114" width="52" height="22" rx="4" fill="#1c2738" stroke="#60a5fa"/><text x="296" y="130" fill="#f4f7fb" text-anchor="middle">N+2</text>
+      <rect x="150" y="146" width="52" height="22" rx="4" fill="#122616" stroke="#b7f05b"/><text x="176" y="162" fill="#b7f05b" text-anchor="middle">益 N</text>
+      <rect x="210" y="146" width="52" height="22" rx="4" fill="#122616" stroke="#b7f05b"/><text x="236" y="162" fill="#b7f05b" text-anchor="middle">益 N+1</text>
+      <rect x="270" y="146" width="52" height="22" rx="4" fill="#122616" stroke="#b7f05b"/><text x="296" y="162" fill="#b7f05b" text-anchor="middle">益 N+2</text>
+    </g>
+    <text x="360" y="152" fill="#b7f05b" font-size="13">解码提前 5 帧算好,显示时按时间戳精确取用 → 滞后 0 帧</text>
+    <text x="150" y="205" fill="#758195" font-size="12">依据:学徒只要 9ms,而解码天然领先显示 ≥1 帧(实测 16–40ms)——预测总能赶在显示之前完成。</text>
+  </svg>
+  </div>
+
+  <h3>关键设计 ②:golden parity——"和参考答案逐位对"</h3>
+  <p class="note">播放器里的整条数学链(线性化、增益、色域、色度增强、PQ/EDR)是用 Metal 重写的,怎么保证和服务器上验证过的
+  Python 参考链<b>一模一样</b>?我们不靠眼睛:让播放器把一帧的处理结果按 10bit 码值原样吐出来,与参考链对同一帧的输出
+  <b>逐像素做差</b>。验收线:99% 像素差 ≤2 码。现役 12 组配置(色度开/关 × 多档位 × 多片源)全部 p99=1 码。
+  <b>shader 里的每个常量都由脚本从 Python 源码自动生成,禁止手抄</b>——两边永远同源。</p>
+
+  <div class="card accent">
+    <h4>🔧 今日战报:一个教科书级 bug 的排查</h4>
+    <p class="note" style="margin:0">现象:播放中画面剧烈抖动,抖动帧看起来是"画面被放大"。排查发现是<b>零拷贝纹理的生命周期</b>问题:
+    解码帧的显存(IOSurface)在还在屏幕上显示时,就被解码器的缓冲池回收去写<b>未来帧</b>了——推镜头里领先几帧的未来帧,
+    恰好就是当前画面的"放大版",于是抖动看起来像缩放。修复:显示路径持有像素缓冲直到 GPU 用完(双持有 + 一帧宽限)。
+    <b>教训:零拷贝的所有权边界必须显式管理;"症状像什么"往往就是根因的指纹。</b></p>
+  </div>
+
+  <h3>正在收尾</h3>
+  <p class="note">
+    <span class="tag">吞吐打磨</span>增益命中率从 97.4% 向 99.5% 收口(去 CPU 转置/回读)<br>
+    <span class="tag">色度三档</span>播放器对齐生产的 off / F_APC / B 三档色度增强(F_APC 已有,补 B)<br>
+    <span class="tag">A/B 分屏</span>SDR|HDR 左右分屏对比 + 30 分钟连播浸泡测试<br>
+    <span class="tag">电视芯片</span>L3 路线启动:模型正在向 MTK Pentonic 700(MT9655)NPU 移植——输入位深实验进行中
+  </p>
+</div></section>
+
+<!-- ============ PART 4 技术优势 ============ -->
+<section id="part4"><div class="wrap">
+  <div class="sec-kicker">PART 4 · 给技术同事</div>
+  <h2>技术优势清单</h2>
+  <table class="cmp">
+    <tr><th>维度</th><th>我们的做法</th><th>为什么这是优势</th></tr>
+    <tr><td><b>无虚构保证</b></td><td>AI 只输出低频增益场,像素 = 原片 × 增益</td><td>按构造不产生新内容(chromaErr≡0),过审风险为零;蒸馏后该性质<b>原样继承</b></td></tr>
+    <tr><td><b>蒸馏目标</b></td><td>只学增益图,不学像素</td><td>输出空间低频、低维 → 5.11M 就够;学徒平均掉教师随机噪声,未见域反超</td></tr>
+    <tr><td><b>数据工厂</b></td><td>教师管线自动产标签,2078 对零人工</td><td>护栏烘进标签;换片源即扩容;33min/次的迭代速度</td></tr>
+    <tr><td><b>部署形态</b></td><td>CoreML/ANE fp16 静态形状,全算子神经引擎常驻</td><td>8.88ms,GPU 全留给像素链;架构从 v1 起就为 NPU 设计(静态上采样、ReLU)</td></tr>
+    <tr><td><b>实时架构</b></td><td>双速率解耦 + PTS 精确配对 + 全 GPU 常驻</td><td>增益不占帧预算;错配按构造为 0(互相关实测);1080p60 零掉帧</td></tr>
+    <tr><td><b>质量体系</b></td><td>golden parity(逐位)+ 学术基准 + 专业母版对标 + 频闪互相关</td><td>每次改动都有客观回归线,不靠眼睛;验收规则盯"真裁判"</td></tr>
+    <tr><td><b>可扩展性</b></td><td>同一教师可蒸馏不同档位/输入域(桌面 CoreML 版与电视 NPU 版并行)</td><td>L2 工作站已落地,L3 电视端(MT9655/NeuroPilot)推进中</td></tr>
+  </table>
+  <p class="small">本页数字均为实测:训练/评测在 H20 服务器,推理耗时在 M4 Max;学术基准 HDRTV1K 117 帧为训练未见域;
+  母版对标以 ASC StEM2 专业 HDR 母版为参照。撰写日期 2026-07,后续里程碑(gainMiss 收口、B 档、A/B 分屏、MT9655 移植)完成后本页会更新。</p>
+</div></section>
+
+<footer><div class="wrap">
+  HDR Production 教学系列 · <a href="index.html" style="color:var(--cyan)">返回目录</a> ·
+  相关阅读:<a href="ltx-gainmap-itm.html" style="color:var(--cyan)">LTX 增益图 ITM 算法</a>
+</div></footer>
+
+</body>
+</html>
