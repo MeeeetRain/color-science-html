@@ -87,6 +87,16 @@
   .pstep .n{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
   .pstep .t{font-weight:720;font-size:14px;margin-top:4px}
   .pstep .d{font-size:12px;color:var(--soft);margin-top:4px;line-height:1.5}
+  /* visual filmstrip: real frames per pipeline stage */
+  .filmstrip{display:flex;align-items:stretch;gap:6px;margin:14px 0 8px;flex-wrap:nowrap;overflow-x:auto}
+  .fs-cell{flex:1 1 0;min-width:150px;margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    background:rgba(255,255,255,.03);display:flex;flex-direction:column}
+  .fs-cell img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+  .fs-cell figcaption{padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--soft);line-height:1.4}
+  .fs-cell figcaption .fs-n{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+  .fs-cell figcaption b{color:var(--ink);font-size:13px;font-weight:720}
+  .fs-arrow{display:flex;align-items:center;color:var(--cyan);font-size:18px;font-weight:700;flex:0 0 auto}
+  @media(max-width:680px){.filmstrip{flex-wrap:wrap}.fs-arrow{transform:rotate(90deg);width:100%;justify-content:center;height:16px}}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:24px 0}
   .card{border:1px solid var(--line);border-radius:10px;padding:18px 20px;
@@ -298,6 +308,23 @@
       <div class="pstep"><div class="n">05</div><div class="t"><span data-lang="zh">色度增强</span><span data-lang="en">Chroma enhance</span></div><div class="d"><span data-lang="zh">Rec.2020 线性域 · F_APC（dmax 可调 / 可关）</span><span data-lang="en">Rec.2020 linear · F_APC (tunable dmax, optional)</span></div></div>
       <div class="pstep"><div class="n">OUT</div><div class="t">HDR10 / JXL</div><div class="d">Rec.2020 PQ</div></div>
     </div>
+
+    <h3 style="margin-top:34px"><span data-lang="zh">看得见的处理链：一个真实镜头走完全程</span><span data-lang="en">The pipeline you can see: one real shot, end to end</span></h3>
+    <p class="note"><span data-lang="zh">取 ASC StEM2 第 4 秒的镜头（暗室中手持发光装置）。注意<b>三张照片的结构完全一致</b>——像素永远来自原片；变化只发生在亮度与色度。中间的<b>增益图</b>是这套方案的核心：AI 只把提亮集中在<b>真实光源</b>（手电 / 绿管）上，暗部几乎不动，因此不会凭空"发明"细节。</span><span data-lang="en">A shot from ASC StEM2 at 4 s (a glowing device held in a dark room). Note that the <b>three photographs are structurally identical</b>—pixels always come from the source; only luminance and chroma change. The <b>gain map</b> in the middle is the core idea: the AI concentrates brightening only on the <b>real light sources</b> (flashlight / green tube) and barely touches the shadows, so no detail is ever invented.</span></p>
+    <div class="filmstrip">
+      <figure class="fs-cell"><img src="assets/pipeline/stem2_sdr.jpg" alt="SDR source frame" loading="lazy">
+        <figcaption><span class="fs-n">01</span><b><span data-lang="zh">SDR 原片</span><span data-lang="en">SDR source</span></b><span data-lang="zh">偏暗、动态范围受限</span><span data-lang="en">dark, limited dynamic range</span></figcaption></figure>
+      <div class="fs-arrow">→</div>
+      <figure class="fs-cell"><img src="assets/pipeline/stem2_ltx.jpg" alt="LTX HDR estimate" loading="lazy">
+        <figcaption><span class="fs-n">02</span><b><span data-lang="zh">LTX 亮度判断</span><span data-lang="en">LTX luminance estimate</span></b><span data-lang="zh">大模型给出"该多亮"</span><span data-lang="en">the model proposes brightness</span></figcaption></figure>
+      <div class="fs-arrow">→</div>
+      <figure class="fs-cell"><img src="assets/pipeline/stem2_gain.jpg" alt="Constrained gain map heatmap" loading="lazy">
+        <figcaption><span class="fs-n">03</span><b><span data-lang="zh">约束增益图</span><span data-lang="en">Constrained gain map</span></b><span data-lang="zh">红=提亮最多，只落在光源</span><span data-lang="en">red = most lift, only on light sources</span></figcaption></figure>
+      <div class="fs-arrow">→</div>
+      <figure class="fs-cell"><img src="assets/pipeline/stem2_full.jpg" alt="Full workflow HDR result" loading="lazy">
+        <figcaption><span class="fs-n">04</span><b><span data-lang="zh">完整工作流成片</span><span data-lang="en">Full-workflow result</span></b><span data-lang="zh">贴回原片 + F_APC 色度</span><span data-lang="en">applied to source + F_APC chroma</span></figcaption></figure>
+    </div>
+    <div class="note" style="margin-top:2px"><span data-lang="zh">照片为 HDR 成片经固定色调映射（Reinhard@200nit）回 SDR 显示，仅供在普通屏幕上对比；真实 HDR 屏上手电峰值可达数百 nit。增益图热力图由成片 ÷ 原片的亮度比逐像素计算。</span><span data-lang="en">Photographs are the HDR result tone-mapped back to SDR for on-screen comparison (fixed Reinhard@200 nit); on a real HDR display the flashlight peaks at several hundred nits. The heat map is the per-pixel result-to-source luminance ratio.</span></div>
 
     <div class="two">
       <div>

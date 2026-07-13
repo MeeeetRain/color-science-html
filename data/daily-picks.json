@@ -1,6 +1,31 @@
 {
-  "updated": "2026-07-09",
+  "updated": "2026-07-10",
   "days": [
+    {
+      "date": "2026-07-10",
+      "picks": [
+        {
+          "tag": "讨论",
+          "tagEn": "Discussion",
+          "source": "ACESCentral",
+          "sourceEn": "ACESCentral",
+          "title": "Chroma Compression Explained",
+          "description": "最近的 `scene-display-referred`、`hdr-color-science` 和 `HDR-Relay` 都在反复讲一件事：HDR 输出不是单纯把亮度压进目标屏幕，而是要决定高光颜色到底保多少、什么时候该往白走。这条 ACESCentral 讨论最值得读的地方，是它把 chroma compression 从一句抽象原则拆成可观察的显示渲染行为：哪些高光会更快去饱和，为什么纯色和低饱和色不该同样处理，以及这套取舍到底在保护什么观感。拿它回看站内最近关于彩色高光恢复、path-to-white 和 output transform 目标的章节，会更容易把概念连到实际画面判断。",
+          "descriptionEn": "The recent `scene-display-referred`, `hdr-color-science`, and `HDR-Relay` chapters keep returning to the same point: HDR output is not just about squeezing luminance into a target display, but about deciding how much highlight color to preserve and when highlights should move toward white. The value of this ACESCentral discussion is that it turns chroma compression from an abstract principle into visible rendering behavior: which highlights desaturate faster, why pure and weakly saturated colors should not be treated identically, and what perceptual goal those tradeoffs are actually protecting. It is a strong continuation of the site's recent chapters on colored-highlight recovery, path-to-white behavior, and output-transform design goals.",
+          "url": "https://community.acescentral.com/t/chroma-compression-explained/5083"
+        },
+        {
+          "tag": "文章",
+          "tagEn": "Article",
+          "source": "Greg Benz Photography",
+          "sourceEn": "Greg Benz Photography",
+          "title": "“Gain maps” make HDR look great on any screen",
+          "description": "最近的 `HDR-Relay` 和 `making-of` 一直在把 gain map 讲成工作流问题，而不只是文件格式名词。这篇文章最值得读的地方，是它把“直接交给系统 tone mapping”和“先保留 SDR base，再用 gain map 把 HDR 高光加回来”之间的差别讲得非常直观：前者更像每台设备各自猜结果，后者更像把创作者的亮度与颜色意图显式带着走。对理解站内最近为什么反复强调参考白锚点、SDR/HDR 兼容交付和高光颜色恢复，这是一条很好的外部续读。",
+          "descriptionEn": "The recent `HDR-Relay` and `making-of` chapters keep treating gain maps as a workflow problem rather than just a file-format term. The value of this article is how concretely it separates letting each system tone-map on its own from preserving an SDR base first and then adding HDR highlights back through a gain map: the former is closer to every device guessing, while the latter carries the creator's luminance and color intent much more explicitly. It is a strong external continuation of the site's recent emphasis on reference-white anchoring, SDR/HDR-compatible delivery, and colored-highlight recovery.",
+          "url": "https://gregbenzphotography.com/hdr-photos/jpg-hdr-gain-maps-in-adobe-camera-raw/"
+        }
+      ]
+    },
     {
       "date": "2026-07-09",
       "picks": [
