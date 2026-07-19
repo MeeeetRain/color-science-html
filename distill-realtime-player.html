@@ -42,6 +42,7 @@ body::before {
 .topnav .in { max-width: 1080px; margin: 0 auto; padding: 12px 22px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .topnav .brand { font-weight: 700; color: var(--cyan); font-size: 14px; }
 .topnav a.lnk { font-size: 13px; color: var(--muted); }
+.topnav a.lnk.cur { color: var(--ink); font-weight: 700; }
 .topnav a.lnk:hover { color: var(--ink); }
 
 /* ---- Hero:规范基准 = ltx-gainmap-itm.html(见 EDITING_GUIDE.md) ---- */
@@ -123,8 +124,11 @@ footer { padding: 50px 0 60px; color: var(--soft); font-size: 13px; border-top: 
 
 <nav class="topnav"><div class="in">
   <span class="brand">HDR Production</span>
-  <a class="lnk" href="index.html">← 返回目录</a>
-  <a class="lnk" href="ltx-gainmap-itm.html">上一篇:LTX 增益图 ITM 算法</a>
+  <a class="lnk" href="index.html#chapters">← 返回目录</a>
+  <a class="lnk" href="sdr-hdr-itm-system.html">逆色调映射系统</a>
+  <a class="lnk" href="sdr-hdr-chroma-luminance-tuning.html">色度+亮度调优</a>
+  <a class="lnk" href="ltx-gainmap-itm.html">LTX Gainmap</a>
+  <a class="lnk cur" href="distill-realtime-player.html">实时播放器 Lumora</a>
 </div></nav>
 
 <header class="hero">
