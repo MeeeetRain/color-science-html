@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- 登录守卫:无有效登录态会跳转到 login.html -->
+<script src="assets/auth/auth-config.js"></script>
+<script src="assets/auth/auth-guard.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>让电视自己把 2D 画面变立体:研究进展汇报</title>
+<meta name="description" content="电视端实时 2D 转 3D 算法的研究进展:用大白话讲清楚做了什么、踩了什么坑、现在效果如何,以及下一步打算怎么做。">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #07080d; --panel: #111620; --panel-2: #172131;
+  --ink: #f4f7fb; --muted: #a7b0bf; --soft: #758195;
+  --line: rgba(255,255,255,.12);
+  --cyan: #34dff2; --lime: #b7f05b; --gold: #ffd166;
+  --rose: #ff4d6d; --violet: #a78bfa; --blue: #60a5fa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 16px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -3;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(52,223,242,.14), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(255,77,109,.12), transparent 30%),
+    radial-gradient(circle at 65% 88%, rgba(183,240,91,.10), transparent 34%),
+    linear-gradient(180deg, #07080d 0%, #0b1019 48%, #07080d 100%);
+}
+.wrap { max-width: 1020px; margin: 0 auto; padding: 0 22px; }
+.topnav {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(7,8,13,.78); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+.topnav .in { max-width: 1020px; margin: 0 auto; padding: 12px 22px; display: flex; gap: 18px; align-items: center; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
+.topnav .brand { font-weight: 700; color: var(--cyan); font-size: 14px; flex: none; }
+.topnav a.lnk { font-size: 13px; color: var(--muted); }
+.topnav a.lnk:hover { color: var(--ink); }
+
+header.hero { position: relative; padding: 90px 0 54px; overflow: hidden; isolation: isolate; }
+.hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.spectrum-band { position: absolute; left: 50%; top: 48%; width: min(1400px,138vw); height: 360px;
+  transform: translate(-50%,-50%) rotate(-7deg); border-radius: 999px;
+  background: linear-gradient(90deg, rgba(67,56,202,0) 0%, rgba(37,99,235,.6) 14%, rgba(6,182,212,.78) 30%,
+    rgba(34,197,94,.72) 46%, rgba(234,179,8,.78) 62%, rgba(249,115,22,.74) 78%, rgba(244,63,94,0) 100%);
+  filter: blur(40px) saturate(1.2); opacity: .6; }
+.grid-field { position: absolute; inset: 0; opacity: .16;
+  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 58px 58px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, black, transparent 70%);
+  mask-image: radial-gradient(circle at 50% 40%, black, transparent 70%); }
+.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--gold); font-size: 13px;
+  font-weight: 820; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 18px; }
+.eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--gold); }
+h1 { font-size: clamp(30px, 5.4vw, 54px); line-height: 1.16; letter-spacing: -.02em; margin-bottom: 18px;
+  max-width: 900px; text-wrap: balance; }
+.h-accent { background: linear-gradient(100deg, var(--cyan), var(--lime), var(--gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-desc { max-width: 760px; color: #d3dce8; font-size: clamp(16px, 1.6vw, 18.5px); line-height: 1.85; margin-bottom: 22px; }
+.hero-desc b { color: #fff; }
+.pass-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(183,240,91,.12);
+  border: 1px solid rgba(183,240,91,.4); color: var(--lime); font-weight: 700; font-size: 14px;
+  padding: 8px 16px; border-radius: 999px; margin-bottom: 22px; }
+
+.numband { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 10px 0 8px; }
+.num { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.num .v { font-size: 25px; font-weight: 800; color: var(--lime); }
+.num .v.cy { color: var(--cyan); } .num .v.go { color: var(--gold); } .num .v.vi { color: var(--violet); }
+.num .k { font-size: 13px; color: var(--soft); margin-top: 3px; }
+
+section { padding: 46px 0 8px; }
+.sec-kicker { font-size: 12px; letter-spacing: .2em; color: var(--soft); font-weight: 700; }
+h2 { font-size: clamp(21px, 2.8vw, 28px); margin: 8px 0 12px; }
+h3 { font-size: 17px; margin: 24px 0 8px; color: var(--cyan); }
+p.note { color: var(--muted); max-width: 800px; margin-bottom: 14px; font-size: 15.5px; }
+p.big { color: var(--ink); max-width: 800px; font-size: 17px; line-height: 1.85; margin-bottom: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin: 16px 0; }
+.card.accent { border-color: rgba(255,209,102,.4); background: linear-gradient(180deg, rgba(255,209,102,.06), transparent 60%), var(--panel); }
+.card.pass { border-color: rgba(183,240,91,.4); background: linear-gradient(180deg, rgba(183,240,91,.06), transparent 60%), var(--panel); }
+.card h4 { font-size: 15px; margin-bottom: 8px; color: var(--gold); }
+.card.pass h4 { color: var(--lime); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 880px) { .grid2, .grid3, .grid4 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .grid4 { grid-template-columns: 1fr 1fr; } }
+
+/* 术语卡 */
+.glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0 8px; }
+.gterm { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.gterm .w { color: var(--cyan); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.gterm .d { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+.svgbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+.svgbox svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.cap { font-size: 12.5px; color: var(--soft); text-align: center; margin-top: 8px; line-height: 1.6; }
+
+.small { font-size: 12.5px; color: var(--soft); }
+.smallcaps { font-variant-numeric: tabular-nums; }
+footer { padding: 46px 0 56px; color: var(--soft); font-size: 13px; border-top: 1px solid var(--line); margin-top: 46px; }
+footer a { color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="in">
+  <span class="brand">2D → 3D 实时转换</span>
+  <a class="lnk" href="#part1">在做什么</a>
+  <a class="lnk" href="#part2">怎么训练</a>
+  <a class="lnk" href="#part3">效果如何</a>
+  <a class="lnk" href="#part4">播放器</a>
+  <a class="lnk" href="#part5">下一步</a>
+</div></nav>
+
+<header class="hero">
+<div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+<div class="wrap">
+  <div class="eyebrow">2D→3D · 电视端实时立体转换 · 研究进展</div>
+  <h1>让电视自己<span class="h-accent">把普通画面变立体</span>:<br>研究进展汇报</h1>
+  <p class="hero-desc">目标是让电视<b>实时</b>把普通 2D 画面转换成立体 3D 效果,不需要另外拍摄立体素材。
+  这份报告用尽量少的专业词汇,讲清楚我们做了什么、中间踩过哪些坑、现在效果到什么程度,以及接下来打算怎么做。</p>
+  <div class="pass-badge">✓ 最新一轮质量验收(第 4 关)已通过</div>
+  <div class="numband">
+    <div class="num"><div class="v">50.8 分</div><div class="k">立体转换效果打分(及格线 35 分,满分参考 100,详见第三部分)</div></div>
+    <div class="num"><div class="v cy">12.65 ms/帧</div><div class="k">标准画质档单帧处理耗时,达标线 25ms(相当于每秒 79 帧)</div></div>
+    <div class="num"><div class="v go">20.38M 参数</div><div class="k">实际装进电视的算法体积,预算 26M±3M 内</div></div>
+    <div class="num"><div class="v vi">250,000 步</div><div class="k">最近一次完整训练的步数,4 张服务器显卡耗时约 45 小时</div></div>
+  </div>
+</div></header>
+
+<!-- ============ PART 1 在做什么 ============ -->
+<section id="part1"><div class="wrap">
+  <div class="sec-kicker">第一部分 · 在做什么</div>
+  <h2>为什么要做这件事,又是怎么做的</h2>
+  <p class="big">现在的 3D 内容非常少,而绝大多数视频、直播都只有普通的"平面"画面。
+  我们希望电视能<b>自己实时把这些普通画面变成立体效果</b>,不用等着专门拍摄的 3D 片源,
+  也不需要把画面传去云端处理再传回来——这一切要在电视自己的芯片上,一边播放一边完成。</p>
+
+  <div class="glossary">
+    <div class="gterm"><div class="w">立体感/3D 效果</div><div class="d">让左右两只眼睛看到略有差别的两张画面,大脑就会自动"脑补"出远近层次——这就是立体电影、VR 的基本原理。</div></div>
+    <div class="gterm"><div class="w">老师模型 / 学生模型</div><div class="d">先用一个又大又准、但跑不动实时的"老师"模型打样,再训练一个小得多的"学生"模型去模仿老师——学生能在电视上实时跑。</div></div>
+    <div class="gterm"><div class="w">验收关卡(Gate)</div><div class="d">项目分成几个阶段,每个阶段做完都要经过一次独立审核才能进入下一步,类似"考试过关"。</div></div>
+    <div class="gterm"><div class="w">打分怎么来的</div><div class="d">用电脑程序对比"生成的画面"和"真实拍摄的画面"有多像,自动给出一个 0~100 的相似度分数。</div></div>
+  </div>
+
+  <h3>核心思路:把画面切成一叠"透明胶片"</h3>
+  <p class="note">技术路线上,我们没有让电脑直接"画"出另一只眼睛该看到的画面,而是让它把一张 2D 画面拆成
+  <b>16 层前后叠放的透明胶片</b>——离镜头近的东西画在靠前的胶片上,远处背景画在靠后的胶片上。
+  生成右眼画面时,只需要把这些胶片按远近错开一点、叠在一起就行,不需要"凭空画出"被遮住的部分——
+  因为被前面物体挡住的内容,天然就已经画在后面那层胶片上了。</p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <defs><marker id="pa" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
+    <rect x="16" y="24" width="140" height="46" rx="8" fill="#1c2738" stroke="#60a5fa"/>
+    <text x="86" y="52" fill="#f4f7fb" font-size="13" text-anchor="middle" font-weight="700">一张 2D 画面</text>
+    <path d="M86 70 v20 M50 100 h72" stroke="#758195" stroke-width="1.6" fill="none"/>
+    <path d="M50 100 v14" stroke="#758195" stroke-width="1.6" marker-end="url(#pa)"/>
+    <path d="M122 100 v14" stroke="#758195" stroke-width="1.6" marker-end="url(#pa)"/>
+    <rect x="10" y="116" width="120" height="46" rx="8" fill="#172131" stroke="#a78bfa"/>
+    <text x="70" y="139" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="700">看清楚细节</text>
+    <text x="70" y="154" fill="#a7b0bf" font-size="10" text-anchor="middle">颜色、纹理</text>
+    <rect x="150" y="116" width="130" height="46" rx="8" fill="#172131" stroke="#a78bfa"/>
+    <text x="215" y="139" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="700">判断远近</text>
+    <text x="215" y="154" fill="#a7b0bf" font-size="10" text-anchor="middle">哪里近,哪里远</text>
+    <path d="M70 162 v18 M215 162 v18 M70 180 h145" stroke="#758195" stroke-width="1.6" fill="none"/>
+    <path d="M142 180 v14" stroke="#758195" stroke-width="1.6" marker-end="url(#pa)"/>
+    <rect x="55" y="196" width="174" height="42" rx="8" fill="#172131" stroke="#34dff2"/>
+    <text x="142" y="216" fill="#34dff2" font-size="12" text-anchor="middle" font-weight="700">决定分几层、怎么分</text>
+    <text x="142" y="230" fill="#a7b0bf" font-size="10" text-anchor="middle">把两部分信息拼起来</text>
+    <path d="M142 238 v14" stroke="#758195" stroke-width="1.6" marker-end="url(#pa)"/>
+    <rect x="42" y="254" width="200" height="42" rx="8" fill="#172131" stroke="#ffd166"/>
+    <text x="142" y="274" fill="#ffd166" font-size="12" text-anchor="middle" font-weight="700">画出每一层"透明胶片"</text>
+    <text x="142" y="288" fill="#a7b0bf" font-size="10" text-anchor="middle">共 16 层,近的清楚、远的够用即可</text>
+    <path d="M244 275 h56" stroke="#758195" stroke-width="1.8" marker-end="url(#pa)"/>
+    <rect x="304" y="200" width="184" height="90" rx="10" fill="#0e2027" stroke="#34dff2" stroke-width="1.4"/>
+    <text x="396" y="222" fill="#34dff2" font-size="12" text-anchor="middle" font-weight="700">纯几何计算(不用学习)</text>
+    <text x="396" y="242" fill="#a7b0bf" font-size="11" text-anchor="middle">每层胶片按远近错开一点</text>
+    <text x="396" y="258" fill="#a7b0bf" font-size="11" text-anchor="middle">再前后叠起来</text>
+    <text x="396" y="274" fill="#a7b0bf" font-size="11" text-anchor="middle">被挡住的部分天然露出来</text>
+    <path d="M488 245 h58" stroke="#758195" stroke-width="1.8" marker-end="url(#pa)"/>
+    <rect x="556" y="222" width="150" height="46" rx="8" fill="#0f2418" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="631" y="250" fill="#b7f05b" font-size="13" text-anchor="middle" font-weight="700">生成的右眼画面</text>
+    <path d="M631 130 v-90 M631 40 h-475" stroke="#93a3b8" stroke-width="1" stroke-dasharray="3 3" fill="none" opacity=".5"/>
+    <rect x="716" y="24" width="228" height="270" rx="12" fill="#241a2e" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="5 3"/>
+    <text x="830" y="48" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="700">只在训练时借用,实际播放不需要</text>
+    <rect x="736" y="64" width="188" height="42" rx="7" fill="#2d2338" stroke="#a78bfa"/>
+    <text x="830" y="90" fill="#f4f7fb" font-size="11.5" text-anchor="middle">参考老师(判断远近更准)</text>
+    <path d="M830 106 v16" stroke="#a78bfa" stroke-width="1.6" marker-end="url(#pa)"/>
+    <rect x="736" y="122" width="188" height="42" rx="7" fill="#2d2338" stroke="#a78bfa"/>
+    <text x="830" y="148" fill="#f4f7fb" font-size="11.5" text-anchor="middle">学着模仿老师判断远近</text>
+    <rect x="736" y="192" width="188" height="42" rx="7" fill="#2d2338" stroke="#ffd166"/>
+    <text x="830" y="217" fill="#ffd166" font-size="11.5" text-anchor="middle">学着让合成画面更逼真</text>
+    <text x="830" y="266" fill="#a7b0bf" font-size="10" text-anchor="middle">分两个阶段:先学远近,再学画质</text>
+    <path d="M284 216 C 400 60 505 -20 716 40" stroke="#a78bfa" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#pa)"/>
+  </svg>
+  <div class="cap">左边浅色部分是实际装进电视的算法;右边虚线框里的"老师"和训练用的辅助模块
+  只在研发阶段用来"教"学生,电视实际播放时完全不需要它们。</div>
+  </div>
+
+  <h3>参数量:装进电视的部分有多大</h3>
+  <p class="note">"参数量"决定了算法要占用电视芯片多少存储和算力,是电视厂最关心的硬指标之一。
+  下表是各模块的实测拆分——<b>实际要装进电视的合计约 2038 万个参数(20.38M)</b>,
+  换算成文件大小,32 位精度下约 80MB,做量化压缩后可以降到约 20MB 级别,在旗舰电视芯片的预算内。</p>
+  <div class="svgbox" style="padding:0;background:transparent;border:none">
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">模块</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">作用</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">参数量</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">是否装进电视</th></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">细节分支</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">看清楚颜色、纹理</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">11.38M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">是</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">深度语义分支</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">判断远近</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">3.73M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">是</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">融合模块 + 分层判断</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">决定画面分几层</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">5.26M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">是</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">画面生成模块</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">画出每一层"胶片"</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.01M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">是</td></tr>
+    <tr style="background:rgba(52,223,242,.06)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)"><b>合计(装进电视)</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line)"></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">20.38M</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line)"></td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">"模仿老师"辅助模块</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">只在训练阶段用</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">3.94M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--rose)">否</td></tr>
+  </table>
+  </div>
+  <p class="small">合计训练时的完整参数图为 24.32M(2431.9 万),其中 20.38M 随算法一起交付,3.94M 的"深度头"训练完就丢弃。电视端预算目标是 26M±3M,达标。</p>
+
+  <div class="grid3">
+    <div class="card"><h4>为什么不直接"画"另一只眼睛的画面</h4><p class="note" style="margin:0">因为被前面物体挡住的部分没法直接画出来,只能靠算法"猜"。
+    分层胶片的方式让这部分内容天然保留在后面的胶片里,不需要瞎猜,效果更稳定。</p></div>
+    <div class="card"><h4>这套技术没有现成代码可抄</h4><p class="note" style="margin:0">我们参考的这篇论文(LMPIN,2025年发表)没有公开代码,也没有可以直接商用的开源实现。
+    所有的核心计算、训练方法、打分标准,都是我们自己独立写出来并反复验证过的。</p></div>
+    <div class="card"><h4>借用的"老师"模型有使用限制</h4><p class="note" style="margin:0">现在临时借用的深度判断"老师"模型(Depth Anything V2)权重协议为
+    CC-BY-NC(仅限研究用途,不能直接商用)。这个风险已经记下来,下一步计划里安排了替换方案(见第五部分)。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ PART 2 怎么训练 ============ -->
+<section id="part2"><div class="wrap">
+  <div class="sec-kicker">第二部分 · 怎么训练出来的</div>
+  <h2>训练流程与验收关卡</h2>
+  <p class="big">整个项目按"准备训练数据 → 搭好算法骨架 → 先学看深浅 → 再学画质 → 打分验收"的顺序推进,
+  <b>每一步做完都要经过独立审核才能进入下一步</b>,不允许自己给自己"放水"。目前前三关都已经通过,
+  第四关(最终质量验收)也已经通过。</p>
+
+  <h3>训练数据(第一关)</h3>
+  <p class="note">我们造了 <b>118,287 张训练样本</b>(来自公开图片库 COCO)——每张样本是一张普通图片配上
+  "如果是立体的,另一只眼睛该看到什么样"的参考答案,用来教算法学习。这些样本特意覆盖了从
+  <b>8 像素到 38 像素</b>的立体错位强度(实测采样范围 8.0006~37.9988 像素),从"立体感很弱"到"立体感比较强"都有,
+  不会让算法只学到一种场景。</p>
+  <div class="grid2">
+    <div class="card"><h4>训练样本数量</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">118,287 张</b><br>规模足够训练一个 2000 万参数级别的小模型。</p></div>
+    <div class="card"><h4>画面里"看不见、要靠猜"的部分</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">平均 6.07%</b><br>中位数 5.50%,剩下约 94% 的内容两只眼睛都能直接看到,不用猜,这个比例属于正常范围。</p></div>
+  </div>
+
+  <h3>先学看深浅,再学画质(第二、三关)</h3>
+  <p class="note">正式训练分两步:第一步只教算法"判断画面里哪里近、哪里远"(不产出最终画面);
+  第二步才把"生成最终画面"这件事一起教给它。这样拆开学,比一开始就什么都学更稳妥。</p>
+  <div class="grid2">
+    <div class="card pass"><h4>零件先单独"开卷"验一遍</h4><p class="note" style="margin:0">在正式训练前,评审方另外独立写了一套验证程序(不共用实现方的代码),
+    专门检查"分层胶片怎么错开叠加"这一步的几何计算对不对——结果 <b>12 项检查全部对上,误差小到 0.000000000000001 以内</b>(机器计算的极限精度)。
+    此外算法体积检查为 24,319,206 个参数,落在 2600 万±300 万的预算内。</p></div>
+    <div class="card pass"><h4>先学深浅,和老师对比</h4><p class="note" style="margin:0">训练 <b>6 万轮</b>后,把算法学到的"深浅判断误差"从初始值降低了 <b>71.04%</b>
+    (达标线是降低超过 50%),四张显卡的利用率稳定在 <b>92.1%~92.4%</b>,没有出现"显卡空闲等数据"的浪费。</p></div>
+  </div>
+
+</div></section>
+
+<!-- ============ PART 3 效果如何 ============ -->
+<section id="part3"><div class="wrap">
+  <div class="sec-kicker">第三部分 · 现在效果如何</div>
+  <h2>最终打分:50.8 分,通过了及格线</h2>
+  <p class="big">我们用一套公平的方式来打分:
+  <b>如果"什么都不做"(直接拿左眼画面充当右眼)算 0 分,用真实相机拍出来的立体信息做参考算 100 分</b>
+  (这是物理上限,因为两个镜头本身拍出来的画面就有细微差别,不可能真的到 100 分),及格线定在 35 分。
+  <b style="color:var(--lime)">算法最终考了 50.8 分,通过了这一关。</b></p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 170" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <rect x="40" y="76" width="880" height="22" rx="11" fill="#1c2230"/>
+    <rect x="40" y="76" width="448" height="22" rx="11" fill="#5ad19a"/>
+    <line x1="40" y1="54" x2="40" y2="106" stroke="#758195" stroke-width="1.4"/>
+    <text x="40" y="42" fill="#a7b0bf" font-size="13" text-anchor="middle">0 分</text>
+    <text x="40" y="126" fill="#a7b0bf" font-size="12" text-anchor="middle">什么都不做</text>
+    <line x1="348" y1="66" x2="348" y2="108" stroke="#ff4d6d" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="348" y="42" fill="#ff4d6d" font-size="13" text-anchor="middle" font-weight="700">35 分</text>
+    <text x="348" y="126" fill="#ff4d6d" font-size="12" text-anchor="middle">及格线</text>
+    <line x1="488" y1="60" x2="488" y2="112" stroke="#ffd166" stroke-width="2.5"/>
+    <text x="488" y="146" fill="#ffd166" font-size="15" text-anchor="middle" font-weight="800">我们:50.8 分</text>
+    <line x1="920" y1="54" x2="920" y2="106" stroke="#758195" stroke-width="1.4"/>
+    <text x="920" y="42" fill="#a7b0bf" font-size="13" text-anchor="middle">100 分(满分参考)</text>
+    <text x="920" y="126" fill="#a7b0bf" font-size="12" text-anchor="middle">真实相机拍出来的效果</text>
+  </svg>
+  <div class="cap">打分方式:用电脑程序对比"算法生成的画面"和"真实相机拍出来的画面"有多像(SSIM 相似度指标,0~1,越接近 1 越像),
+  归一化成 0~100 分,排除了"这套测试视频本身有多难"的干扰,只看算法真正学到了多少。
+  测试视频用的是 <b>NAMA3DS1-COSPAD1</b>(公开的真实双镜头拍摄立体视频集)。</div>
+  </div>
+
+  <h3>四方对照:每一种做法的真实分数</h3>
+  <p class="note">下表是 90 段测试视频(共 450 帧)上的完整结果,同时给出三种电脑评分方式(数值含义类似,分数越接近下一行的"满分参考"就越像真实立体画面)。</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
+    <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">做法</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">相似度打分(SSIM)</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">PSNR</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">LPIPS</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">说明</th></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">什么都不做</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.585</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">18.74dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.174</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">左眼画面直接冒充右眼</td></tr>
+    <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)"><b>我们的算法</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">0.713</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">21.15dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.154</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">能在电视上实时跑的"学生"</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">直接照搬"老师"模型</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.699</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">20.68dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.151</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">体积更大、跑不动实时的参考模型</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">满分参考</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.837</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">23.90dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.118</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">用真实测量出的立体视差做出来的效果(物理上限)</td></tr>
+  </table>
+  <p class="small">50.8 分的算法公式:(0.713 − 0.585) ÷ (0.837 − 0.585) = 50.79%。遮挡区域(画面中要靠"脑补"的部分)单独测得的分数比全画面低 3.25dB,达标线是差距小于 6dB。</p>
+
+  <div class="grid2">
+    <div class="card pass"><h4>比"老师模型直接上"还要好</h4><p class="note" style="margin:0">如果直接照搬"老师"模型的深浅判断去拼图,
+    换算成同一套打分标准约 <b>45.3 分</b>;我们训练出来的、能在电视上实时跑的"学生"反而拿到了 <b>50.8 分</b>,说明这套训练方法确实有效,不是单纯继承了老师的水平。</p></div>
+    <div class="card"><h4>还没做到的地方</h4><p class="note" style="margin:0">人工检查 20 组测试画面发现,人物、球网、植物这类<b>细小、复杂的边缘</b>还有些模糊,
+    是接下来重点要打磨的地方(详见第五部分的改进计划①)。</p></div>
+  </div>
+
+  <h3>能不能实时播放</h3>
+  <p class="note">在电视芯片等级的算力预算下(单张服务器显卡实测),我们测了三档清晰度设置。
+  转换过程中用的"中间分辨率"越低,速度越快、画质会有一点点取舍;达标线是每帧处理时间在 <b>25 毫秒以内</b>(相当于每秒 40 帧以上)。</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
+    <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">档位</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">每帧耗时</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">相当于每秒</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">结论</th></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">最高画质档(1/2 中间分辨率)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">44.05 ms</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">22.7 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--rose)">未达标,需继续优化</td></tr>
+    <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)">标准画质档(1/4 中间分辨率)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">12.65 ms</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">79.1 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">达标 ✓</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">训练时用的分辨率(256×384)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">10.13 ms</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">98.8 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">达标 ✓</td></tr>
+  </table>
+  <p class="small">测试条件:1920×1080 输入,单张 H20 服务器显卡,bf16 精度;耗时含画面缩放、算法推理、分层胶片渲染与最终合成,不含视频编解码。</p>
+</div></section>
+
+<!-- ============ PART 4 播放器 ============ -->
+<section id="part4"><div class="wrap">
+  <div class="sec-kicker">第四部分 · 能不能实际看到效果</div>
+  <h2>算法训练好之后,怎么变成能看的视频</h2>
+  <p class="big">我们在一台 Mac 上搭了一个验证播放器(<b>Mac3DPlayer</b>,项目独立于本次汇报的训练工作),
+  用来检验算法能不能真正"边播边转"。这里有两种完全不同的实现方式,<b>第二种才是电视产品最终需要的能力</b>,
+  也是这一部分的重点。</p>
+
+  <h3>方式一:服务器先转好,播放器只管播(早期验证阶段用)</h3>
+  <p class="note">项目最初是让训练服务器把视频批量转换成立体格式,自动打包传给 Mac 播放。
+  这种方式计算全部发生在服务器上,播放器本身不做任何 AI 计算,只适合"看效果、挑毛病",不代表电视的真实工作方式。</p>
+  <div class="svgbox">
+  <svg viewBox="0 0 960 110" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <defs><marker id="pf" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
+    <rect x="10" y="26" width="210" height="52" rx="10" fill="#172131" stroke="#60a5fa"/>
+    <text x="115" y="48" fill="#f4f7fb" font-size="12.5" text-anchor="middle" font-weight="700">服务器批量转换</text>
+    <text x="115" y="65" fill="#a7b0bf" font-size="10.5" text-anchor="middle">提前算好整段立体视频</text>
+    <path d="M220 52 h44" stroke="#758195" stroke-width="1.8" marker-end="url(#pf)"/>
+    <rect x="264" y="26" width="210" height="52" rx="10" fill="#172131" stroke="#a78bfa"/>
+    <text x="369" y="48" fill="#a78bfa" font-size="12.5" text-anchor="middle" font-weight="700">自动打包 + 校验完整性</text>
+    <text x="369" y="65" fill="#a7b0bf" font-size="10.5" text-anchor="middle">确认文件没传坏才算完成</text>
+    <path d="M474 52 h44" stroke="#758195" stroke-width="1.8" marker-end="url(#pf)"/>
+    <rect x="518" y="26" width="210" height="52" rx="10" fill="#172131" stroke="#34dff2"/>
+    <text x="623" y="48" fill="#34dff2" font-size="12.5" text-anchor="middle" font-weight="700">自动传到 Mac 播放器</text>
+    <text x="623" y="65" fill="#a7b0bf" font-size="10.5" text-anchor="middle">定时检查有没有新结果</text>
+    <path d="M728 52 h44" stroke="#758195" stroke-width="1.8" marker-end="url(#pf)"/>
+    <rect x="772" y="26" width="178" height="52" rx="10" fill="#0f2418" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="861" y="48" fill="#b7f05b" font-size="12.5" text-anchor="middle" font-weight="700">打开就能看</text>
+    <text x="861" y="65" fill="#a7b0bf" font-size="10.5" text-anchor="middle">播放已经转好的文件</text>
+  </svg>
+  </div>
+
+  <h3>方式二:播放器自己实时计算(真正对应电视要做的事)</h3>
+  <p class="note">这才是电视产品真正要落地的形态——<b>不提前转换、不经过服务器,播放普通 2D 视频的同时,
+  设备自己一边解码、一边现算立体效果、一边显示</b>。我们已经在 Mac 上把这条链路完整打通:</p>
+  <div class="svgbox">
+  <svg viewBox="0 0 960 110" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <defs><marker id="pf2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker></defs>
+    <rect x="4" y="26" width="164" height="52" rx="10" fill="#172131" stroke="#60a5fa"/>
+    <text x="86" y="48" fill="#f4f7fb" font-size="12" text-anchor="middle" font-weight="700">解码原始 2D 视频</text>
+    <text x="86" y="65" fill="#a7b0bf" font-size="10" text-anchor="middle">和普通播放共用一套解码</text>
+    <path d="M172 52 h34" stroke="#758195" stroke-width="1.8" marker-end="url(#pf2)"/>
+    <rect x="210" y="26" width="164" height="52" rx="10" fill="#172131" stroke="#a78bfa"/>
+    <text x="292" y="48" fill="#a78bfa" font-size="12" text-anchor="middle" font-weight="700">算法现场推理</text>
+    <text x="292" y="65" fill="#a7b0bf" font-size="10" text-anchor="middle">在芯片专用单元上跑</text>
+    <path d="M378 52 h34" stroke="#758195" stroke-width="1.8" marker-end="url(#pf2)"/>
+    <rect x="416" y="26" width="180" height="52" rx="10" fill="#0e2027" stroke="#34dff2" stroke-width="1.4"/>
+    <text x="506" y="48" fill="#34dff2" font-size="12" text-anchor="middle" font-weight="700">分层画面实时叠加</text>
+    <text x="506" y="65" fill="#a7b0bf" font-size="10" text-anchor="middle">用图形芯片现场合成</text>
+    <path d="M600 52 h34" stroke="#758195" stroke-width="1.8" marker-end="url(#pf2)"/>
+    <rect x="638" y="26" width="150" height="52" rx="10" fill="#0f2418" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="713" y="48" fill="#b7f05b" font-size="12" text-anchor="middle" font-weight="700">实时显示</text>
+    <text x="713" y="65" fill="#a7b0bf" font-size="10" text-anchor="middle">不落地任何中间文件</text>
+  </svg>
+  <div class="cap">全过程没有服务器参与,也没有生成中间视频文件——这是最接近电视芯片实际工作方式的验证。</div>
+  </div>
+
+  <div class="grid2">
+    <div class="card pass"><h4>实测速度(苹果 M4 Max 芯片验证)</h4><p class="note" style="margin:0">
+    播放一段 1920×960、24 帧/秒的测试视频时,现场实测<b>约每秒 23.9 帧、单帧计算 13.9 毫秒</b>,基本跟上原始视频的播放速度;
+    播放 4K(4096×2160)视频时,单帧计算耗时约 <b>17.7~20.5 毫秒</b>。测试用的正是本次汇报训练出来的同一个算法(第 250,000 步存档)。</p></div>
+    <div class="card"><h4>计算结果和训练时完全一致</h4><p class="note" style="margin:0">把算法转换到 Mac 上运行的格式后,
+    我们逐像素比对过它和服务器训练时的原始输出——差异小到 <b>千万分之一以内</b>,确认转换过程没有引入误差,不是"看起来差不多"。</p></div>
+  </div>
+
+  <div class="card accent"><h4>如实说明:这是"打通"阶段,不是"验收完成"阶段</h4><p class="note" style="margin:0">
+  实时播放这条链路目前是<b>工程上已经跑通、有初步实测速度数据</b>,但还没有走完播放器项目自己的正式验收流程
+  (比如连续播放较长时间、确认全程不掉帧的仪器化测试)。这一点我们如实标注,不把"能跑"直接等同于"已验收通过、可以量产"。</p></div>
+
+  <h3>功能清单</h3>
+  <div class="grid2">
+    <div class="card"><h4>播放已转换好的文件时可用</h4><p class="note" style="margin:0">立体直通播放、单独看左眼或右眼画面、
+    在普通屏幕上用红蓝眼镜模式查看立体效果、逐帧暂停检查——这些不需要设备现场计算,对着一份已经生成好的文件就能做。</p></div>
+    <div class="card pass"><h4>只有"现场实时计算"模式才有</h4><p class="note" style="margin:0">对着一份从没处理过的普通 2D 视频,
+    播放的同时现场转换出立体效果;还有一个调试专用视图,能把算法内部"分了几层、每层是什么样"直接显示出来,方便检查问题。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ PART 5 下一步 ============ -->
+<section id="part5"><div class="wrap">
+  <div class="sec-kicker">第五部分 · 下一步打算怎么做</div>
+  <h2>已经过关了,但还能做得更好</h2>
+  <p class="big">50.8 分刚过及格线,不代表已经做到极致。我们盘点了几个能继续提升效果的方向,
+  按"值得优先做"的顺序排列:</p>
+
+  <div class="grid2">
+    <div class="card"><h4>① 把物体边缘处理得更整齐</h4><p class="note" style="margin:0">
+    人物、球网这类细小边缘目前还有点模糊。可以在最后一步加一个"贴边"处理,让立体画面的边界更贴合原图的实际轮廓。
+    <br><span class="small">预计几天内可以看到效果,不需要重新训练。</span></p></div>
+    <div class="card"><h4>② 换一个更准的"老师"模型</h4><p class="note" style="margin:0">
+    现在借用的老师模型精度有提升空间,而且有商用限制。换成一个更新、且可以直接商用的版本,
+    能同时解决准确度和授权问题。<br><span class="small">预计约 1 周。</span></p></div>
+    <div class="card"><h4>③ 让算法知道"这张图该有多强的立体感"</h4><p class="note" style="margin:0">
+    训练时每张练习卷的"立体强弱"是随机给的,算法目前只能猜一个大概值。如果训练时明确告诉它这个信息,
+    不仅能让判断更准,还能顺便实现产品上"立体感强弱可调节"的功能。<br><span class="small">预计约 1 周。</span></p></div>
+    <div class="card accent"><h4>④ 用真实拍摄的立体电影素材来打磨(优先级最高)</h4><p class="note" style="margin:0">
+    现在的练习卷是"用普通照片伪造"出来的,和真实拍摄的立体电影还是有差别。如果能采购一批正版 3D 蓝光电影素材用来微调,
+    效果预计会有明显提升——这类干净的真实立体数据,同行业外部很难拿到,是电视厂在这个方向上难得的优势。
+    <br><span class="small">预计 2~3 周,需要先启动采购。</span></p></div>
+  </div>
+  <div class="card"><h4>⑤ 让画面播放起来更稳定,不闪烁</h4><p class="note" style="margin:0">
+  目前是一帧一帧独立处理的,连续播放时可能会有轻微的"深浅感忽强忽弱"。我们已经测出了作为对照的基线数字
+  (相邻帧深度判断的差异度 0.00744、画面运动轨迹误差 0.217 像素),下一步要把这两个数字降下来。
+  这是已经计划中的工作,对最终观感的影响可能比任何单项打分都更直接。</p></div>
+
+  <h3>建议的推进节奏</h3>
+  <div class="grid2">
+    <div class="card"><h4>近期(约 1 周,现有资源就能做)</h4><p class="note" style="margin:0">①+②+③ 一起推进:先做边缘优化看效果,
+    同时更换老师模型,再让算法学会识别立体强弱,做完重新打一次分。</p></div>
+    <div class="card"><h4>中期(2~3 周,需要先采购素材)</h4><p class="note" style="margin:0">④ 用真实电影素材微调,是这一阶段效果提升最关键的一步;
+    ⑤ 播放稳定性的工作穿插在这期间推进。</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  2D → 3D 实时转换 · 研究进展汇报 · 撰写日期 2026-07-19<br>
+  本页数字均为实测:训练与打分在 4 张服务器显卡上完成,速度测试用单张显卡;
+  对比用的立体视频来自公开的真实双镜头拍摄素材。后续里程碑完成后本页会更新。<br>
+  <a href="index.html" style="color:var(--cyan)">← 返回 HDR Production 目录</a>
+</div></footer>
+
+</body>
+</html>
