@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>快门式 3D 播放器开发探索</title>
+<meta name="description" content="在 macOS 上驱动停产的 NVIDIA 3D Vision 快门眼镜看 3D:用大白话讲清快门式立体原理、libusb 协议路线、Metal 120Hz page-flip、相位锁和踩过的坑。发射器真机已通过 120Hz 连续 60 秒压力测试。">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #07080d; --panel: #111620; --panel-2: #172131;
+  --ink: #f4f7fb; --muted: #a7b0bf; --soft: #758195;
+  --line: rgba(255,255,255,.12);
+  --cyan: #34dff2; --lime: #b7f05b; --gold: #ffd166;
+  --rose: #ff4d6d; --violet: #a78bfa; --blue: #60a5fa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 16px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -3;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(52,223,242,.14), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(255,77,109,.12), transparent 30%),
+    radial-gradient(circle at 65% 88%, rgba(183,240,91,.10), transparent 34%),
+    linear-gradient(180deg, #07080d 0%, #0b1019 48%, #07080d 100%);
+}
+.wrap { max-width: 1020px; margin: 0 auto; padding: 0 22px; }
+.topnav {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(7,8,13,.78); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+.topnav .in { max-width: 1020px; margin: 0 auto; padding: 12px 22px; display: flex; gap: 18px; align-items: center; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
+.topnav .brand { font-weight: 700; color: var(--cyan); font-size: 14px; flex: none; }
+.topnav a.lnk { font-size: 13px; color: var(--muted); }
+.topnav a.lnk:hover { color: var(--ink); }
+
+header.hero { position: relative; padding: 90px 0 54px; overflow: hidden; isolation: isolate; }
+.hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.spectrum-band { position: absolute; left: 50%; top: 48%; width: min(1400px,138vw); height: 360px;
+  transform: translate(-50%,-50%) rotate(-7deg); border-radius: 999px;
+  background: linear-gradient(90deg, rgba(67,56,202,0) 0%, rgba(37,99,235,.6) 14%, rgba(6,182,212,.78) 30%,
+    rgba(34,197,94,.72) 46%, rgba(234,179,8,.78) 62%, rgba(249,115,22,.74) 78%, rgba(244,63,94,0) 100%);
+  filter: blur(40px) saturate(1.2); opacity: .6; }
+.grid-field { position: absolute; inset: 0; opacity: .16;
+  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 58px 58px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, black, transparent 70%);
+  mask-image: radial-gradient(circle at 50% 40%, black, transparent 70%); }
+.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--gold); font-size: 13px;
+  font-weight: 820; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 18px; }
+.eyebrow::before { content: ""; width: 34px; height: 1px; background: var(--gold); }
+h1 { font-size: clamp(30px, 5.4vw, 54px); line-height: 1.16; letter-spacing: -.02em; margin-bottom: 18px;
+  max-width: 900px; text-wrap: balance; }
+.h-accent { background: linear-gradient(100deg, var(--cyan), var(--lime), var(--gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-desc { max-width: 760px; color: #d3dce8; font-size: clamp(16px, 1.6vw, 18.5px); line-height: 1.85; margin-bottom: 22px; }
+.hero-desc b { color: #fff; }
+.pass-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(183,240,91,.12);
+  border: 1px solid rgba(183,240,91,.4); color: var(--lime); font-weight: 700; font-size: 14px;
+  padding: 8px 16px; border-radius: 999px; margin-bottom: 22px; }
+
+.numband { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 10px 0 8px; }
+.num { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.num .v { font-size: 25px; font-weight: 800; color: var(--lime); }
+.num .v.cy { color: var(--cyan); } .num .v.go { color: var(--gold); } .num .v.vi { color: var(--violet); } .num .v.ro { color: var(--rose); }
+.num .k { font-size: 13px; color: var(--soft); margin-top: 3px; }
+
+section { padding: 46px 0 8px; }
+.sec-kicker { font-size: 12px; letter-spacing: .2em; color: var(--soft); font-weight: 700; }
+h2 { font-size: clamp(21px, 2.8vw, 28px); margin: 8px 0 12px; }
+h3 { font-size: 17px; margin: 24px 0 8px; color: var(--cyan); }
+p.note { color: var(--muted); max-width: 800px; margin-bottom: 14px; font-size: 15.5px; }
+p.big { color: var(--ink); max-width: 800px; font-size: 17px; line-height: 1.85; margin-bottom: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin: 16px 0; }
+.card.accent { border-color: rgba(255,209,102,.4); background: linear-gradient(180deg, rgba(255,209,102,.06), transparent 60%), var(--panel); }
+.card.pass { border-color: rgba(183,240,91,.4); background: linear-gradient(180deg, rgba(183,240,91,.06), transparent 60%), var(--panel); }
+.card.warn { border-color: rgba(255,77,109,.4); background: linear-gradient(180deg, rgba(255,77,109,.06), transparent 60%), var(--panel); }
+.card h4 { font-size: 15px; margin-bottom: 8px; color: var(--gold); }
+.card.pass h4 { color: var(--lime); }
+.card.warn h4 { color: var(--rose); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 880px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+/* 术语卡 */
+.glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0 8px; }
+.gterm { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.gterm .w { color: var(--cyan); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.gterm .d { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+.svgbox { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 14px 0; max-width: 100%; }
+.svgbox svg { display: block; margin: 0 auto; width: 100%; max-width: 100%; height: auto; }
+.cap { font-size: 12.5px; color: var(--soft); text-align: center; margin-top: 8px; line-height: 1.6; }
+
+/* 步骤流程 */
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; margin: 18px 0; }
+.flow .step { background: var(--panel); border: 1px solid var(--line); padding: 16px 18px; position: relative; }
+.flow .step + .step::before { content: "→"; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+  color: var(--cyan); font-weight: 800; font-size: 18px; z-index: 2; }
+@media (max-width: 640px) { .flow .step + .step::before { content: "↓"; left: 50%; top: -10px; transform: translateX(-50%); } }
+.flow .step .n { color: var(--gold); font-weight: 800; font-size: 13px; }
+.flow .step .t { color: var(--ink); font-weight: 600; font-size: 14px; margin: 4px 0; }
+.flow .step .d { color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+
+.small { color: var(--soft); font-size: 12.5px; }
+.kbd { display: inline-block; padding: 1px 7px; background: var(--panel-2); border: 1px solid var(--line);
+  border-bottom-width: 2px; border-radius: 5px; font-size: 12px; font-family: ui-monospace, monospace; color: var(--cyan); }
+code { font-family: ui-monospace, "SF Mono", monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; color: var(--lime); }
+
+footer { padding: 50px 0 40px; color: var(--soft); font-size: 13px; line-height: 1.9; border-top: 1px solid var(--line); margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="in">
+  <span class="brand">快门式 3D 播放器</span>
+  <a class="lnk" href="#part1">是什么</a>
+  <a class="lnk" href="#part2">怎么做</a>
+  <a class="lnk" href="#part3">最难的部分</a>
+  <a class="lnk" href="#part4">现在到哪了</a>
+  <a class="lnk" href="#part5">边界与下一步</a>
+</div></nav>
+
+<header class="hero">
+<div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+<div class="wrap">
+  <div class="eyebrow">快门式 3D · NVIDIA 3D Vision · Mac 适配实录</div>
+  <h1>快门式 3D <span class="h-accent">播放器开发探索</span></h1>
+  <p class="hero-desc">NVIDIA 早在 2016 年就停产了 3D Vision,官方驱动<b>只有 Windows、且只认自家显卡</b>。
+  我们手上有发射器、眼镜和一台 120Hz 显示器,但用 Mac。这份记录讲清楚:为什么不能直接装驱动、
+  我们是怎么从 USB 协议一层层把它在 macOS 上重新跑起来的、中间最难的眼镜-屏幕同步问题怎么解决,
+  以及现在能稳定到什么程度。</p>
+  <div class="pass-badge">✓ 发射器真机 120Hz 连续 60 秒压力测试通过 · 7,205 条定时命令零传输错误</div>
+  <div class="numband">
+    <div class="num"><div class="v">120 Hz</div><div class="k">外屏实测刷新率(每秒 120 次左右眼切换,每眼 60Hz 无闪烁)</div></div>
+    <div class="num"><div class="v cy">23.1 µs</div><div class="k">USB 切眼命令的平均相位误差(允许范围 ±2500µs,实测远优于)</div></div>
+    <div class="num"><div class="v go">0</div><div class="k">7,205 条连续命令的 USB 传输错误数(并发构建压力下)</div></div>
+    <div class="num"><div class="v vi">0x0955:0007</div><div class="k">NVIDIA 3D Vision 发射器的 USB 识别码(Cypress FX2 芯片)</div></div>
+  </div>
+</div></header>
+
+<!-- ============ PART 1 是什么 ============ -->
+<section id="part1"><div class="wrap">
+  <div class="sec-kicker">第一部分 · 快门式 3D 到底是什么</div>
+  <h2>先说人话:眼镜一直在"眨眼",只是你感觉不到</h2>
+  <p class="big">所有 3D 显示的核心都只有一件事:<b>让左眼只看到左眼该看的画面,右眼只看到右眼该看的</b>,
+  大脑把两张略有差别的图合成一个有远近的立体画面。快门式 3D 用的是最"暴力"也最准确的一种办法——
+  时间上轮流来。</p>
+
+  <div class="glossary">
+    <div class="gterm"><div class="w">时分复用</div><div class="d">同一块屏幕、同一时刻只显示左眼或右眼其中一张,但切换得足够快(120Hz),大脑感觉是同时看到的。</div></div>
+    <div class="gterm"><div class="w">快门眼镜</div><div class="d">两片液晶镜片,可以单独变黑(挡光)或变透明。屏幕显示左眼画面时右镜片变黑,反之亦然。</div></div>
+    <div class="gterm"><div class="w">page-flip(翻页)</div><div class="d">让显示器在每一次垂直同步(vsync)时整幅切换内容,而不是滚动更新——这是时分复用要求的无撕裂切换方式。</div></div>
+    <div class="gterm"><div class="w">相位 / 串扰</div><div class="d">眼镜切换和屏幕切换之间的时间差。差得太多,左眼就会漏看到一点右眼画面,出现"鬼影"。</div></div>
+  </div>
+
+  <h3>一秒钟里发生了 120 次的事</h3>
+  <p class="note">这块示意图把 1 秒钟里前 4 次 vsync 周期放大了看(实际是 120 次)。注意屏幕和眼镜
+  必须严格同步:屏幕显示哪只眼,眼镜就放行哪只眼、挡住另一只。发射器(那个插 USB 的小盒子)
+  就是用红外信号把"现在该哪只眼看"告诉眼镜的。</p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <!-- 时间轴 -->
+    <line x1="40" y1="200" x2="920" y2="200" stroke="#758195" stroke-width="1.5"/>
+    <text x="930" y="204" fill="#758195" font-size="11">时间</text>
+
+    <!-- 4 个 vsync 周期,每个 220 宽 -->
+    <!-- 周期 1: 左眼 -->
+    <rect x="40" y="60" width="220" height="80" rx="6" fill="rgba(52,223,242,.18)" stroke="#34dff2" stroke-width="1.5"/>
+    <text x="150" y="95" text-anchor="middle" fill="#34dff2" font-size="16" font-weight="700">屏幕:左眼画面</text>
+    <text x="150" y="118" text-anchor="middle" fill="#a7b0bf" font-size="11">第 1 帧 · vsync</text>
+
+    <!-- 周期 2: 右眼 -->
+    <rect x="260" y="60" width="220" height="80" rx="6" fill="rgba(255,77,109,.18)" stroke="#ff4d6d" stroke-width="1.5"/>
+    <text x="370" y="95" text-anchor="middle" fill="#ff4d6d" font-size="16" font-weight="700">屏幕:右眼画面</text>
+    <text x="370" y="118" text-anchor="middle" fill="#a7b0bf" font-size="11">第 2 帧 · vsync</text>
+
+    <!-- 周期 3: 左眼 -->
+    <rect x="480" y="60" width="220" height="80" rx="6" fill="rgba(52,223,242,.18)" stroke="#34dff2" stroke-width="1.5"/>
+    <text x="590" y="95" text-anchor="middle" fill="#34dff2" font-size="16" font-weight="700">屏幕:左眼画面</text>
+    <text x="590" y="118" text-anchor="middle" fill="#a7b0bf" font-size="11">第 3 帧 · vsync</text>
+
+    <!-- 周期 4: 右眼 -->
+    <rect x="700" y="60" width="220" height="80" rx="6" fill="rgba(255,77,109,.18)" stroke="#ff4d6d" stroke-width="1.5"/>
+    <text x="810" y="95" text-anchor="middle" fill="#ff4d6d" font-size="16" font-weight="700">屏幕:右眼画面</text>
+    <text x="810" y="118" text-anchor="middle" fill="#a7b0bf" font-size="11">第 4 帧 · vsync</text>
+
+    <!-- 眼镜状态 -->
+    <text x="30" y="245" fill="#ffd166" font-size="13" font-weight="700">眼镜状态:</text>
+
+    <!-- 左眼镜片 -->
+    <rect x="120" y="225" width="60" height="36" rx="4" fill="rgba(52,223,242,.3)" stroke="#34dff2"/>
+    <text x="150" y="247" text-anchor="middle" fill="#34dff2" font-size="11" font-weight="700">透</text>
+    <rect x="340" y="225" width="60" height="36" rx="4" fill="#1a1a1a" stroke="#758195"/>
+    <text x="370" y="247" text-anchor="middle" fill="#758195" font-size="11">黑</text>
+    <rect x="560" y="225" width="60" height="36" rx="4" fill="rgba(52,223,242,.3)" stroke="#34dff2"/>
+    <text x="590" y="247" text-anchor="middle" fill="#34dff2" font-size="11" font-weight="700">透</text>
+    <rect x="780" y="225" width="60" height="36" rx="4" fill="#1a1a1a" stroke="#758195"/>
+    <text x="810" y="247" text-anchor="middle" fill="#758195" font-size="11">黑</text>
+    <text x="150" y="280" text-anchor="middle" fill="#a7b0bf" font-size="11">左镜片</text>
+
+    <!-- 右眼镜片 -->
+    <rect x="190" y="225" width="60" height="36" rx="4" fill="#1a1a1a" stroke="#758195"/>
+    <text x="220" y="247" text-anchor="middle" fill="#758195" font-size="11">黑</text>
+    <rect x="410" y="225" width="60" height="36" rx="4" fill="rgba(255,77,109,.3)" stroke="#ff4d6d"/>
+    <text x="440" y="247" text-anchor="middle" fill="#ff4d6d" font-size="11" font-weight="700">透</text>
+    <rect x="630" y="225" width="60" height="36" rx="4" fill="#1a1a1a" stroke="#758195"/>
+    <text x="660" y="247" text-anchor="middle" fill="#758195" font-size="11">黑</text>
+    <rect x="850" y="225" width="60" height="36" rx="4" fill="rgba(255,77,109,.3)" stroke="#ff4d6d"/>
+    <text x="880" y="247" text-anchor="middle" fill="#ff4d6d" font-size="11" font-weight="700">透</text>
+    <text x="810" y="280" text-anchor="middle" fill="#a7b0bf" font-size="11">右镜片</text>
+
+    <!-- 红外同步箭头 -->
+    <g opacity="0.6">
+      <path d="M 150 140 Q 150 180 150 215" stroke="#b7f05b" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+      <path d="M 370 140 Q 370 180 370 215" stroke="#b7f05b" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+      <path d="M 590 140 Q 590 180 590 215" stroke="#b7f05b" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+      <path d="M 810 140 Q 810 180 810 215" stroke="#b7f05b" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+    </g>
+    <text x="500" y="180" text-anchor="middle" fill="#b7f05b" font-size="11" font-style="italic">↑ 红外信号:告诉眼镜现在该哪只眼透光</text>
+  </svg>
+  <div class="cap">图 1 · 120Hz 快门式 3D 的工作周期(图中放大了 4 个周期,实际每秒 120 个)。屏幕与眼镜通过发射器的红外信号严格同步。</div>
+  </div>
+
+  <h3>为什么不用更省事的偏振 / 裸眼方案?</h3>
+  <div class="grid2">
+    <div class="card"><h4>快门式(本项目)</h4><p class="note" style="margin:0">
+    <b>优点</b>:分辨率不折半(每只眼都看到完整 1080p),色彩无损失,立体感最准。<br>
+    <b>缺点</b>:要戴眼镜、要发射器、要 120Hz 显示器,且对同步精度极其敏感。</p></div>
+    <div class="card"><h4>偏振式(电影院那种)</h4><p class="note" style="margin:0">
+    <b>优点</b>:眼镜便宜轻便,无闪烁。<br>
+    <b>缺点</b>:需要专门的偏振屏幕(普通显示器做不了),且垂直分辨率直接减半。</p></div>
+  </div>
+  <p class="note" style="margin-top:14px">我们走快门式,是因为手头正好有 NVIDIA 3D Vision 的整套设备(发射器+眼镜+一台 3D Vision Ready 显示器),
+  它是 2010 年代 PC 上 3D 游戏的事实标准。问题只有一个——<b>它早停产了,而且 NVIDIA 的驱动不支持 Mac</b>。</p>
+</div></section>
+
+<!-- ============ PART 2 怎么做 ============ -->
+<section id="part2"><div class="wrap">
+  <div class="sec-kicker">第二部分 · 我们怎么在 Mac 上把它跑起来</div>
+  <h2>核心问题:NVIDIA 不给驱动,我们自己写一个</h2>
+  <p class="big">NVIDIA 3D Vision 于 2016 年停产。官方驱动只在 Windows 上工作,而且<b>必须有 NVIDIA 显卡</b>。
+  Mac 上既没有这个驱动,苹果芯片也根本不是 NVIDIA 的 GPU——这条路是堵死的。</p>
+
+  <p class="note">好消息是:发射器硬件本身只是个<b>普通的 USB 设备</b>。它内部是一颗 Cypress EZ-USB FX2 单片机
+  (USB 识别码 <code>0955:0007</code>),开机时是空的,需要主机把固件上传进去、然后按一套固定协议发"切左眼/切右眼"命令。
+  这套协议早就被开源项目 <b>libnvstusb</b>(LGPL 许可)逆向出来了,在 Linux 上的 Psychtoolbox 软件已经稳定用了十几年。
+  我们要做的,就是把这个协议路线搬到 macOS 上。</p>
+
+  <div class="card accent"><h4>关键判断:走 libusb 协议路线,不移植驱动</h4>
+  <p class="note" style="margin:0">
+  libnvstusb 是<b>纯 libusb 实现</b>的——libusb 是跨平台的 USB 访问库,macOS 原生支持。这意味着协议代码
+  本身是主机无关的,只要 Mac 上能装 libusb(本机已装 1.0.29),理论上就能直接跑。我们不碰 NVIDIA 的私有驱动、
+  不依赖 GPU 厂商,完全靠 USB 协议和发射器对话。</p></div>
+
+  <h3>三模块架构:一条链,各管一摊</h3>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 240" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <!-- 模块 1: 播放器 SBS -->
+    <rect x="20" y="40" width="180" height="100" rx="10" fill="rgba(52,223,242,.12)" stroke="#34dff2" stroke-width="1.5"/>
+    <text x="110" y="68" text-anchor="middle" fill="#34dff2" font-size="13" font-weight="700">① 播放器</text>
+    <text x="110" y="90" text-anchor="middle" fill="#f4f7fb" font-size="12">SBS 左右并排视频</text>
+    <text x="110" y="108" text-anchor="middle" fill="#a7b0bf" font-size="10.5">拆成独立的左/右眼帧</text>
+    <text x="110" y="125" text-anchor="middle" fill="#758195" font-size="10">SwiftUI + AVFoundation</text>
+
+    <!-- 箭头 1 -->
+    <path d="M 200 90 L 250 90" stroke="#34dff2" stroke-width="2" marker-end="url(#ah)"/>
+
+    <!-- 模块 2: Metal page-flip -->
+    <rect x="255" y="40" width="200" height="100" rx="10" fill="rgba(183,240,91,.12)" stroke="#b7f05b" stroke-width="1.5"/>
+    <text x="355" y="68" text-anchor="middle" fill="#b7f05b" font-size="13" font-weight="700">② Metal 帧序列</text>
+    <text x="355" y="90" text-anchor="middle" fill="#f4f7fb" font-size="12">每个 vsync 交替整帧</text>
+    <text x="355" y="108" text-anchor="middle" fill="#a7b0bf" font-size="10.5">输出左/右眼 → 显示器</text>
+    <text x="355" y="125" text-anchor="middle" fill="#758195" font-size="10">@120Hz · 无撕裂</text>
+
+    <!-- 箭头 2 (到显示器) -->
+    <path d="M 455 75 L 520 75" stroke="#b7f05b" stroke-width="2" marker-end="url(#ah2)"/>
+    <text x="488" y="68" text-anchor="middle" fill="#b7f05b" font-size="10">画面</text>
+
+    <!-- 显示器 -->
+    <rect x="525" y="40" width="150" height="60" rx="8" fill="var(--panel)" stroke="#758195" stroke-width="1.5"/>
+    <text x="600" y="68" text-anchor="middle" fill="#f4f7fb" font-size="12" font-weight="700">120Hz 显示器</text>
+    <text x="600" y="85" text-anchor="middle" fill="#a7b0bf" font-size="10">3D Vision Ready</text>
+
+    <!-- 从模块 2 向下的同步信号 -->
+    <path d="M 355 140 L 355 170" stroke="#ffd166" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah3)"/>
+    <text x="365" y="160" fill="#ffd166" font-size="10">每个 vsync 的</text>
+    <text x="365" y="172" fill="#ffd166" font-size="10">呈现时刻</text>
+
+    <!-- 模块 3: USB 发射器 -->
+    <rect x="255" y="175" width="200" height="55" rx="10" fill="rgba(255,209,102,.12)" stroke="#ffd166" stroke-width="1.5"/>
+    <text x="355" y="198" text-anchor="middle" fill="#ffd166" font-size="13" font-weight="700">③ libusb 发射器</text>
+    <text x="355" y="218" text-anchor="middle" fill="#a7b0bf" font-size="10.5">swap(eye) → 红外 → 眼镜</text>
+
+    <!-- 发射器到眼镜 -->
+    <path d="M 455 200 L 520 200" stroke="#ffd166" stroke-width="2" marker-end="url(#ah3)"/>
+    <text x="488" y="193" text-anchor="middle" fill="#ffd166" font-size="10">红外</text>
+
+    <!-- 眼镜 -->
+    <rect x="525" y="175" width="150" height="55" rx="8" fill="var(--panel)" stroke="#758195" stroke-width="1.5"/>
+    <text x="600" y="198" text-anchor="middle" fill="#f4f7fb" font-size="12" font-weight="700">快门眼镜</text>
+    <text x="600" y="215" text-anchor="middle" fill="#a7b0bf" font-size="10">左右镜片交替变黑</text>
+
+    <defs>
+      <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <polygon points="0 0, 8 4, 0 8" fill="#34dff2"/>
+      </marker>
+      <marker id="ah2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <polygon points="0 0, 8 4, 0 8" fill="#b7f05b"/>
+      </marker>
+      <marker id="ah3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <polygon points="0 0, 8 4, 0 8" fill="#ffd166"/>
+      </marker>
+    </defs>
+  </svg>
+  <div class="cap">图 2 · 三模块架构。画面流(青→绿)负责"屏幕显示对的图",同步流(黄)负责"眼镜在对应时刻放行对的镜片"。两条流必须对齐。</div>
+  </div>
+
+  <h3>每个模块具体做了什么</h3>
+  <div class="flow">
+    <div class="step">
+      <div class="n">模块 ①</div>
+      <div class="t">SBS 源解码</div>
+      <div class="d">把左右并排(SBS)的视频,用 AVFoundation 解出独立的左/右眼帧序列。这一步和普通 3D 播放器一样。</div>
+    </div>
+    <div class="step">
+      <div class="n">模块 ②</div>
+      <div class="t">Metal page-flip</div>
+      <div class="d">用 MetalKit 在每次 vsync 整幅切换左/右眼画面,要求<b>真 120Hz 输出</b>。这是 Mac 端最难的部分——见第三部分。</div>
+    </div>
+    <div class="step">
+      <div class="n">模块 ③</div>
+      <div class="t">libusb 发射器</div>
+      <div class="d">独立的 C 程序通过 USB 给发射器发"现在切左/右眼"。固件不随 App 分发(属 NVIDIA IP),首次用时让用户选合法取得的固件文件。</div>
+    </div>
+  </div>
+
+  <div class="card"><h4>为什么发射器要做成独立 C 程序,不是直接写在 Swift 里?</h4>
+  <p class="note" style="margin:0">
+  USB 传输是阻塞的——如果发射器在等待响应,会卡住整个 Metal 渲染线程,导致画面掉帧。
+  把 USB 逻辑放进独立的 helper 进程,通过 stdin/stdout 与播放器通信,
+  <b>USB 阻塞永远不会进入渲染线程</b>。helper 用 <code>mach_wait_until</code> 精确守时,
+  优先级是 user-interactive(最高),避免被普通任务抢占。</p></div>
+
+  <h3>四阶段任务分解(S1–S4)</h3>
+  <p class="note">整个工程拆成四个有依赖关系的阶段,每个阶段都有明确的"完成"标准,不靠主观判断。</p>
+  <div class="grid2">
+    <div class="card pass"><h4>S1 · 发射器探测 ✓</h4><p class="note" style="margin:0">
+    用 libusb 枚举 USB,匹配 <code>0955:0007</code>。这一步不需要真硬件——没插时会正确报"未发现",
+    插了能 open+claim 接口就算过。<b>无需硬件即可完成</b>。</p></div>
+    <div class="card pass"><h4>S2 · 固件上传 + 切眼协议 ✓</h4><p class="note" style="margin:0">
+    上传 FX2 固件(23 个数据块,严格校验 CPUCS 头尾和 SHA256),重枚举后发 100/110/120Hz 初始化包和逐帧切眼包。
+    <b>真机 <code>0955:0007</code> 已通过</b>:set_rate(120)、左右眼、反相全部成功。</p></div>
+    <div class="card pass"><h4>S3 · Metal 帧序列输出 ✓</h4><p class="note" style="margin:0">
+    新增输出模式 <code>.frameSequential</code>,每个 vsync 交替输出 L/R 整幅画面。
+    留好接口 <code>onEyePresented(eye, hostTime)</code> 给 S4 用。<b>不需要发射器就能开发和测试</b>。</p></div>
+    <div class="card accent"><h4>S4 · 同步与相位调优 🟡</h4><p class="note" style="margin:0">
+    最难的一块:让眼镜切换和屏幕切换对得上。<b>真机时序已通过 60 秒压力测试</b>,
+    但戴眼镜的肉眼串扰验收还要人工做(见第四部分)。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ PART 3 最难的部分 ============ -->
+<section id="part3"><div class="wrap">
+  <div class="sec-kicker">第三部分 · 最难的工程问题:让眼镜和屏幕对上</div>
+  <h2>掉一个 vsync 槽,整个立体感就崩了</h2>
+  <p class="big">这一段是整个项目里花时间最多、踩坑最深的部分。听起来简单——"屏幕显示左眼时,
+  让眼镜也放行左眼"——但实际做起来,有一类问题能让整个立体效果瞬间瓦解,叫<b>眼别错位</b>。</p>
+
+  <h3>问题是什么:漏一个槽,左右眼就反了</h3>
+  <p class="note">120Hz 意味着每秒有 120 个"显示槽"(vsync 周期)。理想情况下,屏幕和眼镜各数 120 下,严丝合缝。
+  但显示器偶尔会丢一个槽——可能是 GPU 太忙、可能是合成器延迟、可能是窗口系统抖动。一旦屏幕漏掉一个槽
+  <b>而眼镜继续按部就班地数 120 下</b>,两者就错开了一格:从此<b>屏幕显示左眼时,眼镜放行的是右眼</b>,
+  观众看到的立体感完全反转(凸的变凹、近的变远),而且很难自己纠正——会一直反下去。</p>
+
+  <div class="svgbox">
+  <svg viewBox="0 0 960 260" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
+    <text x="40" y="30" fill="#ff4d6d" font-size="14" font-weight="700">错误做法:按回调次数翻转眼别(漏槽时立刻错位)</text>
+
+    <!-- 时间轴 -->
+    <line x1="40" y1="220" x2="920" y2="220" stroke="#758195" stroke-width="1"/>
+
+    <!-- 屏幕序列 (漏了第3槽) -->
+    <text x="30" y="75" fill="#34dff2" font-size="12" font-weight="700">屏幕:</text>
+    <rect x="90" y="55" width="120" height="40" fill="rgba(52,223,242,.2)" stroke="#34dff2"/><text x="150" y="80" text-anchor="middle" fill="#34dff2" font-size="12">左</text>
+    <rect x="215" y="55" width="120" height="40" fill="rgba(255,77,109,.2)" stroke="#ff4d6d"/><text x="275" y="80" text-anchor="middle" fill="#ff4d6d" font-size="12">右</text>
+    <!-- 第3槽:漏了,重复上一帧 -->
+    <rect x="340" y="55" width="120" height="40" fill="rgba(255,77,109,.1)" stroke="#ff4d6d" stroke-dasharray="4 3"/><text x="400" y="80" text-anchor="middle" fill="#ff4d6d" font-size="11">右(重复)</text>
+    <text x="400" y="50" text-anchor="middle" fill="#ff4d6d" font-size="10" font-weight="700">⚠ 漏槽</text>
+    <rect x="465" y="55" width="120" height="40" fill="rgba(52,223,242,.2)" stroke="#34dff2"/><text x="525" y="80" text-anchor="middle" fill="#34dff2" font-size="12">左</text>
+    <rect x="590" y="55" width="120" height="40" fill="rgba(255,77,109,.2)" stroke="#ff4d6d"/><text x="650" y="80" text-anchor="middle" fill="#ff4d6d" font-size="12">右</text>
+
+    <!-- USB/眼镜序列 (按自己计数,不漏) -->
+    <text x="30" y="165" fill="#ffd166" font-size="12" font-weight="700">眼镜:</text>
+    <rect x="90" y="145" width="120" height="40" fill="rgba(52,223,242,.15)" stroke="#ffd166"/><text x="150" y="170" text-anchor="middle" fill="#34dff2" font-size="12">放行左 ✓</text>
+    <rect x="215" y="145" width="120" height="40" fill="rgba(255,77,109,.15)" stroke="#ffd166"/><text x="275" y="170" text-anchor="middle" fill="#ff4d6d" font-size="12">放行右 ✓</text>
+    <rect x="340" y="145" width="120" height="40" fill="rgba(52,223,242,.15)" stroke="#ffd166"/><text x="400" y="170" text-anchor="middle" fill="#34dff2" font-size="12">放行左</text>
+    <rect x="465" y="145" width="120" height="40" fill="rgba(255,77,109,.15)" stroke="#ffd166"/><text x="525" y="170" text-anchor="middle" fill="#ff4d6d" font-size="12">放行右</text>
+    <rect x="590" y="145" width="120" height="40" fill="rgba(52,223,242,.15)" stroke="#ffd166"/><text x="650" y="170" text-anchor="middle" fill="#34dff2" font-size="12">放行左</text>
+
+    <!-- 错位标记 -->
+    <path d="M 400 95 L 400 140" stroke="#ff4d6d" stroke-width="2"/>
+    <circle cx="400" cy="115" r="14" fill="#ff4d6d"/>
+    <text x="400" y="120" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">✗</text>
+    <text x="400" y="245" text-anchor="middle" fill="#ff4d6d" font-size="11" font-weight="700">从此屏幕左 vs 眼镜右,持续反转</text>
+  </svg>
+  <div class="cap">图 3 · 眼别错位的成因。屏幕漏掉一个 vsync 槽(画面重复),但眼镜按自己的计数继续翻眼,两者从此永远错开一格。</div>
+  </div>
+
+  <h3>我们的解法:把眼别绑死到"实际显示的那张图"</h3>
+  <p class="note">关键洞察是:<b>眼别不能靠"我发了多少次命令"来决定,必须靠"屏幕真的显示了哪张图"来决定</b>。
+  我们引入了一个叫 <code>DisplayEyeClock</code> 的组件,做的是一件事——把左右眼标签<b>绑定到每次成功提交的 drawable</b>
+  (Metal 的画面缓冲)。无论屏幕漏不漏槽,USB 和屏幕对同一张画面永远用同一只眼。</p>
+
+  <div class="grid2">
+    <div class="card warn"><h4>原来的脆弱做法</h4><p class="note" style="margin:0">
+    每次 vsync 回调被触发,就翻转一次眼别。问题:回调次数 ≠ 实际显示次数。显示器漏槽时回调照样触发,
+    于是 USB 多翻一次,屏幕和眼镜各数各的,一旦错开就一直错。</p></div>
+    <div class="card pass"><h4>现在的稳健做法</h4><p class="note" style="margin:0">
+    眼别 = drawable 提交序号 &amp; 1。屏幕显示哪张图,眼镜就对哪张图用对应的眼。
+    漏槽时屏幕重复上一张 drawable,眼别也跟着重复,<b>永远不会错位</b>。</p></div>
+  </div>
+
+  <h3>另一个隐藏陷阱:不要相信 Metal 给的"目标呈现时刻"</h3>
+  <p class="note">Metal 提交一帧时会附带一个"预计呈现时刻"(target presentation time),听上去正好可以拿来排程。
+  但实测发现这个时间戳<b>并不可靠</b>——它不一定反映真实的物理呈现,而且 macOS 的窗口合成器还会介入。
+  我们最终改成:<b>只在 drawable 真正呈现后</b>(用 <code>drawable.presentedTime</code> 回调)才确认这一帧落地,
+  并且连续 5 秒严格 120Hz、零漏槽,才允许发射器开始工作;一旦检测到漏槽,立即 fail-closed(停止发射)。</p>
+
+  <div class="card accent"><h4>相位锁(ShutterPhaseLock):提前一帧把下一眼排好</h4>
+  <p class="note" style="margin:0">
+  最朴素的同步是"画面呈现完了再发切眼命令"——但 USB 命令有传输延迟,等发出去眼镜才切,已经晚了。
+  我们的相位锁做了两件事:① 用历史呈现时刻估计刷新周期(EMA 平滑),<b>提前一帧</b>算出下一个 vsync 时刻;
+  ② 通过 <code>EYE_AT eye timestamp</code> 命令告诉 helper:"在 <b>这个绝对时刻</b> 执行切眼"。
+  helper 用 <code>mach_wait_until</code> 提前 0.75ms 唤醒 + 末尾短忙等,把执行误差压到接近 0。
+  相位还可在 <code>-2.5…+2.5 ms</code> 范围内 0.05ms 步进调节,适配不同显示器和眼镜的物理延迟。</p></div>
+
+  <h3>解法的全貌:四道安全闸门</h3>
+  <div class="grid2">
+    <div class="card"><h4>① 眼别绑定 drawable 序列</h4><p class="note" style="margin:0">
+    漏槽不会让眼别错位——屏幕重复哪张图,眼镜就跟着对哪张图用同一只眼。</p></div>
+    <div class="card"><h4>② 真实呈现时刻校验</h4><p class="note" style="margin:0">
+    不信 target timestamp,只信 <code>presentedTime</code>。相邻呈现间隔异常 = 漏槽,立即处理。</p></div>
+    <div class="card"><h4>③ 启动前 5 秒稳定门</h4><p class="note" style="margin:0">
+    连续 5 秒严格 120Hz、零漏槽才让发射器上岗。任一不稳定就不开始,避免观众看到错乱的画面。</p></div>
+    <div class="card"><h4>④ 刷新率 95–105% 容差</h4><p class="note" style="margin:0">
+    实测刷新率必须落在目标的 95%–105% 内才允许输出。PLL(锁相环)不会把 2 倍漏帧或重复眼学成新周期。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ PART 4 现在到哪了 ============ -->
+<section id="part4"><div class="wrap">
+  <div class="sec-kicker">第四部分 · 现在能跑到什么程度</div>
+  <h2>真机 60 秒压力测试:7,205 条命令,零错误</h2>
+  <p class="big">2026-07-30,我们拿到了真发射器(<code>0955:0007</code>,USB 2.0 High-Speed),
+  在一台 SONY TV 3840×2160@120Hz 外屏上做了完整的压力测试。下面是实测数据,不是估算。</p>
+
+  <div class="numband">
+    <div class="num"><div class="v">7,205</div><div class="k">连续 60 秒发出的定时切眼命令数(约 120/秒 × 60)</div></div>
+    <div class="num"><div class="v cy">0</div><div class="k">其中 USB 传输错误数(全程稳定)</div></div>
+    <div class="num"><div class="v go">23.1 µs</div><div class="k">窗口均值绝对值的平均相位误差(允许 ±2500µs)</div></div>
+    <div class="num"><div class="v vi">~1.0 ms</div><div class="k">USB 完成的自适应提前量(初始 1.8ms,收敛到约 1.0ms)</div></div>
+  </div>
+
+  <h3>压力场景:不只是空载</h3>
+  <p class="note">测试不是在空闲机器上跑的。我们在<b>同时运行 Xcode Debug 构建和 pytest</b> 的负载下
+  依然保持 120fps。系统调度的长尾最坏到 13.53ms(约一个 vsync 周期),但这种长尾不参与提前量学习,
+  后续的过期命令会被丢弃策略恢复,链路不会断。</p>
+
+  <div class="card pass"><h4>✓ 已通过的真机验证</h4>
+  <p class="note" style="margin:0">
+  • <b>固件上传</b>:23 个 FX2 vendor-request 数据块,逐块校验 CPUCS 头尾 + SHA256,7,026 字节完整上传后正确重枚举<br>
+  • <b>切眼协议</b>:set_rate(120)、左/右眼、INVERT(反相)全部成功,无 USB transfer error<br>
+  • <b>相位闭环</b>:自适应提前量从 1.8ms 收敛到 ~1.0ms,稳态窗口平均误差接近 0<br>
+  • <b>压力稳定性</b>:60 秒、60 个统计窗口,无传输错误;并发构建负载下窗口均值误差 23.1µs<br>
+  • <b>过期命令恢复</b>:注入 20ms 旧的 <code>EYE_AT</code> 命令后正确报告 stale_drops=1,链路不断</p></div>
+
+  <h3>App 里的实际体验</h3>
+  <div class="grid2">
+    <div class="card"><h4>外屏全屏输出</h4><p class="note" style="margin:0">
+    独立的 borderless 窗口精确覆盖目标屏(如 SONY TV),不创建 macOS 全屏 Space。
+    内屏保留所有控制:打开文件、播放/暂停、左右眼互换、刷新率选择、相位微调、USB 状态。</p></div>
+    <div class="card"><h4>实时校准工具</h4><p class="note" style="margin:0">
+    全屏期间保留半透明校准条,可用 <span class="kbd">[</span> <span class="kbd">]</span> 快捷键调相位
+    (步进 0.05ms),<span class="kbd">⌥</span>+<span class="kbd">[</span> 调 0.1ms。
+    实测刷新周期和锁相抖动实时显示。</p></div>
+  </div>
+
+  <h3>实时 2D → 快门 3D:把第一份研究的成果接进来</h3>
+  <p class="note">这个快门链路不只放现成的 SBS 3D 片——它能配合我们<b>另一项研究</b>(实时 2D 转 3D)
+  工作。普通 2D 视频用 Core ML 模型实时生成立体画面,直接喂进 page-flip 链路。
+  四个 Core ML 模型在 M4 Max 上的单帧耗时:Compact 3:1 <b>7.65ms</b>、Compact 6:1 <b>7.68ms</b>、
+  Medium 15M <b>8.64ms</b>、S6 Full 20M <b>9.52ms</b>——四档都满足 24fps 内容实时。
+  在 SONY TV 上 Compact 3:1 实测连续 30 秒窗口均达 120fps,USB 抖动 0.00ms。<br>
+  <span class="small">(2D 转 3D 的算法细节在<a href="2d3d-realtime-conversion.html" style="color:var(--cyan)">另一份报告</a>里,
+  本页只讲快门链路怎么把它变成可看的画面。)</span></p>
+
+  <div class="card"><h4>为什么 120Hz 是硬骨头</h4><p class="note" style="margin:0">
+  2D 转 3D 模型推理只要 ~8ms(够 24fps 内容实时),但<b>120Hz 外屏输出</b>意味着 GPU 每 8.3ms 就要合成一帧。
+  推理和显示合成在抢同一块 GPU。我们为此写了<b>快门专用 Metal 快路径</b>:把多层立体数据打包成
+  RGBA16F 纹理数组,每层一次硬件双线性采样;离屏右眼缓存降到 960×540(普通播放仍是原分辨率)。
+  相比之前 720p 缓存的 114fps 低谷,Compact 3:1 在外屏稳到 120fps。</p></div>
+</div></section>
+
+<!-- ============ PART 5 边界与下一步 ============ -->
+<section id="part5"><div class="wrap">
+  <div class="sec-kicker">第五部分 · 诚实边界与待办</div>
+  <h2>哪些算数,哪些还不算</h2>
+  <p class="big">我们坚持一个原则:<b>没验证的不说成已验证</b>。下面把已确认和未确认的明确分开,
+  方便你判断当前到底是什么状态。</p>
+
+  <div class="grid2">
+    <div class="card pass"><h4>✓ 已经在真机验证的</h4><p class="note" style="margin:0">
+    • 发射器 USB 协议全链路(固件上传、set_rate、左右眼、反相)<br>
+    • 120Hz 真机连续 60 秒、7,205 条命令、零传输错误<br>
+    • 相位锁自适应收敛、过期命令丢弃、热插拔自动重连<br>
+    • USB 完成时刻的闭环(自适应提前量 1.8ms → ~1.0ms)<br>
+    • 眼别绑定 drawable 序列,漏槽不会导致左右反转<br>
+    • 实时 2D→3D + 快门外屏 120fps(Compact 3:1 实测)</p></div>
+    <div class="card warn"><h4>✗ 还没人工验收的</h4><p class="note" style="margin:0">
+    • <b>戴眼镜的肉眼观感</b>:左眼只见左、右眼只见右,无串扰<br>
+    • <b>最佳相位值</b>:不同显示器/眼镜的物理延迟不同,需要用高对比测试图现场调<br>
+    • <b>连续 60 秒不失锁的肉眼确认</b>(时序已通过,观感需人工)<br>
+    • <b>物理冷启动拔插</b>:断电重上电的固件上传流程(逻辑已实现,未做物理实验)</p></div>
+  </div>
+
+  <h3>已知风险与限制</h3>
+  <div class="grid2">
+    <div class="card"><h4>3D Vision 2 变体可能不兼容</h4><p class="note" style="margin:0">
+    libnvstusb 逆向的是初代 3D Vision(<code>0955:0007</code>)。如果你的发射器是 3D Vision 2
+    (<code>0955:0008</code> 或其他变体),协议可能不直接覆盖,需要追加逆向,工作量会上升。</p></div>
+    <div class="card"><h4>系统调度长尾</h4><p class="note" style="margin:0">
+    并发负载下系统抢占的最坏长尾约 13.53ms(超过一个 vsync 周期)。这个长尾不参与提前量学习,
+    依赖过期命令丢弃机制恢复。极端高负载下可能短暂丢几帧,但不会持续错位。</p></div>
+    <div class="card"><h4>固件属 NVIDIA IP,不能随 App 分发</h4><p class="note" style="margin:0">
+    发射器固件是 NVIDIA 的知识产权。仓库和 App 都<b>不附带固件</b>。首次使用时 App 会提示用户
+    选择合法取得的 <code>nvstusb.fw</code>,保存到 ~/Library/Application Support/。libusb 与 LGPL
+    文本随 App 携带,符合许可证要求。</p></div>
+    <div class="card"><h4>Mac 内屏不是最优目标</h4><p class="note" style="margin:0">
+    MacBook 内置屏虽然能跑 120Hz,但实测在 2D→3D 实时路径上左右眼差异弱。
+    外接 120Hz 3D Vision Ready 显示器(或 DLP-Link 投影)才是设计目标。</p></div>
+  </div>
+
+  <h3>用户侧体验步骤(硬件齐备时)</h3>
+  <div class="flow">
+    <div class="step">
+      <div class="n">①</div>
+      <div class="t">预检</div>
+      <div class="d">运行 <code>scripts/preflight_3dvision.sh</code>,看到 <code>PREFLIGHT_PASS hardware=connected</code>。</div>
+    </div>
+    <div class="step">
+      <div class="n">②</div>
+      <div class="t">选固件</div>
+      <div class="d">App 首次提示时选 <code>nvstusb.fw</code>(合法提取自 NVIDIA 驱动)。之后自动加载。</div>
+    </div>
+    <div class="step">
+      <div class="n">③</div>
+      <div class="t">开 120Hz</div>
+      <div class="d">在 macOS 显示器设置里把目标屏选 120Hz。144/165Hz 仅作实验档。</div>
+    </div>
+    <div class="step">
+      <div class="n">④</div>
+      <div class="t">调相位</div>
+      <div class="d">用左右眼测试图(左红右蓝),戴眼镜调到双边最少串扰。连续 60 秒确认无失锁。</div>
+    </div>
+  </div>
+
+  <div class="card accent"><h4>下一步:戴上眼镜,亲眼确认</h4>
+  <p class="note" style="margin:0">
+  所有 USB 时序、协议、相位数学都已在真机闭环验证。剩下唯一待办是<b>人工戴眼镜观感验收</b>——
+  确认左眼只见左、右眼只见右,调到双边最少串扰,连续观看 60 秒无失锁。这是物理层面的最终确认,
+  无法用程序替代。完成后本链路即可作为内部 3D 效果评测的标准工具使用。</p></div>
+</div></section>
+
+<footer><div class="wrap">
+  快门式 3D · NVIDIA 3D Vision Mac 适配实录 · 首发 2026-08-06<br>
+  本页所有数字均为实机实测:USB 数据来自 <code>0955:0007</code> 发射器 + SONY TV 3840×2160@120Hz 外屏,
+  测试日期 2026-07-30;相位误差与压力稳定性数据来自连续 60 秒、7,205 条命令的真机运行日志。
+  协议路线基于开源 libnvstusb(LGPL),固件属 NVIDIA IP 不随本页或 App 分发。<br>
+  相关:<a href="2d3d-realtime-conversion.html" style="color:var(--cyan)">2D → 3D 实时转换研究进展</a>
+  · <a href="index.html" style="color:var(--cyan)">← 返回 HDR Production 目录</a>
+</div></footer>
+
+</body>
+</html>
