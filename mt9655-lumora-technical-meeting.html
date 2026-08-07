@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MT9655 × Lumora：SDR→HDR 电视端联合技术沟通</title>
+<meta name="description" content="面向 MTK NPU、AI-PQ 与画质引擎专家的 Lumora SDR→HDR 架构、接口需求和问题板。">
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#07080d; --panel:#111620; --panel2:#172131; --ink:#f4f7fb;
+  --muted:#a7b0bf; --soft:#758195; --line:rgba(255,255,255,.12);
+  --cyan:#34dff2; --lime:#b7f05b; --gold:#ffd166; --rose:#ff4d6d;
+  --violet:#a78bfa; --blue:#60a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-3;background:radial-gradient(circle at 12% 12%,rgba(52,223,242,.14),transparent 28%),radial-gradient(circle at 82% 8%,rgba(255,77,109,.12),transparent 30%),radial-gradient(circle at 65% 88%,rgba(183,240,91,.1),transparent 34%),linear-gradient(180deg,#07080d 0%,#0b1019 48%,#07080d 100%)}
+a{color:inherit;text-decoration:none}
+button,textarea{font:inherit}
+button{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.topnav{position:sticky;top:0;z-index:50;background:rgba(7,8,13,.84);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.topnav .in{max-width:1180px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:16px;overflow-x:auto;scrollbar-width:none}
+.topnav .in::-webkit-scrollbar{display:none}
+.brand{font-weight:850;color:var(--cyan);font-size:13px;white-space:nowrap;margin-right:auto}
+.navlink{font-size:12.5px;color:var(--muted);white-space:nowrap}.navlink:hover{color:var(--ink)}
+.navtool{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px;padding:6px 11px;cursor:pointer;white-space:nowrap;font-size:12px}
+.navtool:hover{border-color:rgba(52,223,242,.5);color:var(--cyan)}
+.navtool.danger:hover{border-color:rgba(255,77,109,.55);color:var(--rose)}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+header.hero{position:relative;padding:92px 0 64px;overflow:hidden;isolation:isolate}
+.hero-bg{position:absolute;inset:0;z-index:-2;overflow:hidden}
+.spectrum-band{position:absolute;left:50%;top:48%;width:min(1400px,138vw);height:360px;transform:translate(-50%,-50%) rotate(-7deg);border-radius:999px;background:linear-gradient(90deg,rgba(67,56,202,0) 0%,rgba(37,99,235,.6) 14%,rgba(6,182,212,.78) 30%,rgba(34,197,94,.72) 46%,rgba(234,179,8,.78) 62%,rgba(249,115,22,.74) 78%,rgba(244,63,94,0) 100%);filter:blur(40px) saturate(1.2);opacity:.6}
+.grid-field{position:absolute;inset:0;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:58px 58px;-webkit-mask-image:radial-gradient(circle at 50% 40%,black,transparent 70%);mask-image:radial-gradient(circle at 50% 40%,black,transparent 70%)}
+.backlink{display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;font-size:13.5px;color:var(--cyan);border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:rgba(52,223,242,.05)}
+.eyebrow{display:flex;align-items:center;gap:9px;color:var(--gold);font-size:13px;font-weight:820;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}.eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+h1{font-size:clamp(34px,6vw,62px);line-height:1.08;letter-spacing:-.03em;margin-bottom:20px;max-width:1020px;text-wrap:balance}.h-accent{background:linear-gradient(100deg,var(--cyan),var(--lime),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-desc{max-width:860px;color:#d3dce8;font-size:clamp(16px,1.7vw,19px);line-height:1.8;margin-bottom:22px}.hero-desc b{color:#fff}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}.badge{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--muted);background:rgba(7,8,13,.5)}.badge.internal{color:var(--rose);border-color:rgba(255,77,109,.45)}.badge.target{color:var(--lime);border-color:rgba(183,240,91,.45)}
+.numband{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.num{background:rgba(17,22,32,.82);border:1px solid var(--line);border-radius:14px;padding:16px 18px}.num .v{font-size:26px;font-weight:850;color:var(--lime);line-height:1.2}.num .v.cy{color:var(--cyan)}.num .v.go{color:var(--gold)}.num .v.vi{color:var(--violet)}.num .k{font-size:12.5px;color:var(--soft);margin-top:5px}
+
+.section{padding:58px 0;border-top:1px solid var(--line)}
+.sec-kicker{font-size:12px;letter-spacing:.2em;color:var(--cyan);font-weight:800;text-transform:uppercase}
+h2{font-size:clamp(26px,3.6vw,38px);line-height:1.2;margin:8px 0 12px;letter-spacing:-.02em}
+h3{font-size:19px;margin:26px 0 10px}p.note{color:var(--muted);max-width:900px;margin-bottom:18px}
+.grid2,.grid3,.grid4{display:grid;gap:15px}.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}.card h3,.card h4{margin:0 0 8px}.card p{color:var(--muted)}
+.answer-card{position:relative;padding-top:48px}.answer-card .index{position:absolute;left:20px;top:17px;color:var(--gold);font-size:12px;font-weight:850;letter-spacing:.1em}.answer-card h3{font-size:17px}.answer-card .deliverable{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--lime)}
+.goal-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--line);margin-top:20px}.goal-line div{background:var(--panel);padding:16px 17px;color:var(--muted);font-size:13px}.goal-line b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}.goal-line em{color:var(--gold);font-style:normal}
+.callout{border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(255,209,102,.08),transparent);padding:15px 18px;color:var(--muted);margin-top:18px}.callout b{color:var(--ink)}
+
+.diagram-shell{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:18px;margin-top:24px;overflow:hidden}.scroll-hint{display:none;color:var(--gold);font-size:12px;margin-bottom:9px}.diagram-scroll{overflow-x:auto;padding-bottom:8px}.pipeline{min-width:1030px;display:grid;grid-template-columns:130px repeat(6,1fr);grid-template-rows:auto auto;gap:10px;align-items:stretch}.source{grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(96,165,250,.5);background:#101d2d;border-radius:14px;text-align:center;padding:14px}.lane{display:contents}.node{position:relative;min-height:102px;border-radius:13px;padding:13px 12px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}.node::after{content:"→";position:absolute;right:-17px;top:39%;z-index:2;color:var(--soft);font-size:20px}.node:last-child::after{display:none}.node .label{font-weight:800;font-size:14px}.node .sub{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.45}.node.ai{border-color:rgba(167,139,250,.42);background:#211a2c}.node.pixel{border-color:rgba(52,223,242,.38);background:#0e2027}.node.multiply{border-color:var(--gold);background:#2a2416;box-shadow:0 0 28px rgba(255,209,102,.12)}.node.multiply .label{color:var(--gold);font-size:18px}.node.output{border-color:rgba(183,240,91,.5);background:#102519}.node.join-down::after{content:"↓";right:auto;left:50%;top:auto;bottom:-31px;transform:translateX(-50%);color:var(--gold);font-size:25px}.node.spacer{visibility:hidden;pointer-events:none}.node.spacer::after{display:none}.lane-label{position:absolute}.pipeline-caption{display:flex;gap:22px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:13px;margin-top:10px;color:var(--muted);font-size:12px}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:6px}.legend-dot.ai{background:var(--violet)}.legend-dot.px{background:var(--cyan)}.legend-dot.join{background:var(--gold)}
+.invariants{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.invariant{border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:12.5px}.invariant b{display:block;color:var(--ink);margin-bottom:3px}
+
+.contract{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.contract .card{min-height:215px}.contract .icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:rgba(52,223,242,.1);color:var(--cyan);font-weight:900;margin-bottom:14px}.kv{list-style:none;margin-top:12px}.kv li{display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}.state{font-size:10px;font-weight:850;border-radius:99px;padding:2px 6px;height:max-content;margin-top:1px;white-space:nowrap}.state.ok{color:var(--lime);background:rgba(183,240,91,.1)}.state.ask{color:var(--gold);background:rgba(255,209,102,.1)}
+
+.filter-btn{border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.035);padding:8px 14px;cursor:pointer;color:var(--muted)}.filter-btn:hover{color:var(--ink)}.filter-btn.active{color:#071014;background:var(--cyan);border-color:var(--cyan);font-weight:800}.tier-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.tier-table th,.tier-table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.tier-table th{color:var(--soft)}.tier-table td:first-child{font-weight:750;color:var(--ink)}.warn{color:var(--gold)}
+
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-col{border:1px solid var(--line);border-radius:16px;overflow:hidden}.matrix-head{padding:13px 17px;font-weight:850}.matrix-col.confirmed .matrix-head{color:var(--lime);background:rgba(183,240,91,.08)}.matrix-col.pending .matrix-head{color:var(--gold);background:rgba(255,209,102,.08)}.matrix-item{padding:13px 17px;border-top:1px solid var(--line)}.matrix-item b{display:block;font-size:14px}.matrix-item span{font-size:12.5px;color:var(--muted)}
+
+.question-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0}.progress{margin-left:auto;color:var(--muted);font-size:13px}.progress b{color:var(--lime);font-size:17px}.q-list{display:grid;gap:12px}.q-card{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}.q-card[hidden]{display:none}.q-card.p1,.q-card.p2{display:none!important}.q-head{display:grid;grid-template-columns:1fr auto;gap:13px;align-items:start;padding:18px}.q-check,.notes,.progress,#resetBtn,.q-priority,.wanted{display:none!important}.q-title{font-size:16px;line-height:1.45}.q-tags{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.q-tag{font-size:10px;color:var(--muted);border:1px solid var(--line);padding:2px 7px;border-radius:99px}.q-body{display:block;padding:0 18px 18px}.q-detail{color:var(--muted);font-size:13px}
+.q-card.done{border-color:rgba(183,240,91,.38)}.q-card.done .q-title{text-decoration:line-through;text-decoration-color:rgba(183,240,91,.45);color:var(--muted)}
+
+.agenda{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:20px}.agenda-item{position:relative;border-top:3px solid var(--cyan);background:var(--panel);padding:13px;border-radius:0 0 12px 12px;min-height:120px}.agenda-item:nth-child(3),.agenda-item:nth-child(4){border-color:var(--gold)}.agenda-time{font-size:20px;font-weight:900}.agenda-title{font-size:12.5px;font-weight:750;margin-top:5px}.agenda-desc{font-size:11px;color:var(--soft);margin-top:5px}
+.branch{border-top:3px solid var(--lime)}.branch.b{border-color:var(--gold)}.branch.c{border-color:var(--rose)}.branch .route{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--soft)}.branch h3{margin:8px 0}.branch ul{margin-left:18px;color:var(--muted);font-size:13px}.branch li{margin:5px 0}
+.artifact-list{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}.artifact{border:1px dashed rgba(255,255,255,.22);border-radius:12px;padding:13px;color:var(--muted);font-size:12px}.artifact b{color:var(--ink);display:block;margin-bottom:4px}
+.next-steps{counter-reset:step;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.step{counter-increment:step;border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--muted);font-size:12.5px}.step::before{content:counter(step);display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:rgba(52,223,242,.12);color:var(--cyan);font-weight:900;margin-bottom:8px}
+footer{padding:42px 0 58px;border-top:1px solid var(--line);color:var(--soft);font-size:12.5px}.footer-row{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap}.confidential{color:var(--rose)}
+
+@media(max-width:900px){.numband,.grid4,.contract{grid-template-columns:repeat(2,1fr)}.goal-line{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}.agenda{grid-template-columns:repeat(3,1fr)}.artifact-list{grid-template-columns:repeat(2,1fr)}.next-steps{grid-template-columns:repeat(2,1fr)}.invariants{grid-template-columns:repeat(2,1fr)}.scroll-hint{display:block}}
+@media(max-width:640px){.wrap{padding:0 17px}.topnav .in{padding-inline:17px}.navlink{display:none}header.hero{padding-top:65px}.numband,.grid2,.grid4,.contract,.matrix,.goal-line{grid-template-columns:1fr}.num .v{font-size:22px}.q-head{grid-template-columns:1fr}.q-tags{grid-column:1;justify-content:flex-start}.q-body{grid-template-columns:1fr;padding-left:18px}.agenda{grid-template-columns:repeat(2,1fr)}.artifact-list,.next-steps{grid-template-columns:1fr}.invariants{grid-template-columns:1fr}.section{padding:46px 0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{
+  :root{color-scheme:light;--bg:#fff;--panel:#fff;--panel2:#f5f7fa;--ink:#111827;--muted:#374151;--soft:#6b7280;--line:rgba(17,24,39,.18)}
+  body{background:#fff;color:#111827;font-size:11pt}.topnav,.question-toolbar,.scroll-hint{display:none!important}body::before,.hero-bg{display:none}.hero{padding:24px 0}.section{padding:24px 0;break-inside:auto}.card,.q-card,.matrix-col,.diagram-shell{break-inside:avoid}.q-card[hidden]{display:block}.q-body{display:grid}.notes textarea{min-height:55px;background:#fff;color:#111;border-color:#bbb;overflow:visible}.diagram-scroll{overflow:visible}.pipeline{transform:scale(.76);transform-origin:left top;margin-bottom:-80px}.badge{background:#fff}.numband{grid-template-columns:repeat(4,1fr)}a{text-decoration:none}}
+</style>
+</head>
+<body>
+<nav class="topnav" aria-label="会议页面导航"><div class="in">
+  <a class="brand" href="#top">MT9655 × LUMORA</a>
+  <a class="navlink" href="#goal">会议目标</a><a class="navlink" href="#architecture">架构</a>
+  <a class="navlink" href="#contract">接口确认</a>
+  <a class="navlink" href="#questions">问题板</a><a class="navlink" href="#done">会后出口</a>
+  <button class="navtool" id="printBtn" type="button">打印 / 导出 PDF</button>
+  <button class="navtool danger" id="resetBtn" type="button">清空记录</button>
+</div></nav>
+
+<header class="hero" id="top"><div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
+<div class="wrap">
+  <a class="backlink" href="distill-realtime-player.html">← 从 Lumora 实时播放器架构继续</a>
+  <div class="eyebrow">联合技术沟通 · NPU / AI-PQ / 画质引擎</div>
+  <h1><span class="h-accent">MT9655 × Lumora</span><br>把一张 AI 增益图，接入电视画质主链</h1>
+  <p class="hero-desc">我们已经在 Mac 上验证了实时 SDR→HDR。现在要共同解决的不是“模型能不能跑”，而是<b>从视频链哪里取帧、以什么信号表示送入模型、增益图从哪里写入，以及如何与 MTK 现有 AI-PQ 共存</b>。</p>
+  <div class="badges"><span class="badge internal">仅限内部技术沟通</span><span class="badge">MT9655 · mdla1.7e</span><span class="badge target">目标：确认集成接口</span></div>
+  <div class="numband">
+    <div class="num"><div class="v">5.11M</div><div class="k">轻量增益网络参数量；输出单通道亮度增益图</div></div>
+    <div class="num"><div class="v cy">512×288</div><div class="k">当前模型输入；目标 24–30Hz 刷新</div></div>
+    <div class="num"><div class="v go">8.88 ms</div><div class="k">M4 Max 神经网络引擎（ANE）实测</div></div>
+    <div class="num"><div class="v vi">1 ×</div><div class="k">AI 对全分辨率像素的唯一控制：乘增益</div></div>
+  </div>
+</div></header>
+
+<main>
+<section class="section" id="goal"><div class="wrap">
+  <div class="sec-kicker">会议重点</div><h2>这次会议主要确认四件事</h2>
+  <div class="goal-line"><div><b>取帧</b>取帧口（tap）在哪里，能提供什么格式和精度</div><div><b>接入与启停</b>模型怎样接入；<em>如何只在全屏视频时开启</em></div><div><b>画质链</b>增益图从哪里写入，从哪一帧开始生效</div><div><b>上板</b>示例代码、负责人和联调时间</div></div>
+  <div class="callout"><b>一句话定义我们的边界：</b>AI 只当“测光表”，预测哪里该提多亮；全分辨率画面始终来自原片。所谓“一次乘法”，指 AI 对像素的唯一控制是在线性域乘空间增益，后续色域、色度与输出变换仍由现有画质链完成。</div>
+</div></section>
+
+<section class="section" id="architecture"><div class="wrap">
+  <div class="sec-kicker">系统架构</div><h2>两条流水线，一次汇合</h2>
+  <p class="note">把 Lumora 桌面播放器已验证的双流水线结构映射到电视主芯片（SoC）：全分辨率视频主链持续运行，AI 增益支路并行计算；二者只在“原片像素乘亮度增益”这一步汇合。</p>
+  <div class="diagram-shell"><div class="scroll-hint">← 横向滑动查看完整架构 →</div><div class="diagram-scroll" tabindex="0" aria-label="双流水线架构图，可横向滚动">
+    <div class="pipeline">
+      <div class="source"><b>解码器 / HDMI 接收端</b><span style="color:var(--muted);font-size:11px;margin-top:7px">SDR 输入<br>HDR 输入自动旁路</span></div>
+      <div class="node ai"><span class="label">AI-PQ 取帧口</span><span class="sub">下采样帧副本<br>帧编号 / PTS</span></div>
+      <div class="node ai"><span class="label">输入格式统一</span><span class="sub">YUV→RGB 或模型内矩阵<br>量化范围 / 色彩矩阵 / 编码域</span></div>
+      <div class="node ai"><span class="label">MT9655 NPU</span><span class="sub">轻量增益网络 · 512×288<br>8/16 位整数 + 局部半精度浮点</span></div>
+      <div class="node ai join-down"><span class="label">护栏与双缓冲</span><span class="sub">增益/峰值亮度限制<br>低清对数增益图 · 按帧切换</span></div>
+      <div class="node spacer" aria-hidden="true"></div><div class="node spacer" aria-hidden="true"></div>
+
+      <div class="node pixel"><span class="label">信号与内容判定</span><span class="sub">SDR/HDR · 量化范围<br>全屏视频 / 界面 · 低延迟模式</span></div>
+      <div class="node pixel"><span class="label">现有缩放 / 画质处理</span><span class="sub">主视频路径<br>不等待 AI 推理</span></div>
+      <div class="node pixel"><span class="label">去伽马编码</span><span class="sub">转换到线性光域<br>位置请 MTK 标点</span></div>
+      <div class="node multiply"><span class="label">× 空间增益</span><span class="sub">原片线性像素 × 增益面<br>AI 唯一像素控制</span></div>
+      <div class="node pixel"><span class="label">色域 / 色度 / 色调映射</span><span class="sub">BT.709→BT.2020 · 查找表<br>与现有画质模块协同</span></div>
+      <div class="node output"><span class="label">PQ 编码 / 面板输出</span><span class="sub">HDR 亮度上屏<br>主链目标不增加帧延迟</span></div>
+    </div>
+  </div><div class="pipeline-caption"><span><i class="legend-dot ai"></i>AI 增益支路：低分辨率、可并行</span><span><i class="legend-dot px"></i>像素主链：全分辨率、硬实时</span><span><i class="legend-dot join"></i>唯一新增接口：亮度增益图写入</span></div></div>
+  <div class="invariants">
+    <div class="invariant"><b>主链不阻塞</b>AI 推理偶尔变慢不能让视频掉帧；未及时得到结果时使用最近的安全增益，或将增益设为 1（不改变亮度）。</div>
+    <div class="invariant"><b>HDR 自动旁路</b>输入已有 HDR10、HLG 或 Dolby Vision 时不进入本 SDR→HDR 功能。</div>
+    <div class="invariant"><b>逐帧可追踪</b>取帧、增益图和显示帧之间需要帧编号或等价的同步机制。</div>
+    <div class="invariant"><b>安全可审计</b>亮度增益限制在 1～16，并按目标峰值亮度再次封顶；失败时不改变原图亮度。</div>
+  </div>
+  <div class="callout"><b>HDMI 新增启用条件：</b>目前实测发现，外部信源的菜单、电脑桌面、HUD 等界面也会被增益放大。目标是仅在确认“当前为全屏播放视频”时开启 SDR→HDR，其余画面保持 SDR，亮度增益为 1。需要 MTK 说明是否已有可直接复用的全屏视频、电脑图形、游戏或 OSD 识别结果；若电视本机的 OSD 与视频层可分离，也请确认能否只处理视频层。HDMI 信源内部已经合成进画面的界面，则需要内容识别或可靠的模式信号。</div>
+</div></section>
+
+<section class="section" id="contract"><div class="wrap">
+  <div class="sec-kicker">接口确认</div><h2>电视端接口，需要和 MTK 确认什么</h2>
+  <div class="contract">
+    <article class="card"><div class="icon">入</div><h3>模型输入</h3><p>低分辨率视频帧，当前网络尺寸为宽 512、高 288。</p><ul class="kv"><li><span class="state ok">已定</span>固定尺寸；每秒更新 24～30 次</li><li><span class="state ask">待答</span>YUV/RGB、位深、量化范围、色彩矩阵</li><li><span class="state ask">待答</span>伽马编码域或线性光域；先转换还是先下采样</li></ul></article>
+    <article class="card"><div class="icon">出</div><h3>模型输出</h3><p>单通道、低频的对数亮度增益图；模型不生成 HDR 画面像素。</p><ul class="kv"><li><span class="state ok">已定</span>对数增益解码后限制在 1～16</li><li><span class="state ask">待答</span>画质引擎支持的增益网格大小和数值精度</li><li><span class="state ask">待答</span>共享内存或寄存器写入接口</li></ul></article>
+    <article class="card"><div class="icon">时</div><h3>帧同步</h3><p>文件播放争取按 PTS 精确配对；HDMI 实时输入优先使用最近完成的本帧增益，不额外做跨帧平滑。</p><ul class="kv"><li><span class="state ok">已定</span>双缓冲，推理变慢时不阻塞视频</li><li><span class="state ask">待答</span>帧编号如何传递，增益图从哪一帧生效</li><li><span class="state ask">可选</span>只有真机出现闪烁时才启用 EMA（指数移动平均，用历史增益平滑当前增益）；启用后切镜时需要重置历史值</li></ul></article>
+    <article class="card"><div class="icon">停</div><h3>启用与旁路</h3><p>只处理全屏 SDR 视频；界面、桌面、菜单和已有 HDR 信号不进入转换。</p><ul class="kv"><li><span class="state ok">已定</span>HDR 输入旁路；超时安全回退</li><li><span class="state ask">待答</span>全屏视频 / 图形界面的现成判定信号</li><li><span class="state ask">待答</span>视频层与 OSD 能否分开处理</li></ul></article>
+  </div>
+
+  <h3 style="margin-top:34px">取帧口规格会影响可达到的画质上限</h3>
+  <p class="note">取帧口（tap）是从视频主链复制一张低分辨率帧给 AI 模型的接口。下面三组实验都使用带分组归一化（Group Normalization，简称 GN）的同一类模型。高光峰值还原度表示模型恢复最亮高光的能力，1.0 代表与参考结果一致；本项目当前验收线为 0.75。需要特别注意：把已经量化成 10 位的数值再存进 32 位浮点缓冲区，并不能找回量化时丢失的信息。</p>
+  <div style="overflow-x:auto"><table class="tier-table"><thead><tr><th>取帧口提供的信号</th><th>高光峰值还原度</th><th>是否达到项目验收线</th><th>工程含义</th></tr></thead><tbody><tr><td>10 位伽马编码信号</td><td>0.719</td><td>未达到</td><td>可以用于接口联调，但极亮小高光仍偏保守</td></tr><tr><td>未经整数位深量化的伽马编码信号</td><td>0.772</td><td>达到，但余量较小</td><td class="warn">投产前需要用多个随机种子重复训练确认稳定性</td></tr><tr><td>32 位浮点线性光信号</td><td>0.863</td><td>达到</td><td>播放器在 GPU 上先去伽马，再在线性光域以浮点精度下采样后得到</td></tr></tbody></table></div>
+  <div class="callout"><b>Lumora 播放器如何得到这一路输入：</b>片源本身并不直接提供 32 位浮点线性光信号。播放器先从解码器取得普通 SDR 编码帧，然后在 Metal 预处理阶段完成三步：先读取伽马编码的 RGB，按当前播放器约定执行 sRGB 去伽马转换（EOTF），得到线性 RGB；再在线性光域对每个目标像素覆盖的 4×4 区域取平均，下采样到模型需要的 512×288；最后写入每通道 32 位浮点纹理（RGBA32Float），取出 RGB 三通道送入 CoreML 模型。</div>
+  <p class="note"><b>这里的关键不是“扩位”。</b>把已经量化的 10 位信号直接改存为 32 位浮点，无法恢复丢失的信息。Lumora 的优势来自处理顺序：在原始解码分辨率上先转到线性光域，再用浮点数对多个源像素求平均。平均过程会产生并保留介于原有量化码值之间的结果，因此不同于先在伽马域下采样、量化成 10 位，再交给模型。</p>
+</div></section>
+
+<section class="section" id="questions"><div class="wrap">
+  <div class="sec-kicker">重点问题</div><h2>需要与 MTK 确认的核心问题</h2>
+  <p class="note">以下问题标明了主要负责团队，可按团队筛选查看。</p>
+  <div class="question-toolbar" role="group" aria-label="问题分类筛选">
+    <button class="filter-btn active" type="button" data-filter="all">全部</button><button class="filter-btn" type="button" data-filter="aipq">AI-PQ</button><button class="filter-btn" type="button" data-filter="npu">NPU</button><button class="filter-btn" type="button" data-filter="pq">画质引擎</button>
+    <div class="progress" aria-live="polite">已获得明确答案 <b id="doneCount">0</b> / <span id="totalCount">10</span></div>
+  </div>
+  <div class="q-list">
+    <article class="q-card p0" data-id="q1" data-tags="aipq pq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 1 已获得明确答案"><div><span class="q-priority">最高优先级 · Q1</span><h3 class="q-title">媒体播放和 HDMI 两条路径，AI-PQ 取帧口分别位于哪个节点？</h3></div><div class="q-tags"><span class="q-tag">AI-PQ 负责人</span><span class="q-tag">画质链路</span></div></div><div class="q-body"><p class="q-detail">请区分媒体解码播放路径与 HDMI 接收路径；说明取帧口位于缩放、去伽马编码、色彩空间转换和运动补偿（MEMC）等模块的前面还是后面，以及能否覆盖普通模式和游戏模式。</p><div class="wanted"><b>希望拿到</b>在 MT9655 视频方框图上标出节点；两条路径的支持情况表；对应负责人。</div><div class="notes"><label for="note-q1">会议记录</label><textarea id="note-q1" placeholder="节点、模式差异、负责人、待补材料……"></textarea></div></div></article>
+
+    <article class="q-card p0" data-id="q2" data-tags="aipq npu"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 2 已获得明确答案"><div><span class="q-priority">最高优先级 · Q2</span><h3 class="q-title">请给出取帧口到 NPU 的完整数据规格，而不只是“支持 YUV”。</h3></div><div class="q-tags"><span class="q-tag">AI-PQ</span><span class="q-tag">NPU 输入输出</span></div></div><div class="q-body"><p class="q-detail">格式是 NV12、P010、YUV 4:4:4 还是 RGB？位深是 8、10 还是 12 位？量化范围是 limited 还是 full？色彩矩阵是 BT.709 还是 BT.2020？信号位于伽马编码域还是线性光域？色度由谁上采样？尺寸能否达到 1024×576？是否使用 DMA 共享缓冲区（dma-buf）？是否带帧编号，取帧到 NPU 的延迟是多少？</p><div class="wanted"><b>希望拿到</b>字段级取帧口规格、一帧数据样例、缓冲区描述和代码片段。</div><div class="notes"><label for="note-q2">会议记录</label><textarea id="note-q2" placeholder="格式、位深、信号域、尺寸、缓冲区、延迟……"></textarea></div></div></article>
+
+    <article class="q-card p0" data-id="q3" data-tags="aipq npu"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 3 已获得明确答案"><div><span class="q-priority">最高优先级 · Q3</span><h3 class="q-title">AI-PQ 如何接入、调度和升级一个自定义逐帧模型？</h3></div><div class="q-tags"><span class="q-tag">AI-PQ 负责人</span><span class="q-tag">模型运行管理</span></div></div><div class="q-body"><p class="q-detail">模型输入一张低分辨率帧，输出一张单通道增益图，目标每秒更新 24～30 次。需要确认 DLA 编译文件的打包与注册、启动/停止、模式切换、版本校验、异常时安全回退，以及和场景识别、对象识别、AI 超分辨率等内置模型的共存方式。</p><div class="wanted"><b>希望拿到</b>最小示例代码、配置模板、运行流程图、集成负责人和预计周期。</div><div class="notes"><label for="note-q3">会议记录</label><textarea id="note-q3" placeholder="框架入口、文件格式、调度、负责人……"></textarea></div></div></article>
+
+    <article class="q-card p0" data-id="q4" data-tags="pq aipq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 4 已获得明确答案"><div><span class="q-priority">最高优先级 · Q4</span><h3 class="q-title">画质引擎能否接收外部亮度增益图，并在线性光域执行乘法？</h3></div><div class="q-tags"><span class="q-tag">画质引擎负责人</span><span class="q-tag">核心接口</span></div></div><div class="q-body"><p class="q-detail">候选可能是局部对比度、局部调光补偿或其他亮度调制模块。请确认增益图写入的信号域，以及它和色域转换、3D 查找表、色调映射之间的顺序；同时确认支持的网格上限、数值位宽、硬件上采样、共享内存或寄存器接口、双缓冲，以及写入后从第几帧生效。</p><div class="wanted"><b>希望拿到</b>在 MTK 方框图上现场标出唯一推荐点；接口规格和最小写入示例。</div><div class="notes"><label for="note-q4">会议记录</label><textarea id="note-q4" placeholder="写入模块、信号域、网格、精度、同步、接口……"></textarea></div></div></article>
+
+    <article class="q-card p0" data-id="q10" data-tags="aipq pq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记全屏视频判断问题已获得明确答案"><div><span class="q-priority">最高优先级 · 画面类型</span><h3 class="q-title">MT9655 是否已有“全屏视频 / 图形界面”判定，可直接控制 SDR→HDR 的启停？</h3></div><div class="q-tags"><span class="q-tag">AI-PQ 负责人</span><span class="q-tag">HDMI 内容识别</span></div></div><div class="q-body"><p class="q-detail">HDMI 实测中，外部信源的菜单、桌面和 HUD 也会被增益，这是不希望出现的。目标是只有确认当前画面为全屏播放视频时才开启转换。请区分两类情况：电视本机 OSD 能否在视频处理之后再合成，从而只处理视频层；对于 HDMI 信源内部已经合成的界面，是否有现成的视频、电脑图形、游戏、UI/OSD 分类器、全屏视频检测或可靠模式信号可以复用？判定结果能否提供置信度、迟滞处理和状态切换通知？</p><div class="wanted"><b>希望拿到</b>MTK 现有直接方案及输出接口；适用媒体播放和 HDMI 的范围；没有现成方案时的推荐实现和误判处理。</div><div class="notes"><label for="note-q10">会议记录</label><textarea id="note-q10" placeholder="现有分类器或系统信号、适用路径、置信度、切换策略……"></textarea></div></div></article>
+
+    <article class="q-card p1" data-id="q5" data-tags="npu aipq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 5 已获得明确答案"><div><span class="q-priority">次优先级 · Q5</span><h3 class="q-title">与内置 AI-PQ 模型同时运行时，NPU 能稳定分配多少计算资源？</h3></div><div class="q-tags"><span class="q-tag">NPU 运行管理</span><span class="q-tag">任务调度</span></div></div><div class="q-body"><p class="q-detail">重点不是芯片的理论峰值算力，而是场景识别、对象识别和 AI 超分辨率同时开启并长时间运行时，第三方模型能否稳定做到每秒 24～30 次更新；需要了解任务优先级、抢占方式、QoS、隔帧运行和过热降频时的行为。</p><div class="wanted"><b>希望拿到</b>推荐调度方式、并发测试方法、可接受的时延与占用边界，以及资源不足时的降级策略。</div><div class="notes"><label for="note-q5">会议记录</label><textarea id="note-q5" placeholder="计算预算、并发组合、QoS、温度限制……"></textarea></div></div></article>
+
+    <article class="q-card p1" data-id="q6" data-tags="npu debug"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 6 已获得明确答案"><div><span class="q-priority">次优先级 · Q6</span><h3 class="q-title">16 位激活值配合 8 位权重时，整型输入输出与 dma-buf 零拷贝应该怎样接入？</h3></div><div class="q-tags"><span class="q-tag">Neuron Runtime</span><span class="q-tag">内存管理</span></div></div><div class="q-body"><p class="q-detail">编译器探针显示，这种 16×8 量化方式需要直接使用整数作为模型入口。请确认输入输出张量的量化参数、缓冲区来源、步长与内存对齐、缓存同步、所有权与生命周期，以及取帧缓冲区能否直接绑定到 Neuron Runtime。</p><div class="wanted"><b>希望拿到</b>TV 平台 C/C++ 示例代码；dma-buf 分配和导入示例；输入输出数据样例与输出一致性检查方法。</div><div class="notes"><label for="note-q6">会议记录</label><textarea id="note-q6" placeholder="接口、缓冲区、内存对齐、缓存同步、所有权……"></textarea></div></div></article>
+
+    <article class="q-card p1" data-id="q7" data-tags="pq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 7 已获得明确答案"><div><span class="q-priority">次优先级 · Q7</span><h3 class="q-title">SDR 输入、HDR 面板输出时，哪些画质模块可以使用、旁路或调整顺序？</h3></div><div class="q-tags"><span class="q-tag">画质链路</span><span class="q-tag">色彩处理路径</span></div></div><div class="q-body"><p class="q-detail">请确认亮度增益乘法应位于色域转换之前还是之后；色调映射、局部对比度、3D 查找表和局部调光之间如何协同；HDR10、HLG 和 Dolby Vision 输入如何可靠地自动旁路本功能。</p><div class="wanted"><b>希望拿到</b>SDR 输入、HDR 输出模式下各画质模块的开启/旁路表及推荐处理顺序。</div><div class="notes"><label for="note-q7">会议记录</label><textarea id="note-q7" placeholder="模块顺序、模式限制、HDR 旁路……"></textarea></div></div></article>
+
+    <article class="q-card p1" data-id="q8" data-tags="pq aipq"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 8 已获得明确答案"><div><span class="q-priority">次优先级 · Q8</span><h3 class="q-title">普通/MEMC 模式与游戏低延迟模式，帧同步策略分别怎样实现？</h3></div><div class="q-tags"><span class="q-tag">帧同步</span><span class="q-tag">HDMI</span></div></div><div class="q-body"><p class="q-detail">普通模式希望利用视频管线的提前量，按帧编号精确配对；游戏模式接受最近完成的增益图，但主视频路径不能增加一帧延迟。请给出两类模式从取帧到显示的延迟、帧编号传递方式，以及增益图开始生效的帧边界。</p><div class="wanted"><b>希望拿到</b>两套时序图；普通模式和游戏模式各一组可测量的验收点。</div><div class="notes"><label for="note-q8">会议记录</label><textarea id="note-q8" placeholder="管线帧数、帧编号、生效时刻、游戏模式……"></textarea></div></div></article>
+
+    <article class="q-card p2" data-id="q9" data-tags="debug npu"><div class="q-head"><input class="q-check" type="checkbox" aria-label="标记问题 9 已获得明确答案"><div><span class="q-priority">补充问题 · Q9</span><h3 class="q-title">工程板和量产固件上，完整的上板调试与性能分析路径是什么？</h3></div><div class="q-tags"><span class="q-tag">板端支持</span><span class="q-tag">调试</span></div></div><div class="q-body"><p class="q-detail">量产固件是否允许使用 neuronrt 或 adb root？如果不允许，应使用什么工程模式？TV 平台不支持逐算子调试信息时，怎样定位耗时较长的模型段、算子回退、内存峰值和多模型同时运行时的时延波动？</p><div class="wanted"><b>希望拿到</b>固件与权限说明、可用工具清单、板端负责人和第一轮联调时间。</div><div class="notes"><label for="note-q9">会议记录</label><textarea id="note-q9" placeholder="固件、权限、工具、负责人、日期……"></textarea></div></div></article>
+  </div>
+</div></section>
+
+<section class="section" id="agenda"><div class="wrap">
+  <div class="sec-kicker">建议议程</div><h2>用 75 分钟确认接口和后续安排</h2>
+  <div class="agenda"><div class="agenda-item"><div class="agenda-time">08′</div><div class="agenda-title">目标与边界</div><div class="agenda-desc">像素路径、启用条件与安全旁路</div></div><div class="agenda-item"><div class="agenda-time">12′</div><div class="agenda-title">架构与实验</div><div class="agenda-desc">输入精度与三种取帧条件</div></div><div class="agenda-item"><div class="agenda-time">20′</div><div class="agenda-title">AI-PQ 与增益图写入</div><div class="agenda-desc">核心接口问题，现场标方框图</div></div><div class="agenda-item"><div class="agenda-time">20′</div><div class="agenda-title">NPU 与运行接口</div><div class="agenda-desc">任务调度、整数输入输出与零拷贝</div></div><div class="agenda-item"><div class="agenda-time">10′</div><div class="agenda-title">上板计划</div><div class="agenda-desc">模式、权限、测试与负责人</div></div><div class="agenda-item"><div class="agenda-time">05′</div><div class="agenda-title">确认会议结论</div><div class="agenda-desc">接口、材料、日期和备选路线</div></div></div>
+</div></section>
+
+<section class="section" id="done"><div class="wrap">
+  <div class="sec-kicker">会后安排</div><h2>根据 MTK 提供的接口选择实施路线</h2>
+  <div class="grid3">
+    <article class="card branch"><span class="route">路线 A · 首选</span><h3>使用 AI-PQ 和原生增益图接口</h3><ul><li>自定义模型接入现有 AI-PQ 框架</li><li>取帧口→NPU→亮度增益图全程零拷贝</li><li>主视频路径不增加帧延迟，进入整机联调</li></ul></article>
+    <article class="card branch b"><span class="route">路线 B · 可落地</span><h3>独立调用 Neuron Runtime</h3><ul><li>AI-PQ 不开放自定义模型，但允许独立调用 Neuron Runtime</li><li>复用取帧口、dma-buf 和画质引擎增益图接口</li><li>由项目自行管理模型的启动、停止和任务调度</li></ul></article>
+    <article class="card branch c"><span class="route">路线 C · 需要平台定制</span><h3>没有现成的增益图写入接口</h3><ul><li>评估定制局部对比度或局部调光模块</li><li>或退到 GPU 合成，接受可能增加一帧延迟</li><li>形成平台需求书和成本评估</li></ul></article>
+  </div>
+  <h3>会议完成的最小产物</h3>
+  <div class="artifact-list"><div class="artifact"><b>① 方框图标点</b>取帧口与增益图写入的准确位置</div><div class="artifact"><b>② 取帧口规格</b>格式、信号域、位深、尺寸、缓冲区和时序</div><div class="artifact"><b>③ 启停判定</b>全屏视频 / UI 的现成信号、接口或推荐方案</div><div class="artifact"><b>④ 最小接口示例</b>模型接入或 Neuron Runtime 加增益图写入</div><div class="artifact"><b>⑤ 负责人清单</b>AI-PQ、NPU、画质引擎和板端四方负责人</div><div class="artifact"><b>⑥ 联调窗口</b>板卡、固件、权限与第一轮测试日期</div></div>
+  <h3>拿到材料后的实验顺序</h3>
+  <div class="next-steps"><div class="step">按最终取帧口规格固定模型前处理，并统一图像缩放的半像素中心规则（half-pixel），再导出 TFLite。</div><div class="step">用 `check-target-only` 检查算子支持，再用完整执行计划确认模型全部放到 MDLA 及其内存占用。</div><div class="step">在真板上测试整数输入输出、零拷贝、连续 100 次推理时延，以及与内置 AI-PQ 同时运行时的温度和稳定性。</div><div class="step">接入亮度增益图，验证全屏视频开启、UI/桌面关闭、HDR 旁路、帧同步和真屏画质。</div></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><div class="footer-row"><span><a href="index.html" style="color:var(--cyan)">返回 HDR Production 目录</a> · <a href="distill-realtime-player.html" style="color:var(--cyan)">Lumora 架构背景</a></span><span class="confidential">内部技术资料 · 请勿对外分发</span></div><p style="margin-top:12px">数字依据：项目实测与 MT9655/NeuroPilot 内部适配记录。硬件执行计划、整机时延和 HDR 观感仍需最终模型、真板与真屏验证。</p></div></footer>
+
+<script>
+(() => {
+  'use strict';
+  const storageKey = 'mt9655-lumora-meeting-v1';
+  const cards = [...document.querySelectorAll('.q-card')];
+  const filterButtons = [...document.querySelectorAll('.filter-btn')];
+  filterButtons.forEach(button => button.addEventListener('click', () => {
+    filterButtons.forEach(b => b.classList.toggle('active', b === button));
+    const filter = button.dataset.filter;
+    cards.forEach(card => { card.hidden = filter !== 'all' && !card.dataset.tags.split(' ').includes(filter); });
+  }));
+
+  function readState() {
+    try { return JSON.parse(localStorage.getItem(storageKey)) || {}; }
+    catch (_) { return {}; }
+  }
+  function writeState(state) {
+    try { localStorage.setItem(storageKey, JSON.stringify(state)); }
+    catch (_) { /* Private modes may disable storage; the worksheet still works in memory. */ }
+  }
+  let state = readState();
+  const doneCount = document.getElementById('doneCount');
+  document.getElementById('totalCount').textContent = String(cards.length);
+  function updateProgress() {
+    const count = cards.filter(card => card.querySelector('.q-check').checked).length;
+    doneCount.textContent = String(count);
+  }
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    const checkbox = card.querySelector('.q-check');
+    const textarea = card.querySelector('textarea');
+    checkbox.checked = Boolean(state[id]?.done);
+    textarea.value = state[id]?.note || '';
+    card.classList.toggle('done', checkbox.checked);
+    checkbox.addEventListener('change', () => {
+      state[id] = { done: checkbox.checked, note: textarea.value };
+      card.classList.toggle('done', checkbox.checked);
+      writeState(state); updateProgress();
+    });
+    textarea.addEventListener('input', () => {
+      state[id] = { done: checkbox.checked, note: textarea.value };
+      writeState(state);
+    });
+  });
+  updateProgress();
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!window.confirm('仅清空本页保存的勾选和会议记录，确定继续？')) return;
+    localStorage.removeItem(storageKey); state = {};
+    cards.forEach(card => { card.querySelector('.q-check').checked = false; card.querySelector('textarea').value = ''; card.classList.remove('done'); });
+    updateProgress();
+  });
+})();
+</script>
+</body>
+</html>
