@@ -15,3 +15,9 @@ Thumbs.db
 node_modules/
 .dev.vars
 .wrangler/
+
+# Local previews and presentation scratch files
+.playwright-cli/
+output/playwright/
+.pptx-hdr-*/
+PPT/*_备份_*.pptx

@@ -1,0 +1,22 @@
+name = "color-science-auth"
+main = "src/index.js"
+compatibility_date = "2024-11-06"
+
+# 非机密配置(可直接改)
+[vars]
+ALLOWED_DOMAIN = "skyworth.com"
+# 发件人:必须是你在 Resend 验证过的域名;测试可临时用 "onboarding@resend.dev"(仅能发到注册邮箱)
+FROM_EMAIL = "影像色彩指南 <noreply@your-verified-domain.com>"
+# 允许跨域请求的站点来源(逗号分隔);本地联调含静态服端口
+ALLOWED_ORIGINS = "http://localhost:8765,http://localhost:8000,http://127.0.0.1:8765"
+TOKEN_TTL_DAYS = "7"
+ENVIRONMENT = "production"
+
+# 机密(不要写在这里)— 用命令设置:
+#   wrangler secret put RESEND_API_KEY
+#   wrangler secret put JWT_SECRET
+
+# KV:先 `wrangler kv namespace create AUTH_KV`,把返回的 id 填到下面
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

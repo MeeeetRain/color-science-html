@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>ECO 高光预算 · 用户亮度解耦 — HDR 效能工作模式交互演示</title>
+<meta name="description" content="ECO 模式 HDR tone mapping 交互演示：拖动用户亮度、峰值降速 β，实时查看 EETF 曲线、拐点、headroom（高光系数）与高光预览条。线性坐标 0–10000 nit（PQ 满量程）。">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #070a0f;
+    --panel: #111824;
+    --panel-2: #162233;
+    --ink: #f3f7fb;
+    --muted: #a8b4c4;
+    --soft: #75849a;
+    --line: rgba(255,255,255,.12);
+    --cyan: #32d8ee;
+    --blue: #62a8ff;
+    --green: #6ee596;
+    --yellow: #ffd166;
+    --red: #ff6363;
+    --amber: #eab308;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, #070a0f 0%, #0c121b 48%, #070a0f 100%);
+    color: var(--ink);
+    font: 15.5px/1.72 var(--sans);
+    overflow-x: hidden;
+  }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  header h1 { font-size: 26px; margin: 8px 0 4px; letter-spacing: .5px; }
+  header .sub { color: var(--muted); margin: 0 0 6px; }
+  header .doc-link { font-size: 13px; color: var(--soft); }
+
+  .grid { display: grid; grid-template-columns: 330px 1fr; gap: 18px; margin-top: 22px; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ---------- controls ---------- */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h2 { font-size: 13px; letter-spacing: 1.5px; color: var(--soft);
+             margin: 0 0 14px; text-transform: uppercase; font-weight: 600; }
+  .ctl { margin-bottom: 18px; }
+  .ctl:last-child { margin-bottom: 0; }
+  .ctl .label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .ctl .label span:first-child { font-size: 13.5px; color: var(--muted); }
+  .ctl .label b { font-size: 15px; font-family: var(--mono); color: var(--ink); }
+  .ctl .hint { font-size: 12px; color: var(--soft); margin-top: 4px; line-height: 1.5; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 5px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--cyan) 0%, rgba(50,216,238,.25) 100%);
+    outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 17px; height: 17px; border-radius: 50%;
+    background: #0d1015; border: 3px solid var(--cyan);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #0d1015; border: 3px solid var(--cyan); cursor: pointer;
+  }
+
+  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1; min-width: 60px;
+    background: var(--panel-2); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 10px; font-size: 13.5px; cursor: pointer; font-family: var(--sans);
+    transition: all .15s;
+  }
+  .seg button.active { background: rgba(50,216,238,.14); color: var(--cyan); border-color: var(--cyan); font-weight: 600; }
+  .seg button:hover:not(.active) { border-color: var(--soft); }
+
+  .chip-row { display: flex; gap: 8px; margin-top: 8px; }
+  .chip {
+    background: var(--panel-2); color: var(--muted);
+    border: 1px dashed var(--line); border-radius: 999px;
+    padding: 2px 12px; font-size: 12px; cursor: pointer; font-family: var(--mono);
+  }
+  .chip:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); cursor: pointer; }
+  .check input { accent-color: var(--cyan); width: 15px; height: 15px; }
+
+  /* ---------- readouts ---------- */
+  .readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+  @media (max-width: 760px) { .readouts { grid-template-columns: repeat(2, 1fr); } }
+  .ro {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .ro .k { font-size: 12px; color: var(--soft); letter-spacing: .3px; }
+  .ro .v { font-size: 21px; font-family: var(--mono); font-weight: 700; margin-top: 2px; }
+  .ro .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .ro.hl .v { color: var(--cyan); }
+  .ro.warn .v { color: var(--yellow); }
+  .ro.bad  .v { color: var(--red); }
+  .ro.ok .v { color: var(--green); }
+
+  /* ---------- plot ---------- */
+  .plot-wrap { margin-top: 18px; }
+  .plot-wrap svg { width: 100%; height: auto; display: block; }
+  .plot-caption { font-size: 12.5px; color: var(--soft); margin-top: 8px; line-height: 1.6; }
+
+  /* ---------- preview strips ---------- */
+  .preview { margin-top: 18px; }
+  .preview .rows { display: flex; flex-direction: column; gap: 6px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .row .tag { width: 150px; font-size: 12.5px; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .row canvas { flex: 1; border-radius: 6px; border: 1px solid var(--line); width: 100%; height: 42px; display: block; }
+  .preview .marks { display: flex; font-size: 11px; color: var(--soft); margin-left: 162px; margin-top: 2px; }
+  .preview .marks span { flex: 1; text-align: center; white-space: nowrap; }
+  .preview .marks .a { color: var(--amber); }
+  .preview .marks .k { color: var(--green); }
+
+  /* ---------- notes ---------- */
+  .notes { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .notes { grid-template-columns: 1fr; } }
+  .notes h3 { font-size: 15px; margin: 0 0 10px; color: var(--ink); }
+  .notes ul { margin: 0; padding-left: 18px; }
+  .notes li { font-size: 13.5px; color: var(--muted); margin-bottom: 7px; line-height: 1.6; }
+  .notes li b { color: var(--ink); }
+  .notes code { font-family: var(--mono); font-size: 12.5px; color: var(--cyan); background: rgba(50,216,238,.08); padding: 1px 5px; border-radius: 4px; }
+  .warn-box {
+    margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+    background: rgba(255,209,102,.07); border: 1px solid rgba(255,209,102,.35);
+    font-size: 13px; color: var(--yellow); line-height: 1.6;
+  }
+  .edr-box {
+    margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+    background: rgba(98,168,255,.07); border: 1px solid rgba(98,168,255,.3);
+    font-size: 13px; color: var(--muted); line-height: 1.7;
+  }
+  .edr-box b { color: var(--blue); }
+  footer { margin-top: 34px; font-size: 12.5px; color: var(--soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ECO 高光预算 · 用户亮度解耦 — 交互演示</h1>  <p class="sub">ECO 模式的 EETF 曲线（<b>物理显示域</b>，线性坐标 0–10000 nit = PQ 满量程，纵轴=屏上实际 nit）。调低亮度 B 时：<b>中段斜率 = f(B)</b>（下限 F_MIN，参考白不低于 40 nit），暗部独立缓斜率保可见；高光被 roll-off 抬到 P(B)=800×g(B)（降得慢），headroom = P/R 增大。<b>保的不是中间调，是高光。</b></p>
+  <a class="doc-link" href="docs/HDR效能工作模式_PQ设计.html" target="_blank">← 设计文档（§4.4 用户亮度与 HDR headroom 保持）</a>
+</header>
+
+<div class="grid">
+  <!-- ============ controls ============ -->
+  <div>
+    <div class="card">
+      <h2>控制参数</h2>
+
+      <div class="ctl">
+        <div class="label"><span>面板峰值（L_panel）</span><b id="vPanel">800 nit</b></div>
+        <input type="range" id="rPanel" min="400" max="4000" step="50" value="800">
+        <div class="chip-row">
+          <span class="chip" data-panel="800">800 低端</span>
+          <span class="chip" data-panel="3000">3000 旗舰</span>
+        </div>
+        <div class="hint">低端屏（≤800）上三种模式 L_target 相同——能力只有这么多，模式分叉消失。</div>
+      </div>
+
+      <div class="ctl">
+        <div class="label"><span>用户亮度 B</span><b id="vB">100%</b></div>
+        <input type="range" id="rB" min="0.10" max="1.00" step="0.01" value="1.00">
+        <div class="hint">f(B)=B：参考白物理亮度 R(B)=203×B，线性快降（大面积 duty）。</div>
+      </div>
+
+      <div class="ctl">
+        <div class="label"><span>峰值降速 β（g(B)=B<sup>β</sup>）</span><b id="vBeta">0.35</b></div>
+        <input type="range" id="rBeta" min="0.20" max="0.60" step="0.01" value="0.35">
+        <div class="hint">β 越小峰值降得越慢（FALD 小窗口 boost / OLED 峰值电流与平均 duty 解耦）。headroom 提升倍数 = B<sup>β−1</sup>。</div>
+      </div>
+
+      <div class="ctl">
+        <label class="check">
+          <input type="checkbox" id="cFloor" checked>
+          拐点保护：拐点 ≥ 参考白物理 ×1.72（保留高光余量）
+        </label>
+        <div class="hint">开：拐点随 R(B) 下移但保留余量（B=1 时 ≈350 nit，与静态设计一致）。关：拐点取自然位置 1.5×Vpeak−0.5，压缩更激进。</div>
+      </div>
+
+      <div class="ctl">
+        <label class="check">
+          <input type="checkbox" id="cTrad" checked>
+          叠加显示「传统等比变暗」曲线（峰值也按 B 线性降，headroom 恒定）
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ plot + readouts ============ -->
+  <div>
+    <div class="readouts">
+      <div class="ro"><div class="k">峰值预算 P(B) = L_target</div><div class="v" id="roP">—</div><div class="s" id="roPsub">g(B) 系数</div></div>
+      <div class="ro"><div class="k">参考白物理亮度 R(B)</div><div class="v" id="roR">—</div><div class="s">= 203 × f(B)</div></div>
+      <div class="ro hl"><div class="k">headroom（高光系数）</div><div class="v" id="roH">—</div><div class="s" id="roHsub">—</div></div>
+      <div class="ro"><div class="k">拐点 KS</div><div class="v" id="roKnee">—</div><div class="s" id="roKneesub">roll-off 起点</div></div>
+      <div class="ro"><div class="k">Vpeak 码值</div><div class="v" id="roVp">—</div><div class="s">PQ(L_target)</div></div>
+      <div class="ro"><div class="k">roll-off 幂指数 k</div><div class="v" id="roM0">—</div><div class="s">=相切；越大滚降越快封顶</div></div>
+      <div class="ro" id="roMono"><div class="k">单调性（无过冲）</div><div class="v" id="roMonoV">✓</div><div class="s">Hermite 样条 + m0 钳制</div></div>
+      <div class="ro ok"><div class="k">参考白实际显示</div><div class="v" id="roRW">—</div><div class="s">目标 203×f(B)</div></div>
+    </div>
+
+    <div class="plot-wrap card" style="margin-top:18px;">
+      <svg id="plot" viewBox="0 0 880 620" font-family="-apple-system,PingFang SC,sans-serif"></svg>
+      <div class="plot-caption">
+        横轴：输入信号亮度（绝对 PQ，nit，对数）；纵轴：输出亮度（码域曲线解码，nit，对数，10% 窗口能力口径）。
+        黄色竖线 = 信号参考白 203 nit；黄色横线 = 参考白物理亮度 R(B)（大面积实际显示）；右侧标注 = 当前 headroom。
+      </div>
+    </div>
+
+    <div class="preview card" style="margin-top:18px;">
+      <h2>高光预览条（输入 1 → 10,000 nit 信号经曲线后的显示结果）</h2>
+      <div class="rows" id="rows"></div>
+      <div class="marks" id="marks"></div>
+      <div class="plot-caption">条带亮度 =（输出码值解码亮度 / 203）<sup>1/2.4</sup>，以参考白为 1.0 感知归一；「传统」行 = 峰值也按 B 线性降。右侧尾巴越高、越白，HDR 高光越有冲击力。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ notes ============ -->
+<div class="notes">
+  <div class="card">
+    <h3>机制说明</h3>
+    <ul>
+      <li><b>线性区斜率 = f(B)，不再是 1:1</b>：调低 B 时整条线性区按 f(B) 下压——参考白物理 = 203×f(B)（B=0.2 → 41 nit），中间调等比变暗；曲线不再贴 1:1 对角线。</li>
+      <li><b>峰值慢降 → headroom 增大</b>：P(B)=基值×g(B)（g=B<sup>β</sup>）降得比 f(B) 慢，roll-off 把高光抬到 P(B)。B 1.0→0.2：参考白 203→41，峰值 800→455，headroom 3.9×→11.2×。</li>
+      <li><b>拐点随 B 下移</b>：为保证高光被抬升（headroom 增大），拐点物理位置必须低于"参考白×余量"，因此随 B 下移（B=1 时 ECO ≈350 nit，与静态设计一致；B=0.2 → ≈90 nit）。低亮度时更多中间调被"相对提亮"进高光预算。</li>
+      <li><b>拐点保护</b>：开启时拐点 ≥ 参考白物理×1.72，保留高光余量；关闭时取自然拐点 1.5×Vpeak−0.5，压缩更激进。</li>
+      <li><b>低亮度取舍</b>：B 越低线性区越暗、高光相对越突出——暗环境下让对比度优先于绝对亮度，是省电模式的设计意图。</li>
+      <li>平衡模式接入：场景自适应上限从面板峰值改为 P(B)，即「用户亮度 = 当前面板能力」。</li>
+    </ul>
+    <div class="warn-box" id="warnBox" style="display:none;"></div>
+  </div>
+  <div class="card">
+    <h3>Apple EDR 对照</h3>
+    <div class="edr-box" id="edrBox">
+      <b>headroom = 显示峰值 / 参考白</b> 是 Apple EDR 的官方定义，与本设计「高光系数」同一指标（WWDC21「Explore HDR rendering with EDR」、WWDC22「Explore EDR on iOS」）。<br>
+      <b>亮度滑块只缩放参考白、峰值不动 → headroom 随调暗增大</b>：Pro Display XDR 峰值固定 1,600 nit，参考白 500→4 nit 时 headroom 从 3.2× 涨到 400×——正是本设计 f/g 解耦的官方先例。<br>
+      设备 headroom 档：MacBook Pro XDR / iPad Pro ≤16× · iPhone XDR ≤8× · 外接 HDR10 ≈5× · 普通背光 ≈2×。<br>
+      Apple 默认对 >headroom 的值<b>硬裁切</b>（无软 roll-off）；软压缩为可选系统路径，曲线按 ITU HLG/PQ。官方并建议 headroom &lt;1.5 时降级 SDR 省电——对应本设计 ECO 的低预算降级。
+    </div>
+    <ul style="margin-top:12px;">
+      <li>EDR 的 tone mapping 只压缩参考白以上的高光，SDR 锚点不动——与本设计「拐点以下 1:1、只动高光」同构。</li>
+      <li>EDR 是显示端能力（display-referred），不需要内容元数据——与本文「曲线不用 MaxCLL/MDL」的原则一致。</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  设计文档：<a href="docs/HDR效能工作模式_PQ设计.html" target="_blank">docs/HDR效能工作模式_PQ设计.html</a> · §4.4 ·
+  EETF 实现：<a href="scripts/gen_eetf_svg.py" target="_blank">scripts/gen_eetf_svg.py</a>（曲线数学同源，可对照验证）
+</footer>
+</div>
+
+<script>
+"use strict";
+/* ================= PQ (ST 2084) ================= */
+const M1 = 2610/16384, M2 = 2523/4096*128;
+const C1 = 3424/4096,  C2 = 2413/4096*32, C3 = 2392/4096*32;
+const REF_WHITE_SIGNAL = 203;
+const REF_MARGIN = 1.72;   // 拐点保护：拐点 ≥ 参考白物理 ×1.72
+const R_MIN = 40;          // 可调最低参考白（nit）：f(B) 下限 = R_MIN/203
+const F_MIN = R_MIN / REF_WHITE_SIGNAL;  // ≈0.197，B 滑块再低参考白也不低于 40 nit
+const KS1 = 10;            // 暗部/中段分界（输入 nit）
+const S1_FLOOR = 0.3;      // 暗部斜率下限（保暗部可见，不被压成 0）
+/* 物理显示域曲线（nit→nit），分段斜率 + 幂函数 roll-off：
+   - 暗部（0–KS1）：斜率 s1（由参考白约束反解，夹在 [S1_FLOOR,1]）—— 保暗部可见，B=1 时=1；
+   - 中段（KS1–KS）：斜率 f(B)=B —— 调亮度改这段斜率，参考白 = 203×f(B)；
+   - 滚降（>KS）：幂 shoulder，相切、斜率单调递减、平滑封顶 P。 */
+function params(panel, B, beta, ksFloor) {
+  const base = modeBase(panel);
+  const Lt = base * g(B, beta);
+  const LtTrad = base * B;
+  const fB = Math.max(F_MIN, f(B));        // 参考白降幅，下限 F_MIN（≥40 nit）
+  const R = REF_WHITE_SIGNAL * fB;
+  const s1 = Math.max(S1_FLOOR, Math.min(1, (R - fB*(REF_WHITE_SIGNAL - KS1)) / KS1));
+  const yKS1 = s1 * KS1;
+  let KS = ksFloor ? Math.max(REF_MARGIN * R, REF_WHITE_SIGNAL) : REF_WHITE_SIGNAL;
+  if (fB * KS >= Lt - 1) KS = Math.max(KS, 0.9 * Lt / Math.max(fB, 1e-3));
+  const kneeV = yKS1 + fB * (KS - KS1);
+  const k = Math.max(1, fB * (10000 - KS) / (Lt - kneeV));
+  const H = Lt / R;
+  const Htrad = LtTrad / R;
+  return { base, Lt, P: Lt, LtTrad, fB, R, s1, KS1, yKS1, KS, kneeV, k, kneePhys: kneeV, H, Htrad,
+           floorActive: ksFloor && (REF_MARGIN*R > REF_WHITE_SIGNAL), Vp: pqInv(Lt), m0: k };
+}
+
+function outPhys(nitIn, p) {
+  if (nitIn <= p.KS1) return p.s1 * nitIn;
+  if (nitIn <= p.KS) return p.yKS1 + p.fB * (nitIn - p.KS1);
+  const u = (nitIn - p.KS) / (10000 - p.KS);
+  return p.P - (p.P - p.kneeV) * Math.pow(1 - u, p.k);
+}
+function pqInv(nit) { const y = Math.max(nit,0)/10000, ym = Math.pow(y,M1);
+  return Math.pow((C1 + C2*ym)/(1 + C3*ym), M2); }
+function pqEotf(v) { v = Math.max(v,0); const vp = Math.pow(v, 1/M2);
+  return Math.pow(Math.max(vp-C1,0)/(C2 - C3*vp), 1/M1)*10000; }
+
+/* ================= state ================= */
+const S = {
+  mode: "eco", panel: 800, B: 1.0, beta: 0.35,
+  ksFloor: true, showTrad: true,
+};
+function modeBase(panel) { return Math.min(800, panel); }  // 固定 ECO：高光预算下限 800 nit
+function g(B, beta) { return Math.pow(B, beta); }
+function f(B) { return B; }
+
+/* ================= plot geometry（与静态 SVG 同源） ================= */
+const PW_ = 880, PH_ = 620, PL = 78, PR = 96, PT = 58, PB = 68;
+const HI_IN = 10000;                       // 横轴（输入）上限 = PQ 满量程（nit）
+const HI_OUT = 1000;                       // 纵轴（输出）上限（nit），覆盖 ECO 峰值 800
+function X(nit) { return PL + (Math.max(nit,0)/HI_IN)*(PW_-PL-PR); }
+function Y(nit) { return (PH_-PB) - (Math.max(nit,0)/HI_OUT)*(PH_-PT-PB); }
+
+const NS = "http://www.w3.org/2000/svg";
+const MODE_COLOR = { perf: "#62a8ff", bal: "#ffd166", eco: "#6ee596" };
+const $ = id => document.getElementById(id);
+
+/* ================= render ================= */
+function render() {
+  const p = params(S.panel, S.B, S.beta, S.ksFloor);
+  const col = MODE_COLOR.eco;
+
+  /* ---- readouts ---- */
+  $("roP").textContent = p.Lt.toFixed(0) + " nit";
+  $("roPsub").textContent = "g(B) = " + g(S.B, S.beta).toFixed(3) + " · 基值 " + p.base + " nit";
+  $("roR").textContent = p.R.toFixed(1) + " nit";
+  $("roH").textContent = p.H.toFixed(1) + "×";
+  $("roHsub").textContent = "传统恒 " + p.Htrad.toFixed(1) + "× · 提升 ×" + (p.H/p.Htrad).toFixed(2);
+  $("roKnee").textContent = p.kneePhys.toFixed(0) + " nit";
+  $("roKneesub").textContent = "物理亮度 · 参考白×" + (p.kneePhys/p.R).toFixed(2) +
+    (p.floorActive ? "（拐点保护生效）" : "（自然拐点）");
+  $("roVp").textContent = p.Vp.toFixed(3);
+  $("roM0").textContent = p.k.toFixed(1);
+  const mono = monoCheck(p);
+  const monoEl = $("roMono");
+  $("roMonoV").textContent = mono ? "✓" : "✗";
+  monoEl.className = "ro " + (mono ? "ok" : "bad");
+  // 参考白实际显示亮度：拐点之下 = 203×f(B)；拐点之上被轻微抬升
+  const rwActual = outPhys(REF_WHITE_SIGNAL, p);
+  const onLine = Math.abs(rwActual - p.R) < 0.5;
+  $("roRW").textContent = rwActual.toFixed(0);
+  $("roRW").parentElement.className = "ro " + (onLine ? "ok" : "warn");
+  $("roRW").parentElement.querySelector(".s").textContent =
+    onLine ? "贴合 203×f(B) 变暗线" : "被 roll-off 抬升（目标 " + p.R.toFixed(0) + "）";
+
+  /* ---- warn box ---- */
+  const warns = [];
+  if (!S.ksFloor) warns.push("注：已关闭拐点保护，拐点取自然位置 1.5×Vpeak−0.5，参考白不再保留固定余量。");
+  if (S.B < 0.5) warns.push("注：B = " + (S.B*100).toFixed(0) + "% 时参考白降到 " + p.R.toFixed(0) + " nit、拐点 " + p.kneePhys.toFixed(0) + " nit——画面整体变暗，但 headroom 增大、高光仍突出，这是暗环境的设计意图。");
+  const wb = $("warnBox");
+  wb.style.display = warns.length ? "block" : "none";
+  wb.innerHTML = warns.join("<br>");
+
+  drawPlot(p, col);
+  drawStrips(p, col);
+}
+
+function monoCheck(p) {
+  // 物理域单调性：outPhys 随输入不减
+  let prev = -1;
+  for (let i = 0; i <= 2048; i++) {
+    const nit = HI_IN * i/2048;
+    const out = outPhys(nit, p);
+    if (out + 1e-9 < prev) return false;
+    prev = out;
+  }
+  return true;
+}
+
+/* ================= SVG plot ================= */
+function el(name, attrs, text) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function drawPlot(p, col) {
+  const svg = $("plot");
+  svg.innerHTML = "";
+  const bg = el("rect", {width: PW_, height: PH_, fill: "#0c121b", rx: 10});
+  svg.appendChild(bg);
+
+  // grid + ticks（对数/线性切换）
+  const xTicks = [0,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000];
+  const yTicks = [0,100,200,300,400,500,600,700,800,900,1000];
+  for (let k = 0; k < xTicks.length; k++) {
+    const nx = xTicks[k], ny = yTicks[k];
+    const x = X(nx);
+    svg.appendChild(el("line", {x1:x, y1:PT, x2:x, y2:PH_-PB, stroke:"rgba(255,255,255,.06)"}));
+    const lblx = nx>=1000 ? (nx/1000)+"k" : String(nx);
+    svg.appendChild(el("text", {x:x, y:PH_-PB+18, "font-size":12, fill:"#75849a", "text-anchor":"middle"}, lblx));
+  }
+  for (let k = 0; k < yTicks.length; k++) {
+    const ny = yTicks[k];
+    const y = Y(ny);
+    svg.appendChild(el("line", {x1:PL, y1:y, x2:PW_-PR, y2:y, stroke:"rgba(255,255,255,.06)"}));
+    const lbly = ny>=1000 ? (ny/1000)+"k" : String(ny);
+    svg.appendChild(el("text", {x:PL-10, y:y+4, "font-size":12, fill:"#75849a", "text-anchor":"end"}, lbly));
+  }
+  svg.appendChild(el("rect", {x:PL, y:PT, width:PW_-PL-PR, height:PH_-PT-PB, fill:"none", stroke:"#2a3a4d"}));
+
+  // axis labels
+  svg.appendChild(el("text", {x:PL+(PW_-PL-PR)/2, y:PH_-22, "font-size":13, fill:"#a8b4c4", "text-anchor":"middle"},
+    "输入亮度（内容信号，nit，对数）"));
+  svg.appendChild(el("text", {x:20, y:PT+(PH_-PT-PB)/2, "font-size":13, fill:"#a8b4c4", "text-anchor":"middle",
+    transform:"rotate(-90 20 " + (PT+(PH_-PT-PB)/2) + ")"}, "输出亮度（屏上物理显示，nit，对数）"));
+
+  // 1:1 diagonal
+  svg.appendChild(el("line", {x1:X(0), y1:Y(0), x2:X(HI_IN), y2:Y(HI_OUT),
+    stroke:"#3a4a5e", "stroke-width":1.5, "stroke-dasharray":"6 5"}));
+  svg.appendChild(el("text", {x:X(3200), y:Y(5200), "font-size":11.5, fill:"#75849a",
+    "text-anchor":"middle", transform:"rotate(-33 " + X(3200) + " " + Y(5200) + ")"}, "1:1 理想直通"));
+
+  // f(B) 变暗线：中段物理落点 out = f(B)·in（过参考白）。B 越低越往下压。
+  {
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const n = HI_IN*i/60;
+      pts.push(X(n).toFixed(1) + "," + Y(Math.max(p.fB*n,0)).toFixed(1));
+    }
+    svg.appendChild(el("polyline", {points:pts.join(" "), fill:"none", stroke:"#eab308",
+      "stroke-width":1.3, "stroke-dasharray":"2 5", opacity:0.8}));
+    svg.appendChild(el("text", {x:X(p.KS*1.7), y:Y(p.fB*p.KS*1.7)+15, "font-size":11, fill:"#eab308",
+      "text-anchor":"middle"},
+      "变暗线 斜率 f=" + p.fB.toFixed(2) + "（参考白/中间调落点）"));
+  }
+
+  // signal reference white (203) vertical
+  const xw = X(REF_WHITE_SIGNAL);
+  svg.appendChild(el("line", {x1:xw, y1:PT, x2:xw, y2:PH_-PB, stroke:"#eab308", "stroke-width":1.4, "stroke-dasharray":"3 4"}));
+  svg.appendChild(el("text", {x:xw+5, y:PT+16, "font-size":11.5, fill:"#eab308"},
+    "信号 203 nit（码值恒不变）"));
+
+  // physical reference white R(B): horizontal + 参考白实际显示点（f(B) 线与 x=203 交点）
+  const yR = Y(p.R);
+  svg.appendChild(el("line", {x1:PL, y1:yR, x2:PW_-PR, y2:yR, stroke:"#eab308", "stroke-width":1.4, "stroke-dasharray":"3 4"}));
+  svg.appendChild(el("text", {x:PL+6, y:yR-6, "font-size":11.5, fill:"#eab308"},
+    "参考白物理 R(B) = " + p.R.toFixed(0) + " nit"));
+  svg.appendChild(el("circle", {cx:xw, cy:yR, r:4, fill:"#eab308"}));
+
+  // traditional curve (ghost): 峰值也按 B 线性降（headroom 恒定），线性区斜率同为 f(B)
+  if (S.showTrad && Math.abs(p.LtTrad - p.Lt) > 0.5) {
+    const pt = params(S.panel, S.B, 1.0, S.ksFloor);
+    svg.appendChild(el("polyline", {points:curvePoints(pt), fill:"none", stroke:"#6b7a90",
+      "stroke-width":1.8, "stroke-dasharray":"5 4", opacity:0.85}));
+    svg.appendChild(el("text", {x:PW_-PR+6, y:Y(p.LtTrad)+4, "font-size":11, fill:"#6b7a90"},
+      p.LtTrad.toFixed(0) + " 传统"));
+  }
+
+  // main curve
+  svg.appendChild(el("polyline", {points:curvePoints(p), fill:"none", stroke:col, "stroke-width":3}));
+
+  // knee：物理域拐点（输入=pqEotf(KS)，输出=kneePhys），随 B 下移
+  const kx = X(p.KS), ky = Y(p.kneePhys);   // KS 现为物理 nit（输入轴）
+  svg.appendChild(el("circle", {cx:kx, cy:ky, r:5, fill:"#0c121b", stroke:col, "stroke-width":2.5}));
+  svg.appendChild(el("line", {x1:kx, y1:ky, x2:kx+72, y2:ky-42, stroke:col, "stroke-width":1, opacity:0.55}));
+  svg.appendChild(el("text", {x:kx+80, y:ky-48, "font-size":12, fill:col, "font-weight":600},
+    "拐点 " + p.kneePhys.toFixed(0) + " nit"));
+
+  // plateau label
+  svg.appendChild(el("text", {x:PW_-PR+6, y:Y(p.Lt)+4, "font-size":11.5, fill:col, "font-weight":600},
+    p.Lt.toFixed(0) + " P(B)"));
+
+  // region annotations
+  svg.appendChild(el("text", {x:X(1100), y:Y(150), "font-size":12.5, fill:col, opacity:0.9, "text-anchor":"middle"},
+    "拐点右侧 → roll-off 把高光抬到 P(B)"));
+  svg.appendChild(el("text", {x:X(1100), y:Y(105), "font-size":12.5, fill:"#a8b4c4", opacity:0.9, "text-anchor":"middle"},
+    "拐点左侧 → 线性区斜率 = f(B)（参考白/中间调等比变暗）"));
+
+  // legend
+  svg.appendChild(el("rect", {x:PL+14, y:PT+30, width:296, height:56, rx:6, fill:"#111824", stroke:"#2a3a4d"}));
+  svg.appendChild(el("line", {x1:PL+22, y1:PT+48, x2:PL+48, y2:PT+48, stroke:col, "stroke-width":3}));
+  svg.appendChild(el("text", {x:PL+56, y:PT+52, "font-size":12, fill:"#f3f7fb"},
+    "ECO · L_target = P(B)（本设计）"));
+  svg.appendChild(el("line", {x1:PL+22, y1:PT+72, x2:PL+48, y2:PT+72, stroke:"#6b7a90", "stroke-width":1.8, "stroke-dasharray":"5 4"}));
+  svg.appendChild(el("text", {x:PL+56, y:PT+76, "font-size":12, fill:"#a8b4c4"},
+    "传统等比变暗 · L_target = 基值×B（headroom 恒定）"));
+}
+
+function curvePoints(p, n = 201) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const nit = HI_IN * i/(n-1);
+    const out = outPhys(nit, p);          // 物理显示域
+    pts.push(X(nit).toFixed(1) + "," + Y(Math.max(out,0)).toFixed(1));
+  }
+  return pts.join(" ");
+}
+
+/* ================= preview strips ================= */
+function drawStrips(p, col) {
+  const rows = $("rows");
+  const W = 920, RH = 42, DPI = 2;
+  const mkCanvas = () => {
+    const c = document.createElement("canvas");
+    c.width = W*DPI; c.height = RH*DPI; c.style.height = RH + "px";
+    return c;
+  };
+  const draw = (c, params0) => {
+    const g = c.getContext("2d");
+    g.setTransform(DPI,0,0,DPI,0,0);
+    g.fillStyle = "#0d1015"; g.fillRect(0,0,W,RH);
+    const img = g.createImageData(W*DPI, RH*DPI);
+    for (let x = 0; x < W*DPI; x++) {
+      const nit = Math.pow(10, -2 + 6*x/(W*DPI-1));   // 预览条对输入信号对数扫描 0.01–10000
+      const phys = outPhys(nit, params0);                 // 物理显示亮度
+      const b = Math.min(1, Math.pow(phys/params0.R, 1/2.4)); // 以参考白 R(B) 归一=1.0
+      const gv = Math.round(24 + b*231);
+      for (let y = 0; y < RH*DPI; y++) {
+        const i = (y*W*DPI + x)*4;
+        img.data[i] = gv; img.data[i+1] = gv; img.data[i+2] = gv; img.data[i+3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+  };
+  const row = (tag, c, color) => {
+    const d = document.createElement("div"); d.className = "row";
+    const t = document.createElement("span"); t.className = "tag"; t.innerHTML = tag;
+    d.appendChild(t); d.appendChild(c); return d;
+  };
+  rows.innerHTML = "";
+  const c1 = mkCanvas(); draw(c1, p);
+  rows.appendChild(row("<b style='color:" + col + "'>本设计</b> · 峰值 P(B)=" + p.Lt.toFixed(0) + " nit", c1));
+  if (S.showTrad && Math.abs(p.LtTrad - p.Lt) > 0.5) {
+    const pt = params(S.panel, S.B, 1.0, S.ksFloor);
+    const c2 = mkCanvas(); draw(c2, pt);
+    rows.appendChild(row("<b style='color:#6b7a90'>传统</b> · 峰值 " + p.LtTrad.toFixed(0) + " nit（headroom 恒定）", c2));
+  }
+  // markers
+  const marks = $("marks");
+  const mk = (nit, label, cls) => {
+    const s = document.createElement("span");
+    s.className = cls || "";
+    s.style.marginLeft = ((Math.max(nit,0)/HI_IN)*100) + "%";
+    s.textContent = label;
+    return s;
+  };
+  marks.innerHTML = "";
+  marks.appendChild(mk(REF_WHITE_SIGNAL, "参考白 203", "a"));
+  marks.appendChild(mk(p.KS, "拐点 " + p.kneePhys.toFixed(0), "k"));
+  marks.appendChild(mk(10000, "峰值→" + p.Lt.toFixed(0), "k"));
+}
+
+/* ================= controls wiring ================= */
+function bindSeg(id, cb) {
+  const box = $(id);
+  box.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    box.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    cb(b.dataset.mode || b.dataset.floor || b.dataset.axis);
+  });
+}
+$("cFloor").addEventListener("change", e => { S.ksFloor = e.target.checked; render(); });
+
+$("rPanel").addEventListener("input", e => { S.panel = +e.target.value; $("vPanel").textContent = S.panel + " nit"; render(); });
+$("rB").addEventListener("input", e => { S.B = +e.target.value; $("vB").textContent = Math.round(S.B*100) + "%"; render(); });
+$("rBeta").addEventListener("input", e => { S.beta = +e.target.value; $("vBeta").textContent = S.beta.toFixed(2); render(); });
+$("cTrad").addEventListener("change", e => { S.showTrad = e.target.checked; render(); });
+document.querySelectorAll(".chip").forEach(c =>
+  c.addEventListener("click", () => {
+    S.panel = +c.dataset.panel;
+    $("rPanel").value = S.panel; $("vPanel").textContent = S.panel + " nit";
+    render();
+  }));
+
+// 初始化 label 与 state 同步
+$("vB").textContent = Math.round(S.B*100) + "%";
+$("vPanel").textContent = S.panel + " nit";
+$("vBeta").textContent = S.beta.toFixed(2);
+render();
+</script>
+</body>
+</html>

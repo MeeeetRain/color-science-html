@@ -6,8 +6,8 @@
 <script src="assets/auth/auth-config.js"></script>
 <script src="assets/auth/auth-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>让电视自己把 2D 画面变立体:研究进展汇报</title>
-<meta name="description" content="电视端实时 2D 转 3D 算法的研究进展:用大白话讲清楚做了什么、踩了什么坑、现在效果如何,以及下一步打算怎么做。">
+<title>2D 转 3D:研究进展</title>
+<meta name="description" content="电视端实时 2D 转 3D 算法的研究进展:用大白话讲清楚做了什么、踩了什么坑、现在效果如何,以及下一步打算怎么做。已完成真实电影微调、时域优化并部署进 Mac 播放器。">
 <style>
 :root {
   color-scheme: dark;
@@ -103,6 +103,24 @@ p.big { color: var(--ink); max-width: 800px; font-size: 17px; line-height: 1.85;
 .svgbox svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 .cap { font-size: 12.5px; color: var(--soft); text-align: center; margin-top: 8px; line-height: 1.6; }
 
+.version-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 14px 0; }
+.version-table th, .version-table td { padding: 10px 11px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.version-table th { color: var(--soft); font-size: 12px; text-align: left; white-space: nowrap; }
+.version-table td.numcell, .version-table th.numcell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.version-table tr.chosen { background: rgba(52,223,242,.07); }
+.version-table tr.quality { background: rgba(183,240,91,.07); }
+.version-table tr.archived { color: var(--muted); }
+.role-pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.role-pill.quality { color: var(--lime); border: 1px solid rgba(183,240,91,.38); background: rgba(183,240,91,.08); }
+.role-pill.chosen { color: var(--cyan); border: 1px solid rgba(52,223,242,.38); background: rgba(52,223,242,.08); }
+.role-pill.archive { color: var(--muted); border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+.role-pill.stop { color: var(--rose); border: 1px solid rgba(255,77,109,.35); background: rgba(255,77,109,.07); }
+.table-scroll { overflow-x: auto; margin: 14px 0; }
+@media (max-width: 640px) {
+  .version-map-box::before { content: "← 左右滑动查看完整版本关系 →"; display: block; color: var(--soft); font-size: 11.5px; text-align: center; margin-bottom: 8px; }
+  .version-map-box svg { min-width: 760px; max-width: none; }
+}
+
 .small { font-size: 12.5px; color: var(--soft); }
 .smallcaps { font-variant-numeric: tabular-nums; }
 footer { padding: 46px 0 56px; color: var(--soft); font-size: 13px; border-top: 1px solid var(--line); margin-top: 46px; }
@@ -124,15 +142,15 @@ footer a { color: var(--cyan); }
 <div class="hero-bg" aria-hidden="true"><div class="grid-field"></div><div class="spectrum-band"></div></div>
 <div class="wrap">
   <div class="eyebrow">2D→3D · 电视端实时立体转换 · 研究进展</div>
-  <h1>让电视自己<span class="h-accent">把普通画面变立体</span>:<br>研究进展汇报</h1>
+  <h1>2D 画面,<span class="h-accent">实时变立体</span></h1>
   <p class="hero-desc">目标是让电视<b>实时</b>把普通 2D 画面转换成立体 3D 效果,不需要另外拍摄立体素材。
   这份报告用尽量少的专业词汇,讲清楚我们做了什么、中间踩过哪些坑、现在效果到什么程度,以及接下来打算怎么做。</p>
-  <div class="pass-badge">✓ 最新一轮质量验收(第 4 关)已通过</div>
+  <div class="pass-badge">✓ 真实电影微调 + 播放稳定性优化已完成,最新模型已部署进 Mac 播放器</div>
   <div class="numband">
-    <div class="num"><div class="v">50.8 分</div><div class="k">立体转换效果打分(及格线 35 分,满分参考 100,详见第三部分)</div></div>
-    <div class="num"><div class="v cy">12.65 ms/帧</div><div class="k">标准画质档单帧处理耗时,达标线 25ms(相当于每秒 79 帧)</div></div>
-    <div class="num"><div class="v go">20.38M 参数</div><div class="k">实际装进电视的算法体积,预算 26M±3M 内</div></div>
-    <div class="num"><div class="v vi">250,000 步</div><div class="k">最近一次完整训练的步数,4 张服务器显卡耗时约 45 小时</div></div>
+    <div class="num"><div class="v">52.6 分</div><div class="k">立体转换效果打分(上一版 50.8,及格线 35;学了真实电影后不降反升)</div></div>
+    <div class="num"><div class="v cy">11.12 ms/帧</div><div class="k">Mac 播放器实机耗时(Core ML + Metal),相当于每秒约 90 帧</div></div>
+    <div class="num"><div class="v go">+7.5%</div><div class="k">真实立体电影考卷上的恢复率——此前版本是负分,本周首次转正</div></div>
+    <div class="num"><div class="v vi">6 部</div><div class="k">用于训练的正版真实 3D 电影(约 86 万帧,仅内部研究使用)</div></div>
   </div>
 </div></header>
 
@@ -208,7 +226,7 @@ footer a { color: var(--cyan); }
 
   <h3>参数量:装进电视的部分有多大</h3>
   <p class="note">"参数量"决定了算法要占用电视芯片多少存储和算力,是电视厂最关心的硬指标之一。
-  下表是各模块的实测拆分——<b>实际要装进电视的合计约 2038 万个参数(20.38M)</b>,
+  下表是各模块的实测拆分——<b>实际要装进电视的合计约 2041 万个参数(20.41M)</b>,
   换算成文件大小,32 位精度下约 80MB,做量化压缩后可以降到约 20MB 级别,在旗舰电视芯片的预算内。</p>
   <div class="svgbox" style="padding:0;background:transparent;border:none">
   <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -221,15 +239,91 @@ footer a { color: var(--cyan); }
     <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">"模仿老师"辅助模块</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">只在训练阶段用</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">3.94M</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--rose)">否</td></tr>
   </table>
   </div>
-  <p class="small">合计训练时的完整参数图为 24.32M(2431.9 万),其中 20.38M 随算法一起交付,3.94M 的"深度头"训练完就丢弃。电视端预算目标是 26M±3M,达标。</p>
+  <p class="small">合计训练时的完整参数图约为 24.34M,其中约 20.41M 随算法一起交付,约 3.94M 的"深度头"训练完就丢弃。电视端预算目标是 26M±3M,达标。</p>
+
+  <h3>现在到底有几个版本:一张图看懂</h3>
+  <p class="note">研发记录里的 A1、A2、B 只是实验代号,不适合产品沟通。下面统一改成容易记的名字:
+  <b>满配高质量版</b>、<b>当前小模型</b>、原小模型、激进小模型和中杯实验版。它们都从同一个 S6 满配模型出发,
+  区别只有"裁掉多少通道"和"恢复训练时合成数据与真实电影的权重比例"。</p>
+
+  <div class="svgbox version-map-box">
+  <svg viewBox="0 0 960 430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif" role="img" aria-labelledby="version-map-title version-map-desc">
+    <title id="version-map-title">2D 转 3D 模型版本关系图</title>
+    <desc id="version-map-desc">S6 满配高质量版分支出当前小模型、原小模型、激进小模型和中杯实验版。当前保留满配高质量版和 A1 当前小模型。</desc>
+    <defs>
+      <marker id="vm-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#758195"/></marker>
+    </defs>
+
+    <rect x="22" y="146" width="238" height="120" rx="14" fill="#10251a" stroke="#b7f05b" stroke-width="2"/>
+    <text x="141" y="176" fill="#b7f05b" font-size="15" text-anchor="middle" font-weight="700">满配高质量版</text>
+    <text x="141" y="200" fill="#f4f7fb" font-size="13" text-anchor="middle">S6 · 20.41M 参数</text>
+    <text x="141" y="224" fill="#a7b0bf" font-size="12" text-anchor="middle">通用跨域 52.56 分</text>
+    <text x="141" y="246" fill="#a7b0bf" font-size="12" text-anchor="middle">画质优先 / 黄金回退</text>
+
+    <path d="M260 206 H320 M320 54 V376" stroke="#758195" stroke-width="1.6" fill="none"/>
+    <path d="M320 70 H366" stroke="#758195" stroke-width="1.6" marker-end="url(#vm-arrow)"/>
+    <path d="M320 170 H366" stroke="#758195" stroke-width="1.6" marker-end="url(#vm-arrow)"/>
+    <path d="M320 270 H366" stroke="#758195" stroke-width="1.6" marker-end="url(#vm-arrow)"/>
+    <path d="M320 370 H366" stroke="#758195" stroke-width="1.6" marker-end="url(#vm-arrow)"/>
+
+    <rect x="370" y="20" width="360" height="88" rx="12" fill="#102329" stroke="#34dff2" stroke-width="2"/>
+    <text x="390" y="47" fill="#34dff2" font-size="14" font-weight="700">当前小模型 · A1</text>
+    <text x="390" y="70" fill="#f4f7fb" font-size="12.5">9.11M · 目标剪40%(实际35.5%) · 合成:真实=6:1</text>
+    <text x="390" y="91" fill="#a7b0bf" font-size="11.5">真实电影基本无损;时域核验通过</text>
+    <rect x="752" y="42" width="178" height="42" rx="21" fill="rgba(52,223,242,.10)" stroke="#34dff2"/>
+    <text x="841" y="68" fill="#34dff2" font-size="12.5" text-anchor="middle" font-weight="700">低算力候选 ✓</text>
+
+    <rect x="370" y="126" width="360" height="88" rx="12" fill="#172131" stroke="#758195"/>
+    <text x="390" y="153" fill="#d4dbe5" font-size="14" font-weight="700">原小模型 · 旧 3:1 版</text>
+    <text x="390" y="176" fill="#f4f7fb" font-size="12.5">9.11M · 目标剪40%(实际35.5%) · 合成:真实=3:1</text>
+    <text x="390" y="197" fill="#a7b0bf" font-size="11.5">被 A1 同体积全面小幅超过</text>
+    <rect x="752" y="148" width="178" height="42" rx="21" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.16)"/>
+    <text x="841" y="174" fill="#a7b0bf" font-size="12.5" text-anchor="middle">历史回退</text>
+
+    <rect x="370" y="232" width="360" height="88" rx="12" fill="#25151d" stroke="#ff4d6d"/>
+    <text x="390" y="259" fill="#ff4d6d" font-size="14" font-weight="700">激进小模型 · A2</text>
+    <text x="390" y="282" fill="#f4f7fb" font-size="12.5">9.11M · 目标剪40%(实际35.5%) · 合成:真实=12:1</text>
+    <text x="390" y="303" fill="#a7b0bf" font-size="11.5">三项质量均低于 A1,没有继续价值</text>
+    <rect x="752" y="254" width="178" height="42" rx="21" fill="rgba(255,77,109,.08)" stroke="#ff4d6d"/>
+    <text x="841" y="280" fill="#ff4d6d" font-size="12.5" text-anchor="middle">停止考虑</text>
+
+    <rect x="370" y="338" width="360" height="88" rx="12" fill="#282315" stroke="#ffd166"/>
+    <text x="390" y="365" fill="#ffd166" font-size="14" font-weight="700">中杯实验版 · B</text>
+    <text x="390" y="388" fill="#f4f7fb" font-size="12.5">14.67M · 目标剪20%(实际14.3%) · 合成:真实=3:1</text>
+    <text x="390" y="409" fill="#a7b0bf" font-size="11.5">参数多 61%,通用分只比 A1 高 0.53</text>
+    <rect x="752" y="360" width="178" height="42" rx="21" fill="rgba(255,209,102,.08)" stroke="#ffd166"/>
+    <text x="841" y="386" fill="#ffd166" font-size="12.5" text-anchor="middle">保留实验数据</text>
+  </svg>
+  <div class="cap">最终只保留两个产品档位:算力充足时用 20.41M 满配高质量版;算力紧张时用 9.11M 的 A1 当前小模型。其余三个版本只用于证明为什么这样选。</div>
+  </div>
+
+  <div class="table-scroll">
+  <table class="version-table">
+    <thead><tr>
+      <th>容易记的名字</th><th>研发代号</th><th class="numcell">交付参数</th>
+      <th class="numcell">真实电影</th><th class="numcell">新电影</th><th class="numcell">通用跨域</th>
+      <th class="numcell">2K 1/2</th><th>现在的角色</th>
+    </tr></thead>
+    <tbody>
+      <tr class="quality"><td><b>满配高质量版</b></td><td>S6</td><td class="numcell">20.41M</td><td class="numcell">7.46</td><td class="numcell">24.67</td><td class="numcell"><b>52.56</b></td><td class="numcell">16.43 ms</td><td><span class="role-pill quality">画质优先</span></td></tr>
+      <tr class="chosen"><td><b>当前小模型</b></td><td>A1 · 6:1</td><td class="numcell">9.11M</td><td class="numcell"><b>7.22</b></td><td class="numcell"><b>24.75</b></td><td class="numcell">35.69</td><td class="numcell"><b>13.99 ms</b></td><td><span class="role-pill chosen">低算力候选</span></td></tr>
+      <tr class="archived"><td>原小模型</td><td>旧 3:1</td><td class="numcell">9.11M</td><td class="numcell">6.81</td><td class="numcell">24.15</td><td class="numcell">35.62</td><td class="numcell">14.07 ms</td><td><span class="role-pill archive">历史回退</span></td></tr>
+      <tr class="archived"><td>激进小模型</td><td>A2 · 12:1</td><td class="numcell">9.11M</td><td class="numcell">6.57</td><td class="numcell">24.55</td><td class="numcell">35.35</td><td class="numcell">13.97 ms</td><td><span class="role-pill stop">停止考虑</span></td></tr>
+      <tr class="archived"><td>中杯实验版</td><td>B · 轻剪</td><td class="numcell">14.67M</td><td class="numcell">7.10</td><td class="numcell"><b>26.30</b></td><td class="numcell">36.22</td><td class="numcell">15.99 ms</td><td><span class="role-pill archive">实验归档</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small">三项质量分都采用同一套 protocol-v2 恢复率,数值越高越好;“2K 1/2”是 H20 上预热 20 帧、测量 200 帧的编译后完整出口平均耗时,越低越好。A1 的 tOF=0.3019、T-Depth=0.00387,时域稳定性终审通过。</p>
+  <p class="note"><b>怎么选:</b>如果芯片装得下 20.41M,优先满配版,因为它在电视常见的广播、体育、剧集等通用画面上明显更稳;
+  如果芯片预算紧,选 A1——参数减少约 55%,真实电影质量几乎没掉。最终仍要等目标 NPU 开发板实测内存、功耗和真实延迟。</p>
 
   <div class="grid3">
     <div class="card"><h4>为什么不直接"画"另一只眼睛的画面</h4><p class="note" style="margin:0">因为被前面物体挡住的部分没法直接画出来,只能靠算法"猜"。
     分层胶片的方式让这部分内容天然保留在后面的胶片里,不需要瞎猜,效果更稳定。</p></div>
     <div class="card"><h4>这套技术没有现成代码可抄</h4><p class="note" style="margin:0">我们参考的这篇论文(LMPIN,2025年发表)没有公开代码,也没有可以直接商用的开源实现。
     所有的核心计算、训练方法、打分标准,都是我们自己独立写出来并反复验证过的。</p></div>
-    <div class="card"><h4>借用的"老师"模型有使用限制</h4><p class="note" style="margin:0">现在临时借用的深度判断"老师"模型(Depth Anything V2)权重协议为
-    CC-BY-NC(仅限研究用途,不能直接商用)。这个风险已经记下来,下一步计划里安排了替换方案(见第五部分)。</p></div>
+    <div class="card"><h4>"老师"模型的商用限制已解除</h4><p class="note" style="margin:0">最初借用的深度判断"老师"(Depth Anything V2)只限研究用途,
+    存在商用风险。现已整体替换为更新一代、<b>可直接商用</b>(Apache-2.0 协议)的 Depth Anything 3,精度还更高——授权和准确度两个问题一次解决。</p></div>
   </div>
 </div></section>
 
@@ -238,8 +332,10 @@ footer a { color: var(--cyan); }
   <div class="sec-kicker">第二部分 · 怎么训练出来的</div>
   <h2>训练流程与验收关卡</h2>
   <p class="big">整个项目按"准备训练数据 → 搭好算法骨架 → 先学看深浅 → 再学画质 → 打分验收"的顺序推进,
-  <b>每一步做完都要经过独立审核才能进入下一步</b>,不允许自己给自己"放水"。目前前三关都已经通过,
-  第四关(最终质量验收)也已经通过。</p>
+  <b>每一步做完都要经过独立审核才能进入下一步</b>,不允许自己给自己"放水"。主线五关已全部通过;
+  此后又完成了三轮加训——<b>边缘与强弱调节优化、真实 3D 电影微调、连续播放稳定性优化</b>——每一轮同样设了独立验收关卡,
+  期间有两次训练被预设的"红线检查"自动叫停(一次是评分口径 bug,一次是太空电影黑场景污染训练信号),
+  都是查明根因后再重启,没有带病赶进度。</p>
 
   <h3>训练数据(第一关)</h3>
   <p class="note">我们造了 <b>118,287 张训练样本</b>(来自公开图片库 COCO)——每张样本是一张普通图片配上
@@ -247,9 +343,10 @@ footer a { color: var(--cyan); }
   <b>8 像素到 38 像素</b>的立体错位强度(实测采样范围 8.0006~37.9988 像素),从"立体感很弱"到"立体感比较强"都有,
   不会让算法只学到一种场景。</p>
   <div class="grid2">
-    <div class="card"><h4>训练样本数量</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">118,287 张</b><br>规模足够训练一个 2000 万参数级别的小模型。</p></div>
-    <div class="card"><h4>画面里"看不见、要靠猜"的部分</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">平均 6.07%</b><br>中位数 5.50%,剩下约 94% 的内容两只眼睛都能直接看到,不用猜,这个比例属于正常范围。</p></div>
+    <div class="card"><h4>合成训练样本</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">118,287 张</b><br>用普通照片"伪造"的立体对,保证场景多样性。</p></div>
+    <div class="card accent"><h4>真实电影训练样本(后期加入)</h4><p class="note" style="margin:0"><b style="color:var(--ink);font-size:22px">147,700 对</b><br>来自 6 部正版 3D 电影(比利·林恩、霍比特人、少年派、海底世界、地心引力、双子杀手),真实拍摄的左右眼画面,仅内部研究使用。训练时合成与真实按 3:1 混合,既学真实立体、又不偏科。</p></div>
   </div>
+  <p class="small">画面里"看不见、要靠猜"的遮挡部分平均占 6.07%——合成样本里这部分是"编"的,真实电影里是真拍到的,这正是引入真实素材的核心价值。</p>
 
   <h3>先学看深浅,再学画质(第二、三关)</h3>
   <p class="note">正式训练分两步:第一步只教算法"判断画面里哪里近、哪里远"(不产出最终画面);
@@ -267,24 +364,25 @@ footer a { color: var(--cyan); }
 <!-- ============ PART 3 效果如何 ============ -->
 <section id="part3"><div class="wrap">
   <div class="sec-kicker">第三部分 · 现在效果如何</div>
-  <h2>最终打分:50.8 分,通过了及格线</h2>
+  <h2>最新打分:52.6 分(首版 50.8,三轮优化后不降反升)</h2>
   <p class="big">我们用一套公平的方式来打分:
   <b>如果"什么都不做"(直接拿左眼画面充当右眼)算 0 分,用真实相机拍出来的立体信息做参考算 100 分</b>
   (这是物理上限,因为两个镜头本身拍出来的画面就有细微差别,不可能真的到 100 分),及格线定在 35 分。
-  <b style="color:var(--lime)">算法最终考了 50.8 分,通过了这一关。</b></p>
+  <b style="color:var(--lime)">首版考了 50.8 分过关;经过边缘优化、真实电影微调、稳定性优化三轮加训后,最新版本考到 52.6 分</b>——
+  特别值得说明的是,后两轮的主要目标并不是这张考卷,能"顺便"再涨说明基本功变扎实了,没有为新目标牺牲旧能力。</p>
 
   <div class="svgbox">
   <svg viewBox="0 0 960 170" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,sans-serif">
     <rect x="40" y="76" width="880" height="22" rx="11" fill="#1c2230"/>
-    <rect x="40" y="76" width="448" height="22" rx="11" fill="#5ad19a"/>
+    <rect x="40" y="76" width="463" height="22" rx="11" fill="#5ad19a"/>
     <line x1="40" y1="54" x2="40" y2="106" stroke="#758195" stroke-width="1.4"/>
     <text x="40" y="42" fill="#a7b0bf" font-size="13" text-anchor="middle">0 分</text>
     <text x="40" y="126" fill="#a7b0bf" font-size="12" text-anchor="middle">什么都不做</text>
     <line x1="348" y1="66" x2="348" y2="108" stroke="#ff4d6d" stroke-width="2" stroke-dasharray="5 3"/>
     <text x="348" y="42" fill="#ff4d6d" font-size="13" text-anchor="middle" font-weight="700">35 分</text>
     <text x="348" y="126" fill="#ff4d6d" font-size="12" text-anchor="middle">及格线</text>
-    <line x1="488" y1="60" x2="488" y2="112" stroke="#ffd166" stroke-width="2.5"/>
-    <text x="488" y="146" fill="#ffd166" font-size="15" text-anchor="middle" font-weight="800">我们:50.8 分</text>
+    <line x1="503" y1="60" x2="503" y2="112" stroke="#ffd166" stroke-width="2.5"/>
+    <text x="503" y="146" fill="#ffd166" font-size="15" text-anchor="middle" font-weight="800">我们:52.6 分(首版 50.8)</text>
     <line x1="920" y1="54" x2="920" y2="106" stroke="#758195" stroke-width="1.4"/>
     <text x="920" y="42" fill="#a7b0bf" font-size="13" text-anchor="middle">100 分(满分参考)</text>
     <text x="920" y="126" fill="#a7b0bf" font-size="12" text-anchor="middle">真实相机拍出来的效果</text>
@@ -299,17 +397,37 @@ footer a { color: var(--cyan); }
   <table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
     <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">做法</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">相似度打分(SSIM)</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">PSNR</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">LPIPS</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">说明</th></tr>
     <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">什么都不做</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.585</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">18.74dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.174</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">左眼画面直接冒充右眼</td></tr>
-    <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)"><b>我们的算法</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">0.713</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">21.15dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.154</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">能在电视上实时跑的"学生"</td></tr>
-    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">直接照搬"老师"模型</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.699</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">20.68dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.151</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">体积更大、跑不动实时的参考模型</td></tr>
+    <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)"><b>我们的算法(最新版)</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">0.7175</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">21.12dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.151</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">能在电视上实时跑的"学生"(已部署版本)</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">我们的算法(首版,7-19)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.713</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">21.15dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.154</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">三轮加训前的版本,供对照</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">直接照搬"老师"模型</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.702</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">20.60dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.152</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">体积更大、跑不动实时的参考模型</td></tr>
     <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">满分参考</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.837</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">23.90dB</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">0.118</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">用真实测量出的立体视差做出来的效果(物理上限)</td></tr>
   </table>
-  <p class="small">50.8 分的算法公式:(0.713 − 0.585) ÷ (0.837 − 0.585) = 50.79%。遮挡区域(画面中要靠"脑补"的部分)单独测得的分数比全画面低 3.25dB,达标线是差距小于 6dB。</p>
+  <p class="small">52.6 分的算法公式:(0.7175 − 0.585) ÷ (0.837 − 0.585) = 52.59%。遮挡区域(画面中要靠"脑补"的部分)单独测得的分数与全画面差距在达标线(6dB)内。</p>
 
   <div class="grid2">
     <div class="card pass"><h4>比"老师模型直接上"还要好</h4><p class="note" style="margin:0">如果直接照搬"老师"模型的深浅判断去拼图,
-    换算成同一套打分标准约 <b>45.3 分</b>;我们训练出来的、能在电视上实时跑的"学生"反而拿到了 <b>50.8 分</b>,说明这套训练方法确实有效,不是单纯继承了老师的水平。</p></div>
-    <div class="card"><h4>还没做到的地方</h4><p class="note" style="margin:0">人工检查 20 组测试画面发现,人物、球网、植物这类<b>细小、复杂的边缘</b>还有些模糊,
-    是接下来重点要打磨的地方(详见第五部分的改进计划①)。</p></div>
+    换算成同一套打分标准约 <b>46.4 分</b>;我们训练出来的、能在电视上实时跑的"学生"反而拿到了 <b>52.6 分</b>,说明这套训练方法确实有效,不是单纯继承了老师的水平。</p></div>
+    <div class="card"><h4>细边缘问题已改善</h4><p class="note" style="margin:0">首版人工检查发现人物、球网、植物这类<b>细小复杂边缘</b>发虚;
+    后续加入的"贴边"处理(引导滤波)配合更准的新老师模型,已把这类边缘的清晰度明显提上来,深浅判断误差降低了 35%。</p></div>
+  </div>
+
+  <h3>真实 3D 电影考卷:这一轮最关键的进展</h3>
+  <p class="note">上面那张考卷(NAMA3DS1)是公开的双镜头实验素材,画面偏简单。为了更接近电视真实播放的内容,
+  我们从 6 部正版 3D 电影里单独留出 <b>2000 帧</b>做了一张全新考卷——<b>这些片段绝不出现在训练素材里</b>,防止"考题泄漏"。
+  这张考卷更难,也更能说明产品价值:</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
+    <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">版本</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">真实电影考卷得分</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">说明</th></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">只用"伪造"样本训练的版本</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--rose)">−1.5 分</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">负分 = 转出来还不如"什么都不做"</td></tr>
+    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">用 4 部电影微调</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">+6.2 分</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">首次转正</td></tr>
+    <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)"><b>用 6 部电影微调(已部署)</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">+7.5 分</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)">当前版本</td></tr>
+  </table>
+  <div class="grid2">
+    <div class="card accent"><h4>最难的部分改善最多</h4><p class="note" style="margin:0">立体转换最难的是"物体边缘后面露出来的内容"——
+    伪造样本里这部分是编的,真实电影里是真拍到的。用真数据训练后,这个区域的画质<b>反超"什么都不做"基线 0.45dB</b>,
+    这正是花钱买真实素材想买到的东西,也是外部同行很难拿到的数据优势。</p></div>
+    <div class="card"><h4>为什么分数看着不高</h4><p class="note" style="margin:0">因为真实电影的立体错位量普遍很小(中位数仅约 3 像素),
+    "什么都不做"本身就已经很接近正确答案,能提升的空间物理上就窄。在立体感强的场景(新加入的两部片)上,
+    同样的算法能拿到 <b>+26.6 分</b>——差距拉得开的地方,我们赢得多。</p></div>
   </div>
 
   <h3>能不能实时播放</h3>
@@ -317,11 +435,21 @@ footer a { color: var(--cyan); }
   转换过程中用的"中间分辨率"越低,速度越快、画质会有一点点取舍;达标线是每帧处理时间在 <b>25 毫秒以内</b>(相当于每秒 40 帧以上)。</p>
   <table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
     <tr style="color:var(--soft);font-size:12.5px"><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">档位</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">每帧耗时</th><th style="text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)">相当于每秒</th><th style="text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)">结论</th></tr>
-    <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">最高画质档(1/2 中间分辨率)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">44.05 ms</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">22.7 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--rose)">未达标,需继续优化</td></tr>
+    <tr style="background:rgba(52,223,242,.06)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)">最高画质档(1/2 中间分辨率,编译优化后)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--cyan)">16.43 ms</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">60.9 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">达标 ✓</td></tr>
     <tr style="background:rgba(183,240,91,.07)"><td style="padding:9px 12px;border-bottom:1px solid var(--line)">标准画质档(1/4 中间分辨率)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums"><b style="color:var(--lime)">12.65 ms</b></td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">79.1 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">达标 ✓</td></tr>
     <tr><td style="padding:9px 12px;border-bottom:1px solid var(--line)">训练时用的分辨率(256×384)</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">10.13 ms</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums">98.8 帧</td><td style="padding:9px 12px;border-bottom:1px solid var(--line);color:var(--lime)">达标 ✓</td></tr>
   </table>
-  <p class="small">测试条件:1920×1080 输入,单张 H20 服务器显卡,bf16 精度;耗时含画面缩放、算法推理、分层胶片渲染与最终合成,不含视频编解码。</p>
+  <p class="small">测试条件:1920×1080 输入,单张 H20 服务器显卡,bf16 精度;耗时含画面缩放、算法推理、分层胶片渲染与最终合成,不含视频编解码。最高画质档原始实现约 46ms,经 torch.compile 编译后降至 16.43ms;A1 小模型同档约 13.99ms。</p>
+
+  <h3>连续播放稳不稳:深度抖动降 46%,盲测已分不出新旧</h3>
+  <p class="note">单张画面转得好还不够——视频是连续播放的,如果算法每帧独立判断深浅,连起来看就会有轻微的
+  "远近感忽强忽弱"(业内叫时域抖动),这对观感的影响比任何单帧打分都直接。我们做了专项优化:让算法在处理连续两帧时保持深浅判断一致。</p>
+  <div class="grid2">
+    <div class="card pass"><h4>抖动指标改善 46%</h4><p class="note" style="margin:0">相邻帧深度判断的差异度从 <b>0.00744 降到 0.00403</b>,
+    画面越稳,立体感越自然、越不容易看累。</p></div>
+    <div class="card pass"><h4>盲测:已经看不出差别</h4><p class="note" style="margin:0">我们把优化前后的 <b>36 段视频</b>随机打乱、隐藏版本标签做盲测,
+    结论是两者的播放平滑度<b>已无法分辨</b>、静止画面无闪烁。播放器端还有一层平滑处理兜底,产品观感有双保险。</p></div>
+  </div>
 </div></section>
 
 <!-- ============ PART 4 播放器 ============ -->
@@ -383,10 +511,10 @@ footer a { color: var(--cyan); }
 
   <div class="grid2">
     <div class="card pass"><h4>实测速度(苹果 M4 Max 芯片验证)</h4><p class="note" style="margin:0">
-    播放一段 1920×960、24 帧/秒的测试视频时,现场实测<b>约每秒 23.9 帧、单帧计算 13.9 毫秒</b>,基本跟上原始视频的播放速度;
-    播放 4K(4096×2160)视频时,单帧计算耗时约 <b>17.7~20.5 毫秒</b>。测试用的正是本次汇报训练出来的同一个算法(第 250,000 步存档)。</p></div>
-    <div class="card"><h4>计算结果和训练时完全一致</h4><p class="note" style="margin:0">把算法转换到 Mac 上运行的格式后,
-    我们逐像素比对过它和服务器训练时的原始输出——差异小到 <b>千万分之一以内</b>,确认转换过程没有引入误差,不是"看起来差不多"。</p></div>
+    最新模型实测<b>单帧计算 11.12 毫秒</b>(相当于每秒约 90 帧),远超视频本身的播放速度,余量充足;
+    低/中/高三档立体强度可一键切换。</p></div>
+    <div class="card pass"><h4>最新模型已部署,可随时回退</h4><p class="note" style="margin:0">经过三轮加训的最终模型已正式转成 Mac 运行格式并内嵌进播放器。
+    逐像素比对确认转换<b>精度损失小于千万分之二</b>,三档强度均验证通过;旧版本完整保留,可一键回退。</p></div>
   </div>
 
   <div class="card accent"><h4>如实说明:这是"打通"阶段,不是"验收完成"阶段</h4><p class="note" style="margin:0">
@@ -405,43 +533,41 @@ footer a { color: var(--cyan); }
 <!-- ============ PART 5 下一步 ============ -->
 <section id="part5"><div class="wrap">
   <div class="sec-kicker">第五部分 · 下一步打算怎么做</div>
-  <h2>已经过关了,但还能做得更好</h2>
-  <p class="big">50.8 分刚过及格线,不代表已经做到极致。我们盘点了几个能继续提升效果的方向,
-  按"值得优先做"的顺序排列:</p>
+  <h2>画质主线已收官,剩下的是"上电视"</h2>
+  <p class="big">7 月 19 日汇报时列的五个优化方向(边缘处理、更换老师模型、立体强弱可调、真实电影微调、播放稳定性)
+  <b>现已全部完成并合入已部署的版本</b>。算法画质这条主线到此收官,接下来的重点转向<b>真正装进电视芯片</b>。</p>
 
+  <h3>部署准备已经完成</h3>
   <div class="grid2">
-    <div class="card"><h4>① 把物体边缘处理得更整齐</h4><p class="note" style="margin:0">
-    人物、球网这类细小边缘目前还有点模糊。可以在最后一步加一个"贴边"处理,让立体画面的边界更贴合原图的实际轮廓。
-    <br><span class="small">预计几天内可以看到效果,不需要重新训练。</span></p></div>
-    <div class="card"><h4>② 换一个更准的"老师"模型</h4><p class="note" style="margin:0">
-    现在借用的老师模型精度有提升空间,而且有商用限制。换成一个更新、且可以直接商用的版本,
-    能同时解决准确度和授权问题。<br><span class="small">预计约 1 周。</span></p></div>
-    <div class="card"><h4>③ 让算法知道"这张图该有多强的立体感"</h4><p class="note" style="margin:0">
-    训练时每张练习卷的"立体强弱"是随机给的,算法目前只能猜一个大概值。如果训练时明确告诉它这个信息,
-    不仅能让判断更准,还能顺便实现产品上"立体感强弱可调节"的功能。<br><span class="small">预计约 1 周。</span></p></div>
-    <div class="card accent"><h4>④ 用真实拍摄的立体电影素材来打磨(优先级最高)</h4><p class="note" style="margin:0">
-    现在的练习卷是"用普通照片伪造"出来的,和真实拍摄的立体电影还是有差别。如果能采购一批正版 3D 蓝光电影素材用来微调,
-    效果预计会有明显提升——这类干净的真实立体数据,同行业外部很难拿到,是电视厂在这个方向上难得的优势。
-    <br><span class="small">预计 2~3 周,需要先启动采购。</span></p></div>
+    <div class="card pass"><h4>① 两档模型已经定型</h4><p class="note" style="margin:0">
+    20.41M 满配版负责高质量,9.11M A1 小模型负责低算力。A1 的真实电影、通用跨域、播放稳定性和三档强弱调节都已复评完成。</p></div>
+    <div class="card pass"><h4>② 两档画质都达到实时</h4><p class="note" style="margin:0">
+    编译优化把最高画质 1/2 档从约 46 毫秒降到 16.43 毫秒;标准 1/4 档仍作为低功耗默认,1/2 档作为增强选项。</p></div>
+    <div class="card pass"><h4>③ 字幕方案已经确定</h4><p class="note" style="margin:0">
+    检测到字幕带时,在输出环节把字幕钉在屏幕平面并做边缘羽化,避免细字幕出现双像。纯输出侧处理,不需要重新训练模型。</p></div>
+    <div class="card pass"><h4>④ 全程汇报材料已经齐全</h4><p class="note" style="margin:0">
+    从论文复现、真实电影训练、播放稳定性到剪枝和速度优化,各阶段指标、对比图与验收结论都已归档。</p></div>
   </div>
-  <div class="card"><h4>⑤ 让画面播放起来更稳定,不闪烁</h4><p class="note" style="margin:0">
-  目前是一帧一帧独立处理的,连续播放时可能会有轻微的"深浅感忽强忽弱"。我们已经测出了作为对照的基线数字
-  (相邻帧深度判断的差异度 0.00744、画面运动轨迹误差 0.217 像素),下一步要把这两个数字降下来。
-  这是已经计划中的工作,对最终观感的影响可能比任何单项打分都更直接。</p></div>
 
-  <h3>建议的推进节奏</h3>
+  <h3>在等一块板子(最后一块拼图)</h3>
+  <div class="card accent"><h4>目标电视芯片(NPU)上板实测</h4><p class="note" style="margin:0">
+  目前所有速度数据来自服务器显卡和 Mac 芯片,<b>都不是电视的真实芯片</b>。瘦身版小模型的真实速度、功耗、
+  以及量化压缩后的画质损失,必须在目标芯片开发板上实测才算数——这是算法能否量产的最终验证。
+  <br><span class="small">开发板到位后约 1~2 周可出结论。这是目前唯一需要外部资源配合的环节。</span></p></div>
+
+  <h3>已知问题(如实列出)</h3>
   <div class="grid2">
-    <div class="card"><h4>近期(约 1 周,现有资源就能做)</h4><p class="note" style="margin:0">①+②+③ 一起推进:先做边缘优化看效果,
-    同时更换老师模型,再让算法学会识别立体强弱,做完重新打一次分。</p></div>
-    <div class="card"><h4>中期(2~3 周,需要先采购素材)</h4><p class="note" style="margin:0">④ 用真实电影素材微调,是这一阶段效果提升最关键的一步;
-    ⑤ 播放稳定性的工作穿插在这期间推进。</p></div>
+    <div class="card"><h4>小模型的跨域能力会明显下降</h4><p class="note" style="margin:0">
+    A1 在真实电影考卷上几乎不掉分,但通用跨域分从满配版的 52.56 降到 35.69。算力允许时应优先满配版;小模型只用于芯片预算紧张的场合。</p></div>
+    <div class="card"><h4>电视 NPU 真实表现仍未知</h4><p class="note" style="margin:0">
+    服务器和 Mac 上的速度都已达标,但目标电视芯片上的内存、功耗、量化精度和真实延迟仍必须等待开发板实测。</p></div>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  2D → 3D 实时转换 · 研究进展汇报 · 撰写日期 2026-07-19<br>
-  本页数字均为实测:训练与打分在 4 张服务器显卡上完成,速度测试用单张显卡;
-  对比用的立体视频来自公开的真实双镜头拍摄素材。后续里程碑完成后本页会更新。<br>
+  2D → 3D 实时转换 · 研究进展汇报 · 首发 2026-07-19 · 最近更新 2026-07-28(新增模型版本图与 P3b 选型结果)<br>
+  本页数字均为实测:训练与打分在 4 张服务器显卡上完成,Mac 播放器速度为实机数;
+  对比用的立体素材来自公开双镜头数据集与正版 3D 电影(仅内部研究)。后续里程碑完成后本页会更新。<br>
   <a href="index.html" style="color:var(--cyan)">← 返回 HDR Production 目录</a>
 </div></footer>
 
