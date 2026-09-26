@@ -55,6 +55,8 @@ Cloudflare Pages 的常见设置：
 - Build output directory：`/` 或留空，取决于平台界面提示
 - Root directory：仓库根目录
 
+Pages 单文件上限为 25 MiB。照片转三维章节默认加载约 23.45 MiB 的紧凑模型，保留全部高斯点，参数采用轻量量化。原始 PLY 仅本地保留；线上同时提供三个不超过 24 MiB 的无损分片，可通过 `?asset=original` 对照查看。模型参数与校验方法见 [素材说明](assets/photo-3dgs/README.md)。
+
 ## 资料与引用原则
 
 页面中的技术结论应尽量来自可追溯资料，优先级建议如下：

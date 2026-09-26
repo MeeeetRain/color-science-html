@@ -21,3 +21,6 @@ node_modules/
 output/playwright/
 .pptx-hdr-*/
 PPT/*_备份_*.pptx
+
+# Original model stays local; deploy lossless parts under Pages' asset limit.
+assets/photo-3dgs/horse-sharp.ply

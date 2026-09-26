@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {loadModelParts} from './model-parts.mjs';
 
 const stage = document.querySelector('#gaussian-stage');
 const placeholder = document.querySelector('#viewer-placeholder');
@@ -30,6 +31,35 @@ let moveFrame = 0;
 let active = false;
 let loading = false;
 let appearance = {size:1, opacity:1, points:false};
+// The original lossless PLY remains available for A/B and rollback.
+const useCompressed = new URLSearchParams(location.search).get('asset') !== 'original';
+
+async function compressedModel() {
+  setStatus('下载压缩模型（23.45 MiB）…');
+  const response = await fetch(new URL('horse-sharp.ksplat.shuf4.gz',import.meta.url));
+  if (!response.ok) throw new Error(`模型下载失败 HTTP ${response.status}`);
+  if (!window.DecompressionStream) throw new Error('浏览器不支持 gzip 解码，请升级浏览器。');
+  const reader = response.body.pipeThrough(new DecompressionStream('gzip')).getReader();
+  const chunks=[];let length=0;
+  for (;;) {
+    const {done,value}=await reader.read();if(done)break;
+    length+=value.length;
+    if(length>28421404){await reader.cancel();throw new Error('压缩模型尺寸异常');}
+    chunks.push(value);
+  }
+  if(length!==28421404)throw new Error('压缩模型不完整');
+  const shuffled=new Uint8Array(length);let offset=0;
+  for(const chunk of chunks){shuffled.set(chunk,offset);offset+=chunk.length;}
+  const raw=new Uint8Array(length),n=length/4;
+  for(let i=0;i<n;i++)for(let j=0;j<4;j++)raw[i*4+j]=shuffled[j*n+i];
+  return new Blob([raw],{type:'application/octet-stream'});
+}
+if(new URLSearchParams(location.search).has('ab')) {
+  window.addEventListener('gaussian-test-pose',event=>{
+    const p=event.detail;camera.position.set(...p.position);yaw=p.yaw;pitch=p.pitch;
+    updateCameraOrientation();viewer?.forceRenderNextFrame();
+  });
+}
 
 function applyAppearance() {
   if (!active || !viewer?.splatMesh) return;
@@ -112,6 +142,7 @@ async function loadScene() {
   loading = true;
   loadButton.disabled = true;
   setStatus('正在初始化 WebGL…');
+  let modelURL;
   try {
     if (!document.createElement('canvas').getContext('webgl2')) {
       throw new Error('浏览器或显卡未提供 WebGL 2。');
@@ -133,14 +164,19 @@ async function loadScene() {
       maxScreenSpaceSplatSize: 160
     });
     setStatus('正在读取 3DGS 模型…');
-    await viewer.addSplatScene('assets/photo-3dgs/horse-sharp.ply', {
+    const model = useCompressed ? await compressedModel() : await loadModelParts(new URL('horse-sharp.manifest.json', import.meta.url), percentage => {
+      setStatus(`加载模型 ${Math.round(percentage)}%`);
+    });
+    modelURL = URL.createObjectURL(model);
+    await viewer.addSplatScene(modelURL, {
+      format: useCompressed ? GaussianSplats3D.SceneFormat.KSplat : GaussianSplats3D.SceneFormat.Ply,
       // SHARP's camera is OpenCV (+x right, +y down, +z forward).
       // Rotate the whole scene into Three.js (+y up, -z forward).
       rotation: [1, 0, 0, 0],
       progressiveLoad: false,
       showLoadingUI: false,
       onProgress: (percentage, _label, phase) => {
-        setStatus(`${phase === 1 ? '处理高斯' : '加载模型'} ${Math.round(percentage)}%`);
+        setStatus(`${phase === 1 ? '处理高斯' : '读取模型'} ${Math.round(percentage)}%`);
       }
     });
     viewer.start();
@@ -162,6 +198,7 @@ async function loadScene() {
     loadButton.textContent = '重试加载 3DGS';
     if (viewer) { await viewer.dispose(); viewer = undefined; }
   } finally {
+    if (modelURL) URL.revokeObjectURL(modelURL);
     loading = false;
   }
 }

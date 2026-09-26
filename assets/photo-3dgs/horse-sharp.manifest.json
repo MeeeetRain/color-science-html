@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "source": "horse-sharp.ply",
+  "byteLength": 66061086,
+  "sha256": "2e458b6d88cd91dad95fc1995bc42a34fe76686d2a4fba05f33cf42cdadccbfd",
+  "parts": [
+    {
+      "file": "horse-sharp.2e458b6d88cd.part-01.bin",
+      "byteLength": 25165824,
+      "sha256": "fff7975cdeebdb20120a72fa4897cb6daf0caa644e3eeb9edfeb271dea5cf9bc"
+    },
+    {
+      "file": "horse-sharp.2e458b6d88cd.part-02.bin",
+      "byteLength": 25165824,
+      "sha256": "618dcef8c491588152203438f41ff414c0ad7755cd168417a499856a6831e77d"
+    },
+    {
+      "file": "horse-sharp.2e458b6d88cd.part-03.bin",
+      "byteLength": 15729438,
+      "sha256": "8e347a59b832e15d82881f8bc5a1ec926bdb54298a150e091364e2d6708fa1fb"
+    }
+  ]
+}
