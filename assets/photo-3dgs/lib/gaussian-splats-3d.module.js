@@ -11637,7 +11637,7 @@ function sortWorker(self) {
                     memory: new WebAssembly.Memory({
                         initial: totalPagesRequired,
                         maximum: totalPagesRequired,
-                        shared: true,
+                        shared: e.data.init.wasmMemoryShared,
                     }),
                 }
             };
@@ -11693,18 +11693,20 @@ function createSortWorker(splatCount, useSharedMemory, enableSIMDInSort, integer
 
     // iOS makes choosing the right WebAssembly configuration tricky :(
     const iOSSemVer = isIOS() ? getIOSSemever() : null;
+    const needsNonSharedWasm = iOSSemVer &&
+                              (iOSSemVer.major < 16 || (iOSSemVer.major === 16 && iOSSemVer.minor < 4));
     if (!enableSIMDInSort && !useSharedMemory) {
         sourceWasm = SorterWasmNoSIMD;
         // Testing on various devices has shown that even when shared memory is disabled, the WASM module with shared
         // memory can still be used most of the time -- the exception seems to be iOS devices below 16.4
-        if (iOSSemVer && iOSSemVer.major <= 16 && iOSSemVer.minor < 4) {
+        if (needsNonSharedWasm) {
             sourceWasm = SorterWasmNoSIMDNonShared;
         }
     } else if (!enableSIMDInSort) {
         sourceWasm = SorterWasmNoSIMD;
     } else if (!useSharedMemory) {
         // Same issue with shared memory as above on iOS devices
-        if (iOSSemVer && iOSSemVer.major <= 16 && iOSSemVer.minor < 4) {
+        if (needsNonSharedWasm) {
             sourceWasm = SorterWasmNonShared;
         }
     }
@@ -11720,6 +11722,7 @@ function createSortWorker(splatCount, useSharedMemory, enableSIMDInSort, integer
             'sorterWasmBytes': sorterWasmBytes.buffer,
             'splatCount': splatCount,
             'useSharedMemory': useSharedMemory,
+            'wasmMemoryShared': sourceWasm !== SorterWasmNonShared && sourceWasm !== SorterWasmNoSIMDNonShared,
             'integerBasedSort': integerBasedSort,
             'dynamicMode': dynamicMode,
             'distanceMapRange': 1 << splatSortDistanceMapPrecision,

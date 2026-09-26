@@ -113,7 +113,7 @@ render();
 // one GPU scene and the existing keyboard/mouse controller alive.
 const horsePanel = document.querySelector('#horse-lab');
 const syntheticPanel = document.querySelector('#synthetic-lab');
-const stage = document.querySelector('#gaussian-stage');
+const stage = document.querySelector('#viewer-shell');
 const originalParent = stage.parentElement;
 const returnNotice = document.createElement('div');
 returnNotice.className = 'explore-return';
@@ -157,7 +157,8 @@ function selectMode(horse) {
 document.querySelector('#mode-horse').addEventListener('click',()=>selectMode(true));
 document.querySelector('#mode-synthetic').addEventListener('click',()=>selectMode(false));
 document.querySelector('#return-explore').addEventListener('click',()=>{
-  selectMode(false); stage.scrollIntoView({block:'center'}); stage.focus();
+  selectMode(false); stage.scrollIntoView({block:'center'});
+  stage.querySelector('#gaussian-stage').focus({preventScroll:true});
 });
 horseSize.addEventListener('input',updateHorse);
 horseOpacity.addEventListener('input',updateHorse);

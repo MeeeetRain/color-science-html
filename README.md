@@ -10,7 +10,7 @@
 - `hdr-color-science.html`：从 SDR 到 HDR 的色彩科学演变，覆盖动态范围、Gamma、PQ/HLG、色彩空间、色彩体积、HDR 格式与对比表。
 - `log-gamma.html`：为什么相机使用 Log 拍摄，解释传感器线性数据、Log 曲线和调色工作流。
 - `image-color-management.html`：图片色彩管理到底在管什么，解释 RGB 数字、ICC Profile、Assign/Convert、Web 广色域和导出检查。
-- `photo-to-3dgs-video.html`：照片 → SHARP 3D 高斯场景 → 运镜视频的可视化讲解，含鼠标 + WASD 自由探索与锥形环绕视频；入口位于主页“后期”阶段。3D 模型点击后才下载，需通过 HTTP/HTTPS 访问，本地查看请启动静态服务器。
+- `photo-to-3dgs-video.html`：照片 → SHARP 3D 高斯场景 → 运镜视频的可视化讲解，含鼠标 + WASD 自由探索与锥形环绕视频；手机端支持触摸转向、前后左右移动、复位与大画面查看。入口位于主页“后期”阶段。3D 模型点击后才下载，需通过 HTTP/HTTPS 访问，本地查看请启动静态服务器。
 - `assets/`：页面用到的图片资源。
 - `scripts/`：生成或处理资源的辅助脚本。
 

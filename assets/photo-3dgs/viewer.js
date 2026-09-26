@@ -7,6 +7,12 @@ const loadButton = document.querySelector('#load-scene');
 const status = document.querySelector('#viewer-status');
 const hud = document.querySelector('#viewer-hud');
 const mobilePad = document.querySelector('#mobile-pad');
+const shell = document.querySelector('#viewer-shell');
+const expandButton = document.querySelector('#expand-view');
+const touchLayout = window.matchMedia('(any-pointer: coarse), (max-width: 800px)');
+const mobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const usesTouchControls = () => mobileDevice || touchLayout.matches;
 const speedLabel = document.querySelector('#speed-label');
 
 const camera = new THREE.PerspectiveCamera(
@@ -24,6 +30,7 @@ let yaw = 0;
 let pitch = 0;
 let speed = 1;
 let dragging = false;
+let dragPointer;
 let pointerX = 0;
 let pointerY = 0;
 let lastTime = 0;
@@ -31,6 +38,40 @@ let moveFrame = 0;
 let active = false;
 let loading = false;
 let appearance = {size:1, opacity:1, points:false};
+const touchPointers = new Map();
+let savedBodyOverflow;
+
+function updateTouchLayout() {
+  const touch = usesTouchControls();
+  document.documentElement.classList.toggle('touch-view', touch);
+  mobilePad.hidden = !active || !touch;
+  if (!touch) setExpanded(false);
+}
+touchLayout.addEventListener('change', updateTouchLayout);
+updateTouchLayout();
+
+function setExpanded(expanded) {
+  if (expanded === shell.classList.contains('is-expanded')) return;
+  if (expanded) savedBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = expanded ? 'hidden' : savedBodyOverflow;
+  shell.classList.toggle('is-expanded', expanded);
+  expandButton.setAttribute('aria-pressed', String(expanded));
+  const label = expanded ? '退出大画面' : '展开画面';
+  expandButton.setAttribute('aria-label', label);
+  expandButton.title = label;
+  expandButton.querySelector('img').src = `assets/photo-3dgs/icons/${expanded ? 'minimize' : 'maximize'}.svg`;
+  clearMovement();
+  resizeCamera();
+}
+
+function clearMovement() {
+  keys.clear();
+  touchMoves.clear();
+  touchPointers.clear();
+  dragging = false;
+  dragPointer = undefined;
+  for (const button of mobilePad.querySelectorAll('[data-move]')) button.setAttribute('aria-pressed', 'false');
+}
 // The original lossless PLY remains available for A/B and rollback.
 const useCompressed = new URLSearchParams(location.search).get('asset') !== 'original';
 
@@ -88,6 +129,7 @@ function updateCameraOrientation() {
 }
 
 function resetView() {
+  clearMovement();
   camera.position.copy(origin);
   yaw = 0;
   pitch = 0;
@@ -183,13 +225,14 @@ async function loadScene() {
     resetView();
     placeholder.hidden = true;
     hud.style.display = 'flex';
-    mobilePad.hidden = false;
-    setStatus('已就绪 · 鼠标拖动转向，WASD 自由移动');
     active = true;
+    stage.dataset.ready = 'true';
+    updateTouchLayout();
+    setStatus(usesTouchControls() ? '场景已就绪' : '已就绪 · 鼠标拖动转向，WASD 自由移动');
     applyAppearance();
     lastTime = performance.now();
     moveFrame = requestAnimationFrame(animateMovement);
-    stage.focus();
+    stage.focus({preventScroll: true});
     new ResizeObserver(resizeCamera).observe(stage);
   } catch (error) {
     console.error('3DGS 场景加载失败', error);
@@ -205,19 +248,25 @@ async function loadScene() {
 
 loadButton.addEventListener('click', loadScene);
 document.querySelector('#reset-view').addEventListener('click', resetView);
+document.querySelector('#reset-view-mobile').addEventListener('click', resetView);
+expandButton.addEventListener('click', () => setExpanded(!shell.classList.contains('is-expanded')));
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape') setExpanded(false);
+});
 document.querySelector('#speed-down').addEventListener('click', () => updateSpeed(.75));
 document.querySelector('#speed-up').addEventListener('click', () => updateSpeed(1.333));
 
 stage.addEventListener('pointerdown', (event) => {
-  if (!active || event.target.closest('button')) return;
+  if (!active || dragging || event.button !== 0 || event.target.closest('button')) return;
   dragging = true;
+  dragPointer = event.pointerId;
   pointerX = event.clientX;
   pointerY = event.clientY;
   stage.setPointerCapture(event.pointerId);
-  stage.focus();
+  stage.focus({preventScroll: true});
 });
 stage.addEventListener('pointermove', (event) => {
-  if (!dragging) return;
+  if (!dragging || event.pointerId !== dragPointer) return;
   yaw -= (event.clientX - pointerX) * .003;
   pitch = Math.max(-1.4, Math.min(1.4, pitch - (event.clientY - pointerY) * .003));
   pointerX = event.clientX;
@@ -225,8 +274,12 @@ stage.addEventListener('pointermove', (event) => {
   updateCameraOrientation();
   viewer?.forceRenderNextFrame();
 });
-stage.addEventListener('pointerup', () => { dragging = false; });
-stage.addEventListener('pointercancel', () => { dragging = false; });
+function endDrag(event) {
+  if (event.pointerId === dragPointer) { dragging = false; dragPointer = undefined; }
+}
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
+stage.addEventListener('lostpointercapture', endDrag);
 stage.addEventListener('wheel', (event) => {
   if (!active) return;
   event.preventDefault();
@@ -242,16 +295,31 @@ stage.addEventListener('keydown', (event) => {
 });
 stage.addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
 stage.addEventListener('blur', () => keys.clear());
-for (const button of mobilePad.querySelectorAll('button')) {
+function syncTouchMoves() {
+  touchMoves.clear();
+  for (const direction of touchPointers.values()) touchMoves.add(direction);
+  for (const button of mobilePad.querySelectorAll('[data-move]')) {
+    button.setAttribute('aria-pressed', String(touchMoves.has(button.dataset.move)));
+  }
+}
+for (const button of mobilePad.querySelectorAll('[data-move]')) {
   button.addEventListener('pointerdown', (event) => {
+    if (!active || event.button !== 0) return;
     event.preventDefault();
-    touchMoves.add(button.dataset.move);
+    touchPointers.set(event.pointerId, button.dataset.move);
+    syncTouchMoves();
     button.setPointerCapture(event.pointerId);
   });
-  button.addEventListener('pointerup', () => touchMoves.delete(button.dataset.move));
-  button.addEventListener('pointercancel', () => touchMoves.delete(button.dataset.move));
+  const stop = event => { touchPointers.delete(event.pointerId); syncTouchMoves(); };
+  button.addEventListener('pointerup', stop);
+  button.addEventListener('pointercancel', stop);
+  button.addEventListener('lostpointercapture', stop);
 }
+window.addEventListener('blur', clearMovement);
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearMovement(); });
 window.addEventListener('pagehide', () => {
+  clearMovement();
+  setExpanded(false);
   active = false;
   cancelAnimationFrame(moveFrame);
   viewer?.dispose();

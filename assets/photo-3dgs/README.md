@@ -11,8 +11,10 @@
 | `horse-sharp.manifest.json` / `horse-sharp.*.bin` | 原始 PLY 按字节拆成最多 24 MiB 的三片，满足 Cloudflare Pages 的单文件限制。清单记录顺序、大小、每片及整文件 SHA-256；模型属性、点数、字节顺序和精度均不变。 |
 | `model-parts.mjs` | 按清单加载并校验各片，拼接为 PLY Blob，再交给原有渲染器；失败可重试，读取完成后释放临时 URL。 |
 | `orbit-horizontal.mp4` | `IMG_7159_3DGS_SDR_10s_安全构图裁切.mp4`，同一 PLY 的 ±3° 水平往返运镜，300 帧、30 fps、10 秒，安全裁切后 1920×1080；无音频。 |
-| `orbit-cone.mp4` / `cone-poster.png` | `汇报/样例/马匹锥形环绕/horse_cone_SDR.mp4` 与 `horse_cone_poster.png`；同一马匹场景，锥半角 1.5°，右→上→左→下→右的连续圆形轨迹，lookAt 固定主体、不滚转；300 帧、30 fps、10 秒、1920×1080。用于视频输出章节。 |
-| `viewer.js` | 以 PLY 内的原始相机内参还原初始视角，将 OpenCV 坐标中的高斯旋转到 WebGL 坐标；鼠标与 WASD 控制自由视角。 |
+| `orbit-cone.mp4` / `cone-poster.png` | 保留原马匹锥形环绕素材，不再作为视频输出章节的默认视频。 |
+| `painting-cone.mp4` / `painting-cone-poster.png` | PPT 油画场景的 `汇报/样例/多运镜/screenshot_0904_fullframe/04_cone_SDR_full.mp4`，视频逐字节复制，海报取首帧；锥半角 1.5°，右→上→左→下→右，300 帧、30 fps、10 秒、1920×1080，既有满屏裁切、无黑边、无音频。仅替换视频输出章节，保留 autoplay / muted / controls / loop / playsinline / preload="auto"。 |
+| `viewer.js` | 以 PLY 内的原始相机内参还原初始视角，将 OpenCV 坐标中的高斯旋转到 WebGL 坐标；鼠标与 WASD 控制自由视角，手机端支持触摸转向与方向键移动。 |
+| `icons/` | 移动控制区使用 Lucide 图标，ISC 许可证原文随图标保留。 |
 | `splat-lab.js` / `splat-math.mjs` | 合成高斯教学实验：正交投影协方差、逐像素高斯核、线性 RGB 的 back-to-front alpha 混合。空间线框是斜视示意，非真实 PLY；不代表正式透视 EWA 渲染器的性能或画质。 |
 
 高斯实验新增真实马匹选项：与自由探索共用单一 WebGL Viewer，点击选项后才加载 PLY。投影尺寸直接设置 `SplatMesh.setSplatScale`，不透明度倍率通过 `sceneOpacity` uniform 乘在原有 alpha 上；点状模式使用渲染器的 point-cloud 开关。它们不编辑 PLY、不改变模型输出的三维中心。切回原理实验时真实查看器回到自由探索区并恢复默认外观。
@@ -21,6 +23,12 @@
 源素材与 SHARP 生成内容仅作内部技术演示。Apple SHARP 权重适用 Apple Machine Learning Research 许可；对外发布原图、生成物或模型前需另行核准对应许可。网页开源代码的许可**不**自动覆盖这些素材。
 
 WebGL 查看器与 Mac Metal 渲染器不同，颜色、排序、边缘和性能可能有差异。它展示同一份重建 PLY，但不能视为与 App 完全像素一致的输出。大幅度离开原始相机后会暴露单图未知的遮挡区域。
+
+## 手机端查看
+
+窄屏或具有粗精度指针的设备在场景加载后显示独立控制区：长按方向键移动，松手或取消触摸即停止；拖动画面转向。复位和大画面按钮分别恢复拍摄点与展开查看。画面按 4:3 构图，按钮位于画面下方，不遮挡主体；真实马匹实验与自由探索共用同一查看器和控制区，不重复下载模型。
+
+本地维护的 GaussianSplats3D 0.4.7 模块已修正排序 worker 的兼容问题：iOS 16.4 之前选择非共享内存 WASM 时，创建同类型的 WebAssembly.Memory，而非始终创建共享内存；同时修正版本范围判断。没有修改排序算法或模型精度。回归测试：`node --test scripts/3dgs-sort-worker.test.mjs`。压缩模型仍需浏览器支持 DecompressionStream，旧版系统如缺少该接口需升级或使用无损分片对照入口。
 
 ## 更新模型
 
